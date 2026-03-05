@@ -1,0 +1,168 @@
+from datetime import datetime
+from typing import Optional, Literal
+from pydantic import BaseModel
+
+
+Country = Literal['GH', 'NG', 'BF']
+UserType = Literal['Farmer', 'Buyer', 'Transporter', 'EquipmentProvider', 'StorageProvider']
+
+
+class UserCreate(BaseModel):
+    full_name: str
+    phone: str
+    country: Country
+    region: str
+    user_type: UserType
+    password: Optional[str] = None
+
+
+class UserLogin(BaseModel):
+    phone: str
+    password: str
+
+
+class OTPVerify(BaseModel):
+    phone: str
+    code: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = 'bearer'
+
+
+class IDVerificationIn(BaseModel):
+    user_id: int
+    id_type: Literal['GhanaCard', 'NIN', 'BF National ID']
+    id_number: str
+    id_photo_url: str
+    facial_verification_flag: bool = False
+
+
+class VerificationDecisionIn(BaseModel):
+    status: Literal['APPROVED', 'DENIED']
+    reviewer_note: Optional[str] = None
+
+
+class FarmPassportIn(BaseModel):
+    user_id: int
+    gps_lat: Optional[float] = None
+    gps_lng: Optional[float] = None
+    farm_size_hectares: float = 0
+    crop_types: str = '[]'
+    livestock_numbers: str = '{}'
+    farm_photo_urls: str = '[]'
+    harvest_records_notes: str = ''
+
+
+class FarmerProfileIn(BaseModel):
+    user_id: int
+    gps_lat: Optional[float] = None
+    gps_lng: Optional[float] = None
+    farm_size_hectares: float = 0
+    crops_summary: str = '{}'
+    livestock_summary: str = '{}'
+    photo_urls: str = '[]'
+
+
+class CropListingIn(BaseModel):
+    farmer_id: int
+    crop_name: str
+    quantity_kg: float
+    unit_price: float
+    location: Optional[str] = None
+    country: Country = 'GH'
+    status: str = 'OPEN'
+
+
+class LivestockListingIn(BaseModel):
+    farmer_id: int
+    livestock_type: str
+    quantity: int
+    unit_price: float
+    location: Optional[str] = None
+    country: Country = 'GH'
+    status: str = 'OPEN'
+
+
+class LogisticsIn(BaseModel):
+    requester_id: Optional[int] = None
+    created_by: Optional[int] = None
+    pickup_location: str
+    dropoff_location: str
+    cargo_type: Optional[str] = None
+    cargo_details: Optional[str] = None
+    weight_kg: float = 0
+    status: str = 'PENDING'
+
+
+class EquipmentRentalIn(BaseModel):
+    requester_id: int
+    equipment_type: str
+    duration_days: int
+    location: str
+    budget: float
+    status: str = 'PENDING'
+
+
+class StorageReservationIn(BaseModel):
+    requester_id: int
+    storage_type: str
+    quantity_kg: float
+    location: str
+    duration_days: int
+    status: str = 'PENDING'
+
+
+class OfferIn(BaseModel):
+    listing_id: int
+    buyer_id: int
+    offer_price: float
+    quantity_kg: float
+
+
+class LogisticsAcceptIn(BaseModel):
+    transporter_id: int
+
+
+class PaymentIn(BaseModel):
+    payer_id: int
+    payee_id: int
+    amount: float
+    country: Country
+    method: str
+    provider: str
+    escrow_enabled: bool = True
+    currency: Optional[str] = None
+
+
+class WeatherAlertIn(BaseModel):
+    country: Country
+    region: str
+    severity: str = 'MEDIUM'
+    alert_type: str
+    message: str
+    valid_until: Optional[datetime] = None
+
+
+class ContractIn(BaseModel):
+    origin_country: Country
+    destination_country: Country
+    commodity: str
+    quantity: float
+    price: float
+    delivery_date: datetime
+    payment_terms: str
+    status: str = 'DRAFT'
+
+
+class DeviceTokenIn(BaseModel):
+    user_id: Optional[int] = None
+    platform: str = 'web'
+    token: str
+
+
+class DiseaseAnalyzeIn(BaseModel):
+    user_id: Optional[int] = None
+    image_url: str
+    crop_type: Optional[str] = None

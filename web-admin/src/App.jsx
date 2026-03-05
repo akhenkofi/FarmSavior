@@ -1,0 +1,947 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
+import * as api from './services/api'
+
+const errMsg = (e) => e?.response?.data?.detail || e?.message || 'Request failed'
+
+const countries = ['GH', 'NG', 'BF']
+const userTypes = ['Farmer', 'Buyer', 'Transporter', 'EquipmentProvider', 'StorageProvider']
+const cropOptions = ['Cassava','Maize','Tomato','Rice','Yam','Plantain','Onion','Pepper','Cocoa','Sorghum','Millet','Groundnut']
+const animalOptions = ['Poultry','Goats','Sheep','Cattle','Rabbits','Grasscutters','Horses','Dogs']
+
+const featuredProductsSeed = [
+  { name: 'Goats', qty: '50 units', price: '85' },
+  { name: 'Sheep', qty: '40 units', price: '120' },
+  { name: 'Day-old Chicks', qty: '2,000 units', price: '1.2' },
+  { name: 'Cows', qty: '25 units', price: '900' },
+  { name: 'Cashew', qty: '12,000 kg', price: '2.1' },
+  { name: 'Mango', qty: '8,500 kg', price: '1.4' },
+  { name: 'Coconuts', qty: '6,000 units', price: '0.8' },
+  { name: 'Coffee', qty: '9,000 kg', price: '3.2' }
+]
+
+const featuredServicesSeed = [
+  { name: 'Tractor hire (4WD)', status: 'Available' },
+  { name: 'Combine harvester rental', status: 'Available' },
+  { name: 'Cold room storage', status: 'Available' },
+  { name: 'Long-haul truck logistics', status: 'Open' },
+  { name: 'Farm spraying service', status: 'Available' },
+  { name: 'Irrigation setup service', status: 'Open' },
+  { name: 'Feed supply delivery', status: 'Open' },
+  { name: 'Warehouse monthly leasing', status: 'Available' }
+]
+
+const paymentProviders = {
+  GH: ['MTN MoMo', 'Vodafone Cash', 'AirtelTigo Money'],
+  NG: ['OPay', 'PalmPay', 'Paga'],
+  BF: ['Orange Money', 'Moov Money']
+}
+const currencyByCountry = { GH: 'GHS', NG: 'NGN', BF: 'XOF' }
+
+// Locked by user request: High Demand Products/Services must always display 10 rows unless explicitly changed.
+const DEMAND_LOCK_COUNT = 10
+const lockDemandCount = (arr, fillerFactory) => {
+  const out = [...arr]
+  while (out.length < DEMAND_LOCK_COUNT) out.push(fillerFactory(out.length + 1))
+  return out.slice(0, DEMAND_LOCK_COUNT)
+}
+
+function DataTable({ columns, rows, filterKey, onEdit }) {
+  const [q, setQ] = useState('')
+  const filtered = rows.filter((r) => !q || String(r[filterKey] ?? '').toLowerCase().includes(q.toLowerCase()))
+  return <div>
+    <input className='input filter' placeholder={`Filter by ${filterKey}...`} value={q} onChange={(e) => setQ(e.target.value)} />
+    <table className='table'>
+      <thead>
+        <tr>
+          {columns.map(c => <th key={c}>{c}</th>)}
+          {onEdit && <th>actions</th>}
+        </tr>
+      </thead>
+      <tbody>
+        {filtered.map((r, i) => (
+          <tr key={r.id || i}>
+            {columns.map(c => <td key={c}>{String(r[c] ?? '')}</td>)}
+            {onEdit && <td><button className='btn btn-dark' onClick={() => onEdit(r)}>Edit</button></td>}
+          </tr>
+        ))}
+        {!filtered.length && <tr><td colSpan={columns.length + (onEdit ? 1 : 0)}>No records</td></tr>}
+      </tbody>
+    </table>
+  </div>
+}
+
+export default function App() {
+  const [token, setToken] = useState(localStorage.getItem('farmsavior_token'))
+  const [authMode, setAuthMode] = useState('login')
+  const [portalType, setPortalType] = useState('main')
+  const [uiCountry, setUiCountry] = useState('GH')
+  const [uiLang, setUiLang] = useState('en')
+  const [phoneForOtp, setPhoneForOtp] = useState('')
+  const [authMsg, setAuthMsg] = useState('')
+  const [active, setActive] = useState('home')
+  const [homeQuery, setHomeQuery] = useState('')
+  const [publicQuery, setPublicQuery] = useState('')
+  const [recentSearches, setRecentSearches] = useState([])
+  const [recentViewed, setRecentViewed] = useState([])
+  const [state, setState] = useState({ metrics: {}, users: [], listings: [], livestock: [], logistics: [], equipment: [], storage: [], payments: [], alerts: [], contracts: [], idv: [], passports: [], verificationApps: [], approvedAccounts: [], deviceTokens: [], diseaseScans: [], disputes: [], fraudFlags: [], news: [], publicWeather: [], govPrograms: [], spotTrading: [], spotHistory: [] })
+  const [me, setMe] = useState(null)
+  const lastTrackRef = useRef('')
+
+  const [signup, setSignup] = useState({ full_name: '', phone: '', country: 'GH', region: '', user_type: 'Farmer', password: '' })
+  const [login, setLogin] = useState({ phone: '', password: '' })
+  const [otp, setOtp] = useState({ phone: '', code: '' })
+
+  const [idForm, setIdForm] = useState({ user_id: 1, id_type: 'GhanaCard', id_number: '', id_photo_url: '', facial_verification_flag: false })
+  const [passportForm, setPassportForm] = useState({ user_id: 1, gps_lat: '', gps_lng: '', farm_size_hectares: '', crop_types: '[]', livestock_numbers: '{}', farm_photo_urls: '[]', harvest_records_notes: '' })
+  const [cropForm, setCropForm] = useState({ farmer_id: 1, crop_name: '', quantity_kg: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
+  const [cropEdit, setCropEdit] = useState({ id: '', farmer_id: 1, crop_name: '', quantity_kg: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
+  const [cropQuickEdit, setCropQuickEdit] = useState({ id: '', quantity_kg: '', unit_price: '' })
+  const [livestockForm, setLivestockForm] = useState({ farmer_id: 1, livestock_type: '', quantity: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
+  const [livestockEdit, setLivestockEdit] = useState({ id: '', farmer_id: 1, livestock_type: '', quantity: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
+  const [livestockQuickEdit, setLivestockQuickEdit] = useState({ id: '', quantity: '', unit_price: '' })
+  const [logisticsForm, setLogisticsForm] = useState({ requester_id: 1, pickup_location: '', dropoff_location: '', cargo_type: '', weight_kg: '', status: 'PENDING' })
+  const [logisticsEdit, setLogisticsEdit] = useState({ id: '', requester_id: 1, pickup_location: '', dropoff_location: '', cargo_type: '', weight_kg: '', status: 'PENDING' })
+  const [equipmentForm, setEquipmentForm] = useState({ requester_id: 1, equipment_type: '', duration_days: '', location: '', budget: '', status: 'PENDING' })
+  const [equipmentEdit, setEquipmentEdit] = useState({ id: '', requester_id: 1, equipment_type: '', duration_days: '', location: '', budget: '', status: 'PENDING' })
+  const [storageForm, setStorageForm] = useState({ requester_id: 1, storage_type: '', quantity_kg: '', location: '', duration_days: '', status: 'PENDING' })
+  const [storageEdit, setStorageEdit] = useState({ id: '', requester_id: 1, storage_type: '', quantity_kg: '', location: '', duration_days: '', status: 'PENDING' })
+  const [paymentForm, setPaymentForm] = useState({ payer_id: 2, payee_id: 1, amount: '', country: 'GH', method: 'MobileMoney', provider: 'MTN MoMo', escrow_enabled: true })
+  const [paymentEdit, setPaymentEdit] = useState({ id: '', payer_id: 2, payee_id: 1, amount: '', country: 'GH', method: 'MobileMoney', provider: 'MTN MoMo', escrow_enabled: true })
+  const [alertForm, setAlertForm] = useState({ country: 'GH', region: '', severity: 'MEDIUM', alert_type: '', message: '', valid_until: '' })
+  const [alertEdit, setAlertEdit] = useState({ id: '', country: 'GH', region: '', severity: 'MEDIUM', alert_type: '', message: '', valid_until: '' })
+  const [alertCountryFilter, setAlertCountryFilter] = useState('ALL')
+  const [regionMap, setRegionMap] = useState({ GH: [], NG: [], BF: [] })
+  const [contractForm, setContractForm] = useState({ origin_country: 'GH', destination_country: 'NG', commodity: '', quantity: '', price: '', delivery_date: '', payment_terms: '', status: 'DRAFT' })
+  const [contractEdit, setContractEdit] = useState({ id: '', origin_country: 'GH', destination_country: 'NG', commodity: '', quantity: '', price: '', delivery_date: '', payment_terms: '', status: 'DRAFT' })
+  const [mapCountry, setMapCountry] = useState('GH')
+
+  const t = (en, fr) => (uiLang === 'fr' ? fr : en)
+  const [fcmToken, setFcmToken] = useState('')
+  const [diseaseForm, setDiseaseForm] = useState({ user_id: 1, category: 'crop', target: '', image_url: '' })
+  const [farmMapForm, setFarmMapForm] = useState({ user_id: 1, gps_lat: '', gps_lng: '', farm_size_hectares: '', crop_types: '[]', livestock_numbers: '{}', farm_photo_urls: '[]', harvest_records_notes: '' })
+  const [govSubsidyForm, setGovSubsidyForm] = useState({ country: 'GH', agency: 'MOFA', farmer_user_id: 1, amount: '' })
+  const [govMsgForm, setGovMsgForm] = useState({ country: 'GH', target: 'farmers', text: '' })
+
+  const load = async () => {
+    const meRes = await api.fetchMe().catch(() => null)
+    setMe(meRes)
+    const isAdmin = (meRes?.role || '').toLowerCase() === 'admin'
+
+    const [metrics, users, listings, livestock, logistics, equipment, storage, payments, alerts, contracts, idv, passports, regions, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, govPrograms, spotTrading, spotHistory] = await Promise.all([
+      api.fetchMetrics(), api.fetchUsers(), api.fetchListings(), api.fetchLivestock(), api.fetchLogistics(), api.fetchEquipment(), api.fetchStorage(), api.fetchPayments(), api.fetchAlerts(alertCountryFilter === 'ALL' ? undefined : alertCountryFilter), api.fetchContracts(), api.fetchIdVerifications(), api.fetchPassports(), api.fetchWeatherRegions(), api.fetchVerificationApps(), api.fetchApprovedAccounts(), api.fetchDeviceTokens(), api.fetchDiseaseScans(),
+      isAdmin ? api.fetchAdminDisputes() : Promise.resolve([]),
+      isAdmin ? api.fetchAdminFraudFlags() : Promise.resolve([]),
+      api.fetchPublicNews().catch(() => []),
+      api.fetchGovPrograms().catch(() => ({ items: [] })),
+      api.fetchSpotTrading().catch(() => ({ items: [] })),
+      api.fetchSpotTradingHistory().catch(() => ({ items: [] }))
+    ])
+    setRegionMap(regions || { GH: [], NG: [], BF: [] })
+    setState({ metrics, users, listings, livestock, logistics, equipment, storage, payments, alerts, contracts, idv, passports, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, govPrograms: govPrograms.items || [], spotTrading: spotTrading.items || [], spotHistory: spotHistory.items || [] })
+  }
+
+  useEffect(() => { if (token) load().catch(console.error) }, [token, alertCountryFilter])
+
+  useEffect(() => {
+    const key = `${token ? 'auth' : 'guest'}|${active}|${uiCountry}|${uiLang}`
+    if (lastTrackRef.current === key) return
+    lastTrackRef.current = key
+    api.trackAnalyticsEvent({
+      event_name: 'page_context',
+      country: uiCountry,
+      role_hint: me?.role || (token ? 'user' : 'guest'),
+      properties: { active_page: active, language: uiLang, authenticated: !!token }
+    }).catch(() => {})
+  }, [token, active, uiCountry, uiLang, me?.role])
+
+  useEffect(() => {
+    setSignup((s) => ({ ...s, country: uiCountry }))
+    setcropAndCountry()
+  }, [uiCountry])
+
+  const setcropAndCountry = () => {
+    setCropForm((s) => ({ ...s, country: uiCountry }))
+    setCropEdit((s) => ({ ...s, country: uiCountry }))
+    setLivestockForm((s) => ({ ...s, country: uiCountry }))
+    setLivestockEdit((s) => ({ ...s, country: uiCountry }))
+    setPaymentForm((s) => ({ ...s, country: uiCountry, provider: paymentProviders[uiCountry][0] }))
+    setPaymentEdit((s) => ({ ...s, country: uiCountry, provider: paymentProviders[uiCountry][0] }))
+    setAlertForm((s) => ({ ...s, country: uiCountry, region: '' }))
+    setAlertEdit((s) => ({ ...s, country: uiCountry, region: '' }))
+    setMapCountry(uiCountry)
+  }
+
+  useEffect(() => {
+    if (token) return
+    Promise.all([
+      api.fetchListings().catch(() => []),
+      api.fetchLivestock().catch(() => []),
+      api.fetchLogistics().catch(() => []),
+      api.fetchEquipment().catch(() => []),
+      api.fetchStorage().catch(() => []),
+      api.fetchAlerts().catch(() => []),
+      api.fetchPublicNews().catch(() => []),
+      api.fetchPublicWeather().catch(() => []),
+      api.fetchGovPrograms().catch(() => ({ items: [] })),
+      api.fetchSpotTrading().catch(() => ({ items: [] })),
+      api.fetchSpotTradingHistory().catch(() => ({ items: [] }))
+    ]).then(([listings, livestock, logistics, equipment, storage, alerts, news, publicWeather, govPrograms, spotTrading, spotHistory]) => {
+      setState(prev => ({ ...prev, listings, livestock, logistics, equipment, storage, alerts, news, publicWeather, govPrograms: govPrograms.items || [], spotTrading: spotTrading.items || [], spotHistory: spotHistory.items || [] }))
+    })
+  }, [token])
+
+  const saveToken = (jwt) => {
+    localStorage.setItem('farmsavior_token', jwt)
+    setToken(jwt)
+    setAuthMsg('Authenticated successfully')
+  }
+
+  const recentsKey = `farmsavior_recents_${(token || 'guest').slice(0, 12)}`
+  useEffect(() => {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(recentsKey) || '{}')
+      setRecentSearches(parsed.searches || [])
+      setRecentViewed(parsed.viewed || [])
+    } catch {}
+  }, [recentsKey])
+
+  const persistRecents = (searches, viewed) => {
+    localStorage.setItem(recentsKey, JSON.stringify({ searches, viewed }))
+  }
+
+  const addRecentSearch = (term) => {
+    const t = String(term || '').trim()
+    if (!t) return
+    const next = [t, ...recentSearches.filter(x => x !== t)].slice(0, 8)
+    setRecentSearches(next)
+    persistRecents(next, recentViewed)
+    api.trackAnalyticsEvent({
+      event_name: 'search',
+      country: uiCountry,
+      role_hint: me?.role || (token ? 'user' : 'guest'),
+      properties: { query: t, active_page: active }
+    }).catch(() => {})
+  }
+
+  const addRecentViewed = (label) => {
+    const t = String(label || '').trim()
+    if (!t) return
+    const next = [t, ...recentViewed.filter(x => x !== t)].slice(0, 10)
+    setRecentViewed(next)
+    persistRecents(recentSearches, next)
+  }
+
+  const baseMenu = ['home', 'dashboard', 'onboarding', 'products', 'livestock', 'services', 'payments', 'alerts', 'maps', 'messaging', 'ai-disease', 'government', 'contracts']
+  const menu = ((me?.role || '').toLowerCase() === 'admin') ? [...baseMenu, 'admin'] : baseMenu
+  const menuLabel = (m) => ({
+    'home':'home',
+    'dashboard':'dashboard',
+    'onboarding':'onboarding',
+    'products':'products',
+    'livestock':'livestock',
+    'services':'services',
+    'payments':'payments',
+    'alerts':'alerts',
+    'maps':'maps',
+    'messaging':'messaging',
+    'ai-disease':'AI Disease Analyzer',
+    'government':'Government Integration',
+    'contracts':'contracts',
+    'admin':'admin'
+  }[m] || m)
+
+  const kpis = useMemo(() => [
+    ['Users', state.metrics.users_total || 0],
+    ['Listings', state.metrics.listings_total || 0],
+    ['Logistics', state.metrics.logistics_total || 0],
+    ['Payments', state.metrics.payments_total || 0],
+    ['Contracts', state.metrics.contracts_total || 0],
+  ], [state.metrics])
+
+  if (!token) return <div className='authWrap'>
+    <div className='authCard' style={{width:'min(1180px,98vw)'}}>
+      <div className='panel' style={{background:'linear-gradient(120deg,#0b3b2e,#0e7490)', color:'#fff'}}>
+        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:8}}>
+          <img src='/assets/farmsavior-logo.jpg' alt='FarmSavior logo' style={{width:72,height:72,borderRadius:12,objectFit:'cover',border:'2px solid rgba(255,255,255,.3)'}} />
+          <h2 style={{margin:0}}>FarmSavior Marketplace Live</h2>
+        </div>
+        <p style={{opacity:.95}}>{t('High-demand products and services across Ghana, Nigeria, and Burkina Faso. Browse freely. To contact providers or use tools, sign up/sign in.','Produits et services à forte demande au Ghana, au Nigeria et au Burkina Faso. Parcourez librement. Pour contacter les fournisseurs ou utiliser les outils, inscrivez-vous/connectez-vous.')}</p>
+        <div className='inlineForm' style={{background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.25)', marginBottom:8}}>
+          <select className='input' value={uiCountry} onChange={(e)=>setUiCountry(e.target.value)}>
+            <option value='GH'>Ghana</option><option value='NG'>Nigeria</option><option value='BF'>Burkina Faso</option>
+          </select>
+          <select className='input' value={uiLang} onChange={(e)=>setUiLang(e.target.value)}>
+            <option value='en'>English</option><option value='fr'>Français</option>
+          </select>
+          <div className='list-row' style={{padding:'6px 10px', background:'rgba(255,255,255,.85)'}}><span>{t('Currency','Devise')}</span><strong>{currencyByCountry[uiCountry]}</strong></div>
+          <div className='list-row' style={{padding:'6px 10px', background:'rgba(255,255,255,.85)'}}><span>{t('Payment methods','Moyens de paiement')}</span><strong>{paymentProviders[uiCountry].join(', ')}</strong></div>
+        </div>
+        <form className='inlineForm' onSubmit={(e)=>{e.preventDefault(); addRecentSearch(publicQuery)}} style={{background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.25)'}}>
+          <input className='input' placeholder='Search products, services, market activity…' value={publicQuery} onChange={(e)=>setPublicQuery(e.target.value)} />
+          <button className='btn btn-dark'>Search</button>
+          <button type='button' className='btn' onClick={()=>setPublicQuery('')}>Clear</button>
+        </form>
+      </div>
+
+      <div className='three-col' style={{marginTop:10}}>
+        <article className='panel' style={{minHeight: 430}}>
+          <h3>🔥 High Demand Products</h3>
+          <div className='list'>
+            {lockDemandCount(
+              [
+                ...[
+                  ...state.listings,
+                  ...state.livestock
+                ].map(x => ({
+                  name: x.crop_name || x.livestock_type,
+                  qty: x.quantity_kg ? `${x.quantity_kg} kg` : `${x.quantity || 0} units`,
+                  price: x.unit_price || '-'
+                })),
+                ...featuredProductsSeed
+              ].filter(x => !publicQuery || `${x.name} ${x.qty}`.toLowerCase().includes(publicQuery.toLowerCase())),
+              (n) => ({ name: `Market item ${n}`, qty: '—', price: '—' })
+            ).map((x,i)=><div className='list-row' key={`p-${i}`}><span>{x.name} {x.qty}</span><strong>{x.price}</strong></div>)}
+          </div>
+        </article>
+
+        <article className='panel' style={{minHeight: 430}}>
+          <h3>🚚 High Demand Services</h3>
+          <div className='list'>
+            {lockDemandCount(
+              [
+                ...[...state.logistics, ...state.equipment, ...state.storage].map(x => ({
+                  name: x.pickup_location ? `${x.pickup_location} → ${x.dropoff_location}` : (x.equipment_type || x.storage_type),
+                  status: x.status || 'OPEN'
+                })),
+                ...featuredServicesSeed
+              ].filter(x => !publicQuery || `${x.name} ${x.status}`.toLowerCase().includes(publicQuery.toLowerCase())),
+              (n) => ({ name: `Service slot ${n}`, status: 'OPEN' })
+            ).map((x,i)=><div className='list-row' key={`s-${i}`}><span>{x.name}</span><strong>{x.status}</strong></div>)}
+          </div>
+        </article>
+
+        <article className='panel'>
+          <h3>🧠 Popular Actions</h3>
+          <div className='list'>
+            <div className='list-row'><span>List Product</span><button className='btn' onClick={()=>{ setAuthMode('signup'); setAuthMsg('Create an account or log in to list a product.'); }}>Start</button></div>
+            <div className='list-row'><span>List Services</span><button className='btn' onClick={()=>{ setAuthMode('signup'); setAuthMsg('Create an account or log in to list your services.'); }}>Start</button></div>
+            <div className='list-row'><span>List Machinery for Rent</span><button className='btn' onClick={()=>{ setAuthMode('signup'); setAuthMsg('Sign up or log in to list machinery for rent.'); }}>Start</button></div>
+            <div className='list-row'><span>Rent Machinery</span><button className='btn' onClick={()=>{ setAuthMode('login'); setAuthMsg('Log in to rent machinery and contact providers.'); }}>Start</button></div>
+            <div className='list-row'><span>Request Logistics / Transport</span><button className='btn' onClick={()=>{ setAuthMode('login'); setAuthMsg('Log in to request transport services.'); }}>Start</button></div>
+            <div className='list-row'><span>Find Storage / Cold Room</span><button className='btn' onClick={()=>{ setAuthMode('login'); setAuthMsg('Log in to reserve storage facilities.'); }}>Start</button></div>
+            <div className='list-row'><span>AI Disease Analyzer</span><button className='btn' onClick={()=>{ setAuthMode('login'); setAuthMsg('Please sign in to use AI Disease Analyzer.'); }}>Open</button></div>
+            <div className='list-row'><span>Farm GPS Mapping</span><button className='btn' onClick={()=>{ setAuthMode('login'); setAuthMsg('Please sign in to map farms and save data.'); }}>Open</button></div>
+          </div>
+          <p style={{fontSize:'.82rem', color:'#64748b'}}>You can browse publicly; posting, renting, contacting providers, and transactions require sign-in.</p>
+        </article>
+      </div>
+
+      <div className='two-col' style={{marginTop:10}}>
+        <article className='panel'>
+          <h3>🌤️ 9-City Weather Forecast (GH • NG • BF)</h3>
+          <div className='news-grid'>
+            {state.publicWeather.map((w,i)=>(
+              <div className='news-card' key={`w-${i}`}>
+                <div className='news-body'>
+                  <div className='news-title'>{w.city}, {w.country}</div>
+                  <div className='news-meta'>Condition: {w.condition || '-'}</div>
+                  <div className='news-meta'>Temp: {w.temperature_c}°C • Humidity: {w.humidity_pct}% • Rainfall: {w.rainfall_mm} mm</div>
+                </div>
+              </div>
+            ))}
+            {!state.publicWeather.length && <div className='list-row'><span>Loading weather forecast…</span></div>}
+          </div>
+
+          <p style={{fontSize:'.85rem', color:'#0f766e', marginTop:8}}>Free forecast preview for farmers. Sign up to unlock personalized alerts and farm-level recommendations.</p>
+
+
+          <h3 style={{marginTop:12}}>📰 Ag News + Innovation</h3>
+          <div className='news-grid'>
+            {state.news.slice(0,8).map((n,i)=>(
+              <div className='news-card' key={`n-${i}`}>
+                <img src={n.image_url || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80'} alt={n.title} className='news-img' />
+                <div className='news-body'>
+                  <a href={n.url} target='_blank' rel='noreferrer' className='news-title'>{n.title}</a>
+                  <div className='news-meta'>{n.source} {n.published ? `• ${n.published}` : ''}</div>
+                  <div className='news-credit'>{n.image_credit || 'Image credit: source / Unsplash'}</div>
+                </div>
+              </div>
+            ))}
+            {!state.news.length && <div className='list-row'><span>Fetching latest ag news…</span></div>}
+          </div>
+          <p style={{fontSize:'.82rem', color:'#64748b'}}>Sources and image credits are shown on each story.</p>
+        </article>
+
+        <article className='panel'>
+          <h3>Access Portal</h3>
+          <div className='tabs'>
+            <button className={`tab ${portalType === 'main' ? 'active' : ''}`} onClick={() => setPortalType('main')}>Main App</button>
+            <button className={`tab ${portalType === 'admin' ? 'active' : ''}`} onClick={() => setPortalType('admin')}>Admin</button>
+            <button className={`tab ${portalType === 'devadmin' ? 'active' : ''}`} onClick={() => setPortalType('devadmin')}>Developer Admin</button>
+          </div>
+
+          <div className='tabs'>{['login', 'signup', 'otp'].map(m => <button key={m} className={`tab ${authMode === m ? 'active' : ''}`} onClick={() => setAuthMode(m)}>{m.toUpperCase()}</button>)}</div>
+
+          {authMode === 'signup' && <form className='list' onSubmit={async (e) => {
+            try { e.preventDefault(); const r = await api.register(signup); setPhoneForOtp(signup.phone); setOtp({ ...otp, phone: signup.phone }); setAuthMode('otp'); setAuthMsg(`Registered. Use OTP: ${r.otp_mock_code}`); } catch (e) { setAuthMsg(`Signup failed: ${errMsg(e)}`) }
+          }}>
+            <input className='input' placeholder='Full name' value={signup.full_name} onChange={e => setSignup({ ...signup, full_name: e.target.value })} required />
+            <input className='input' placeholder='Phone' value={signup.phone} onChange={e => setSignup({ ...signup, phone: e.target.value })} required />
+            <div className='row2'><select className='input' value={signup.country} onChange={e => setSignup({ ...signup, country: e.target.value })}>{countries.map(c => <option key={c}>{c}</option>)}</select><input className='input' placeholder='Region' value={signup.region} onChange={e => setSignup({ ...signup, region: e.target.value })} required /></div>
+            <select className='input' value={signup.user_type} onChange={e => setSignup({ ...signup, user_type: e.target.value })}>{userTypes.map(u => <option key={u}>{u}</option>)}</select>
+            <input className='input' type='password' placeholder='Password' value={signup.password} onChange={e => setSignup({ ...signup, password: e.target.value })} required />
+            <button className='btn btn-dark'>Create Account</button>
+          </form>}
+
+          {authMode === 'login' && <form className='list' onSubmit={async (e) => {
+            try { e.preventDefault(); const r = await api.login(login); saveToken(r.access_token) } catch (e) { setAuthMsg(`Login failed: ${errMsg(e)}`) }
+          }}>
+            <input className='input' placeholder='Phone' value={login.phone} onChange={e => setLogin({ ...login, phone: e.target.value })} required />
+            <input className='input' type='password' placeholder='Password' value={login.password} onChange={e => setLogin({ ...login, password: e.target.value })} required />
+            <button className='btn btn-dark'>{portalType === 'main' ? 'Login' : portalType === 'admin' ? 'Admin Login' : 'Developer Admin Login'}</button>
+          </form>}
+
+          {authMode === 'otp' && <form className='list' onSubmit={async (e) => {
+            try { e.preventDefault(); const r = await api.verifyOtp(otp); saveToken(r.access_token) } catch (e) { setAuthMsg(`OTP verification failed: ${errMsg(e)}`) }
+          }}>
+            <input className='input' placeholder='Phone' value={otp.phone || phoneForOtp} onChange={e => setOtp({ ...otp, phone: e.target.value })} required />
+            <input className='input' placeholder='OTP Code' value={otp.code} onChange={e => setOtp({ ...otp, code: e.target.value })} required />
+            <button className='btn btn-dark'>Verify OTP</button>
+          </form>}
+          <p>{authMsg}</p>
+
+          <div className='list-row' style={{marginTop:12}}>
+            <h3 style={{margin:0}}>📈 Spot Trading (GH • NG • BF • World Avg)</h3>
+            <button className='btn' onClick={() => window.print()}>Export Briefing (PDF)</button>
+          </div>
+          <div className='list'>
+            {state.spotTrading.map((r, i) => {
+              const hist = state.spotHistory.find(h => h.commodity === r.commodity) || {}
+              const max = Math.max(r.GH || 0, r.NG || 0, r.BF || 0, r.WORLD_AVG || 0, 1)
+              const bar = (v) => `${Math.max(6, Math.round((v / max) * 100))}%`
+              const t7 = hist.trend_7d || []
+              const min = Math.min(...(t7.length ? t7 : [0]))
+              const max7 = Math.max(...(t7.length ? t7 : [1]))
+              const points = t7.map((v, idx) => `${(idx/Math.max(1,t7.length-1))*180},${28-((v-min)/Math.max(1,(max7-min)))*24}`).join(' ')
+              return <div key={`st-right-${i}`} className='panel' style={{padding:10}}>
+                <div style={{fontWeight:700, marginBottom:6}}>{r.commodity}</div>
+                <div className='list-row'><span>Ghana ({r.GH})</span><div style={{height:8,width:bar(r.GH),background:'#16a34a',borderRadius:99}} /></div>
+                <div className='list-row'><span>Nigeria ({r.NG})</span><div style={{height:8,width:bar(r.NG),background:'#0284c7',borderRadius:99}} /></div>
+                <div className='list-row'><span>Burkina Faso ({r.BF})</span><div style={{height:8,width:bar(r.BF),background:'#ea580c',borderRadius:99}} /></div>
+                <div className='list-row'><span>World Avg ({r.WORLD_AVG})</span><div style={{height:8,width:bar(r.WORLD_AVG),background:'#334155',borderRadius:99}} /></div>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#475569',marginTop:6}}>
+                  <span>7d: {hist.change_pct_7d ?? 0}%</span><span>30d: {hist.change_pct_30d ?? 0}%</span>
+                </div>
+                <svg width='180' height='32' style={{marginTop:4, background:'#f8fafc', borderRadius:6}}>
+                  <polyline fill='none' stroke='#0f766e' strokeWidth='2' points={points || '0,28 180,4'} />
+                </svg>
+                <div style={{fontSize:11,color:'#64748b'}}>Source: {hist.provenance || 'FarmSavior market feed'}</div>
+              </div>
+            })}
+            {!state.spotTrading.length && <div className='list-row'><span>Loading spot trading data…</span></div>}
+          </div>
+        </article>
+      </div>
+
+      <article className='panel' style={{marginTop:10}}>
+        <h3>🏛️ Government Programs & Subsidies (GH • NG • BF)</h3>
+        <div className='list'>
+          {state.govPrograms.slice(0, 6).map((g, i) => (
+            <div className='list-row' key={`gov-${i}`}>
+              <span>{g.country} • {g.agency} • {g.headline} ({g.status || 'ok'})</span>
+              <a className='btn' href={g.source_url} target='_blank' rel='noreferrer'>Programs Page</a>
+            </div>
+          ))}
+          {!state.govPrograms.length && <div className='list-row'><span>Loading official ministry programs…</span></div>}
+        </div>
+      </article>
+    </div>
+  </div>
+
+  return <div className='layout'>
+    <aside className='sidebar'>
+      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+        <img src='/assets/farmsavior-logo.jpg' alt='FarmSavior' style={{width:36,height:36,borderRadius:8,objectFit:'cover'}} />
+        <h3 style={{margin:0}}>FarmSavior</h3>
+      </div>
+      {menu.map(m => <button key={m} className={`sideBtn ${active === m ? 'on' : ''}`} onClick={() => setActive(m)}>{menuLabel(m)}</button>)}
+      <button className='sideBtn' onClick={() => { localStorage.removeItem('farmsavior_token'); setToken('') }}>logout</button>
+    </aside>
+    <main className='main'>
+      <div className='inlineForm' style={{marginBottom:10, justifyContent:'space-between'}}>
+        <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+          <select className='input' value={uiCountry} onChange={(e)=>setUiCountry(e.target.value)}>
+            <option value='GH'>Ghana</option><option value='NG'>Nigeria</option><option value='BF'>Burkina Faso</option>
+          </select>
+          <select className='input' value={uiLang} onChange={(e)=>setUiLang(e.target.value)}>
+            <option value='en'>English</option><option value='fr'>Français</option>
+          </select>
+          <button className='btn btn-dark' onClick={() => setActive('home')}>← Main Interface</button>
+          <button className='btn' onClick={() => setActive('products')}>Products</button>
+          <button className='btn' onClick={() => setActive('livestock')}>Livestock</button>
+          <button className='btn' onClick={() => setActive('services')}>Services</button>
+        </div>
+        <div style={{display:'flex', gap:8}}>
+          <button className='btn btn-dark' onClick={() => setActive('onboarding')}>My Account</button>
+          <button className='btn' onClick={() => { setAuthMode('login'); localStorage.removeItem('farmsavior_token'); setToken(''); }}>Main App Home</button>
+        </div>
+      </div>
+      {active === 'home' && <section>
+        <h2>Main App Homepage</h2>
+        <form className='inlineForm' onSubmit={(e) => { e.preventDefault(); addRecentSearch(homeQuery) }}>
+          <input className='input' placeholder='Search products, livestock, services…' value={homeQuery} onChange={(e)=>setHomeQuery(e.target.value)} />
+          <button className='btn btn-dark' type='submit'>Search</button>
+        </form>
+        <div className='two-col'>
+          <article className='panel'>
+            <h3>Search Results</h3>
+            <div className='list'>
+              {[...state.listings.map(x=>({type:'Product', id:x.id, name:x.crop_name, price:x.unit_price})), ...state.livestock.map(x=>({type:'Livestock', id:x.id, name:x.livestock_type, price:x.unit_price})), ...state.logistics.map(x=>({type:'Service', id:x.id, name:`${x.pickup_location} → ${x.dropoff_location}`, price:''}))]
+                .filter(x => !homeQuery || `${x.type} ${x.name}`.toLowerCase().includes(homeQuery.toLowerCase()))
+                .slice(0,20)
+                .map((x,i)=><div className='list-row' key={`${x.type}-${x.id}-${i}`}><span>{x.type}: {x.name}</span><span>{x.price ? `₵${x.price}` : ''}</span></div>)}
+            </div>
+          </article>
+          <article className='panel'>
+            <h3>Recents</h3>
+            <p><strong>Recent Searches</strong></p>
+            <div className='list'>
+              {recentSearches.map((s,i)=><div className='list-row' key={`s-${i}`}><span>{s}</span></div>)}
+              {!recentSearches.length && <div className='list-row'><span>No recent searches yet</span></div>}
+            </div>
+            <p style={{marginTop:8}}><strong>Recently Viewed</strong></p>
+            <div className='list'>
+              {recentViewed.map((s,i)=><div className='list-row' key={`v-${i}`}><span>{s}</span></div>)}
+              {!recentViewed.length && <div className='list-row'><span>No recently viewed yet</span></div>}
+            </div>
+          </article>
+        </div>
+      </section>}
+
+      {active === 'dashboard' && <section>
+        <h2>Admin Dashboard + Analytics</h2>
+        <div className='kpi-grid'>{kpis.map(([k, v]) => <article className='kpi-card' key={k}><p>{k}</p><strong>{v}</strong></article>)}</div>
+
+        <div className='two-col'>
+          <article className='panel'>
+            <h3>Crop Supply Forecasts</h3>
+            <div className='list-row'><span>Total Crop Listings</span><strong>{state.listings.length}</strong></div>
+            <div className='list-row'><span>Estimated Supply (kg)</span><strong>{state.listings.reduce((s,x)=>s+Number(x.quantity_kg||0),0).toFixed(0)}</strong></div>
+            <div className='list-row'><span>30-day Outlook</span><strong>{state.listings.length > 5 ? 'High' : 'Moderate'}</strong></div>
+          </article>
+          <article className='panel'>
+            <h3>Regional Production Data</h3>
+            {['GH','NG','BF'].map(c => {
+              const count = state.listings.filter(x => x.country === c).length
+              return <div className='list-row' key={c}><span>{c}</span><strong>{count} listings</strong></div>
+            })}
+          </article>
+        </div>
+
+        <div className='two-col' style={{marginTop:10}}>
+          <article className='panel'>
+            <h3>Market Price Trends</h3>
+            <div className='list-row'><span>Avg Crop Unit Price</span><strong>{(state.listings.reduce((s,x)=>s+Number(x.unit_price||0),0) / Math.max(state.listings.length,1)).toFixed(2)}</strong></div>
+            <div className='list-row'><span>Avg Livestock Unit Price</span><strong>{(state.livestock.reduce((s,x)=>s+Number(x.unit_price||0),0) / Math.max(state.livestock.length,1)).toFixed(2)}</strong></div>
+          </article>
+          <article className='panel'>
+            <h3>Logistics Activity + Farmer Growth</h3>
+            <div className='list-row'><span>Active Logistics Requests</span><strong>{state.logistics.length}</strong></div>
+            <div className='list-row'><span>Farmer Profiles</span><strong>{state.users.filter(u => (u.role||'') === 'Farmer').length}</strong></div>
+            <div className='list-row'><span>Growth Signal</span><strong>{state.users.length > 5 ? 'Growing' : 'Early Stage'}</strong></div>
+          </article>
+        </div>
+
+        <DataTable columns={['id', 'full_name', 'phone', 'country', 'region', 'role']} rows={state.users} filterKey='full_name' />
+      </section>}
+
+      {active === 'onboarding' && <section>
+        <div className='two-col'>
+          <article className='panel'><h3>ID Verification</h3><form className='list' onSubmit={async e => { e.preventDefault(); await api.createIdVerification({ ...idForm, user_id: Number(idForm.user_id) }); await load() }}>
+            <input className='input' type='number' placeholder='User ID' value={idForm.user_id} onChange={e => setIdForm({ ...idForm, user_id: e.target.value })} />
+            <select className='input' value={idForm.id_type} onChange={e => setIdForm({ ...idForm, id_type: e.target.value })}><option>GhanaCard</option><option>NIN</option><option>BF National ID</option></select>
+            <input className='input' placeholder='ID Number' value={idForm.id_number} onChange={e => setIdForm({ ...idForm, id_number: e.target.value })} />
+            <input className='input' placeholder='ID Photo URL' value={idForm.id_photo_url} onChange={e => setIdForm({ ...idForm, id_photo_url: e.target.value })} />
+            <label><input type='checkbox' checked={idForm.facial_verification_flag} onChange={e => setIdForm({ ...idForm, facial_verification_flag: e.target.checked })} /> Facial verification done</label>
+            <button className='btn btn-dark'>Save ID Verification</button>
+          </form></article>
+          <article className='panel'><h3>Digital Farm Passport</h3><form className='list' onSubmit={async e => { e.preventDefault(); await api.createPassport({ ...passportForm, user_id: Number(passportForm.user_id), gps_lat: Number(passportForm.gps_lat), gps_lng: Number(passportForm.gps_lng), farm_size_hectares: Number(passportForm.farm_size_hectares) }); await load() }}>
+            <input className='input' type='number' placeholder='User ID' value={passportForm.user_id} onChange={e => setPassportForm({ ...passportForm, user_id: e.target.value })} />
+            <div className='row2'><input className='input' placeholder='GPS Lat' value={passportForm.gps_lat} onChange={e => setPassportForm({ ...passportForm, gps_lat: e.target.value })} /><input className='input' placeholder='GPS Lng' value={passportForm.gps_lng} onChange={e => setPassportForm({ ...passportForm, gps_lng: e.target.value })} /></div>
+            <input className='input' placeholder='Farm size (ha)' value={passportForm.farm_size_hectares} onChange={e => setPassportForm({ ...passportForm, farm_size_hectares: e.target.value })} />
+            <input className='input' placeholder='Crop types JSON array' value={passportForm.crop_types} onChange={e => setPassportForm({ ...passportForm, crop_types: e.target.value })} />
+            <input className='input' placeholder='Livestock JSON object' value={passportForm.livestock_numbers} onChange={e => setPassportForm({ ...passportForm, livestock_numbers: e.target.value })} />
+            <input className='input' placeholder='Farm photos URLs JSON array' value={passportForm.farm_photo_urls} onChange={e => setPassportForm({ ...passportForm, farm_photo_urls: e.target.value })} />
+            <input className='input' placeholder='Harvest notes' value={passportForm.harvest_records_notes} onChange={e => setPassportForm({ ...passportForm, harvest_records_notes: e.target.value })} />
+            <button className='btn btn-dark'>Save Passport</button>
+          </form></article>
+        </div>
+
+        <article className='panel' style={{marginTop: 12}}>
+          <div className='panelHeadActions'>
+            <h3>Verification Applications</h3>
+            <button className='btn btn-dark' onClick={async () => { await api.analyzeAllVerifications(); await load(); }}>AI Analyze & Decide All</button>
+          </div>
+          <DataTable columns={['id_verification_id','full_name','phone','country','id_type','status','ai_score','ai_reason']} rows={state.verificationApps} filterKey='full_name' />
+          <div className='inlineForm'>
+            <input id='verifyAppId' className='input' placeholder='Application ID' />
+            <button className='btn btn-dark' onClick={async ()=>{ const id=Number(document.getElementById('verifyAppId').value); if(id){ await api.analyzeVerification(id); await load(); }}}>Analyze One</button>
+            <button className='btn btn-dark' onClick={async ()=>{ const id=Number(document.getElementById('verifyAppId').value); if(id){ await api.setVerificationDecision(id,{status:'APPROVED'}); await load(); }}}>Approve</button>
+            <button className='btn btn-dark' onClick={async ()=>{ const id=Number(document.getElementById('verifyAppId').value); if(id){ await api.setVerificationDecision(id,{status:'DENIED'}); await load(); }}}>Deny</button>
+          </div>
+        </article>
+
+        <article className='panel' style={{marginTop: 12}}>
+          <h3>Verified Accounts (Approved)</h3>
+          <DataTable columns={['user_id','full_name','phone','country','role','verified_status','ai_score']} rows={state.approvedAccounts} filterKey='full_name' />
+        </article>
+      </section>}
+
+      {active === 'products' && <section><h3>Product Listings</h3><form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.createListing({ ...cropForm, farmer_id: Number(cropForm.farmer_id), quantity_kg: Number(cropForm.quantity_kg), unit_price: Number(cropForm.unit_price) }); await load() }}>
+        <input className='input' placeholder='Crop' value={cropForm.crop_name} onChange={e => setCropForm({ ...cropForm, crop_name: e.target.value })} required />
+        <input className='input' placeholder='Qty kg' value={cropForm.quantity_kg} onChange={e => setCropForm({ ...cropForm, quantity_kg: e.target.value })} required />
+        <input className='input' placeholder='Unit price' value={cropForm.unit_price} onChange={e => setCropForm({ ...cropForm, unit_price: e.target.value })} required />
+        <input className='input' placeholder='Location' value={cropForm.location} onChange={e => setCropForm({ ...cropForm, location: e.target.value })} />
+        <button className='btn btn-dark'>Create</button>
+      </form>
+      <form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.updateListing(Number(cropEdit.id), { ...cropEdit, farmer_id: Number(cropEdit.farmer_id), quantity_kg: Number(cropEdit.quantity_kg), unit_price: Number(cropEdit.unit_price) }); await load() }}>
+        <input className='input' placeholder='Listing ID to edit' value={cropEdit.id} onChange={e => setCropEdit({ ...cropEdit, id: e.target.value })} required />
+        <input className='input' placeholder='Crop' value={cropEdit.crop_name} onChange={e => setCropEdit({ ...cropEdit, crop_name: e.target.value })} required />
+        <input className='input' placeholder='Qty kg' value={cropEdit.quantity_kg} onChange={e => setCropEdit({ ...cropEdit, quantity_kg: e.target.value })} required />
+        <input className='input' placeholder='Unit price' value={cropEdit.unit_price} onChange={e => setCropEdit({ ...cropEdit, unit_price: e.target.value })} required />
+        <button className='btn btn-dark'>Save Edit</button>
+      </form>
+      <form className='inlineForm' onSubmit={async e => { e.preventDefault(); try { await api.patchListingPriceQty(Number(cropQuickEdit.id), { quantity_kg: Number(cropQuickEdit.quantity_kg), unit_price: Number(cropQuickEdit.unit_price) }); await load(); alert('Product update approved by AI and saved.'); } catch(err) { alert(err?.response?.data?.detail || 'Update denied/failed'); } }}>
+        <input className='input' placeholder='Quick edit ID' value={cropQuickEdit.id} onChange={e => setCropQuickEdit({ ...cropQuickEdit, id: e.target.value })} required />
+        <input className='input' placeholder='New quantity kg' value={cropQuickEdit.quantity_kg} onChange={e => setCropQuickEdit({ ...cropQuickEdit, quantity_kg: e.target.value })} required />
+        <input className='input' placeholder='New unit price' value={cropQuickEdit.unit_price} onChange={e => setCropQuickEdit({ ...cropQuickEdit, unit_price: e.target.value })} required />
+        <button className='btn btn-dark'>Quick Save Qty+Price</button>
+      </form>
+      <DataTable columns={['id', 'crop_name', 'quantity_kg', 'unit_price', 'country', 'status']} rows={state.listings} filterKey='crop_name' onEdit={(r) => {
+        setCropEdit({
+          id: r.id,
+          farmer_id: r.farmer_id || 1,
+          crop_name: r.crop_name || '',
+          quantity_kg: r.quantity_kg || '',
+          unit_price: r.unit_price || '',
+          location: r.location || '',
+          country: r.country || 'GH',
+          status: r.status || 'OPEN'
+        })
+        setCropQuickEdit({ id: r.id, quantity_kg: r.quantity_kg || '', unit_price: r.unit_price || '' })
+        addRecentViewed(`Product #${r.id} ${r.crop_name || ''}`)
+      }} />
+      <p style={{fontSize:'.85rem',color:'#475569'}}>Tip: click Edit on a row, update fields above, then Save Edit or Quick Save Qty+Price.</p>
+      </section>}
+
+      {active === 'livestock' && <section><h3>Livestock Listings</h3><form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.createLivestock({ ...livestockForm, farmer_id: Number(livestockForm.farmer_id), quantity: Number(livestockForm.quantity), unit_price: Number(livestockForm.unit_price) }); await load() }}>
+        <input className='input' placeholder='Type' value={livestockForm.livestock_type} onChange={e => setLivestockForm({ ...livestockForm, livestock_type: e.target.value })} required />
+        <input className='input' placeholder='Quantity' value={livestockForm.quantity} onChange={e => setLivestockForm({ ...livestockForm, quantity: e.target.value })} required />
+        <input className='input' placeholder='Unit price' value={livestockForm.unit_price} onChange={e => setLivestockForm({ ...livestockForm, unit_price: e.target.value })} required />
+        <input className='input' placeholder='Location' value={livestockForm.location} onChange={e => setLivestockForm({ ...livestockForm, location: e.target.value })} />
+        <button className='btn btn-dark'>Create</button>
+      </form>
+
+      <form className='inlineForm' onSubmit={async e => {
+        e.preventDefault();
+        await api.updateLivestock(Number(livestockEdit.id), {
+          farmer_id: Number(livestockEdit.farmer_id || 1),
+          livestock_type: livestockEdit.livestock_type,
+          quantity: Number(livestockEdit.quantity),
+          unit_price: Number(livestockEdit.unit_price),
+          location: livestockEdit.location,
+          country: livestockEdit.country,
+          status: livestockEdit.status
+        });
+        await load();
+      }}>
+        <input className='input' placeholder='Listing ID to edit' value={livestockEdit.id} onChange={e => setLivestockEdit({ ...livestockEdit, id: e.target.value })} required />
+        <input className='input' placeholder='Type' value={livestockEdit.livestock_type} onChange={e => setLivestockEdit({ ...livestockEdit, livestock_type: e.target.value })} required />
+        <input className='input' placeholder='Quantity' value={livestockEdit.quantity} onChange={e => setLivestockEdit({ ...livestockEdit, quantity: e.target.value })} required />
+        <input className='input' placeholder='Unit price' value={livestockEdit.unit_price} onChange={e => setLivestockEdit({ ...livestockEdit, unit_price: e.target.value })} required />
+        <input className='input' placeholder='Location' value={livestockEdit.location} onChange={e => setLivestockEdit({ ...livestockEdit, location: e.target.value })} />
+        <button className='btn btn-dark'>Save Edit</button>
+      </form>
+
+      <form className='inlineForm' onSubmit={async e => {
+        e.preventDefault();
+        try {
+          await api.patchLivestockPriceQty(Number(livestockQuickEdit.id), {
+            quantity: Number(livestockQuickEdit.quantity),
+            unit_price: Number(livestockQuickEdit.unit_price)
+          });
+          await load();
+          alert('Livestock update approved by AI and saved.');
+        } catch(err) {
+          alert(err?.response?.data?.detail || 'Update denied/failed');
+        }
+      }}>
+        <input className='input' placeholder='Quick edit ID' value={livestockQuickEdit.id} onChange={e => setLivestockQuickEdit({ ...livestockQuickEdit, id: e.target.value })} required />
+        <input className='input' placeholder='New quantity' value={livestockQuickEdit.quantity} onChange={e => setLivestockQuickEdit({ ...livestockQuickEdit, quantity: e.target.value })} required />
+        <input className='input' placeholder='New unit price' value={livestockQuickEdit.unit_price} onChange={e => setLivestockQuickEdit({ ...livestockQuickEdit, unit_price: e.target.value })} required />
+        <button className='btn btn-dark'>Quick Save Qty+Price</button>
+      </form>
+      <DataTable columns={['id', 'livestock_type', 'quantity', 'unit_price', 'country', 'status']} rows={state.livestock} filterKey='livestock_type' onEdit={(r) => {
+        setLivestockEdit({
+          id: r.id,
+          farmer_id: r.farmer_id || 1,
+          livestock_type: r.livestock_type || '',
+          quantity: r.quantity || '',
+          unit_price: r.unit_price || '',
+          location: r.location || '',
+          country: r.country || 'GH',
+          status: r.status || 'OPEN'
+        })
+        setLivestockQuickEdit({ id: r.id, quantity: r.quantity || '', unit_price: r.unit_price || '' })
+        addRecentViewed(`Livestock #${r.id} ${r.livestock_type || ''}`)
+      }} />
+      <p style={{fontSize:'.85rem',color:'#475569'}}>Tip: click Edit on a row, change fields, then Save Edit or Quick Save Qty+Price.</p>
+      </section>}
+
+      {active === 'services' && <section><h3>Services</h3>
+        <div className='three-col'>
+          <article className='panel'><h4>Logistics Requests</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.createLogistics({ ...logisticsForm, requester_id: Number(logisticsForm.requester_id), weight_kg: Number(logisticsForm.weight_kg) }); await load() }}>
+            <input className='input' placeholder='Pickup' value={logisticsForm.pickup_location} onChange={e => setLogisticsForm({ ...logisticsForm, pickup_location: e.target.value })} />
+            <input className='input' placeholder='Dropoff' value={logisticsForm.dropoff_location} onChange={e => setLogisticsForm({ ...logisticsForm, dropoff_location: e.target.value })} />
+            <input className='input' placeholder='Cargo type' value={logisticsForm.cargo_type} onChange={e => setLogisticsForm({ ...logisticsForm, cargo_type: e.target.value })} />
+            <input className='input' placeholder='Weight kg' value={logisticsForm.weight_kg} onChange={e => setLogisticsForm({ ...logisticsForm, weight_kg: e.target.value })} />
+            <button className='btn btn-dark'>Create Logistics</button>
+          </form>
+          <form className='list' onSubmit={async e => { e.preventDefault(); await api.updateLogistics(Number(logisticsEdit.id), { ...logisticsEdit, requester_id: Number(logisticsEdit.requester_id), weight_kg: Number(logisticsEdit.weight_kg) }); await load() }}>
+            <input className='input' placeholder='ID to edit' value={logisticsEdit.id} onChange={e => setLogisticsEdit({ ...logisticsEdit, id: e.target.value })} required />
+            <input className='input' placeholder='Pickup' value={logisticsEdit.pickup_location} onChange={e => setLogisticsEdit({ ...logisticsEdit, pickup_location: e.target.value })} />
+            <input className='input' placeholder='Dropoff' value={logisticsEdit.dropoff_location} onChange={e => setLogisticsEdit({ ...logisticsEdit, dropoff_location: e.target.value })} />
+            <button className='btn btn-dark'>Save Edit</button>
+          </form>
+          <DataTable columns={['id', 'pickup_location', 'dropoff_location', 'cargo_type', 'weight_kg', 'status']} rows={state.logistics} filterKey='pickup_location' /></article>
+          <article className='panel'><h4>Equipment Rentals</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.createEquipment({ ...equipmentForm, requester_id: Number(equipmentForm.requester_id), duration_days: Number(equipmentForm.duration_days), budget: Number(equipmentForm.budget) }); await load() }}>
+            <input className='input' placeholder='Equipment' value={equipmentForm.equipment_type} onChange={e => setEquipmentForm({ ...equipmentForm, equipment_type: e.target.value })} />
+            <input className='input' placeholder='Duration days' value={equipmentForm.duration_days} onChange={e => setEquipmentForm({ ...equipmentForm, duration_days: e.target.value })} />
+            <input className='input' placeholder='Location' value={equipmentForm.location} onChange={e => setEquipmentForm({ ...equipmentForm, location: e.target.value })} />
+            <input className='input' placeholder='Budget' value={equipmentForm.budget} onChange={e => setEquipmentForm({ ...equipmentForm, budget: e.target.value })} />
+            <button className='btn btn-dark'>Create Rental</button>
+          </form>
+          <form className='list' onSubmit={async e => { e.preventDefault(); await api.updateEquipment(Number(equipmentEdit.id), { ...equipmentEdit, requester_id: Number(equipmentEdit.requester_id), duration_days: Number(equipmentEdit.duration_days), budget: Number(equipmentEdit.budget) }); await load() }}>
+            <input className='input' placeholder='ID to edit' value={equipmentEdit.id} onChange={e => setEquipmentEdit({ ...equipmentEdit, id: e.target.value })} required />
+            <input className='input' placeholder='Equipment' value={equipmentEdit.equipment_type} onChange={e => setEquipmentEdit({ ...equipmentEdit, equipment_type: e.target.value })} />
+            <input className='input' placeholder='Duration days' value={equipmentEdit.duration_days} onChange={e => setEquipmentEdit({ ...equipmentEdit, duration_days: e.target.value })} />
+            <button className='btn btn-dark'>Save Edit</button>
+          </form>
+          <DataTable columns={['id', 'equipment_type', 'duration_days', 'location', 'budget', 'status']} rows={state.equipment} filterKey='equipment_type' /></article>
+          <article className='panel'><h4>Storage Reservations</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.createStorage({ ...storageForm, requester_id: Number(storageForm.requester_id), quantity_kg: Number(storageForm.quantity_kg), duration_days: Number(storageForm.duration_days) }); await load() }}>
+            <input className='input' placeholder='Storage type' value={storageForm.storage_type} onChange={e => setStorageForm({ ...storageForm, storage_type: e.target.value })} />
+            <input className='input' placeholder='Qty kg' value={storageForm.quantity_kg} onChange={e => setStorageForm({ ...storageForm, quantity_kg: e.target.value })} />
+            <input className='input' placeholder='Location' value={storageForm.location} onChange={e => setStorageForm({ ...storageForm, location: e.target.value })} />
+            <input className='input' placeholder='Duration days' value={storageForm.duration_days} onChange={e => setStorageForm({ ...storageForm, duration_days: e.target.value })} />
+            <button className='btn btn-dark'>Create Reservation</button>
+          </form>
+          <form className='list' onSubmit={async e => { e.preventDefault(); await api.updateStorage(Number(storageEdit.id), { ...storageEdit, requester_id: Number(storageEdit.requester_id), quantity_kg: Number(storageEdit.quantity_kg), duration_days: Number(storageEdit.duration_days) }); await load() }}>
+            <input className='input' placeholder='ID to edit' value={storageEdit.id} onChange={e => setStorageEdit({ ...storageEdit, id: e.target.value })} required />
+            <input className='input' placeholder='Storage type' value={storageEdit.storage_type} onChange={e => setStorageEdit({ ...storageEdit, storage_type: e.target.value })} />
+            <input className='input' placeholder='Qty kg' value={storageEdit.quantity_kg} onChange={e => setStorageEdit({ ...storageEdit, quantity_kg: e.target.value })} />
+            <button className='btn btn-dark'>Save Edit</button>
+          </form>
+          <DataTable columns={['id', 'storage_type', 'quantity_kg', 'location', 'duration_days', 'status']} rows={state.storage} filterKey='storage_type' /></article>
+        </div>
+      </section>}
+
+      {active === 'payments' && <section><h3>Payments + Escrow</h3><form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.createPayment({ ...paymentForm, payer_id: Number(paymentForm.payer_id), payee_id: Number(paymentForm.payee_id), amount: Number(paymentForm.amount) }); await load() }}>
+        <input className='input' placeholder='Payer ID' value={paymentForm.payer_id} onChange={e => setPaymentForm({ ...paymentForm, payer_id: e.target.value })} />
+        <input className='input' placeholder='Payee ID' value={paymentForm.payee_id} onChange={e => setPaymentForm({ ...paymentForm, payee_id: e.target.value })} />
+        <input className='input' placeholder='Amount' value={paymentForm.amount} onChange={e => setPaymentForm({ ...paymentForm, amount: e.target.value })} />
+        <select className='input' value={paymentForm.country} onChange={e => setPaymentForm({ ...paymentForm, country: e.target.value, provider: paymentProviders[e.target.value][0] })}>{countries.map(c => <option key={c}>{c}</option>)}</select>
+        <select className='input' value={paymentForm.provider} onChange={e => setPaymentForm({ ...paymentForm, provider: e.target.value })}>{paymentProviders[paymentForm.country].map(p => <option key={p}>{p}</option>)}</select>
+        <label><input type='checkbox' checked={paymentForm.escrow_enabled} onChange={e => setPaymentForm({ ...paymentForm, escrow_enabled: e.target.checked })} /> Escrow</label>
+        <button className='btn btn-dark'>Create Payment</button>
+      </form>
+      <form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.updatePayment(Number(paymentEdit.id), { ...paymentEdit, payer_id: Number(paymentEdit.payer_id), payee_id: Number(paymentEdit.payee_id), amount: Number(paymentEdit.amount) }); await load() }}>
+        <input className='input' placeholder='Payment ID to edit' value={paymentEdit.id} onChange={e => setPaymentEdit({ ...paymentEdit, id: e.target.value })} required />
+        <input className='input' placeholder='Amount' value={paymentEdit.amount} onChange={e => setPaymentEdit({ ...paymentEdit, amount: e.target.value })} />
+        <select className='input' value={paymentEdit.country} onChange={e => setPaymentEdit({ ...paymentEdit, country: e.target.value, provider: paymentProviders[e.target.value][0] })}>{countries.map(c => <option key={c}>{c}</option>)}</select>
+        <select className='input' value={paymentEdit.provider} onChange={e => setPaymentEdit({ ...paymentEdit, provider: e.target.value })}>{paymentProviders[paymentEdit.country].map(p => <option key={p}>{p}</option>)}</select>
+        <button className='btn btn-dark'>Save Edit</button>
+      </form>
+      <DataTable columns={['id', 'payer_id', 'payee_id', 'amount', 'country', 'provider', 'escrow_enabled', 'status']} rows={state.payments} filterKey='provider' /></section>}
+
+      {active === 'alerts' && <section><h3>Weather Alerts (GH • NG • BF)</h3>
+        <div className='inlineForm' style={{marginBottom: 10}}>
+          <select className='input' value={alertCountryFilter} onChange={e => setAlertCountryFilter(e.target.value)}>
+            <option value='ALL'>All Countries</option>
+            <option value='GH'>Ghana</option>
+            <option value='NG'>Nigeria</option>
+            <option value='BF'>Burkina Faso</option>
+          </select>
+          <button className='btn btn-dark' onClick={async () => { await api.syncWeather(); await load(); }}>Auto Sync 3 Countries</button>
+        </div>
+
+        <form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.createAlert({ ...alertForm, valid_until: alertForm.valid_until || null }); await load() }}>
+          <select className='input' value={alertForm.country} onChange={e => setAlertForm({ ...alertForm, country: e.target.value, region: '' })}>{countries.map(c => <option key={c}>{c}</option>)}</select>
+          <select className='input' value={alertForm.region} onChange={e => setAlertForm({ ...alertForm, region: e.target.value })}>
+            <option value=''>Select Region</option>
+            {(regionMap[alertForm.country] || []).map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
+          <input className='input' placeholder='Alert type' value={alertForm.alert_type} onChange={e => setAlertForm({ ...alertForm, alert_type: e.target.value })} />
+          <input className='input' placeholder='Message' value={alertForm.message} onChange={e => setAlertForm({ ...alertForm, message: e.target.value })} />
+          <button className='btn btn-dark'>Create Alert</button>
+        </form>
+
+        <form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.updateAlert(Number(alertEdit.id), { ...alertEdit, valid_until: alertEdit.valid_until || null }); await load() }}>
+          <input className='input' placeholder='Alert ID to edit' value={alertEdit.id} onChange={e => setAlertEdit({ ...alertEdit, id: e.target.value })} required />
+          <select className='input' value={alertEdit.country} onChange={e => setAlertEdit({ ...alertEdit, country: e.target.value, region: '' })}>{countries.map(c => <option key={c}>{c}</option>)}</select>
+          <select className='input' value={alertEdit.region} onChange={e => setAlertEdit({ ...alertEdit, region: e.target.value })}>
+            <option value=''>Select Region</option>
+            {(regionMap[alertEdit.country] || []).map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
+          <input className='input' placeholder='Alert type' value={alertEdit.alert_type} onChange={e => setAlertEdit({ ...alertEdit, alert_type: e.target.value })} />
+          <input className='input' placeholder='Message' value={alertEdit.message} onChange={e => setAlertEdit({ ...alertEdit, message: e.target.value })} />
+          <button className='btn btn-dark'>Save Edit</button>
+        </form>
+        <DataTable columns={['id', 'country', 'region', 'severity', 'alert_type', 'message']} rows={state.alerts} filterKey='region' />
+      </section>}
+
+      {active === 'maps' && <section><h3>Map System (Google Maps) + Farm GPS Mapping</h3>
+        <div className='inlineForm'>
+          <select className='input' value={mapCountry} onChange={(e)=>setMapCountry(e.target.value)}>
+            <option value='GH'>Ghana</option><option value='NG'>Nigeria</option><option value='BF'>Burkina Faso</option>
+          </select>
+          <button className='btn btn-dark' onClick={() => window.open('https://maps.google.com', '_blank')}>Open Google Maps</button>
+        </div>
+        <div className='panel'>
+          {mapCountry === 'GH' && <iframe title='Ghana map' width='100%' height='320' style={{border:0}} loading='lazy' src='https://www.openstreetmap.org/export/embed.html?bbox=-3.5%2C4.5%2C1.5%2C11.5&layer=mapnik' />}
+          {mapCountry === 'NG' && <iframe title='Nigeria map' width='100%' height='320' style={{border:0}} loading='lazy' src='https://www.openstreetmap.org/export/embed.html?bbox=2.5%2C4.0%2C15.5%2C14.5&layer=mapnik' />}
+          {mapCountry === 'BF' && <iframe title='Burkina Faso map' width='100%' height='320' style={{border:0}} loading='lazy' src='https://www.openstreetmap.org/export/embed.html?bbox=-6.5%2C9.0%2C3.0%2C15.5&layer=mapnik' />}
+          <p style={{fontSize:'.85rem', color:'#64748b'}}>Step 1: Open map. Step 2: Drop pin in Google Maps. Step 3: copy lat/lng below and save farm profile.</p>
+        </div>
+
+        <form className='inlineForm' onSubmit={async (e) => {
+          e.preventDefault();
+          await api.createPassport({
+            ...farmMapForm,
+            user_id: Number(farmMapForm.user_id),
+            gps_lat: Number(farmMapForm.gps_lat),
+            gps_lng: Number(farmMapForm.gps_lng),
+            farm_size_hectares: Number(farmMapForm.farm_size_hectares)
+          });
+          await load();
+          alert('Farm GPS mapping saved to database.');
+        }}>
+          <input className='input' placeholder='User ID' value={farmMapForm.user_id} onChange={(e)=>setFarmMapForm({...farmMapForm,user_id:e.target.value})} required />
+          <input className='input' placeholder='GPS Lat' value={farmMapForm.gps_lat} onChange={(e)=>setFarmMapForm({...farmMapForm,gps_lat:e.target.value})} required />
+          <input className='input' placeholder='GPS Lng' value={farmMapForm.gps_lng} onChange={(e)=>setFarmMapForm({...farmMapForm,gps_lng:e.target.value})} required />
+          <input className='input' placeholder='Farm size (hectares)' value={farmMapForm.farm_size_hectares} onChange={(e)=>setFarmMapForm({...farmMapForm,farm_size_hectares:e.target.value})} required />
+          <input className='input' placeholder='Farm photos URLs JSON array' value={farmMapForm.farm_photo_urls} onChange={(e)=>setFarmMapForm({...farmMapForm,farm_photo_urls:e.target.value})} />
+          <button className='btn btn-dark'>Save Farm GPS</button>
+        </form>
+      </section>}
+
+      {active === 'messaging' && <section><h3>Messaging (Firebase Cloud Messaging)</h3>
+        <form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.registerDeviceToken({ user_id: 1, platform: 'web', token: fcmToken }); setFcmToken(''); await load(); }}>
+          <input className='input' placeholder='FCM device token' value={fcmToken} onChange={(e)=>setFcmToken(e.target.value)} required />
+          <button className='btn btn-dark'>Register Device Token</button>
+        </form>
+        <DataTable columns={['id','user_id','platform','token','created_at']} rows={state.deviceTokens} filterKey='platform' />
+      </section>}
+
+      {active === 'ai-disease' && <section><h3>AI Disease Analyzer</h3>
+        <form className='inlineForm' onSubmit={async e => {
+          e.preventDefault();
+          const r = await api.analyzeDisease({ user_id: Number(diseaseForm.user_id), crop_type: diseaseForm.target, image_url: diseaseForm.image_url });
+          alert(`Diagnosis: ${r.diagnosis} | Confidence: ${Math.round((r.confidence||0)*100)}%`);
+          await load();
+        }}>
+          <input className='input' placeholder='User ID' value={diseaseForm.user_id} onChange={(e)=>setDiseaseForm({...diseaseForm,user_id:e.target.value})} />
+          <select className='input' value={diseaseForm.category} onChange={(e)=>setDiseaseForm({...diseaseForm,category:e.target.value,target:''})}>
+            <option value='crop'>Crop Disease</option>
+            <option value='animal'>Animal Disease</option>
+          </select>
+          <select className='input' value={diseaseForm.target} onChange={(e)=>setDiseaseForm({...diseaseForm,target:e.target.value})} required>
+            <option value=''>Select</option>
+            {(diseaseForm.category === 'crop' ? cropOptions : animalOptions).map(x => <option key={x} value={x}>{x}</option>)}
+          </select>
+          <input className='input' placeholder='Image URL' value={diseaseForm.image_url} onChange={(e)=>setDiseaseForm({...diseaseForm,image_url:e.target.value})} required />
+          <button className='btn btn-dark'>Analyze</button>
+        </form>
+        <DataTable columns={['id','user_id','crop_type','image_url','result','created_at']} rows={state.diseaseScans} filterKey='crop_type' />
+      </section>}
+
+      {active === 'government' && <section><h3>Government Integration</h3>
+        <article className='panel'>
+          <h4>Official Programs & Subsidies (auto-check)</h4>
+          <DataTable columns={['country','agency','headline','status','source_url','last_checked_utc']} rows={state.govPrograms} filterKey='agency' />
+          <p style={{fontSize:'.82rem', color:'#64748b'}}>Best-effort direct checks from official ministry websites. Open source links for complete current program details.</p>
+        </article>
+
+        <div className='two-col' style={{marginTop:10}}>
+          <article className='panel'>
+            <h4>Distribute Subsidy</h4>
+            <form className='list' onSubmit={async e => { e.preventDefault(); await api.govDistributeSubsidy({ ...govSubsidyForm, farmer_user_id: Number(govSubsidyForm.farmer_user_id), amount: Number(govSubsidyForm.amount) }); alert('Subsidy recorded successfully'); await load(); }}>
+              <select className='input' value={govSubsidyForm.country} onChange={(e)=>setGovSubsidyForm({...govSubsidyForm,country:e.target.value})}><option value='GH'>Ghana</option><option value='NG'>Nigeria</option><option value='BF'>Burkina Faso</option></select>
+              <input className='input' placeholder='Agency' value={govSubsidyForm.agency} onChange={(e)=>setGovSubsidyForm({...govSubsidyForm,agency:e.target.value})} />
+              <input className='input' placeholder='Farmer User ID' value={govSubsidyForm.farmer_user_id} onChange={(e)=>setGovSubsidyForm({...govSubsidyForm,farmer_user_id:e.target.value})} />
+              <input className='input' placeholder='Amount' value={govSubsidyForm.amount} onChange={(e)=>setGovSubsidyForm({...govSubsidyForm,amount:e.target.value})} />
+              <button className='btn btn-dark'>Record Subsidy</button>
+            </form>
+          </article>
+
+          <article className='panel'>
+            <h4>Communicate with Farmers</h4>
+            <form className='list' onSubmit={async e => { e.preventDefault(); await api.govCommunicate(govMsgForm); alert('Government message queued'); }}>
+              <select className='input' value={govMsgForm.country} onChange={(e)=>setGovMsgForm({...govMsgForm,country:e.target.value})}><option value='GH'>Ghana</option><option value='NG'>Nigeria</option><option value='BF'>Burkina Faso</option></select>
+              <input className='input' placeholder='Target (farmers/coops/all)' value={govMsgForm.target} onChange={(e)=>setGovMsgForm({...govMsgForm,target:e.target.value})} />
+              <input className='input' placeholder='Message text' value={govMsgForm.text} onChange={(e)=>setGovMsgForm({...govMsgForm,text:e.target.value})} />
+              <button className='btn btn-dark'>Send Notice</button>
+            </form>
+          </article>
+        </div>
+      </section>}
+
+      {active === 'contracts' && <section><h3>Cross-Border Contracts (MVP)</h3><form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.createContract({ ...contractForm, quantity: Number(contractForm.quantity), price: Number(contractForm.price), delivery_date: new Date(contractForm.delivery_date).toISOString() }); await load() }}>
+        <select className='input' value={contractForm.origin_country} onChange={e => setContractForm({ ...contractForm, origin_country: e.target.value })}>{countries.map(c => <option key={c}>{c}</option>)}</select>
+        <select className='input' value={contractForm.destination_country} onChange={e => setContractForm({ ...contractForm, destination_country: e.target.value })}>{countries.map(c => <option key={c}>{c}</option>)}</select>
+        <input className='input' placeholder='Commodity' value={contractForm.commodity} onChange={e => setContractForm({ ...contractForm, commodity: e.target.value })} />
+        <input className='input' placeholder='Quantity' value={contractForm.quantity} onChange={e => setContractForm({ ...contractForm, quantity: e.target.value })} />
+        <input className='input' placeholder='Price' value={contractForm.price} onChange={e => setContractForm({ ...contractForm, price: e.target.value })} />
+        <input className='input' type='date' value={contractForm.delivery_date} onChange={e => setContractForm({ ...contractForm, delivery_date: e.target.value })} />
+        <input className='input' placeholder='Payment terms' value={contractForm.payment_terms} onChange={e => setContractForm({ ...contractForm, payment_terms: e.target.value })} />
+        <button className='btn btn-dark'>Create Contract</button>
+      </form>
+      <form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.updateContract(Number(contractEdit.id), { ...contractEdit, quantity: Number(contractEdit.quantity), price: Number(contractEdit.price), delivery_date: new Date(contractEdit.delivery_date).toISOString() }); await load() }}>
+        <input className='input' placeholder='Contract ID to edit' value={contractEdit.id} onChange={e => setContractEdit({ ...contractEdit, id: e.target.value })} required />
+        <input className='input' placeholder='Commodity' value={contractEdit.commodity} onChange={e => setContractEdit({ ...contractEdit, commodity: e.target.value })} />
+        <input className='input' placeholder='Quantity' value={contractEdit.quantity} onChange={e => setContractEdit({ ...contractEdit, quantity: e.target.value })} />
+        <input className='input' placeholder='Price' value={contractEdit.price} onChange={e => setContractEdit({ ...contractEdit, price: e.target.value })} />
+        <button className='btn btn-dark'>Save Edit</button>
+      </form>
+      <DataTable columns={['id', 'origin_country', 'destination_country', 'commodity', 'quantity', 'price', 'status']} rows={state.contracts} filterKey='commodity' /></section>}
+
+      {active === 'admin' && ((me?.role || '').toLowerCase() === 'admin') && <section>
+        <h2>Admin Dashboard (Admin Only)</h2>
+        <div className='kpi-grid'>
+          <article className='kpi-card'><p>User management</p><strong>{state.users.length}</strong></article>
+          <article className='kpi-card'><p>Crop marketplace monitoring</p><strong>{state.listings.length}</strong></article>
+          <article className='kpi-card'><p>Payment tracking</p><strong>{state.payments.length}</strong></article>
+          <article className='kpi-card'><p>Logistics monitoring</p><strong>{state.logistics.length}</strong></article>
+          <article className='kpi-card'><p>Disputes</p><strong>{state.disputes.length}</strong></article>
+          <article className='kpi-card'><p>Fraud flags</p><strong>{state.fraudFlags.length}</strong></article>
+        </div>
+
+        <article className='panel'>
+          <h3>User Management</h3>
+          <DataTable columns={['id','full_name','phone','country','region','role']} rows={state.users} filterKey='full_name' />
+        </article>
+
+        <div className='two-col'>
+          <article className='panel'>
+            <h3>Dispute Resolution (Denied Changes)</h3>
+            <DataTable columns={['id','module','record_id','decision','reason','created_at']} rows={state.disputes} filterKey='module' />
+          </article>
+          <article className='panel'>
+            <h3>Fraud Detection (High-Value Payments)</h3>
+            <DataTable columns={['id','payer_id','payee_id','amount','country','provider','status']} rows={state.fraudFlags} filterKey='provider' />
+          </article>
+        </div>
+      </section>}
+
+    </main>
+  </div>
+}
