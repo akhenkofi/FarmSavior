@@ -137,6 +137,7 @@ export default function App() {
   const [contractForm, setContractForm] = useState({ origin_country: 'GH', destination_country: 'NG', commodity: '', quantity: '', price: '', delivery_date: '', payment_terms: '', status: 'DRAFT' })
   const [contractEdit, setContractEdit] = useState({ id: '', origin_country: 'GH', destination_country: 'NG', commodity: '', quantity: '', price: '', delivery_date: '', payment_terms: '', status: 'DRAFT' })
   const [mapCountry, setMapCountry] = useState('GH')
+  const [expandedTradeCommodity, setExpandedTradeCommodity] = useState('')
 
   const t = (en, fr) => (uiLang === 'fr' ? fr : en)
   const [fcmToken, setFcmToken] = useState('')
@@ -290,6 +291,12 @@ export default function App() {
     ['Payments', state.metrics.payments_total || 0],
     ['Contracts', state.metrics.contracts_total || 0],
   ], [state.metrics])
+
+  useEffect(() => {
+    if (!expandedTradeCommodity && state.tradeExportStats.length) {
+      setExpandedTradeCommodity(state.tradeExportStats[0].commodity_key || state.tradeExportStats[0].commodity)
+    }
+  }, [state.tradeExportStats, expandedTradeCommodity])
 
   const publicWeatherRows = state.publicWeather.length ? state.publicWeather : featuredWeatherSeed
   const publicNewsRows = state.news.length ? state.news : featuredNewsSeed
@@ -507,10 +514,27 @@ export default function App() {
 
       <article className='panel' style={{marginTop:10}}>
         <h3>🌍 Current Export/Import Statistics (Top 10 + Volumes)</h3>
-        <p style={{fontSize:'.85rem',color:'#475569'}}>Coverage: Poultry, Sheep & Goats, Cattle, Rice, and major commodities.</p>
-        <div className='three-col'>
-          {state.tradeExportStats.map((c, i) => (
-            <div className='panel' key={`trade-${i}`} style={{padding:10}}>
+        <p style={{fontSize:'.85rem',color:'#475569'}}>Select a commodity below to expand its export/import rankings.</p>
+
+        <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
+          {state.tradeExportStats.map((c, i) => {
+            const key = c.commodity_key || c.commodity || `c-${i}`
+            return (
+              <button
+                key={`trade-tab-${key}`}
+                className={`tab ${expandedTradeCommodity === key ? 'active' : ''}`}
+                onClick={() => setExpandedTradeCommodity(key)}
+              >
+                {c.commodity}
+              </button>
+            )
+          })}
+        </div>
+
+        {state.tradeExportStats
+          .filter((c, i) => (c.commodity_key || c.commodity || `c-${i}`) === expandedTradeCommodity)
+          .map((c, i) => (
+            <div className='panel' key={`trade-expanded-${i}`} style={{padding:10}}>
               <h4 style={{marginTop:0}}>{c.commodity}</h4>
               <div style={{fontWeight:600, marginBottom:6}}>Top 10 Exporters</div>
               <div className='list'>
@@ -532,8 +556,8 @@ export default function App() {
               </div>
             </div>
           ))}
-          {!state.tradeExportStats.length && <div className='list-row'><span>Loading current export/import statistics…</span></div>}
-        </div>
+
+        {!state.tradeExportStats.length && <div className='list-row'><span>Loading current export/import statistics…</span></div>}
       </article>
 
       <article className='panel' style={{marginTop:10}}>
