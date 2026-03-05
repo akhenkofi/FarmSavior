@@ -173,6 +173,7 @@ export default function App() {
   const [contractEdit, setContractEdit] = useState({ id: '', origin_country: 'GH', destination_country: 'NG', commodity: '', quantity: '', price: '', delivery_date: '', payment_terms: '', status: 'DRAFT' })
   const [mapCountry, setMapCountry] = useState('GH')
   const [expandedWeatherCountry, setExpandedWeatherCountry] = useState('GH')
+  const [expandedSpotCommodity, setExpandedSpotCommodity] = useState('')
   const [expandedTradeCommodity, setExpandedTradeCommodity] = useState('')
 
   const t = (en, fr) => (uiLang === 'fr' ? fr : en)
@@ -339,6 +340,13 @@ export default function App() {
       setExpandedTradeCommodity(tradeRows[0].commodity_key || tradeRows[0].commodity)
     }
   }, [state.tradeExportStats, expandedTradeCommodity])
+
+  useEffect(() => {
+    const spotRows = state.spotTrading.length ? state.spotTrading : featuredSpotSeed
+    if (!expandedSpotCommodity && spotRows.length) {
+      setExpandedSpotCommodity(spotRows[0].commodity)
+    }
+  }, [state.spotTrading, expandedSpotCommodity])
 
   const publicWeatherRows = state.publicWeather.length ? state.publicWeather : featuredWeatherSeed
   const publicNewsRows = state.news.length ? state.news : featuredNewsSeed
@@ -600,31 +608,45 @@ export default function App() {
             <h3 style={{margin:0}}>📈 Spot Trading (GH • NG • BF • World Avg)</h3>
             <button className='btn' onClick={() => window.print()}>Export Briefing (PDF)</button>
           </div>
+          <div className='tabs' style={{marginTop:8, marginBottom:8, flexWrap:'wrap'}}>
+            {publicSpotRows.map((r, i) => (
+              <button
+                key={`spot-tab-${r.commodity || i}`}
+                className={`tab ${expandedSpotCommodity === r.commodity ? 'active' : ''}`}
+                onClick={() => setExpandedSpotCommodity(r.commodity)}
+              >
+                {r.commodity}
+              </button>
+            ))}
+          </div>
+
           <div className='list'>
-            {publicSpotRows.map((r, i) => {
-              const hist = publicSpotHistoryRows.find(h => h.commodity === r.commodity) || {}
-              const max = Math.max(r.GH || 0, r.NG || 0, r.BF || 0, r.WORLD_AVG || 0, 1)
-              const bar = (v) => `${Math.max(6, Math.round((v / max) * 100))}%`
-              const t7 = hist.trend_7d || []
-              const min = Math.min(...(t7.length ? t7 : [0]))
-              const max7 = Math.max(...(t7.length ? t7 : [1]))
-              const points = t7.map((v, idx) => `${(idx/Math.max(1,t7.length-1))*180},${28-((v-min)/Math.max(1,(max7-min)))*24}`).join(' ')
-              return <div key={`st-right-${i}`} className='panel' style={{padding:10}}>
-                <div style={{fontWeight:700, marginBottom:6}}>{r.commodity}</div>
-                <div className='list-row'><span>Ghana ({r.GH})</span><div style={{height:8,width:bar(r.GH),background:'#16a34a',borderRadius:99}} /></div>
-                <div className='list-row'><span>Nigeria ({r.NG})</span><div style={{height:8,width:bar(r.NG),background:'#0284c7',borderRadius:99}} /></div>
-                <div className='list-row'><span>Burkina Faso ({r.BF})</span><div style={{height:8,width:bar(r.BF),background:'#ea580c',borderRadius:99}} /></div>
-                <div className='list-row'><span>World Avg ({r.WORLD_AVG})</span><div style={{height:8,width:bar(r.WORLD_AVG),background:'#334155',borderRadius:99}} /></div>
-                <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#475569',marginTop:6}}>
-                  <span>7d: {hist.change_pct_7d ?? 0}%</span><span>30d: {hist.change_pct_30d ?? 0}%</span>
+            {publicSpotRows
+              .filter((r) => !expandedSpotCommodity || r.commodity === expandedSpotCommodity)
+              .map((r, i) => {
+                const hist = publicSpotHistoryRows.find(h => h.commodity === r.commodity) || {}
+                const max = Math.max(r.GH || 0, r.NG || 0, r.BF || 0, r.WORLD_AVG || 0, 1)
+                const bar = (v) => `${Math.max(6, Math.round((v / max) * 100))}%`
+                const t7 = hist.trend_7d || []
+                const min = Math.min(...(t7.length ? t7 : [0]))
+                const max7 = Math.max(...(t7.length ? t7 : [1]))
+                const points = t7.map((v, idx) => `${(idx/Math.max(1,t7.length-1))*180},${28-((v-min)/Math.max(1,(max7-min)))*24}`).join(' ')
+                return <div key={`st-right-${i}`} className='panel' style={{padding:10}}>
+                  <div style={{fontWeight:700, marginBottom:6}}>{r.commodity}</div>
+                  <div style={{fontSize:12,color:'#64748b',marginBottom:6}}>Date: {r.updated_at_utc || hist.updated_at_utc || 'Live feed'}</div>
+                  <div className='list-row'><span>Ghana ({r.GH})</span><div style={{height:8,width:bar(r.GH),background:'#16a34a',borderRadius:99}} /></div>
+                  <div className='list-row'><span>Nigeria ({r.NG})</span><div style={{height:8,width:bar(r.NG),background:'#0284c7',borderRadius:99}} /></div>
+                  <div className='list-row'><span>Burkina Faso ({r.BF})</span><div style={{height:8,width:bar(r.BF),background:'#ea580c',borderRadius:99}} /></div>
+                  <div className='list-row'><span>World Avg ({r.WORLD_AVG})</span><div style={{height:8,width:bar(r.WORLD_AVG),background:'#334155',borderRadius:99}} /></div>
+                  <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#475569',marginTop:6}}>
+                    <span>7d: {hist.change_pct_7d ?? 0}%</span><span>30d: {hist.change_pct_30d ?? 0}%</span>
+                  </div>
+                  <svg width='180' height='32' style={{marginTop:4, background:'#f8fafc', borderRadius:6}}>
+                    <polyline fill='none' stroke='#0f766e' strokeWidth='2' points={points || '0,28 180,4'} />
+                  </svg>
+                  <div style={{fontSize:11,color:'#64748b'}}>Source: {hist.provenance || 'FarmSavior market feed'}</div>
                 </div>
-                <svg width='180' height='32' style={{marginTop:4, background:'#f8fafc', borderRadius:6}}>
-                  <polyline fill='none' stroke='#0f766e' strokeWidth='2' points={points || '0,28 180,4'} />
-                </svg>
-                <div style={{fontSize:11,color:'#64748b'}}>Source: {hist.provenance || 'FarmSavior market feed'}</div>
-              </div>
-            })}
-            {false && <div className='list-row'><span>Loading spot trading data…</span></div>}
+              })}
           </div>
         </article>
       </div>
