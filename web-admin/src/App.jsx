@@ -9,16 +9,16 @@ const cropOptions = ['Cassava','Maize','Tomato','Rice','Yam','Plantain','Onion',
 const animalOptions = ['Poultry','Goats','Sheep','Cattle','Rabbits','Grasscutters','Horses','Dogs']
 
 const featuredProductsSeed = [
-  { name: 'Goats 50 units', key: 'Goats' },
-  { name: 'Sheep 40 units', key: 'Sheep' },
-  { name: 'Day-old Chicks 2,000 units', key: 'Day-old Chicks' },
-  { name: 'Cows 25 units', key: 'Cows' },
-  { name: 'Cashew 12,000 kg', key: 'Cashew' },
-  { name: 'Mango 8,500 kg', key: 'Mango' },
-  { name: 'Coconuts 6,000 units', key: 'Coconuts' },
-  { name: 'Coffee 9,000 kg', key: 'Coffee' },
-  { name: 'Cocoa 7,500 kg', key: 'Cocoa' },
-  { name: 'Rice 15,000 kg', key: 'Rice' }
+  { name: 'Goats' },
+  { name: 'Sheep' },
+  { name: 'Day-old Chicks' },
+  { name: 'Cows' },
+  { name: 'Cashew' },
+  { name: 'Mango' },
+  { name: 'Coconuts' },
+  { name: 'Coffee' },
+  { name: 'Cocoa' },
+  { name: 'Rice' }
 ]
 
 const featuredServicesSeed = [
@@ -360,7 +360,7 @@ export default function App() {
       rice: ['rice']
     }
 
-    for (const item of featuredProductsSeed) out.set(item.key || item.name, 0)
+    for (const item of featuredProductsSeed) out.set(item.name, 0)
 
     merged.forEach((x) => {
       const rawName = norm(x.crop_name || x.livestock_type)
@@ -368,11 +368,10 @@ export default function App() {
       if (!rawName || !Number.isFinite(qty)) return
 
       for (const item of featuredProductsSeed) {
-        const key = norm(item.key || item.name)
+        const key = norm(item.name)
         const candidates = alias[key] || [key]
         if (candidates.some((c) => rawName.includes(c))) {
-          const canon = item.key || item.name
-          out.set(canon, Number(out.get(canon) || 0) + qty)
+          out.set(item.name, Number(out.get(item.name) || 0) + qty)
           break
         }
       }
@@ -459,7 +458,7 @@ export default function App() {
               featuredProductsSeed.filter(x => !publicQuery || `${x.name}`.toLowerCase().includes(publicQuery.toLowerCase())),
               (n) => ({ name: `Market item ${n}` })
             ).map((x,i)=>{
-              const inventory = Number(productInventoryByName.get(x.key || x.name) || 0)
+              const inventory = Number(productInventoryByName.get(x.name) || 0)
               return <div className='list-row' key={`p-${i}`}><span>{x.name}</span><strong>{inventory.toLocaleString()}</strong></div>
             })}
           </div>
