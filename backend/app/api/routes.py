@@ -17,14 +17,15 @@ from app.models.models import (
     LogisticsRequest, LogisticsStatus, Payment, WeatherAlert,
     UserRole, CountryCode, IDVerification, FarmPassport,
     LivestockListing, EquipmentRental, StorageReservation, TradeContract, VerificationReview, UpdateReview,
-    DeviceToken, DiseaseScan
+    DeviceToken, DiseaseScan, SheepGoatRecord, SheepGoatBreedingGroup, SheepGoatSubscription
 )
 from app.schemas.schemas import (
     UserCreate, UserLogin, OTPVerify, TokenResponse, FarmerProfileIn,
     CropListingIn, OfferIn, LogisticsIn, LogisticsAcceptIn,
     PaymentIn, WeatherAlertIn, IDVerificationIn, FarmPassportIn,
     LivestockListingIn, EquipmentRentalIn, StorageReservationIn, ContractIn,
-    VerificationDecisionIn, DeviceTokenIn, DiseaseAnalyzeIn
+    VerificationDecisionIn, DeviceTokenIn, DiseaseAnalyzeIn,
+    SheepGoatRecordIn, SheepGoatBreedingGroupIn, SheepGoatSubscriptionIn
 )
 from app.core.config import settings
 from app.core.security import create_access_token, hash_password, verify_password, decode_access_token
@@ -967,6 +968,133 @@ def patch_livestock_price_qty(listing_id: int, payload: dict = Body(...), db: Se
     db.commit()
     db.refresh(listing)
     return {'decision': decision, 'ai_score': score, 'reason': reason, 'record': listing}
+
+
+@router.get('/livestock-records/dashboard')
+def livestock_records_dashboard(db: Session = Depends(get_db)):
+    total = db.query(func.count(SheepGoatRecord.id)).scalar() or 0
+    sheep = db.query(func.count(SheepGoatRecord.id)).filter(SheepGoatRecord.species == 'SHEEP').scalar() or 0
+    goats = db.query(func.count(SheepGoatRecord.id)).filter(SheepGoatRecord.species == 'GOAT').scalar() or 0
+    ewes = db.query(func.count(SheepGoatRecord.id)).filter(SheepGoatRecord.animal_type == 'EWE').scalar() or 0
+    rams = db.query(func.count(SheepGoatRecord.id)).filter(SheepGoatRecord.animal_type == 'RAM').scalar() or 0
+    does = db.query(func.count(SheepGoatRecord.id)).filter(SheepGoatRecord.animal_type == 'DOE').scalar() or 0
+    bucks = db.query(func.count(SheepGoatRecord.id)).filter(SheepGoatRecord.animal_type == 'BUCK').scalar() or 0
+    groups = db.query(func.count(SheepGoatBreedingGroup.id)).scalar() or 0
+    return {'totalAnimals': total, 'sheep': sheep, 'goats': goats, 'ewes': ewes, 'rams': rams, 'does': does, 'bucks': bucks, 'groups': groups}
+
+
+@router.get('/livestock-records/animals')
+def list_livestock_records(species: Optional[str] = None, animal_type: Optional[str] = None, db: Session = Depends(get_db)):
+    q = db.query(SheepGoatRecord)
+    if species:
+        q = q.filter(SheepGoatRecord.species == species.upper())
+    if animal_type:
+        q = q.filter(SheepGoatRecord.animal_type == animal_type.upper())
+    return q.order_by(SheepGoatRecord.id.desc()).all()
+
+
+@router.post('/livestock-records/animals')
+def create_livestock_record(payload: SheepGoatRecordIn, db: Session = Depends(get_db)):
+    rec = SheepGoatRecord(**payload.model_dump())
+    db.add(rec)
+    db.commit()
+    db.refresh(rec)
+    return rec
+
+
+@router.put('/livestock-records/animals/{record_id}')
+def update_livestock_record(record_id: int, payload: SheepGoatRecordIn, db: Session = Depends(get_db)):
+    rec = db.query(SheepGoatRecord).filter(SheepGoatRecord.id == record_id).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail='Livestock record not found')
+    for k, v in payload.model_dump().items():
+        setattr(rec, k, v)
+    db.commit()
+    db.refresh(rec)
+    return rec
+
+
+@router.delete('/livestock-records/animals/{record_id}')
+def delete_livestock_record(record_id: int, db: Session = Depends(get_db)):
+    rec = db.query(SheepGoatRecord).filter(SheepGoatRecord.id == record_id).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail='Livestock record not found')
+    db.delete(rec)
+    db.commit()
+    return {'message': 'deleted'}
+
+
+@router.get('/livestock-records/breeding-groups')
+def list_breeding_groups(db: Session = Depends(get_db)):
+    return db.query(SheepGoatBreedingGroup).order_by(SheepGoatBreedingGroup.id.desc()).all()
+
+
+@router.post('/livestock-records/breeding-groups')
+def create_breeding_group(payload: SheepGoatBreedingGroupIn, db: Session = Depends(get_db)):
+    rec = SheepGoatBreedingGroup(**payload.model_dump())
+    db.add(rec)
+    db.commit()
+    db.refresh(rec)
+    return rec
+
+
+@router.get('/livestock-records/subscription/plans')
+def livestock_subscription_plans():
+    # Pricing positioned to undercut common international livestock record tools
+    # and support all major currencies used across target African markets.
+    return {
+        'note': 'Prices are monthly base rates and can be billed in supported currencies by FX conversion.',
+        'supported_currencies': ['GHS', 'NGN', 'XOF', 'KES', 'TZS', 'UGX', 'ZAR', 'USD', 'EUR'],
+        'plans': [
+            {
+                'plan_code': 'starter',
+                'name': 'Sheep & Goats Starter',
+                'monthly_usd': 4.99,
+                'yearly_usd': 49.99,
+                'features': ['Up to 300 animals', 'Basic records', 'Breeding groups', 'CSV export']
+            },
+            {
+                'plan_code': 'pro',
+                'name': 'Sheep & Goats Pro',
+                'monthly_usd': 9.99,
+                'yearly_usd': 99.99,
+                'features': ['Up to 2,500 animals', 'Health and cull tracking', 'Performance analytics', 'Team access (3 users)']
+            },
+            {
+                'plan_code': 'enterprise',
+                'name': 'Sheep & Goats Enterprise',
+                'monthly_usd': 24.99,
+                'yearly_usd': 249.99,
+                'features': ['Unlimited animals', 'Multi-farm operations', 'Priority support', 'API/data integrations']
+            }
+        ],
+        'coverage': 'Available for all African countries and all FarmSavior listed countries.'
+    }
+
+
+@router.post('/livestock-records/subscription/checkout')
+def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Session = Depends(get_db)):
+    plans = {
+        'starter': {'monthly': 4.99, 'yearly': 49.99},
+        'pro': {'monthly': 9.99, 'yearly': 99.99},
+        'enterprise': {'monthly': 24.99, 'yearly': 249.99}
+    }
+    amount = plans[payload.plan_code][payload.billing_cycle]
+    ref = f"SGSUB-{int(datetime.utcnow().timestamp())}-{random.randint(100,999)}"
+    rec = SheepGoatSubscription(
+        user_id=payload.user_id,
+        plan_code=payload.plan_code,
+        country=payload.country,
+        billing_cycle=payload.billing_cycle,
+        amount=amount,
+        currency=payload.currency,
+        status='ACTIVE',
+        reference=ref
+    )
+    db.add(rec)
+    db.commit()
+    db.refresh(rec)
+    return {'message': 'subscription activated', 'reference': ref, 'subscription': rec}
 
 
 @router.post('/marketplace/offers')

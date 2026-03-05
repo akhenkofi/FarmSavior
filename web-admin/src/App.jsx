@@ -83,7 +83,7 @@ export default function App() {
   const [publicQuery, setPublicQuery] = useState('')
   const [recentSearches, setRecentSearches] = useState([])
   const [recentViewed, setRecentViewed] = useState([])
-  const [state, setState] = useState({ metrics: {}, users: [], listings: [], livestock: [], logistics: [], equipment: [], storage: [], payments: [], alerts: [], contracts: [], idv: [], passports: [], verificationApps: [], approvedAccounts: [], deviceTokens: [], diseaseScans: [], disputes: [], fraudFlags: [], news: [], publicWeather: [], govPrograms: [], spotTrading: [], spotHistory: [], tradeExportStats: [] })
+  const [state, setState] = useState({ metrics: {}, users: [], listings: [], livestock: [], logistics: [], equipment: [], storage: [], payments: [], alerts: [], contracts: [], idv: [], passports: [], verificationApps: [], approvedAccounts: [], deviceTokens: [], diseaseScans: [], disputes: [], fraudFlags: [], news: [], publicWeather: [], govPrograms: [], spotTrading: [], spotHistory: [], tradeExportStats: [], livestockPlans: [] })
   const [me, setMe] = useState(null)
   const lastTrackRef = useRef('')
 
@@ -127,7 +127,7 @@ export default function App() {
     setMe(meRes)
     const isAdmin = (meRes?.role || '').toLowerCase() === 'admin'
 
-    const [metrics, users, listings, livestock, logistics, equipment, storage, payments, alerts, contracts, idv, passports, regions, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, govPrograms, spotTrading, spotHistory, tradeExportStats] = await Promise.all([
+    const [metrics, users, listings, livestock, logistics, equipment, storage, payments, alerts, contracts, idv, passports, regions, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, govPrograms, spotTrading, spotHistory, tradeExportStats, livestockPlans] = await Promise.all([
       api.fetchMetrics(), api.fetchUsers(), api.fetchListings(), api.fetchLivestock(), api.fetchLogistics(), api.fetchEquipment(), api.fetchStorage(), api.fetchPayments(), api.fetchAlerts(alertCountryFilter === 'ALL' ? undefined : alertCountryFilter), api.fetchContracts(), api.fetchIdVerifications(), api.fetchPassports(), api.fetchWeatherRegions(), api.fetchVerificationApps(), api.fetchApprovedAccounts(), api.fetchDeviceTokens(), api.fetchDiseaseScans(),
       isAdmin ? api.fetchAdminDisputes() : Promise.resolve([]),
       isAdmin ? api.fetchAdminFraudFlags() : Promise.resolve([]),
@@ -135,10 +135,11 @@ export default function App() {
       api.fetchGovPrograms().catch(() => ({ items: [] })),
       api.fetchSpotTrading().catch(() => ({ items: [] })),
       api.fetchSpotTradingHistory().catch(() => ({ items: [] })),
-      api.fetchTradeExportStats().catch(() => ({ items: [] }))
+      api.fetchTradeExportStats().catch(() => ({ items: [] })),
+      api.fetchLivestockRecordsPlans().catch(() => ({ plans: [] }))
     ])
     setRegionMap(regions || { GH: [], NG: [], BF: [] })
-    setState({ metrics, users, listings, livestock, logistics, equipment, storage, payments, alerts, contracts, idv, passports, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, govPrograms: govPrograms.items || [], spotTrading: spotTrading.items || [], spotHistory: spotHistory.items || [], tradeExportStats: tradeExportStats.items || [] })
+    setState({ metrics, users, listings, livestock, logistics, equipment, storage, payments, alerts, contracts, idv, passports, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, govPrograms: govPrograms.items || [], spotTrading: spotTrading.items || [], spotHistory: spotHistory.items || [], tradeExportStats: tradeExportStats.items || [], livestockPlans: livestockPlans.plans || [] })
   }
 
   useEffect(() => { if (token) load().catch(console.error) }, [token, alertCountryFilter])
@@ -186,9 +187,10 @@ export default function App() {
       api.fetchGovPrograms().catch(() => ({ items: [] })),
       api.fetchSpotTrading().catch(() => ({ items: [] })),
       api.fetchSpotTradingHistory().catch(() => ({ items: [] })),
-      api.fetchTradeExportStats().catch(() => ({ items: [] }))
-    ]).then(([listings, livestock, logistics, equipment, storage, alerts, news, publicWeather, govPrograms, spotTrading, spotHistory, tradeExportStats]) => {
-      setState(prev => ({ ...prev, listings, livestock, logistics, equipment, storage, alerts, news, publicWeather, govPrograms: govPrograms.items || [], spotTrading: spotTrading.items || [], spotHistory: spotHistory.items || [], tradeExportStats: tradeExportStats.items || [] }))
+      api.fetchTradeExportStats().catch(() => ({ items: [] })),
+      api.fetchLivestockRecordsPlans().catch(() => ({ plans: [] }))
+    ]).then(([listings, livestock, logistics, equipment, storage, alerts, news, publicWeather, govPrograms, spotTrading, spotHistory, tradeExportStats, livestockPlans]) => {
+      setState(prev => ({ ...prev, listings, livestock, logistics, equipment, storage, alerts, news, publicWeather, govPrograms: govPrograms.items || [], spotTrading: spotTrading.items || [], spotHistory: spotHistory.items || [], tradeExportStats: tradeExportStats.items || [], livestockPlans: livestockPlans.plans || [] }))
     })
   }, [token])
 
@@ -486,6 +488,24 @@ export default function App() {
             </div>
           ))}
           {!state.tradeExportStats.length && <div className='list-row'><span>Loading current export/import statistics…</span></div>}
+        </div>
+      </article>
+
+      <article className='panel' style={{marginTop:10}}>
+        <h3>🐑 Sheep & Goats Records System (All Africa)</h3>
+        <p style={{fontSize:'.85rem',color:'#475569'}}>Full records system now integrated into FarmSavior backend (animals, breeding groups, dashboards, subscriptions). Billing supports all major African currencies.</p>
+        <div className='three-col'>
+          {state.livestockPlans.map((p, i) => (
+            <div className='panel' key={`plan-${i}`} style={{padding:10}}>
+              <h4 style={{marginTop:0}}>{p.name}</h4>
+              <div className='list-row'><span>Monthly</span><strong>${p.monthly_usd}</strong></div>
+              <div className='list-row'><span>Yearly</span><strong>${p.yearly_usd}</strong></div>
+              <div className='list'>
+                {(p.features || []).map((f, j) => <div className='list-row' key={`pf-${i}-${j}`}><span>{f}</span></div>)}
+              </div>
+            </div>
+          ))}
+          {!state.livestockPlans.length && <div className='list-row'><span>Loading livestock subscription plans…</span></div>}
         </div>
       </article>
     </div>

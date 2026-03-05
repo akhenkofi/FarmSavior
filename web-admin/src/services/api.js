@@ -78,6 +78,8 @@ export const govCommunicate = async (payload) => (await api.post('/gov/communica
 export const fetchSpotTrading = async () => (await api.get('/market/spot-trading')).data
 export const fetchSpotTradingHistory = async () => (await api.get('/market/spot-trading/history')).data
 export const fetchTradeExportStats = async () => (await api.get('/trade/export-stats')).data
+export const fetchLivestockRecordsPlans = async () => (await api.get('/livestock-records/subscription/plans')).data
+export const checkoutLivestockRecordsPlan = async (payload) => (await api.post('/livestock-records/subscription/checkout', payload)).data
 
 export const registerDeviceToken = async (payload) => (await api.post('/messaging/device-token', payload)).data
 export const fetchDeviceTokens = async () => (await api.get('/messaging/device-token')).data

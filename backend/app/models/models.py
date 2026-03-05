@@ -258,3 +258,68 @@ class DiseaseScan(Base):
     crop_type = Column(String(120), nullable=True)
     result = Column(Text, default='{}')
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class SheepGoatRecord(Base):
+    __tablename__ = 'sheep_goat_records'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True, index=True)
+    ownership = Column(String(120), nullable=True)
+    species = Column(String(20), default='SHEEP')  # SHEEP | GOAT
+    animal_type = Column(String(20), nullable=False)  # RAM|EWE|BUCK|DOE
+    name = Column(String(120), nullable=True)
+    ear_tag = Column(String(120), nullable=True, index=True)
+    farm_id = Column(String(120), nullable=True)
+    registration_number = Column(String(120), nullable=True)
+    stars = Column(Integer, default=0)
+    date_of_birth = Column(DateTime, nullable=True)
+    acquisition_date = Column(DateTime, nullable=True)
+    purchase_price = Column(Float, nullable=True)
+    currency = Column(String(10), default='GHS')
+    sire_id = Column(String(120), nullable=True)
+    dam_id = Column(String(120), nullable=True)
+    litter_size = Column(Integer, nullable=True)
+    initial_weight_kg = Column(Float, nullable=True)
+    breeding_type = Column(String(80), nullable=True)
+    castrated = Column(Boolean, default=False)
+    sale_date = Column(DateTime, nullable=True)
+    sale_price = Column(Float, nullable=True)
+    sold_to = Column(String(120), nullable=True)
+    died_date = Column(DateTime, nullable=True)
+    cull_keep_status = Column(String(20), nullable=True)  # KEEP|CULL
+    cull_reason = Column(String(255), nullable=True)
+    health_status = Column(String(120), nullable=True)
+    pen_location = Column(String(120), nullable=True)
+    notes = Column(Text, default='')
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class SheepGoatBreedingGroup(Base):
+    __tablename__ = 'sheep_goat_breeding_groups'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True, index=True)
+    name = Column(String(120), nullable=False)
+    species = Column(String(20), nullable=False)
+    male_type = Column(String(20), nullable=False)
+    female_type = Column(String(20), nullable=False)
+    male_count = Column(Integer, default=0)
+    female_count = Column(Integer, default=0)
+    ratio_label = Column(String(40), nullable=True)
+    active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class SheepGoatSubscription(Base):
+    __tablename__ = 'sheep_goat_subscriptions'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True, index=True)
+    plan_code = Column(String(40), nullable=False)
+    country = Column(String(40), default='GH')
+    billing_cycle = Column(String(20), default='monthly')
+    amount = Column(Float, nullable=False)
+    currency = Column(String(10), nullable=False)
+    status = Column(String(20), default='ACTIVE')
+    reference = Column(String(120), nullable=True)
+    started_at = Column(DateTime, default=datetime.utcnow)
+    ends_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)

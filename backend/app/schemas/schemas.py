@@ -166,3 +166,54 @@ class DiseaseAnalyzeIn(BaseModel):
     user_id: Optional[int] = None
     image_url: str
     crop_type: Optional[str] = None
+
+
+class SheepGoatRecordIn(BaseModel):
+    user_id: Optional[int] = None
+    ownership: Optional[str] = None
+    species: Literal['SHEEP', 'GOAT'] = 'SHEEP'
+    animal_type: Literal['RAM', 'EWE', 'BUCK', 'DOE']
+    name: Optional[str] = None
+    ear_tag: Optional[str] = None
+    farm_id: Optional[str] = None
+    registration_number: Optional[str] = None
+    stars: int = 0
+    date_of_birth: Optional[datetime] = None
+    acquisition_date: Optional[datetime] = None
+    purchase_price: Optional[float] = None
+    currency: str = 'GHS'
+    sire_id: Optional[str] = None
+    dam_id: Optional[str] = None
+    litter_size: Optional[int] = None
+    initial_weight_kg: Optional[float] = None
+    breeding_type: Optional[str] = None
+    castrated: bool = False
+    sale_date: Optional[datetime] = None
+    sale_price: Optional[float] = None
+    sold_to: Optional[str] = None
+    died_date: Optional[datetime] = None
+    cull_keep_status: Optional[str] = None
+    cull_reason: Optional[str] = None
+    health_status: Optional[str] = None
+    pen_location: Optional[str] = None
+    notes: Optional[str] = ''
+
+
+class SheepGoatBreedingGroupIn(BaseModel):
+    user_id: Optional[int] = None
+    name: str
+    species: Literal['SHEEP', 'GOAT']
+    male_type: Literal['RAM', 'BUCK']
+    female_type: Literal['EWE', 'DOE']
+    male_count: int = 0
+    female_count: int = 0
+    ratio_label: Optional[str] = None
+    active: bool = True
+
+
+class SheepGoatSubscriptionIn(BaseModel):
+    user_id: Optional[int] = None
+    plan_code: Literal['starter', 'pro', 'enterprise']
+    country: str = 'GH'
+    billing_cycle: Literal['monthly', 'yearly'] = 'monthly'
+    currency: str
