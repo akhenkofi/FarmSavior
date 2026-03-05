@@ -9,14 +9,16 @@ const cropOptions = ['Cassava','Maize','Tomato','Rice','Yam','Plantain','Onion',
 const animalOptions = ['Poultry','Goats','Sheep','Cattle','Rabbits','Grasscutters','Horses','Dogs']
 
 const featuredProductsSeed = [
-  { name: 'Goats', qty: '50 units', price: '85' },
-  { name: 'Sheep', qty: '40 units', price: '120' },
-  { name: 'Day-old Chicks', qty: '2,000 units', price: '1.2' },
-  { name: 'Cows', qty: '25 units', price: '900' },
-  { name: 'Cashew', qty: '12,000 kg', price: '2.1' },
-  { name: 'Mango', qty: '8,500 kg', price: '1.4' },
-  { name: 'Coconuts', qty: '6,000 units', price: '0.8' },
-  { name: 'Coffee', qty: '9,000 kg', price: '3.2' }
+  { name: 'Goats', price: '85' },
+  { name: 'Sheep', price: '120' },
+  { name: 'Day-old Chicks', price: '1.2' },
+  { name: 'Cows', price: '900' },
+  { name: 'Cashew', price: '2.1' },
+  { name: 'Mango', price: '1.4' },
+  { name: 'Coconuts', price: '0.8' },
+  { name: 'Coffee', price: '3.2' },
+  { name: 'Cocoa', price: '2.6' },
+  { name: 'Rice', price: '1.7' }
 ]
 
 const featuredServicesSeed = [
@@ -28,6 +30,24 @@ const featuredServicesSeed = [
   { name: 'Irrigation setup service', status: 'Open' },
   { name: 'Feed supply delivery', status: 'Open' },
   { name: 'Warehouse monthly leasing', status: 'Available' }
+]
+
+const featuredWeatherSeed = [
+  { city: 'Accra', country: 'GH', condition: 'Partly cloudy', temperature_c: 29, humidity_pct: 74, rainfall_mm: 0.8 },
+  { city: 'Kumasi', country: 'GH', condition: 'Cloudy', temperature_c: 27, humidity_pct: 79, rainfall_mm: 1.2 },
+  { city: 'Tamale', country: 'GH', condition: 'Sunny', temperature_c: 33, humidity_pct: 55, rainfall_mm: 0.0 },
+  { city: 'Lagos', country: 'NG', condition: 'Humid', temperature_c: 30, humidity_pct: 81, rainfall_mm: 1.5 },
+  { city: 'Abuja', country: 'NG', condition: 'Cloudy', temperature_c: 28, humidity_pct: 67, rainfall_mm: 0.6 },
+  { city: 'Kano', country: 'NG', condition: 'Sunny', temperature_c: 35, humidity_pct: 42, rainfall_mm: 0.0 },
+  { city: 'Ouagadougou', country: 'BF', condition: 'Hot', temperature_c: 34, humidity_pct: 38, rainfall_mm: 0.0 },
+  { city: 'Bobo-Dioulasso', country: 'BF', condition: 'Clear', temperature_c: 32, humidity_pct: 46, rainfall_mm: 0.0 },
+  { city: 'Koudougou', country: 'BF', condition: 'Warm', temperature_c: 31, humidity_pct: 49, rainfall_mm: 0.2 }
+]
+
+const featuredNewsSeed = [
+  { title: 'West Africa input prices ease as supply chains stabilize', url: 'https://www.farmsavior.com', source: 'FarmSavior Wire', published: 'Live', image_url: '', image_credit: 'FarmSavior' },
+  { title: 'Moisture outlook improves for rice and maize belts', url: 'https://www.farmsavior.com', source: 'FarmSavior Weather Desk', published: 'Live', image_url: '', image_credit: 'FarmSavior' },
+  { title: 'Regional livestock demand remains strong ahead of market week', url: 'https://www.farmsavior.com', source: 'FarmSavior Markets', published: 'Live', image_url: '', image_credit: 'FarmSavior' }
 ]
 
 const paymentProviders = {
@@ -127,11 +147,12 @@ export default function App() {
     setMe(meRes)
     const isAdmin = (meRes?.role || '').toLowerCase() === 'admin'
 
-    const [metrics, users, listings, livestock, logistics, equipment, storage, payments, alerts, contracts, idv, passports, regions, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, govPrograms, spotTrading, spotHistory, tradeExportStats, livestockPlans] = await Promise.all([
+    const [metrics, users, listings, livestock, logistics, equipment, storage, payments, alerts, contracts, idv, passports, regions, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, publicWeather, govPrograms, spotTrading, spotHistory, tradeExportStats, livestockPlans] = await Promise.all([
       api.fetchMetrics(), api.fetchUsers(), api.fetchListings(), api.fetchLivestock(), api.fetchLogistics(), api.fetchEquipment(), api.fetchStorage(), api.fetchPayments(), api.fetchAlerts(alertCountryFilter === 'ALL' ? undefined : alertCountryFilter), api.fetchContracts(), api.fetchIdVerifications(), api.fetchPassports(), api.fetchWeatherRegions(), api.fetchVerificationApps(), api.fetchApprovedAccounts(), api.fetchDeviceTokens(), api.fetchDiseaseScans(),
       isAdmin ? api.fetchAdminDisputes() : Promise.resolve([]),
       isAdmin ? api.fetchAdminFraudFlags() : Promise.resolve([]),
       api.fetchPublicNews().catch(() => []),
+      api.fetchPublicWeather().catch(() => []),
       api.fetchGovPrograms().catch(() => ({ items: [] })),
       api.fetchSpotTrading().catch(() => ({ items: [] })),
       api.fetchSpotTradingHistory().catch(() => ({ items: [] })),
@@ -139,7 +160,7 @@ export default function App() {
       api.fetchLivestockRecordsPlans().catch(() => ({ plans: [] }))
     ])
     setRegionMap(regions || { GH: [], NG: [], BF: [] })
-    setState({ metrics, users, listings, livestock, logistics, equipment, storage, payments, alerts, contracts, idv, passports, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, govPrograms: govPrograms.items || [], spotTrading: spotTrading.items || [], spotHistory: spotHistory.items || [], tradeExportStats: tradeExportStats.items || [], livestockPlans: livestockPlans.plans || [] })
+    setState({ metrics, users, listings, livestock, logistics, equipment, storage, payments, alerts, contracts, idv, passports, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, publicWeather, govPrograms: govPrograms.items || [], spotTrading: spotTrading.items || [], spotHistory: spotHistory.items || [], tradeExportStats: tradeExportStats.items || [], livestockPlans: livestockPlans.plans || [] })
   }
 
   useEffect(() => { if (token) load().catch(console.error) }, [token, alertCountryFilter])
@@ -262,6 +283,9 @@ export default function App() {
     ['Contracts', state.metrics.contracts_total || 0],
   ], [state.metrics])
 
+  const publicWeatherRows = state.publicWeather.length ? state.publicWeather : featuredWeatherSeed
+  const publicNewsRows = state.news.length ? state.news : featuredNewsSeed
+
   if (!token) return <div className='authWrap'>
     <div className='authCard' style={{width:'min(1180px,98vw)'}}>
       <div className='panel' style={{background:'linear-gradient(120deg,#0b3b2e,#0e7490)', color:'#fff'}}>
@@ -293,18 +317,17 @@ export default function App() {
           <div className='list'>
             {lockDemandCount(
               [
+                ...featuredProductsSeed,
                 ...[
                   ...state.listings,
                   ...state.livestock
                 ].map(x => ({
                   name: x.crop_name || x.livestock_type,
-                  qty: x.quantity_kg ? `${x.quantity_kg} kg` : `${x.quantity || 0} units`,
                   price: x.unit_price || '-'
-                })),
-                ...featuredProductsSeed
-              ].filter(x => !publicQuery || `${x.name} ${x.qty}`.toLowerCase().includes(publicQuery.toLowerCase())),
-              (n) => ({ name: `Market item ${n}`, qty: '—', price: '—' })
-            ).map((x,i)=><div className='list-row' key={`p-${i}`}><span>{x.name} {x.qty}</span><strong>{x.price}</strong></div>)}
+                }))
+              ].filter(x => !publicQuery || `${x.name}`.toLowerCase().includes(publicQuery.toLowerCase())),
+              (n) => ({ name: `Market item ${n}`, price: '—' })
+            ).map((x,i)=><div className='list-row' key={`p-${i}`}><span>{x.name}</span><strong>{x.price}</strong></div>)}
           </div>
         </article>
 
@@ -344,7 +367,7 @@ export default function App() {
         <article className='panel'>
           <h3>🌤️ 9-City Weather Forecast (GH • NG • BF)</h3>
           <div className='news-grid'>
-            {state.publicWeather.map((w,i)=>(
+            {publicWeatherRows.map((w,i)=>(
               <div className='news-card' key={`w-${i}`}>
                 <div className='news-body'>
                   <div className='news-title'>{w.city}, {w.country}</div>
@@ -353,7 +376,6 @@ export default function App() {
                 </div>
               </div>
             ))}
-            {!state.publicWeather.length && <div className='list-row'><span>Loading weather forecast…</span></div>}
           </div>
 
           <p style={{fontSize:'.85rem', color:'#0f766e', marginTop:8}}>Free forecast preview for farmers. Sign up to unlock personalized alerts and farm-level recommendations.</p>
@@ -361,7 +383,7 @@ export default function App() {
 
           <h3 style={{marginTop:12}}>📰 Ag News + Innovation</h3>
           <div className='news-grid'>
-            {state.news.slice(0,8).map((n,i)=>(
+            {publicNewsRows.slice(0,8).map((n,i)=>(
               <div className='news-card' key={`n-${i}`}>
                 <img src={n.image_url || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80'} alt={n.title} className='news-img' />
                 <div className='news-body'>
@@ -371,7 +393,6 @@ export default function App() {
                 </div>
               </div>
             ))}
-            {!state.news.length && <div className='list-row'><span>Fetching latest ag news…</span></div>}
           </div>
           <p style={{fontSize:'.82rem', color:'#64748b'}}>Sources and image credits are shown on each story.</p>
         </article>
