@@ -172,6 +172,7 @@ export default function App() {
   const [contractForm, setContractForm] = useState({ origin_country: 'GH', destination_country: 'NG', commodity: '', quantity: '', price: '', delivery_date: '', payment_terms: '', status: 'DRAFT' })
   const [contractEdit, setContractEdit] = useState({ id: '', origin_country: 'GH', destination_country: 'NG', commodity: '', quantity: '', price: '', delivery_date: '', payment_terms: '', status: 'DRAFT' })
   const [mapCountry, setMapCountry] = useState('GH')
+  const [expandedWeatherCountry, setExpandedWeatherCountry] = useState('GH')
   const [expandedTradeCommodity, setExpandedTradeCommodity] = useState('')
 
   const t = (en, fr) => (uiLang === 'fr' ? fr : en)
@@ -341,6 +342,14 @@ export default function App() {
 
   const publicWeatherRows = state.publicWeather.length ? state.publicWeather : featuredWeatherSeed
   const publicNewsRows = state.news.length ? state.news : featuredNewsSeed
+  const weatherByCountry = useMemo(() => {
+    const out = { GH: [], NG: [], BF: [] }
+    for (const w of publicWeatherRows) {
+      const c = String(w.country || '').toUpperCase()
+      if (out[c]) out[c].push(w)
+    }
+    return out
+  }, [publicWeatherRows])
 
   const productInventoryByName = useMemo(() => {
     const merged = [...state.listings, ...state.livestock]
@@ -496,9 +505,16 @@ export default function App() {
       <div className='two-col' style={{marginTop:10}}>
         <article className='panel'>
           <h3>🌤️ 9-City Weather Forecast (GH • NG • BF)</h3>
+          <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
+            {['GH','NG','BF'].map((c) => (
+              <button key={`wx-${c}`} className={`tab ${expandedWeatherCountry === c ? 'active' : ''}`} onClick={() => setExpandedWeatherCountry(c)}>
+                {c}
+              </button>
+            ))}
+          </div>
           <div className='news-grid'>
-            {publicWeatherRows.map((w,i)=>(
-              <div className='news-card' key={`w-${i}`}>
+            {(weatherByCountry[expandedWeatherCountry] || []).map((w,i)=>(
+              <div className='news-card' key={`w-${expandedWeatherCountry}-${i}`}>
                 <div className='news-body'>
                   <div className='news-title'>{w.city}, {w.country}</div>
                   <div className='news-meta'>Condition: {w.condition || '-'}</div>
