@@ -9,16 +9,16 @@ const cropOptions = ['Cassava','Maize','Tomato','Rice','Yam','Plantain','Onion',
 const animalOptions = ['Poultry','Goats','Sheep','Cattle','Rabbits','Grasscutters','Horses','Dogs']
 
 const featuredProductsSeed = [
-  { name: 'Goats', price: '85' },
-  { name: 'Sheep', price: '120' },
-  { name: 'Day-old Chicks', price: '1.2' },
-  { name: 'Cows', price: '900' },
-  { name: 'Cashew', price: '2.1' },
-  { name: 'Mango', price: '1.4' },
-  { name: 'Coconuts', price: '0.8' },
-  { name: 'Coffee', price: '3.2' },
-  { name: 'Cocoa', price: '2.6' },
-  { name: 'Rice', price: '1.7' }
+  { name: 'Goats' },
+  { name: 'Sheep' },
+  { name: 'Day-old Chicks' },
+  { name: 'Cows' },
+  { name: 'Cashew' },
+  { name: 'Mango' },
+  { name: 'Coconuts' },
+  { name: 'Coffee' },
+  { name: 'Cocoa' },
+  { name: 'Rice' }
 ]
 
 const featuredServicesSeed = [
@@ -335,24 +335,42 @@ export default function App() {
   const publicWeatherRows = state.publicWeather.length ? state.publicWeather : featuredWeatherSeed
   const publicNewsRows = state.news.length ? state.news : featuredNewsSeed
 
-  const liveProductRows = useMemo(() => {
+  const productInventoryByName = useMemo(() => {
     const merged = [...state.listings, ...state.livestock]
-    const byName = new Map()
-    merged
-      .sort((a, b) => Number(b.id || 0) - Number(a.id || 0))
-      .forEach((x) => {
-        const name = x.crop_name || x.livestock_type
-        if (!name) return
-        const qty = Number(x.quantity_kg ?? x.quantity ?? 0)
-        if (!byName.has(name)) {
-          byName.set(name, { name, price: x.unit_price || '-', inventory: qty })
-        } else {
-          const cur = byName.get(name)
-          cur.inventory += qty
-          if (cur.price === '-' && x.unit_price) cur.price = x.unit_price
+    const out = new Map()
+    const norm = (s) => String(s || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, ' ')
+
+    const alias = {
+      goats: ['goat', 'goats'],
+      sheep: ['sheep'],
+      'day old chicks': ['day old chicks', 'day-old chicks', 'chicks', 'poultry'],
+      cows: ['cow', 'cows', 'cattle'],
+      cashew: ['cashew', 'cashews'],
+      mango: ['mango', 'mangoes'],
+      coconuts: ['coconut', 'coconuts'],
+      coffee: ['coffee'],
+      cocoa: ['cocoa'],
+      rice: ['rice']
+    }
+
+    for (const item of featuredProductsSeed) out.set(item.name, 0)
+
+    merged.forEach((x) => {
+      const rawName = norm(x.crop_name || x.livestock_type)
+      const qty = Number(x.quantity_kg ?? x.quantity ?? 0)
+      if (!rawName || !Number.isFinite(qty)) return
+
+      for (const item of featuredProductsSeed) {
+        const key = norm(item.name)
+        const candidates = alias[key] || [key]
+        if (candidates.some((c) => rawName.includes(c))) {
+          out.set(item.name, Number(out.get(item.name) || 0) + qty)
+          break
         }
-      })
-    return [...byName.values()]
+      }
+    })
+
+    return out
   }, [state.listings, state.livestock])
 
   const liveServiceRows = useMemo(() => {
@@ -403,10 +421,12 @@ export default function App() {
           <h3>🔥 High Demand Products</h3>
           <div className='list'>
             {lockDemandCount(
-              (liveProductRows.length ? liveProductRows : featuredProductsSeed)
-                .filter(x => !publicQuery || `${x.name}`.toLowerCase().includes(publicQuery.toLowerCase())),
-              (n) => ({ name: `Market item ${n}`, price: '—', inventory: 0 })
-            ).map((x,i)=><div className='list-row' key={`p-${i}`}><span>{x.name}{typeof x.inventory === 'number' ? ` • ${x.inventory.toLocaleString()} listed` : ''}</span><strong>{x.price}</strong></div>)}
+              featuredProductsSeed.filter(x => !publicQuery || `${x.name}`.toLowerCase().includes(publicQuery.toLowerCase())),
+              (n) => ({ name: `Market item ${n}` })
+            ).map((x,i)=>{
+              const inventory = Number(productInventoryByName.get(x.name) || 0)
+              return <div className='list-row' key={`p-${i}`}><span>{x.name}</span><strong>{inventory.toLocaleString()}</strong></div>
+            })}
           </div>
         </article>
 
