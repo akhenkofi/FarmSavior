@@ -739,6 +739,7 @@ export default function App() {
         <h3>🐑 Sheep & Goats Records & Intelligence Platform (Africa-Wide)</h3>
         <p style={{fontSize:'.85rem',color:'#475569'}}>A production-grade livestock records system for sheep and goats, with traceability, breeding performance, health tracking, and subscription-based access for operators across Africa.</p>
         <p style={{fontSize:'.82rem',color:'#64748b',marginTop:4}}>Pricing auto-displays in your selected country currency. Settlement can route to Ghana Mobile Money or US bank account once payout details are configured.</p>
+        <h4 style={{margin:'8px 0'}}>Select Your Subscription Plan</h4>
         <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
           {publicLivestockPlans.map((p, i) => {
             const key = p.plan_code || p.name || `plan-${i}`
