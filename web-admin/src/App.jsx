@@ -35,6 +35,10 @@ const featuredServicesSeed = [
   { name: 'Ram/Buck/Bull rentals' }
 ]
 
+const featuredServiceBaselineCount = {
+  'Farm consultancy': 1
+}
+
 const featuredWeatherSeed = [
   { city: 'Accra', country: 'GH', condition: 'Partly cloudy', temperature_c: 29, humidity_pct: 74, rainfall_mm: 0.8 },
   { city: 'Kumasi', country: 'GH', condition: 'Cloudy', temperature_c: 27, humidity_pct: 79, rainfall_mm: 1.2 },
@@ -430,7 +434,7 @@ export default function App() {
       'ram buck bull rentals': ['ram', 'buck', 'bull']
     }
 
-    for (const item of featuredServicesSeed) out.set(item.name, 0)
+    for (const item of featuredServicesSeed) out.set(item.name, Number(featuredServiceBaselineCount[item.name] || 0))
 
     merged.forEach((x) => {
       const rawName = norm(x.pickup_location ? `${x.pickup_location} ${x.dropoff_location} ${x.cargo_type || ''}` : (x.equipment_type || x.storage_type || ''))
