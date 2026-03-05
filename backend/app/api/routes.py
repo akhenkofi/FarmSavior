@@ -47,6 +47,11 @@ PUBLIC_NEWS_FEEDS = [
     ('Africa Agriculture News', 'https://www.africanews.com/feed/rss')
 ]
 
+AGRI_NEWS_KEYWORDS = [
+    'agri', 'agric', 'farm', 'farmer', 'crop', 'livestock', 'poultry', 'sheep', 'goat', 'cattle',
+    'irrigation', 'fertilizer', 'seed', 'harvest', 'food security', 'rural', 'cooperative', 'commodity'
+]
+
 MAIN_CITIES = {
     'GH': ['Accra', 'Kumasi', 'Tamale'],
     'NG': ['Lagos', 'Abuja', 'Kano'],
@@ -684,10 +689,16 @@ def public_news(limit: int = 12):
             root = ET.fromstring(data)
             channel = root.find('channel')
             rss_items = channel.findall('item') if channel is not None else root.findall('.//item')
-            for it in rss_items[:6]:
+            for it in rss_items[:10]:
                 title = (it.findtext('title') or '').strip()
                 link = (it.findtext('link') or '').strip()
                 pub = (it.findtext('pubDate') or '').strip()
+                desc = (it.findtext('description') or '').strip()
+                haystack = f"{title} {desc} {link}".lower()
+                is_agri = any(k in haystack for k in AGRI_NEWS_KEYWORDS)
+                if not is_agri:
+                    continue
+
                 img = ''
                 enc = it.find('enclosure')
                 if enc is not None:
