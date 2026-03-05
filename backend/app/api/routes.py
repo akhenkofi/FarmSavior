@@ -1103,11 +1103,7 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
             return s
         return ('*' * max(0, len(s) - keep)) + s[-keep:]
 
-    # Routing rule:
-    # - Ghana/GHS transactions settle to GH MoMo
-    # - Other currencies/countries settle to US bank rail
     payout_channel = 'GH_MOMO' if (country == 'GH' or cur == 'GHS') else 'US_BANK'
-
     payout_details = {
         'beneficiary_name': 'Akhenaten Mensah',
         'channel': payout_channel,
@@ -1123,20 +1119,100 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
         billing_cycle=payload.billing_cycle,
         amount=amount,
         currency=cur,
-        status='ACTIVE',
+        status='PENDING_PAYMENT',
         reference=ref
     )
     db.add(rec)
     db.commit()
     db.refresh(rec)
+
+    payment_url = ''
+    if settings.FLW_SECRET_KEY:
+        user = db.query(User).filter(User.id == (payload.user_id or 0)).first() if payload.user_id else None
+        customer_name = user.full_name if user and user.full_name else 'FarmSavior User'
+        customer_email = f"user{payload.user_id or 0}@farmsavior.app"
+        if user and getattr(user, 'phone', None):
+            customer_email = f"{str(user.phone).replace('+','').replace(' ','')}@farmsavior.app"
+
+        flw_payload = {
+            'tx_ref': ref,
+            'amount': amount,
+            'currency': cur,
+            'redirect_url': settings.FLW_REDIRECT_URL,
+            'payment_options': 'card,banktransfer,mobilemoneyghana,ussd',
+            'customer': {'email': customer_email, 'name': customer_name},
+            'customizations': {
+                'title': 'FarmSavior Sheep & Goats Subscription',
+                'description': f"{payload.plan_code.title()} ({payload.billing_cycle})",
+            }
+        }
+        try:
+            req = Request(
+                'https://api.flutterwave.com/v3/payments',
+                data=json.dumps(flw_payload).encode('utf-8'),
+                headers={
+                    'Content-Type': 'application/json',
+                    'Authorization': f'Bearer {settings.FLW_SECRET_KEY}'
+                },
+                method='POST'
+            )
+            with urlopen(req, timeout=15) as resp:
+                flw_resp = json.loads(resp.read().decode('utf-8', errors='ignore'))
+            payment_url = (((flw_resp or {}).get('data') or {}).get('link') or '')
+        except Exception:
+            payment_url = ''
+
     return {
-        'message': 'subscription activated',
+        'message': 'checkout created',
         'reference': ref,
         'subscription': rec,
         'amount_usd': amount_usd,
+        'payment_url': payment_url,
+        'payment_provider': 'flutterwave' if settings.FLW_SECRET_KEY else 'not_configured',
         'payout_routing': payout_details,
         'routing_rule': 'GH/GHS -> Ghana MoMo; all others -> US bank'
     }
+
+
+@router.get('/livestock-records/subscription/verify/{reference}')
+def livestock_subscription_verify(reference: str, transaction_id: Optional[int] = None, db: Session = Depends(get_db)):
+    rec = db.query(SheepGoatSubscription).filter(SheepGoatSubscription.reference == reference).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail='subscription reference not found')
+
+    if rec.status == 'ACTIVE':
+        return {'message': 'already active', 'reference': reference, 'status': rec.status}
+
+    if not settings.FLW_SECRET_KEY:
+        return {'message': 'payment provider not configured', 'reference': reference, 'status': rec.status}
+
+    if not transaction_id:
+        return {'message': 'transaction_id is required to verify payment', 'reference': reference, 'status': rec.status}
+
+    try:
+        req = Request(
+            f'https://api.flutterwave.com/v3/transactions/{transaction_id}/verify',
+            headers={'Authorization': f'Bearer {settings.FLW_SECRET_KEY}'},
+            method='GET'
+        )
+        with urlopen(req, timeout=15) as resp:
+            v = json.loads(resp.read().decode('utf-8', errors='ignore'))
+
+        data = (v or {}).get('data') or {}
+        status = str(data.get('status', '')).lower()
+        amount = float(data.get('amount', 0) or 0)
+        currency = str(data.get('currency', '') or '').upper()
+        tx_ref = str(data.get('tx_ref', '') or '')
+
+        if status == 'successful' and tx_ref == reference and currency == (rec.currency or '').upper() and amount >= float(rec.amount or 0):
+            rec.status = 'ACTIVE'
+            db.commit()
+            db.refresh(rec)
+            return {'message': 'payment verified and subscription activated', 'reference': reference, 'status': rec.status}
+
+        return {'message': 'payment not verified yet', 'reference': reference, 'status': rec.status, 'provider_status': status}
+    except Exception as e:
+        return {'message': 'verification failed', 'reference': reference, 'status': rec.status, 'error': str(e)}
 
 
 @router.post('/marketplace/offers')

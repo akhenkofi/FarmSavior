@@ -773,7 +773,12 @@ export default function App() {
                       billing_cycle: 'monthly',
                       currency: selectedCurrency
                     })
-                    alert(`Subscription active. Ref: ${r.reference}`)
+                    if (r.payment_url) {
+                      window.open(r.payment_url, '_blank')
+                      alert(`Checkout started. Complete payment to activate. Ref: ${r.reference}`)
+                    } else {
+                      alert(`Checkout created (payment provider not configured). Ref: ${r.reference}`)
+                    }
                   } catch (e) { alert(`Checkout failed: ${errMsg(e)}`) }
                 }}>Subscribe</button>
               </div>
