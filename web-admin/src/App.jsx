@@ -93,7 +93,8 @@ function DataTable({ columns, rows, filterKey, onEdit }) {
 }
 
 export default function App() {
-  const [token, setToken] = useState(localStorage.getItem('farmsavior_token'))
+  const forcePublicView = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('public') === '1'
+  const [token, setToken] = useState(forcePublicView ? null : localStorage.getItem('farmsavior_token'))
   const [authMode, setAuthMode] = useState('login')
   const [portalType, setPortalType] = useState('main')
   const [uiCountry, setUiCountry] = useState('GH')
@@ -222,6 +223,10 @@ export default function App() {
     localStorage.setItem('farmsavior_token', jwt)
     setToken(jwt)
     setAuthMsg('Authenticated successfully')
+  }
+
+  const goToPublicHomepage = () => {
+    window.location.href = '/?public=1'
   }
 
   const recentsKey = `farmsavior_recents_${(token || 'guest').slice(0, 12)}`
@@ -568,7 +573,7 @@ export default function App() {
         </div>
         <div style={{display:'flex', gap:8}}>
           <button className='btn btn-dark' onClick={() => setActive('onboarding')}>My Account</button>
-          <button className='btn' onClick={() => { setAuthMode('login'); localStorage.removeItem('farmsavior_token'); setToken(''); }}>Main App Home</button>
+          <button className='btn' onClick={goToPublicHomepage}>Public Homepage</button>
         </div>
       </div>
       {active === 'home' && <section>
