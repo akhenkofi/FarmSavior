@@ -414,6 +414,14 @@ export default function App() {
           </form>}
           <p>{authMsg}</p>
 
+          <div className='panel' style={{marginTop:10,padding:10,background:'#f8fafc'}}>
+            <h4 style={{margin:'0 0 6px'}}>📲 Download to Phone (1 minute)</h4>
+            <div style={{fontSize:'.84rem',color:'#334155'}}>
+              <div><strong>iPhone (Safari):</strong> Open farmsavior.com → Share → Add to Home Screen.</div>
+              <div><strong>Android (Chrome):</strong> Open farmsavior.com → ⋮ menu → Install app / Add to Home screen.</div>
+            </div>
+          </div>
+
           <div className='list-row' style={{marginTop:12}}>
             <h3 style={{margin:0}}>📈 Spot Trading (GH • NG • BF • World Avg)</h3>
             <button className='btn' onClick={() => window.print()}>Export Briefing (PDF)</button>
@@ -492,8 +500,8 @@ export default function App() {
       </article>
 
       <article className='panel' style={{marginTop:10}}>
-        <h3>🐑 Sheep & Goats Records System (All Africa)</h3>
-        <p style={{fontSize:'.85rem',color:'#475569'}}>Full records system now integrated into FarmSavior backend (animals, breeding groups, dashboards, subscriptions). Billing supports all major African currencies.</p>
+        <h3>🐑 Sheep & Goats Records & Intelligence Platform (Africa-Wide)</h3>
+        <p style={{fontSize:'.85rem',color:'#475569'}}>A production-grade livestock records system for sheep and goats, with traceability, breeding performance, health tracking, and subscription-based access for operators across Africa.</p>
         <div className='three-col'>
           {state.livestockPlans.map((p, i) => (
             <div className='panel' key={`plan-${i}`} style={{padding:10}}>
