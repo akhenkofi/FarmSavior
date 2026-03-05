@@ -22,16 +22,16 @@ const featuredProductsSeed = [
 ]
 
 const featuredServicesSeed = [
-  { name: 'Tractor hire (4WD)', status: 'Available' },
-  { name: 'Combine harvester rental', status: 'Available' },
-  { name: 'Cold room storage', status: 'Available' },
-  { name: 'Long-haul truck logistics', status: 'Open' },
-  { name: 'Farm spraying service', status: 'Available' },
-  { name: 'Irrigation setup service', status: 'Open' },
-  { name: 'Feed supply delivery', status: 'Open' },
-  { name: 'Warehouse monthly leasing', status: 'Available' },
-  { name: 'Farm consultancy', status: 'Available' },
-  { name: 'Ram/Buck/Bull rentals', status: 'Open' }
+  { name: 'Tractor hire (4WD)' },
+  { name: 'Combine harvester rental' },
+  { name: 'Cold room storage' },
+  { name: 'Long-haul truck logistics' },
+  { name: 'Farm spraying service' },
+  { name: 'Irrigation setup service' },
+  { name: 'Feed supply delivery' },
+  { name: 'Warehouse monthly leasing' },
+  { name: 'Farm consultancy' },
+  { name: 'Ram/Buck/Bull rentals' }
 ]
 
 const featuredWeatherSeed = [
@@ -380,14 +380,41 @@ export default function App() {
     return out
   }, [state.listings, state.livestock])
 
-  const liveServiceRows = useMemo(() => {
+  const serviceInventoryByName = useMemo(() => {
     const merged = [...state.logistics, ...state.equipment, ...state.storage]
-    return merged
-      .sort((a, b) => Number(b.id || 0) - Number(a.id || 0))
-      .map((x) => ({
-        name: x.pickup_location ? `${x.pickup_location} → ${x.dropoff_location}` : (x.equipment_type || x.storage_type || 'Service'),
-        status: x.status || 'OPEN'
-      }))
+    const out = new Map()
+    const norm = (s) => String(s || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, ' ')
+
+    const alias = {
+      'tractor hire 4wd': ['tractor', 'tractor hire'],
+      'combine harvester rental': ['combine', 'harvester'],
+      'cold room storage': ['cold room', 'cold storage', 'storage'],
+      'long haul truck logistics': ['logistics', 'truck', 'haulage', 'transport'],
+      'farm spraying service': ['spray', 'spraying'],
+      'irrigation setup service': ['irrigation'],
+      'feed supply delivery': ['feed'],
+      'warehouse monthly leasing': ['warehouse', 'leasing'],
+      'farm consultancy': ['consult', 'consultancy'],
+      'ram buck bull rentals': ['ram', 'buck', 'bull']
+    }
+
+    for (const item of featuredServicesSeed) out.set(item.name, 0)
+
+    merged.forEach((x) => {
+      const rawName = norm(x.pickup_location ? `${x.pickup_location} ${x.dropoff_location} ${x.cargo_type || ''}` : (x.equipment_type || x.storage_type || ''))
+      if (!rawName) return
+
+      for (const item of featuredServicesSeed) {
+        const key = norm(item.name)
+        const candidates = alias[key] || [key]
+        if (candidates.some((c) => rawName.includes(c))) {
+          out.set(item.name, Number(out.get(item.name) || 0) + 1)
+          break
+        }
+      }
+    })
+
+    return out
   }, [state.logistics, state.equipment, state.storage])
 
   const publicGovRows = state.govPrograms.length ? state.govPrograms : featuredGovSeed
@@ -441,10 +468,12 @@ export default function App() {
           <h3>🚚 High Demand Services</h3>
           <div className='list'>
             {lockDemandCount(
-              (liveServiceRows.length ? liveServiceRows : featuredServicesSeed)
-                .filter(x => !publicQuery || `${x.name} ${x.status}`.toLowerCase().includes(publicQuery.toLowerCase())),
-              (n) => ({ name: `Service slot ${n}`, status: 'OPEN' })
-            ).map((x,i)=><div className='list-row' key={`s-${i}`}><span>{x.name}</span><strong>{x.status}</strong></div>)}
+              featuredServicesSeed.filter(x => !publicQuery || `${x.name}`.toLowerCase().includes(publicQuery.toLowerCase())),
+              (n) => ({ name: `Service slot ${n}` })
+            ).map((x,i)=>{
+              const inventory = Number(serviceInventoryByName.get(x.name) || 0)
+              return <div className='list-row' key={`s-${i}`}><span>{x.name}</span><strong>{inventory.toLocaleString()}</strong></div>
+            })}
           </div>
         </article>
 
