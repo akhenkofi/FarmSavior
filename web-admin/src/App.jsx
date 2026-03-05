@@ -178,6 +178,7 @@ export default function App() {
   const [fcmToken, setFcmToken] = useState('')
   const [diseaseForm, setDiseaseForm] = useState({ user_id: 1, category: 'crop', target: '', image_url: '' })
   const [diseaseImageFileName, setDiseaseImageFileName] = useState('')
+  const [diseaseImagePreview, setDiseaseImagePreview] = useState('')
   const [farmMapForm, setFarmMapForm] = useState({ user_id: 1, gps_lat: '', gps_lng: '', farm_size_hectares: '', crop_types: '[]', livestock_numbers: '{}', farm_photo_urls: '[]', harvest_records_notes: '' })
   const [govSubsidyForm, setGovSubsidyForm] = useState({ country: 'GH', agency: 'MOFA', farmer_user_id: 1, amount: '' })
   const [govMsgForm, setGovMsgForm] = useState({ country: 'GH', target: 'farmers', text: '' })
@@ -1051,10 +1052,15 @@ export default function App() {
       {active === 'ai-disease' && <section><h3>AI Disease Analyzer</h3>
         <form className='inlineForm' onSubmit={async e => {
           e.preventDefault();
-          if (!diseaseForm.image_url) { alert('Please upload an image or provide an image URL.'); return }
-          const r = await api.analyzeDisease({ user_id: Number(diseaseForm.user_id), crop_type: diseaseForm.target, image_url: diseaseForm.image_url });
-          alert(`Diagnosis: ${r.diagnosis} | Confidence: ${Math.round((r.confidence||0)*100)}%`);
-          await load();
+          try {
+            if (!diseaseForm.target) { alert('Please select crop/animal type first.'); return }
+            if (!diseaseForm.image_url) { alert('Please upload an image or provide an image URL.'); return }
+            const r = await api.analyzeDisease({ user_id: Number(diseaseForm.user_id), crop_type: diseaseForm.target, image_url: diseaseForm.image_url });
+            alert(`Diagnosis: ${r.diagnosis} | Confidence: ${Math.round((r.confidence||0)*100)}%`);
+            await load();
+          } catch (err) {
+            alert(`Analyze failed: ${errMsg(err)}`)
+          }
         }}>
           <input className='input' placeholder='User ID' value={diseaseForm.user_id} onChange={(e)=>setDiseaseForm({...diseaseForm,user_id:e.target.value})} />
           <select className='input' value={diseaseForm.category} onChange={(e)=>setDiseaseForm({...diseaseForm,category:e.target.value,target:''})}>
@@ -1065,19 +1071,20 @@ export default function App() {
             <option value=''>Select</option>
             {(diseaseForm.category === 'crop' ? cropOptions : animalOptions).map(x => <option key={x} value={x}>{x}</option>)}
           </select>
-          <input className='input' placeholder='Image URL (optional)' value={diseaseForm.image_url.startsWith('data:') ? '' : diseaseForm.image_url} onChange={(e)=>setDiseaseForm({...diseaseForm,image_url:e.target.value})} />
+          <input className='input' placeholder='Image URL (optional)' value={diseaseForm.image_url.startsWith('uploaded://') ? '' : diseaseForm.image_url} onChange={(e)=>setDiseaseForm({...diseaseForm,image_url:e.target.value})} />
           <input className='input' type='file' accept='image/*' onChange={(e)=>{
             const f = e.target.files?.[0]
             if (!f) return
             setDiseaseImageFileName(f.name)
+            setDiseaseForm(prev => ({ ...prev, image_url: `uploaded://${f.name}` }))
             const reader = new FileReader()
-            reader.onload = () => setDiseaseForm(prev => ({ ...prev, image_url: String(reader.result || '') }))
+            reader.onload = () => setDiseaseImagePreview(String(reader.result || ''))
             reader.readAsDataURL(f)
           }} />
           <button className='btn btn-dark'>Analyze</button>
         </form>
         {diseaseImageFileName && <p style={{fontSize:'.82rem',color:'#475569'}}>Uploaded: {diseaseImageFileName}</p>}
-        {diseaseForm.image_url?.startsWith('data:') && <img src={diseaseForm.image_url} alt='Disease scan preview' style={{maxWidth:260,borderRadius:8,border:'1px solid #e2e8f0',marginBottom:8}} />}
+        {diseaseImagePreview && <img src={diseaseImagePreview} alt='Disease scan preview' style={{maxWidth:260,borderRadius:8,border:'1px solid #e2e8f0',marginBottom:8}} />}
         <DataTable columns={['id','user_id','crop_type','image_url','result','created_at']} rows={state.diseaseScans} filterKey='crop_type' />
       </section>}
 
