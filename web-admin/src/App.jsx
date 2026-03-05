@@ -126,7 +126,9 @@ function DataTable({ columns, rows, filterKey, onEdit }) {
 }
 
 export default function App() {
-  const forcePublicView = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('public') === '1'
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams('')
+  const forcePublicView = searchParams.get('public') === '1'
+  const initialSection = searchParams.get('go') || 'home'
   const [token, setToken] = useState(localStorage.getItem('farmsavior_token'))
   const [authMode, setAuthMode] = useState('login')
   const [portalType, setPortalType] = useState('main')
@@ -134,7 +136,7 @@ export default function App() {
   const [uiLang, setUiLang] = useState('en')
   const [phoneForOtp, setPhoneForOtp] = useState('')
   const [authMsg, setAuthMsg] = useState('')
-  const [active, setActive] = useState('home')
+  const [active, setActive] = useState(initialSection)
   const [homeQuery, setHomeQuery] = useState('')
   const [publicQuery, setPublicQuery] = useState('')
   const [recentSearches, setRecentSearches] = useState([])
@@ -261,6 +263,10 @@ export default function App() {
 
   const goToPublicHomepage = () => {
     window.location.href = '/?public=1'
+  }
+
+  const goToAppSection = (section = 'home') => {
+    window.location.href = `/?public=0&go=${encodeURIComponent(section)}`
   }
 
   const recentsKey = `farmsavior_recents_${(token || 'guest').slice(0, 12)}`
@@ -444,14 +450,14 @@ export default function App() {
         <article className='panel'>
           <h3>🧠 Popular Actions</h3>
           <div className='list'>
-            <div className='list-row'><span>List Product</span><button className='btn' onClick={()=>{ if (token) { window.location.href = '/'; return } setAuthMode('signup'); setAuthMsg('Create an account or log in to list a product.'); }}>Start</button></div>
-            <div className='list-row'><span>List Services</span><button className='btn' onClick={()=>{ if (token) { window.location.href = '/?public=0'; return } setAuthMode('signup'); setAuthMsg('Create an account or log in to list your services.'); }}>Start</button></div>
-            <div className='list-row'><span>List Machinery for Rent</span><button className='btn' onClick={()=>{ if (token) { window.location.href = '/?public=0'; return } setAuthMode('signup'); setAuthMsg('Sign up or log in to list machinery for rent.'); }}>Start</button></div>
-            <div className='list-row'><span>Rent Machinery</span><button className='btn' onClick={()=>{ if (token) { window.location.href = '/?public=0'; return } setAuthMode('login'); setAuthMsg('Log in to rent machinery and contact providers.'); }}>Start</button></div>
-            <div className='list-row'><span>Request Logistics / Transport</span><button className='btn' onClick={()=>{ if (token) { window.location.href = '/?public=0'; return } setAuthMode('login'); setAuthMsg('Log in to request transport services.'); }}>Start</button></div>
-            <div className='list-row'><span>Find Storage / Cold Room</span><button className='btn' onClick={()=>{ if (token) { window.location.href = '/?public=0'; return } setAuthMode('login'); setAuthMsg('Log in to reserve storage facilities.'); }}>Start</button></div>
-            <div className='list-row'><span>AI Disease Analyzer</span><button className='btn' onClick={()=>{ if (token) { window.location.href = '/?public=0'; return } setAuthMode('login'); setAuthMsg('Please sign in to use AI Disease Analyzer.'); }}>Open</button></div>
-            <div className='list-row'><span>Farm GPS Mapping</span><button className='btn' onClick={()=>{ if (token) { window.location.href = '/?public=0'; return } setAuthMode('login'); setAuthMsg('Please sign in to map farms and save data.'); }}>Open</button></div>
+            <div className='list-row'><span>List Product</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('products'); return } setAuthMode('signup'); setAuthMsg('Create an account or log in to list a product.'); }}>Start</button></div>
+            <div className='list-row'><span>List Services</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('services'); return } setAuthMode('signup'); setAuthMsg('Create an account or log in to list your services.'); }}>Start</button></div>
+            <div className='list-row'><span>List Machinery for Rent</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('services'); return } setAuthMode('signup'); setAuthMsg('Sign up or log in to list machinery for rent.'); }}>Start</button></div>
+            <div className='list-row'><span>Rent Machinery</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('services'); return } setAuthMode('login'); setAuthMsg('Log in to rent machinery and contact providers.'); }}>Start</button></div>
+            <div className='list-row'><span>Request Logistics / Transport</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('services'); return } setAuthMode('login'); setAuthMsg('Log in to request transport services.'); }}>Start</button></div>
+            <div className='list-row'><span>Find Storage / Cold Room</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('services'); return } setAuthMode('login'); setAuthMsg('Log in to reserve storage facilities.'); }}>Start</button></div>
+            <div className='list-row'><span>AI Disease Analyzer</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('ai-disease'); return } setAuthMode('login'); setAuthMsg('Please sign in to use AI Disease Analyzer.'); }}>Open</button></div>
+            <div className='list-row'><span>Farm GPS Mapping</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('maps'); return } setAuthMode('login'); setAuthMsg('Please sign in to map farms and save data.'); }}>Open</button></div>
           </div>
           <p style={{fontSize:'.82rem', color:'#64748b'}}>You can browse publicly; posting, renting, contacting providers, and transactions require sign-in.</p>
         </article>
