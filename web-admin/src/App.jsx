@@ -94,7 +94,7 @@ function DataTable({ columns, rows, filterKey, onEdit }) {
 
 export default function App() {
   const forcePublicView = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('public') === '1'
-  const [token, setToken] = useState(forcePublicView ? null : localStorage.getItem('farmsavior_token'))
+  const [token, setToken] = useState(localStorage.getItem('farmsavior_token'))
   const [authMode, setAuthMode] = useState('login')
   const [portalType, setPortalType] = useState('main')
   const [uiCountry, setUiCountry] = useState('GH')
@@ -293,8 +293,9 @@ export default function App() {
 
   const publicWeatherRows = state.publicWeather.length ? state.publicWeather : featuredWeatherSeed
   const publicNewsRows = state.news.length ? state.news : featuredNewsSeed
+  const showPublicLanding = !token || forcePublicView
 
-  if (!token) return <div className='authWrap'>
+  if (showPublicLanding) return <div className='authWrap'>
     <div className='authCard' style={{width:'min(1180px,98vw)'}}>
       <div className='panel' style={{background:'linear-gradient(120deg,#0b3b2e,#0e7490)', color:'#fff'}}>
         <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:8}}>
@@ -358,14 +359,14 @@ export default function App() {
         <article className='panel'>
           <h3>🧠 Popular Actions</h3>
           <div className='list'>
-            <div className='list-row'><span>List Product</span><button className='btn' onClick={()=>{ setAuthMode('signup'); setAuthMsg('Create an account or log in to list a product.'); }}>Start</button></div>
-            <div className='list-row'><span>List Services</span><button className='btn' onClick={()=>{ setAuthMode('signup'); setAuthMsg('Create an account or log in to list your services.'); }}>Start</button></div>
-            <div className='list-row'><span>List Machinery for Rent</span><button className='btn' onClick={()=>{ setAuthMode('signup'); setAuthMsg('Sign up or log in to list machinery for rent.'); }}>Start</button></div>
-            <div className='list-row'><span>Rent Machinery</span><button className='btn' onClick={()=>{ setAuthMode('login'); setAuthMsg('Log in to rent machinery and contact providers.'); }}>Start</button></div>
-            <div className='list-row'><span>Request Logistics / Transport</span><button className='btn' onClick={()=>{ setAuthMode('login'); setAuthMsg('Log in to request transport services.'); }}>Start</button></div>
-            <div className='list-row'><span>Find Storage / Cold Room</span><button className='btn' onClick={()=>{ setAuthMode('login'); setAuthMsg('Log in to reserve storage facilities.'); }}>Start</button></div>
-            <div className='list-row'><span>AI Disease Analyzer</span><button className='btn' onClick={()=>{ setAuthMode('login'); setAuthMsg('Please sign in to use AI Disease Analyzer.'); }}>Open</button></div>
-            <div className='list-row'><span>Farm GPS Mapping</span><button className='btn' onClick={()=>{ setAuthMode('login'); setAuthMsg('Please sign in to map farms and save data.'); }}>Open</button></div>
+            <div className='list-row'><span>List Product</span><button className='btn' onClick={()=>{ if (token) { window.location.href = '/'; return } setAuthMode('signup'); setAuthMsg('Create an account or log in to list a product.'); }}>Start</button></div>
+            <div className='list-row'><span>List Services</span><button className='btn' onClick={()=>{ if (token) { window.location.href = '/?public=0'; return } setAuthMode('signup'); setAuthMsg('Create an account or log in to list your services.'); }}>Start</button></div>
+            <div className='list-row'><span>List Machinery for Rent</span><button className='btn' onClick={()=>{ if (token) { window.location.href = '/?public=0'; return } setAuthMode('signup'); setAuthMsg('Sign up or log in to list machinery for rent.'); }}>Start</button></div>
+            <div className='list-row'><span>Rent Machinery</span><button className='btn' onClick={()=>{ if (token) { window.location.href = '/?public=0'; return } setAuthMode('login'); setAuthMsg('Log in to rent machinery and contact providers.'); }}>Start</button></div>
+            <div className='list-row'><span>Request Logistics / Transport</span><button className='btn' onClick={()=>{ if (token) { window.location.href = '/?public=0'; return } setAuthMode('login'); setAuthMsg('Log in to request transport services.'); }}>Start</button></div>
+            <div className='list-row'><span>Find Storage / Cold Room</span><button className='btn' onClick={()=>{ if (token) { window.location.href = '/?public=0'; return } setAuthMode('login'); setAuthMsg('Log in to reserve storage facilities.'); }}>Start</button></div>
+            <div className='list-row'><span>AI Disease Analyzer</span><button className='btn' onClick={()=>{ if (token) { window.location.href = '/?public=0'; return } setAuthMode('login'); setAuthMsg('Please sign in to use AI Disease Analyzer.'); }}>Open</button></div>
+            <div className='list-row'><span>Farm GPS Mapping</span><button className='btn' onClick={()=>{ if (token) { window.location.href = '/?public=0'; return } setAuthMode('login'); setAuthMsg('Please sign in to map farms and save data.'); }}>Open</button></div>
           </div>
           <p style={{fontSize:'.82rem', color:'#64748b'}}>You can browse publicly; posting, renting, contacting providers, and transactions require sign-in.</p>
         </article>
