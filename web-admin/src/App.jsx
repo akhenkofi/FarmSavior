@@ -300,6 +300,37 @@ export default function App() {
 
   const publicWeatherRows = state.publicWeather.length ? state.publicWeather : featuredWeatherSeed
   const publicNewsRows = state.news.length ? state.news : featuredNewsSeed
+
+  const liveProductRows = useMemo(() => {
+    const merged = [...state.listings, ...state.livestock]
+    const byName = new Map()
+    merged
+      .sort((a, b) => Number(b.id || 0) - Number(a.id || 0))
+      .forEach((x) => {
+        const name = x.crop_name || x.livestock_type
+        if (!name) return
+        const qty = Number(x.quantity_kg ?? x.quantity ?? 0)
+        if (!byName.has(name)) {
+          byName.set(name, { name, price: x.unit_price || '-', inventory: qty })
+        } else {
+          const cur = byName.get(name)
+          cur.inventory += qty
+          if (cur.price === '-' && x.unit_price) cur.price = x.unit_price
+        }
+      })
+    return [...byName.values()]
+  }, [state.listings, state.livestock])
+
+  const liveServiceRows = useMemo(() => {
+    const merged = [...state.logistics, ...state.equipment, ...state.storage]
+    return merged
+      .sort((a, b) => Number(b.id || 0) - Number(a.id || 0))
+      .map((x) => ({
+        name: x.pickup_location ? `${x.pickup_location} → ${x.dropoff_location}` : (x.equipment_type || x.storage_type || 'Service'),
+        status: x.status || 'OPEN'
+      }))
+  }, [state.logistics, state.equipment, state.storage])
+
   const showPublicLanding = !token || forcePublicView
 
   if (showPublicLanding) return <div className='authWrap'>
@@ -332,18 +363,10 @@ export default function App() {
           <h3>🔥 High Demand Products</h3>
           <div className='list'>
             {lockDemandCount(
-              [
-                ...featuredProductsSeed,
-                ...[
-                  ...state.listings,
-                  ...state.livestock
-                ].map(x => ({
-                  name: x.crop_name || x.livestock_type,
-                  price: x.unit_price || '-'
-                }))
-              ].filter(x => !publicQuery || `${x.name}`.toLowerCase().includes(publicQuery.toLowerCase())),
-              (n) => ({ name: `Market item ${n}`, price: '—' })
-            ).map((x,i)=><div className='list-row' key={`p-${i}`}><span>{x.name}</span><strong>{x.price}</strong></div>)}
+              (liveProductRows.length ? liveProductRows : featuredProductsSeed)
+                .filter(x => !publicQuery || `${x.name}`.toLowerCase().includes(publicQuery.toLowerCase())),
+              (n) => ({ name: `Market item ${n}`, price: '—', inventory: 0 })
+            ).map((x,i)=><div className='list-row' key={`p-${i}`}><span>{x.name}{typeof x.inventory === 'number' ? ` • ${x.inventory.toLocaleString()} listed` : ''}</span><strong>{x.price}</strong></div>)}
           </div>
         </article>
 
@@ -351,13 +374,8 @@ export default function App() {
           <h3>🚚 High Demand Services</h3>
           <div className='list'>
             {lockDemandCount(
-              [
-                ...[...state.logistics, ...state.equipment, ...state.storage].map(x => ({
-                  name: x.pickup_location ? `${x.pickup_location} → ${x.dropoff_location}` : (x.equipment_type || x.storage_type),
-                  status: x.status || 'OPEN'
-                })),
-                ...featuredServicesSeed
-              ].filter(x => !publicQuery || `${x.name} ${x.status}`.toLowerCase().includes(publicQuery.toLowerCase())),
+              (liveServiceRows.length ? liveServiceRows : featuredServicesSeed)
+                .filter(x => !publicQuery || `${x.name} ${x.status}`.toLowerCase().includes(publicQuery.toLowerCase())),
               (n) => ({ name: `Service slot ${n}`, status: 'OPEN' })
             ).map((x,i)=><div className='list-row' key={`s-${i}`}><span>{x.name}</span><strong>{x.status}</strong></div>)}
           </div>
