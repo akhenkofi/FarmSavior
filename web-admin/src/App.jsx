@@ -23,7 +23,6 @@ const featuredProductsSeed = [
 ]
 
 const featuredServicesSeed = [
-  { name: 'Sheep & Goats Records & Intelligence Platform (Farm Consultancy)' },
   { name: 'Tractor hire (4WD)' },
   { name: 'Combine harvester rental' },
   { name: 'Cold room storage' },
@@ -32,6 +31,7 @@ const featuredServicesSeed = [
   { name: 'Irrigation setup service' },
   { name: 'Feed supply delivery' },
   { name: 'Warehouse monthly leasing' },
+  { name: 'Farm consultancy' },
   { name: 'Ram/Buck/Bull rentals' }
 ]
 
@@ -426,7 +426,7 @@ export default function App() {
       'irrigation setup service': ['irrigation'],
       'feed supply delivery': ['feed'],
       'warehouse monthly leasing': ['warehouse', 'leasing'],
-      'sheep goats records intelligence platform farm consultancy': ['sheep', 'goat', 'records', 'intelligence', 'consult', 'consultancy'],
+      'farm consultancy': ['consult', 'consultancy'],
       'ram buck bull rentals': ['ram', 'buck', 'bull']
     }
 
