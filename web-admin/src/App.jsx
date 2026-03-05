@@ -182,6 +182,7 @@ export default function App() {
   const [expandedWeatherCountry, setExpandedWeatherCountry] = useState('GH')
   const [expandedSpotCommodity, setExpandedSpotCommodity] = useState('')
   const [expandedTradeCommodity, setExpandedTradeCommodity] = useState('')
+  const [expandedLivestockPlan, setExpandedLivestockPlan] = useState('')
 
   const t = (en, fr) => (uiLang === 'fr' ? fr : en)
   const [fcmToken, setFcmToken] = useState('')
@@ -354,6 +355,13 @@ export default function App() {
       setExpandedSpotCommodity(spotRows[0].commodity)
     }
   }, [state.spotTrading, expandedSpotCommodity])
+
+  useEffect(() => {
+    const planRows = state.livestockPlans.length ? state.livestockPlans : featuredLivestockPlansSeed
+    if (!expandedLivestockPlan && planRows.length) {
+      setExpandedLivestockPlan(planRows[0].plan_code || planRows[0].name)
+    }
+  }, [expandedLivestockPlan, state.livestockPlans])
 
   const publicWeatherRows = state.publicWeather.length ? state.publicWeather : featuredWeatherSeed
   const publicNewsRows = state.news.length ? state.news : featuredNewsSeed
@@ -731,8 +739,17 @@ export default function App() {
         <h3>🐑 Sheep & Goats Records & Intelligence Platform (Africa-Wide)</h3>
         <p style={{fontSize:'.85rem',color:'#475569'}}>A production-grade livestock records system for sheep and goats, with traceability, breeding performance, health tracking, and subscription-based access for operators across Africa.</p>
         <p style={{fontSize:'.82rem',color:'#64748b',marginTop:4}}>Pricing auto-displays in your selected country currency. Settlement can route to Ghana Mobile Money or US bank account once payout details are configured.</p>
-        <div className='three-col'>
-          {publicLivestockPlans.map((p, i) => (
+        <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
+          {publicLivestockPlans.map((p, i) => {
+            const key = p.plan_code || p.name || `plan-${i}`
+            return <button key={`plan-tab-${key}`} className={`tab ${expandedLivestockPlan === key ? 'active' : ''}`} onClick={() => setExpandedLivestockPlan(key)}>{p.name}</button>
+          })}
+        </div>
+
+        <div>
+          {publicLivestockPlans
+            .filter((p, i) => (p.plan_code || p.name || `plan-${i}`) === expandedLivestockPlan)
+            .map((p, i) => (
             <div className='panel' key={`plan-${i}`} style={{padding:10}}>
               <h4 style={{marginTop:0}}>{p.name}</h4>
               <div className='list-row'><span>Monthly</span><strong>{formatLocalPrice(p.monthly_usd)}</strong></div>
@@ -757,7 +774,6 @@ export default function App() {
               </div>
             </div>
           ))}
-          {false && <div className='list-row'><span>Loading livestock subscription plans…</span></div>}
         </div>
       </article>
     </div>
