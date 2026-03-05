@@ -408,6 +408,14 @@ export default function App() {
 
         <article className='panel'>
           <h3>Access Portal</h3>
+          {token && <div className='panel' style={{padding:10, marginBottom:10, background:'#ecfeff', border:'1px solid #99f6e4'}}>
+            <div style={{fontWeight:700, marginBottom:6}}>You are signed in.</div>
+            <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+              <button className='btn btn-dark' onClick={() => { window.location.href='/?public=0' }}>Go to My Account</button>
+              <button className='btn' onClick={() => { localStorage.removeItem('farmsavior_token'); setToken(''); setAuthMode('login') }}>Log out</button>
+            </div>
+          </div>}
+          {!token && <>
           <div className='tabs'>
             <button className={`tab ${portalType === 'main' ? 'active' : ''}`} onClick={() => setPortalType('main')}>Main App</button>
             <button className={`tab ${portalType === 'admin' ? 'active' : ''}`} onClick={() => setPortalType('admin')}>Admin</button>
@@ -442,6 +450,7 @@ export default function App() {
             <input className='input' placeholder='OTP Code' value={otp.code} onChange={e => setOtp({ ...otp, code: e.target.value })} required />
             <button className='btn btn-dark'>Verify OTP</button>
           </form>}
+          </>}
           <p>{authMsg}</p>
 
           <div className='panel' style={{marginTop:10,padding:10,background:'#f8fafc'}}>
