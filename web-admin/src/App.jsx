@@ -417,9 +417,7 @@ export default function App() {
           </div>}
           {!token && <>
           <div className='tabs'>
-            <button className={`tab ${portalType === 'main' ? 'active' : ''}`} onClick={() => setPortalType('main')}>Main App</button>
-            <button className={`tab ${portalType === 'admin' ? 'active' : ''}`} onClick={() => setPortalType('admin')}>Admin</button>
-            <button className={`tab ${portalType === 'devadmin' ? 'active' : ''}`} onClick={() => setPortalType('devadmin')}>Developer Admin</button>
+            <button className='tab active' type='button'>Main App</button>
           </div>
 
           <div className='tabs'>{['login', 'signup', 'otp'].map(m => <button key={m} className={`tab ${authMode === m ? 'active' : ''}`} onClick={() => setAuthMode(m)}>{m.toUpperCase()}</button>)}</div>
@@ -440,7 +438,7 @@ export default function App() {
           }}>
             <input className='input' placeholder='Phone' value={login.phone} onChange={e => setLogin({ ...login, phone: e.target.value })} required />
             <input className='input' type='password' placeholder='Password' value={login.password} onChange={e => setLogin({ ...login, password: e.target.value })} required />
-            <button className='btn btn-dark'>{portalType === 'main' ? 'Login' : portalType === 'admin' ? 'Admin Login' : 'Developer Admin Login'}</button>
+            <button className='btn btn-dark'>Login</button>
           </form>}
 
           {authMode === 'otp' && <form className='list' onSubmit={async (e) => {
