@@ -1083,13 +1083,32 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
 
     amount_usd = plans[payload.plan_code][payload.billing_cycle]
     cur = (payload.currency or 'USD').upper()
+    country = (payload.country or '').upper()
     amount = round(amount_usd * fx.get(cur, 1.0), 2)
+
+    def mask_value(v: str, keep: int = 4) -> str:
+        s = str(v or '')
+        if len(s) <= keep:
+            return s
+        return ('*' * max(0, len(s) - keep)) + s[-keep:]
+
+    # Routing rule:
+    # - Ghana/GHS transactions settle to GH MoMo
+    # - Other currencies/countries settle to US bank rail
+    payout_channel = 'GH_MOMO' if (country == 'GH' or cur == 'GHS') else 'US_BANK'
+
+    payout_details = {
+        'beneficiary_name': 'Akhenaten Mensah',
+        'channel': payout_channel,
+        'ghana_mobile_money': mask_value(settings.OWNER_PAYOUT_MOMO_GH),
+        'us_bank_account': mask_value(settings.OWNER_PAYOUT_US_BANK),
+    }
 
     ref = f"SGSUB-{int(datetime.utcnow().timestamp())}-{random.randint(100,999)}"
     rec = SheepGoatSubscription(
         user_id=payload.user_id,
         plan_code=payload.plan_code,
-        country=payload.country,
+        country=country or payload.country,
         billing_cycle=payload.billing_cycle,
         amount=amount,
         currency=cur,
@@ -1104,10 +1123,8 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
         'reference': ref,
         'subscription': rec,
         'amount_usd': amount_usd,
-        'payout_options': {
-            'ghana_mobile_money': settings.OWNER_PAYOUT_MOMO_GH,
-            'us_bank_account': settings.OWNER_PAYOUT_US_BANK
-        }
+        'payout_routing': payout_details,
+        'routing_rule': 'GH/GHS -> Ghana MoMo; all others -> US bank'
     }
 
 
