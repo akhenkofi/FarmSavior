@@ -52,6 +52,39 @@ const featuredNewsSeed = [
   { title: 'Regional livestock demand remains strong ahead of market week', url: 'https://www.farmsavior.com', source: 'FarmSavior Markets', published: 'Live', image_url: '', image_credit: 'FarmSavior' }
 ]
 
+const featuredGovSeed = [
+  { country: 'GH', agency: 'MOFA', headline: 'Official Program Updates', status: 'live', source_url: 'https://mofa.gov.gh/site/programmes/' },
+  { country: 'NG', agency: 'Federal Ministry of Agriculture', headline: 'Program Announcements', status: 'live', source_url: 'https://agriculture.gov.ng/programs/' },
+  { country: 'BF', agency: 'Ministère de l\'Agriculture', headline: 'Actualités du secteur', status: 'live', source_url: 'https://www.agriculture.gov.bf/quotidien/les-actualites' }
+]
+
+const featuredSpotSeed = [
+  { commodity: 'Maize', GH: 12.5, NG: 380, BF: 360, WORLD_AVG: 250.8 },
+  { commodity: 'Rice', GH: 680, NG: 620, BF: 590, WORLD_AVG: 630 },
+  { commodity: 'Soybeans', GH: 430, NG: 470, BF: 420, WORLD_AVG: 455 }
+]
+
+const featuredSpotHistorySeed = [
+  { commodity: 'Maize', change_pct_7d: 1.8, change_pct_30d: 4.4, trend_7d: [245, 246, 248, 249, 250, 251, 252], provenance: 'FarmSavior baseline feed' },
+  { commodity: 'Rice', change_pct_7d: 0.9, change_pct_30d: 2.1, trend_7d: [624, 625, 626, 627, 628, 629, 630], provenance: 'FarmSavior baseline feed' },
+  { commodity: 'Soybeans', change_pct_7d: -0.4, change_pct_30d: 1.3, trend_7d: [457, 456, 456, 455, 455, 455, 455], provenance: 'FarmSavior baseline feed' }
+]
+
+const featuredTradeExportSeed = [
+  {
+    commodity_key: 'poultry',
+    commodity: 'Poultry',
+    top_exporters: [{ rank: 1, country: 'Brazil', volume_tons: 11800000 }, { rank: 2, country: 'USA', volume_tons: 11100000 }],
+    top_importers: [{ rank: 1, country: 'China', volume_tons: 11150000 }, { rank: 2, country: 'Japan', volume_tons: 10500000 }]
+  }
+]
+
+const featuredLivestockPlansSeed = [
+  { name: 'Sheep & Goats Starter', monthly_usd: 4.99, yearly_usd: 49.99, features: ['Basic records', 'Health logs'] },
+  { name: 'Sheep & Goats Pro', monthly_usd: 9.99, yearly_usd: 99.99, features: ['Breeding groups', 'Performance insights'] },
+  { name: 'Sheep & Goats Enterprise', monthly_usd: 24.99, yearly_usd: 249.99, features: ['Multi-farm', 'Advanced analytics'] }
+]
+
 const paymentProviders = {
   GH: ['MTN MoMo', 'Vodafone Cash', 'AirtelTigo Money'],
   NG: ['OPay', 'PalmPay', 'Paga'],
@@ -293,8 +326,9 @@ export default function App() {
   ], [state.metrics])
 
   useEffect(() => {
-    if (!expandedTradeCommodity && state.tradeExportStats.length) {
-      setExpandedTradeCommodity(state.tradeExportStats[0].commodity_key || state.tradeExportStats[0].commodity)
+    const tradeRows = state.tradeExportStats.length ? state.tradeExportStats : featuredTradeExportSeed
+    if (!expandedTradeCommodity && tradeRows.length) {
+      setExpandedTradeCommodity(tradeRows[0].commodity_key || tradeRows[0].commodity)
     }
   }, [state.tradeExportStats, expandedTradeCommodity])
 
@@ -330,6 +364,12 @@ export default function App() {
         status: x.status || 'OPEN'
       }))
   }, [state.logistics, state.equipment, state.storage])
+
+  const publicGovRows = state.govPrograms.length ? state.govPrograms : featuredGovSeed
+  const publicSpotRows = state.spotTrading.length ? state.spotTrading : featuredSpotSeed
+  const publicSpotHistoryRows = state.spotHistory.length ? state.spotHistory : featuredSpotHistorySeed
+  const publicTradeRows = state.tradeExportStats.length ? state.tradeExportStats : featuredTradeExportSeed
+  const publicLivestockPlans = state.livestockPlans.length ? state.livestockPlans : featuredLivestockPlansSeed
 
   const showPublicLanding = !token || forcePublicView
 
@@ -489,8 +529,8 @@ export default function App() {
             <button className='btn' onClick={() => window.print()}>Export Briefing (PDF)</button>
           </div>
           <div className='list'>
-            {state.spotTrading.map((r, i) => {
-              const hist = state.spotHistory.find(h => h.commodity === r.commodity) || {}
+            {publicSpotRows.map((r, i) => {
+              const hist = publicSpotHistoryRows.find(h => h.commodity === r.commodity) || {}
               const max = Math.max(r.GH || 0, r.NG || 0, r.BF || 0, r.WORLD_AVG || 0, 1)
               const bar = (v) => `${Math.max(6, Math.round((v / max) * 100))}%`
               const t7 = hist.trend_7d || []
@@ -512,7 +552,7 @@ export default function App() {
                 <div style={{fontSize:11,color:'#64748b'}}>Source: {hist.provenance || 'FarmSavior market feed'}</div>
               </div>
             })}
-            {!state.spotTrading.length && <div className='list-row'><span>Loading spot trading data…</span></div>}
+            {false && <div className='list-row'><span>Loading spot trading data…</span></div>}
           </div>
         </article>
       </div>
@@ -520,13 +560,13 @@ export default function App() {
       <article className='panel' style={{marginTop:10}}>
         <h3>🏛️ Government Programs & Subsidies (GH • NG • BF)</h3>
         <div className='list'>
-          {state.govPrograms.slice(0, 6).map((g, i) => (
+          {publicGovRows.slice(0, 6).map((g, i) => (
             <div className='list-row' key={`gov-${i}`}>
               <span>{g.country} • {g.agency} • {g.headline} ({g.status || 'ok'})</span>
               <a className='btn' href={g.source_url} target='_blank' rel='noreferrer'>Programs Page</a>
             </div>
           ))}
-          {!state.govPrograms.length && <div className='list-row'><span>Loading official ministry programs…</span></div>}
+          {false && <div className='list-row'><span>Loading official ministry programs…</span></div>}
         </div>
       </article>
 
@@ -535,7 +575,7 @@ export default function App() {
         <p style={{fontSize:'.85rem',color:'#475569'}}>Select a commodity below to expand its export/import rankings.</p>
 
         <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
-          {state.tradeExportStats.map((c, i) => {
+          {publicTradeRows.map((c, i) => {
             const key = c.commodity_key || c.commodity || `c-${i}`
             return (
               <button
@@ -549,7 +589,7 @@ export default function App() {
           })}
         </div>
 
-        {state.tradeExportStats
+        {publicTradeRows
           .filter((c, i) => (c.commodity_key || c.commodity || `c-${i}`) === expandedTradeCommodity)
           .map((c, i) => (
             <div className='panel' key={`trade-expanded-${i}`} style={{padding:10}}>
@@ -575,14 +615,14 @@ export default function App() {
             </div>
           ))}
 
-        {!state.tradeExportStats.length && <div className='list-row'><span>Loading current export/import statistics…</span></div>}
+        {false && <div className='list-row'><span>Loading current export/import statistics…</span></div>}
       </article>
 
       <article className='panel' style={{marginTop:10}}>
         <h3>🐑 Sheep & Goats Records & Intelligence Platform (Africa-Wide)</h3>
         <p style={{fontSize:'.85rem',color:'#475569'}}>A production-grade livestock records system for sheep and goats, with traceability, breeding performance, health tracking, and subscription-based access for operators across Africa.</p>
         <div className='three-col'>
-          {state.livestockPlans.map((p, i) => (
+          {publicLivestockPlans.map((p, i) => (
             <div className='panel' key={`plan-${i}`} style={{padding:10}}>
               <h4 style={{marginTop:0}}>{p.name}</h4>
               <div className='list-row'><span>Monthly</span><strong>${p.monthly_usd}</strong></div>
@@ -592,7 +632,7 @@ export default function App() {
               </div>
             </div>
           ))}
-          {!state.livestockPlans.length && <div className='list-row'><span>Loading livestock subscription plans…</span></div>}
+          {false && <div className='list-row'><span>Loading livestock subscription plans…</span></div>}
         </div>
       </article>
     </div>
