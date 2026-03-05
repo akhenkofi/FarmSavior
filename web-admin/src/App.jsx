@@ -415,7 +415,7 @@ export default function App() {
           <p>{authMsg}</p>
 
           <div className='panel' style={{marginTop:10,padding:10,background:'#f8fafc'}}>
-            <h4 style={{margin:'0 0 6px'}}>📲 Download to Phone (1 minute)</h4>
+            <h4 style={{margin:'0 0 6px'}}>📲 Download App to Phone</h4>
             <div style={{fontSize:'.84rem',color:'#334155'}}>
               <div><strong>iPhone (Safari):</strong> Open farmsavior.com → Share → Add to Home Screen.</div>
               <div><strong>Android (Chrome):</strong> Open farmsavior.com → ⋮ menu → Install app / Add to Home screen.</div>
