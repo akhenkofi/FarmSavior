@@ -10,5 +10,8 @@ class Settings(BaseSettings):
     DATABASE_URL: str = 'sqlite:///./farmsavior.db'
     OTP_BYPASS_CODE: str = '123456'
 
+    OWNER_PAYOUT_MOMO_GH: str = ''
+    OWNER_PAYOUT_US_BANK: str = ''
+
 
 settings = Settings()

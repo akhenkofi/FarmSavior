@@ -1079,7 +1079,12 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
         'pro': {'monthly': 9.99, 'yearly': 99.99},
         'enterprise': {'monthly': 24.99, 'yearly': 249.99}
     }
-    amount = plans[payload.plan_code][payload.billing_cycle]
+    fx = {'USD': 1.0, 'GHS': 15.0, 'NGN': 1600.0, 'XOF': 610.0}
+
+    amount_usd = plans[payload.plan_code][payload.billing_cycle]
+    cur = (payload.currency or 'USD').upper()
+    amount = round(amount_usd * fx.get(cur, 1.0), 2)
+
     ref = f"SGSUB-{int(datetime.utcnow().timestamp())}-{random.randint(100,999)}"
     rec = SheepGoatSubscription(
         user_id=payload.user_id,
@@ -1087,14 +1092,23 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
         country=payload.country,
         billing_cycle=payload.billing_cycle,
         amount=amount,
-        currency=payload.currency,
+        currency=cur,
         status='ACTIVE',
         reference=ref
     )
     db.add(rec)
     db.commit()
     db.refresh(rec)
-    return {'message': 'subscription activated', 'reference': ref, 'subscription': rec}
+    return {
+        'message': 'subscription activated',
+        'reference': ref,
+        'subscription': rec,
+        'amount_usd': amount_usd,
+        'payout_options': {
+            'ghana_mobile_money': settings.OWNER_PAYOUT_MOMO_GH,
+            'us_bank_account': settings.OWNER_PAYOUT_US_BANK
+        }
+    }
 
 
 @router.post('/marketplace/offers')

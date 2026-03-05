@@ -92,6 +92,7 @@ const paymentProviders = {
   BF: ['Orange Money', 'Moov Money']
 }
 const currencyByCountry = { GH: 'GHS', NG: 'NGN', BF: 'XOF' }
+const fxByCurrency = { USD: 1, GHS: 15, NGN: 1600, XOF: 610 }
 
 // Locked by user request: High Demand Products/Services must always display 10 rows unless explicitly changed.
 const DEMAND_LOCK_COUNT = 10
@@ -441,6 +442,13 @@ export default function App() {
   const publicTradeRows = state.tradeExportStats.length ? state.tradeExportStats : featuredTradeExportSeed
   const publicLivestockPlans = state.livestockPlans.length ? state.livestockPlans : featuredLivestockPlansSeed
 
+  const selectedCurrency = currencyByCountry[uiCountry] || 'USD'
+  const formatLocalPrice = (usd) => {
+    const amount = Number(usd || 0) * (fxByCurrency[selectedCurrency] || 1)
+    try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: selectedCurrency, maximumFractionDigits: 2 }).format(amount) }
+    catch { return `${selectedCurrency} ${amount.toFixed(2)}` }
+  }
+
   const showPublicLanding = !token || forcePublicView
 
   if (showPublicLanding) return <div className='authWrap'>
@@ -717,14 +725,30 @@ export default function App() {
       <article className='panel' style={{marginTop:10}}>
         <h3>🐑 Sheep & Goats Records & Intelligence Platform (Africa-Wide)</h3>
         <p style={{fontSize:'.85rem',color:'#475569'}}>A production-grade livestock records system for sheep and goats, with traceability, breeding performance, health tracking, and subscription-based access for operators across Africa.</p>
+        <p style={{fontSize:'.82rem',color:'#64748b',marginTop:4}}>Pricing auto-displays in your selected country currency. Settlement can route to Ghana Mobile Money or US bank account once payout details are configured.</p>
         <div className='three-col'>
           {publicLivestockPlans.map((p, i) => (
             <div className='panel' key={`plan-${i}`} style={{padding:10}}>
               <h4 style={{marginTop:0}}>{p.name}</h4>
-              <div className='list-row'><span>Monthly</span><strong>${p.monthly_usd}</strong></div>
-              <div className='list-row'><span>Yearly</span><strong>${p.yearly_usd}</strong></div>
+              <div className='list-row'><span>Monthly</span><strong>{formatLocalPrice(p.monthly_usd)}</strong></div>
+              <div className='list-row'><span>Yearly</span><strong>{formatLocalPrice(p.yearly_usd)}</strong></div>
               <div className='list'>
                 {(p.features || []).map((f, j) => <div className='list-row' key={`pf-${i}-${j}`}><span>{f}</span></div>)}
+              </div>
+              <div className='list-row' style={{marginTop:8}}>
+                <button className='btn btn-dark' onClick={async () => {
+                  if (!token) { setAuthMode('login'); setAuthMsg('Please login to subscribe.'); return }
+                  try {
+                    const r = await api.checkoutLivestockRecordsPlan({
+                      user_id: Number(me?.id || 1),
+                      plan_code: p.plan_code || 'starter',
+                      country: uiCountry,
+                      billing_cycle: 'monthly',
+                      currency: selectedCurrency
+                    })
+                    alert(`Subscription active. Ref: ${r.reference}`)
+                  } catch (e) { alert(`Checkout failed: ${errMsg(e)}`) }
+                }}>Subscribe</button>
               </div>
             </div>
           ))}
