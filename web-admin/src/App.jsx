@@ -29,7 +29,9 @@ const featuredServicesSeed = [
   { name: 'Farm spraying service', status: 'Available' },
   { name: 'Irrigation setup service', status: 'Open' },
   { name: 'Feed supply delivery', status: 'Open' },
-  { name: 'Warehouse monthly leasing', status: 'Available' }
+  { name: 'Warehouse monthly leasing', status: 'Available' },
+  { name: 'Farm consultancy', status: 'Available' },
+  { name: 'Ram/Buck/Bull rentals', status: 'Open' }
 ]
 
 const featuredWeatherSeed = [
