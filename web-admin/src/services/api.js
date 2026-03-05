@@ -77,6 +77,7 @@ export const govDistributeSubsidy = async (payload) => (await api.post('/gov/sub
 export const govCommunicate = async (payload) => (await api.post('/gov/communicate', payload)).data
 export const fetchSpotTrading = async () => (await api.get('/market/spot-trading')).data
 export const fetchSpotTradingHistory = async () => (await api.get('/market/spot-trading/history')).data
+export const fetchTradeExportStats = async () => (await api.get('/trade/export-stats')).data
 
 export const registerDeviceToken = async (payload) => (await api.post('/messaging/device-token', payload)).data
 export const fetchDeviceTokens = async () => (await api.get('/messaging/device-token')).data

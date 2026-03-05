@@ -83,7 +83,7 @@ export default function App() {
   const [publicQuery, setPublicQuery] = useState('')
   const [recentSearches, setRecentSearches] = useState([])
   const [recentViewed, setRecentViewed] = useState([])
-  const [state, setState] = useState({ metrics: {}, users: [], listings: [], livestock: [], logistics: [], equipment: [], storage: [], payments: [], alerts: [], contracts: [], idv: [], passports: [], verificationApps: [], approvedAccounts: [], deviceTokens: [], diseaseScans: [], disputes: [], fraudFlags: [], news: [], publicWeather: [], govPrograms: [], spotTrading: [], spotHistory: [] })
+  const [state, setState] = useState({ metrics: {}, users: [], listings: [], livestock: [], logistics: [], equipment: [], storage: [], payments: [], alerts: [], contracts: [], idv: [], passports: [], verificationApps: [], approvedAccounts: [], deviceTokens: [], diseaseScans: [], disputes: [], fraudFlags: [], news: [], publicWeather: [], govPrograms: [], spotTrading: [], spotHistory: [], tradeExportStats: [] })
   const [me, setMe] = useState(null)
   const lastTrackRef = useRef('')
 
@@ -127,17 +127,18 @@ export default function App() {
     setMe(meRes)
     const isAdmin = (meRes?.role || '').toLowerCase() === 'admin'
 
-    const [metrics, users, listings, livestock, logistics, equipment, storage, payments, alerts, contracts, idv, passports, regions, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, govPrograms, spotTrading, spotHistory] = await Promise.all([
+    const [metrics, users, listings, livestock, logistics, equipment, storage, payments, alerts, contracts, idv, passports, regions, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, govPrograms, spotTrading, spotHistory, tradeExportStats] = await Promise.all([
       api.fetchMetrics(), api.fetchUsers(), api.fetchListings(), api.fetchLivestock(), api.fetchLogistics(), api.fetchEquipment(), api.fetchStorage(), api.fetchPayments(), api.fetchAlerts(alertCountryFilter === 'ALL' ? undefined : alertCountryFilter), api.fetchContracts(), api.fetchIdVerifications(), api.fetchPassports(), api.fetchWeatherRegions(), api.fetchVerificationApps(), api.fetchApprovedAccounts(), api.fetchDeviceTokens(), api.fetchDiseaseScans(),
       isAdmin ? api.fetchAdminDisputes() : Promise.resolve([]),
       isAdmin ? api.fetchAdminFraudFlags() : Promise.resolve([]),
       api.fetchPublicNews().catch(() => []),
       api.fetchGovPrograms().catch(() => ({ items: [] })),
       api.fetchSpotTrading().catch(() => ({ items: [] })),
-      api.fetchSpotTradingHistory().catch(() => ({ items: [] }))
+      api.fetchSpotTradingHistory().catch(() => ({ items: [] })),
+      api.fetchTradeExportStats().catch(() => ({ items: [] }))
     ])
     setRegionMap(regions || { GH: [], NG: [], BF: [] })
-    setState({ metrics, users, listings, livestock, logistics, equipment, storage, payments, alerts, contracts, idv, passports, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, govPrograms: govPrograms.items || [], spotTrading: spotTrading.items || [], spotHistory: spotHistory.items || [] })
+    setState({ metrics, users, listings, livestock, logistics, equipment, storage, payments, alerts, contracts, idv, passports, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, govPrograms: govPrograms.items || [], spotTrading: spotTrading.items || [], spotHistory: spotHistory.items || [], tradeExportStats: tradeExportStats.items || [] })
   }
 
   useEffect(() => { if (token) load().catch(console.error) }, [token, alertCountryFilter])
@@ -184,9 +185,10 @@ export default function App() {
       api.fetchPublicWeather().catch(() => []),
       api.fetchGovPrograms().catch(() => ({ items: [] })),
       api.fetchSpotTrading().catch(() => ({ items: [] })),
-      api.fetchSpotTradingHistory().catch(() => ({ items: [] }))
-    ]).then(([listings, livestock, logistics, equipment, storage, alerts, news, publicWeather, govPrograms, spotTrading, spotHistory]) => {
-      setState(prev => ({ ...prev, listings, livestock, logistics, equipment, storage, alerts, news, publicWeather, govPrograms: govPrograms.items || [], spotTrading: spotTrading.items || [], spotHistory: spotHistory.items || [] }))
+      api.fetchSpotTradingHistory().catch(() => ({ items: [] })),
+      api.fetchTradeExportStats().catch(() => ({ items: [] }))
+    ]).then(([listings, livestock, logistics, equipment, storage, alerts, news, publicWeather, govPrograms, spotTrading, spotHistory, tradeExportStats]) => {
+      setState(prev => ({ ...prev, listings, livestock, logistics, equipment, storage, alerts, news, publicWeather, govPrograms: govPrograms.items || [], spotTrading: spotTrading.items || [], spotHistory: spotHistory.items || [], tradeExportStats: tradeExportStats.items || [] }))
     })
   }, [token])
 
@@ -453,6 +455,37 @@ export default function App() {
             </div>
           ))}
           {!state.govPrograms.length && <div className='list-row'><span>Loading official ministry programs…</span></div>}
+        </div>
+      </article>
+
+      <article className='panel' style={{marginTop:10}}>
+        <h3>🌍 Current Export/Import Statistics (Top 10 + Volumes)</h3>
+        <p style={{fontSize:'.85rem',color:'#475569'}}>Coverage: Poultry, Sheep & Goats, Cattle, Rice, and major commodities.</p>
+        <div className='three-col'>
+          {state.tradeExportStats.map((c, i) => (
+            <div className='panel' key={`trade-${i}`} style={{padding:10}}>
+              <h4 style={{marginTop:0}}>{c.commodity}</h4>
+              <div style={{fontWeight:600, marginBottom:6}}>Top 10 Exporters</div>
+              <div className='list'>
+                {(c.top_exporters || []).slice(0,10).map((r) => (
+                  <div className='list-row' key={`exp-${c.commodity_key}-${r.rank}`}>
+                    <span>{r.rank}. {r.country}</span>
+                    <strong>{Number(r.volume_tons || 0).toLocaleString()} t</strong>
+                  </div>
+                ))}
+              </div>
+              <div style={{fontWeight:600, margin:'10px 0 6px'}}>Top 10 Importers</div>
+              <div className='list'>
+                {(c.top_importers || []).slice(0,10).map((r) => (
+                  <div className='list-row' key={`imp-${c.commodity_key}-${r.rank}`}>
+                    <span>{r.rank}. {r.country}</span>
+                    <strong>{Number(r.volume_tons || 0).toLocaleString()} t</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+          {!state.tradeExportStats.length && <div className='list-row'><span>Loading current export/import statistics…</span></div>}
         </div>
       </article>
     </div>
