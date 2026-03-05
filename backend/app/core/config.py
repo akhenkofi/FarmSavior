@@ -13,10 +13,10 @@ class Settings(BaseSettings):
     OWNER_PAYOUT_MOMO_GH: str = ''
     OWNER_PAYOUT_US_BANK: str = ''
 
-    FLW_SECRET_KEY: str = ''
-    FLW_PUBLIC_KEY: str = ''
-    FLW_WEBHOOK_SECRET: str = ''
-    FLW_REDIRECT_URL: str = 'https://www.farmsavior.com/?public=0&go=onboarding'
+    PAYSTACK_SECRET_KEY: str = ''
+    PAYSTACK_PUBLIC_KEY: str = ''
+    PAYSTACK_WEBHOOK_SECRET: str = ''
+    PAYSTACK_CALLBACK_URL: str = 'https://www.farmsavior.com/?public=0&go=onboarding'
 
 
 settings = Settings()
