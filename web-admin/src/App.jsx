@@ -4,6 +4,7 @@ import * as api from './services/api'
 const errMsg = (e) => e?.response?.data?.detail || e?.message || 'Request failed'
 
 const countries = ['GH', 'NG', 'BF']
+const countryLabels = { GH: 'Ghana (GH)', NG: 'Nigeria (NG)', BF: 'Burkina Faso (BF)' }
 const userTypes = ['Farmer', 'Buyer', 'Transporter', 'EquipmentProvider', 'StorageProvider']
 const cropOptions = ['Cassava','Maize','Tomato','Rice','Yam','Plantain','Onion','Pepper','Cocoa','Sorghum','Millet','Groundnut']
 const animalOptions = ['Poultry','Goats','Sheep','Cattle','Rabbits','Grasscutters','Horses','Dogs']
@@ -512,11 +513,12 @@ export default function App() {
 
       <div className='two-col' style={{marginTop:10}}>
         <article className='panel'>
-          <h3>🌤️ 9-City Weather Forecast (GH • NG • BF)</h3>
+          <h3>🌤️ 9-City Weather Forecast (Ghana • Nigeria • Burkina Faso)</h3>
+          <p style={{fontSize:'.82rem', color:'#64748b', margin:'4px 0 10px'}}>Country codes: GH = Ghana, NG = Nigeria, BF = Burkina Faso.</p>
           <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
             {['GH','NG','BF'].map((c) => (
               <button key={`wx-${c}`} className={`tab ${expandedWeatherCountry === c ? 'active' : ''}`} onClick={() => setExpandedWeatherCountry(c)}>
-                {c}
+                {countryLabels[c]}
               </button>
             ))}
           </div>
@@ -605,7 +607,7 @@ export default function App() {
           </div>
 
           <div className='list-row' style={{marginTop:12}}>
-            <h3 style={{margin:0}}>📈 Spot Trading (GH • NG • BF • World Avg)</h3>
+            <h3 style={{margin:0}}>📈 Spot Trading (Ghana • Nigeria • Burkina Faso • World Avg)</h3>
             <button className='btn' onClick={() => window.print()}>Export Briefing (PDF)</button>
           </div>
           <div className='tabs' style={{marginTop:8, marginBottom:8, flexWrap:'wrap'}}>
@@ -652,7 +654,7 @@ export default function App() {
       </div>
 
       <article className='panel' style={{marginTop:10}}>
-        <h3>🏛️ Government Programs & Subsidies (GH • NG • BF)</h3>
+        <h3>🏛️ Government Programs & Subsidies (Ghana • Nigeria • Burkina Faso)</h3>
         <div className='list'>
           {publicGovRows.slice(0, 6).map((g, i) => (
             <div className='list-row' key={`gov-${i}`}>
