@@ -1311,7 +1311,22 @@ export default function App() {
             <h3 style={{margin:0}}>📸 FarmSavior Community</h3>
             <button className='btn btn-dark' onClick={() => setActive('community')}>Open Community</button>
           </div>
-          <div className='list' style={{maxHeight:220, overflow:'auto'}}>
+
+          <div style={{position:'relative', marginBottom:10}}>
+            <img
+              src={communityProfile.cover_image_url || 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200&q=80'}
+              alt='Community cover'
+              style={{width:'100%',height:120,objectFit:'cover',borderRadius:10,border:'1px solid #e2e8f0'}}
+            />
+            <img
+              src={communityProfile.avatar_url || 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=300&q=80'}
+              alt='Community avatar'
+              style={{position:'absolute',left:10,bottom:-22,width:56,height:56,objectFit:'cover',borderRadius:'50%',border:'3px solid #fff',boxShadow:'0 6px 12px rgba(0,0,0,.2)'}}
+            />
+            <div style={{position:'absolute',left:74,bottom:8,color:'#fff',fontWeight:700,textShadow:'0 1px 2px rgba(0,0,0,.6)'}}>{me?.full_name || 'Your Community Profile'}</div>
+          </div>
+
+          <div className='list' style={{maxHeight:220, overflow:'auto', marginTop:26}}>
             {communityPosts.slice(0, 3).map((p)=><div key={`home-cp-${p.id}`} className='panel' style={{padding:8}}>
               <div style={{fontWeight:700}}>{p.author_name || `User ${p.user_id}`} {p.author_country ? `(${p.author_country})` : ''}</div>
               {!!p.text && <div style={{fontSize:'.9rem'}}>{String(p.text).slice(0, 140)}{String(p.text).length > 140 ? '…' : ''}</div>}
@@ -1816,9 +1831,21 @@ export default function App() {
         <div className='two-col'>
           <article className='panel'>
             <h4>My Community Profile</h4>
-            {!!communityProfile.cover_image_url && <img src={communityProfile.cover_image_url} alt='Cover' style={{width:'100%',height:130,objectFit:'cover',borderRadius:10,border:'1px solid #e2e8f0',marginBottom:8}} />}
-            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
-              {!!communityProfile.avatar_url && <img src={communityProfile.avatar_url} alt='Avatar' style={{width:72,height:72,objectFit:'cover',borderRadius:'50%',border:'2px solid #fff',boxShadow:'0 2px 10px rgba(0,0,0,.12)'}} />}
+            <div style={{position:'relative', marginBottom:12}}>
+              <img
+                src={communityProfile.cover_image_url || 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200&q=80'}
+                alt='Cover'
+                style={{width:'100%',height:170,objectFit:'cover',borderRadius:12,border:'1px solid #e2e8f0'}}
+              />
+              <div style={{position:'absolute',inset:0,borderRadius:12,background:'linear-gradient(180deg,rgba(15,23,42,0) 30%, rgba(15,23,42,.35) 100%)'}} />
+              <img
+                src={communityProfile.avatar_url || 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=300&q=80'}
+                alt='Avatar'
+                style={{position:'absolute',left:14,bottom:-26,width:86,height:86,objectFit:'cover',borderRadius:'50%',border:'4px solid #fff',boxShadow:'0 8px 20px rgba(0,0,0,.22)'}}
+              />
+            </div>
+            <div style={{paddingLeft:4, marginTop:28, marginBottom:8}}>
+              <div style={{fontSize:'1rem',fontWeight:700,color:'#0f172a'}}>{me?.full_name || 'Your profile'}</div>
               <div style={{fontSize:'.85rem',color:'#475569'}}>{communityProfile.bio || 'Add a short bio to attract followers.'}</div>
             </div>
             <form className='list' onSubmit={async(e)=>{e.preventDefault(); await api.saveCommunityProfileMe(communityProfile); await loadCommunity(); alert('Profile updated')}}>
