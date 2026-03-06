@@ -229,6 +229,11 @@ export default function App() {
   const [expandedSpotCommodity, setExpandedSpotCommodity] = useState('')
   const [expandedTradeCommodity, setExpandedTradeCommodity] = useState('')
   const [expandedLivestockPlan, setExpandedLivestockPlan] = useState('')
+  const [fxBase, setFxBase] = useState('USD')
+  const [fxAmount, setFxAmount] = useState('1')
+  const [fxRates, setFxRates] = useState({})
+  const [fxUpdatedAt, setFxUpdatedAt] = useState('')
+  const [fxQuery, setFxQuery] = useState('')
 
   const t = (en, fr) => (uiLang === 'fr' ? fr : en)
   const displayProductName = (name) => (uiLang === 'fr' ? (productNameFr[name] || name) : name)
@@ -305,6 +310,26 @@ export default function App() {
     setSignup((s) => ({ ...s, country: uiCountry }))
     setcropAndCountry()
   }, [uiCountry])
+
+  useEffect(() => {
+    let alive = true
+    const loadFx = async () => {
+      try {
+        const res = await fetch(`https://open.er-api.com/v6/latest/${fxBase}`)
+        const data = await res.json()
+        if (!alive) return
+        const rates = data?.rates || {}
+        setFxRates(rates)
+        setFxUpdatedAt(data?.time_last_update_utc || new Date().toUTCString())
+      } catch {
+        if (!alive) return
+        setFxRates({})
+      }
+    }
+    loadFx()
+    const id = setInterval(loadFx, 10 * 60 * 1000)
+    return () => { alive = false; clearInterval(id) }
+  }, [fxBase])
 
   const setcropAndCountry = () => {
     setCropForm((s) => ({ ...s, country: uiCountry }))
@@ -527,6 +552,14 @@ export default function App() {
   const publicSpotHistoryRows = state.spotHistory.length ? state.spotHistory : featuredSpotHistorySeed
   const publicTradeRows = state.tradeExportStats.length ? state.tradeExportStats : featuredTradeExportSeed
   const publicLivestockPlans = state.livestockPlans.length ? state.livestockPlans : featuredLivestockPlansSeed
+
+  const fxRows = useMemo(() => {
+    const amount = Number(fxAmount || 0)
+    return Object.entries(fxRates || {})
+      .filter(([code]) => !fxQuery || code.toLowerCase().includes(fxQuery.toLowerCase()))
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([code, rate]) => ({ code, value: (amount * Number(rate || 0)) }))
+  }, [fxRates, fxAmount, fxQuery])
 
   const selectedCurrency = currencyByCountry[uiCountry] || 'USD'
   const formatLocalPrice = (usd) => {
@@ -922,6 +955,26 @@ export default function App() {
             </div>
           </article>
         </div>
+
+        <article className='panel' style={{marginTop:10}}>
+          <h3>💱 Global Currency Converter (Realtime)</h3>
+          <div className='inlineForm'>
+            <input className='input' type='number' step='any' min='0' value={fxAmount} onChange={(e)=>setFxAmount(e.target.value)} placeholder='Amount' />
+            <select className='input' value={fxBase} onChange={(e)=>setFxBase(e.target.value)}>
+              {Object.keys(fxRates || {}).sort().map((c)=><option key={c} value={c}>{c}</option>)}
+              {!Object.keys(fxRates || {}).length && <option value='USD'>USD</option>}
+            </select>
+            <input className='input' value={fxQuery} onChange={(e)=>setFxQuery(e.target.value)} placeholder='Filter currency (e.g., GHS, NGN, EUR)' />
+          </div>
+          <p style={{fontSize:'.82rem',color:'#64748b',margin:'6px 0 10px'}}>Rates source: open.er-api.com • Last updated: {fxUpdatedAt || '—'}</p>
+          <div className='list' style={{maxHeight:320, overflow:'auto'}}>
+            {fxRows.map((r)=>{
+              const formatted = Number.isFinite(r.value) ? r.value.toLocaleString(undefined, { maximumFractionDigits: 4 }) : '0'
+              return <div className='list-row' key={r.code}><span>{r.code}</span><strong>{formatted}</strong></div>
+            })}
+            {!fxRows.length && <div className='list-row'><span>No rates available right now.</span></div>}
+          </div>
+        </article>
       </section>}
 
       {active === 'dashboard' && <section>
