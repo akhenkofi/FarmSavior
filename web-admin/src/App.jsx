@@ -143,8 +143,8 @@ export default function App() {
   const [token, setToken] = useState(localStorage.getItem('farmsavior_token'))
   const [authMode, setAuthMode] = useState('login')
   const [portalType, setPortalType] = useState('main')
-  const [uiCountry, setUiCountry] = useState('GH')
-  const [uiLang, setUiLang] = useState('en')
+  const [uiCountry, setUiCountry] = useState(() => localStorage.getItem('farmsavior_ui_country') || 'GH')
+  const [uiLang, setUiLang] = useState(() => localStorage.getItem('farmsavior_ui_lang') || 'en')
   const [phoneForOtp, setPhoneForOtp] = useState('')
   const [authMsg, setAuthMsg] = useState('')
   const [active, setActive] = useState(initialSection)
@@ -189,6 +189,15 @@ export default function App() {
   const [expandedLivestockPlan, setExpandedLivestockPlan] = useState('')
 
   const t = (en, fr) => (uiLang === 'fr' ? fr : en)
+
+  useEffect(() => {
+    localStorage.setItem('farmsavior_ui_lang', uiLang)
+  }, [uiLang])
+
+  useEffect(() => {
+    localStorage.setItem('farmsavior_ui_country', uiCountry)
+  }, [uiCountry])
+
   const [fcmToken, setFcmToken] = useState('')
   const [diseaseForm, setDiseaseForm] = useState({ user_id: 1, category: 'crop', target: '', image_url: '' })
   const [diseaseImageFileName, setDiseaseImageFileName] = useState('')
@@ -473,7 +482,7 @@ export default function App() {
       <div className='panel' style={{background:'linear-gradient(120deg,#0b3b2e,#0e7490)', color:'#fff'}}>
         <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:8}}>
           <img src='/assets/farmsavior-logo.jpg' alt='FarmSavior logo' style={{width:72,height:72,borderRadius:12,objectFit:'cover',border:'2px solid rgba(255,255,255,.3)'}} />
-          <h2 style={{margin:0}}>FarmSavior Marketplace Live</h2>
+          <h2 style={{margin:0}}>{t('FarmSavior Marketplace Live','Marché FarmSavior en direct')}</h2>
         </div>
         <p style={{opacity:.95}}>{t('High-demand products and services across Ghana, Nigeria, and Burkina Faso. Browse freely. To contact providers or use tools, sign up/sign in.','Produits et services à forte demande au Ghana, au Nigeria et au Burkina Faso. Parcourez librement. Pour contacter les fournisseurs ou utiliser les outils, inscrivez-vous/connectez-vous.')}</p>
         <div className='inlineForm' style={{background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.25)', marginBottom:8}}>
@@ -487,15 +496,15 @@ export default function App() {
           <div className='list-row' style={{padding:'6px 10px', background:'rgba(255,255,255,.85)'}}><span>{t('Payment methods','Moyens de paiement')}</span><strong>{paymentProviders[uiCountry].join(', ')}</strong></div>
         </div>
         <form className='inlineForm' onSubmit={(e)=>{e.preventDefault(); addRecentSearch(publicQuery)}} style={{background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.25)'}}>
-          <input className='input' placeholder='Search products, services, market activity…' value={publicQuery} onChange={(e)=>setPublicQuery(e.target.value)} />
-          <button className='btn btn-dark'>Search</button>
-          <button type='button' className='btn' onClick={()=>setPublicQuery('')}>Clear</button>
+          <input className='input' placeholder={t('Search products, services, market activity…','Rechercher produits, services, activité du marché…')} value={publicQuery} onChange={(e)=>setPublicQuery(e.target.value)} />
+          <button className='btn btn-dark'>{t('Search','Rechercher')}</button>
+          <button type='button' className='btn' onClick={()=>setPublicQuery('')}>{t('Clear','Effacer')}</button>
         </form>
       </div>
 
       <div className='three-col' style={{marginTop:10}}>
         <article className='panel' style={{minHeight: 430}}>
-          <h3>🔥 High Demand Products</h3>
+          <h3>{t('🔥 High Demand Products','🔥 Produits à forte demande')}</h3>
           <div className='list'>
             {lockDemandCount(
               featuredProductsSeed.filter(x => !publicQuery || `${x.name}`.toLowerCase().includes(publicQuery.toLowerCase())),
@@ -508,7 +517,7 @@ export default function App() {
         </article>
 
         <article className='panel' style={{minHeight: 430}}>
-          <h3>🚚 High Demand Services</h3>
+          <h3>{t('🚚 High Demand Services','🚚 Services à forte demande')}</h3>
           <div className='list'>
             {lockDemandCount(
               featuredServicesSeed.filter(x => !publicQuery || `${x.name}`.toLowerCase().includes(publicQuery.toLowerCase())),
@@ -521,7 +530,7 @@ export default function App() {
         </article>
 
         <article className='panel'>
-          <h3>🧠 Popular Actions</h3>
+          <h3>{t('🧠 Popular Actions','🧠 Actions populaires')}</h3>
           <div className='list'>
             <div className='list-row'><span>List Product</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('products'); return } setAuthMode('signup'); setAuthMsg('Create an account or log in to list a product.'); }}>Start</button></div>
             <div className='list-row'><span>List Services</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('services'); return } setAuthMode('signup'); setAuthMsg('Create an account or log in to list your services.'); }}>Start</button></div>
@@ -802,7 +811,7 @@ export default function App() {
         <h3 style={{margin:0}}>FarmSavior</h3>
       </div>
       {menu.map(m => <button key={m} className={`sideBtn ${active === m ? 'on' : ''}`} onClick={() => setActive(m)}>{menuLabel(m)}</button>)}
-      <button className='sideBtn' onClick={() => { localStorage.removeItem('farmsavior_token'); setToken('') }}>logout</button>
+      <button className='sideBtn' onClick={() => { localStorage.removeItem('farmsavior_token'); setToken('') }}>{t('logout','se déconnecter')}</button>
     </aside>
     <main className='main'>
       <div className='inlineForm' style={{marginBottom:10, justifyContent:'space-between'}}>
@@ -813,21 +822,21 @@ export default function App() {
           <select className='input' value={uiLang} onChange={(e)=>setUiLang(e.target.value)}>
             <option value='en'>English</option><option value='fr'>Français</option>
           </select>
-          <button className='btn btn-dark' onClick={() => setActive('home')}>← Main Interface</button>
-          <button className='btn' onClick={() => setActive('products')}>Products</button>
-          <button className='btn' onClick={() => setActive('livestock')}>Livestock</button>
-          <button className='btn' onClick={() => setActive('services')}>Services</button>
+          <button className='btn btn-dark' onClick={() => setActive('home')}>{t('← Main Interface','← Interface principale')}</button>
+          <button className='btn' onClick={() => setActive('products')}>{t('Products','Produits')}</button>
+          <button className='btn' onClick={() => setActive('livestock')}>{t('Livestock','Élevage')}</button>
+          <button className='btn' onClick={() => setActive('services')}>{t('Services','Services')}</button>
         </div>
         <div style={{display:'flex', gap:8}}>
-          <button className='btn btn-dark' onClick={() => setActive('onboarding')}>My Account</button>
-          <button className='btn' onClick={goToPublicHomepage}>Public Homepage</button>
+          <button className='btn btn-dark' onClick={() => setActive('onboarding')}>{t('My Account','Mon compte')}</button>
+          <button className='btn' onClick={goToPublicHomepage}>{t('Public Homepage','Page publique')}</button>
         </div>
       </div>
       {active === 'home' && <section>
-        <h2>Main App Homepage</h2>
+        <h2>{t('Main App Homepage','Page d’accueil de l’application')}</h2>
         <form className='inlineForm' onSubmit={(e) => { e.preventDefault(); addRecentSearch(homeQuery) }}>
-          <input className='input' placeholder='Search products, livestock, services…' value={homeQuery} onChange={(e)=>setHomeQuery(e.target.value)} />
-          <button className='btn btn-dark' type='submit'>Search</button>
+          <input className='input' placeholder={t('Search products, livestock, services…','Rechercher produits, élevage, services…')} value={homeQuery} onChange={(e)=>setHomeQuery(e.target.value)} />
+          <button className='btn btn-dark' type='submit'>{t('Search','Rechercher')}</button>
         </form>
         <div className='two-col'>
           <article className='panel'>
