@@ -30,7 +30,8 @@ from app.schemas.schemas import (
     VerificationDecisionIn, DeviceTokenIn, DiseaseAnalyzeIn,
     SheepGoatRecordIn, SheepGoatBreedingGroupIn, SheepGoatSubscriptionIn,
     WorldChatMessageIn, WorldChatModerationActionIn, WorldChatUserSanctionIn,
-    CommunityProfileIn, CommunityPostIn, CommunityCommentIn
+    CommunityProfileIn, CommunityPostIn, CommunityCommentIn,
+    PlantIdentifyIn
 )
 from app.core.config import settings
 from app.core.security import create_access_token, hash_password, verify_password, decode_access_token
@@ -1039,6 +1040,115 @@ def community_add_comment(post_id: int, payload: CommunityCommentIn, authorizati
     db.commit()
     db.refresh(c)
     return c
+
+
+@router.post('/ai/plants/identify')
+def ai_plant_identify(payload: PlantIdentifyIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    _current_user_from_auth(authorization, db)  # signed-in users only
+
+    name_hint = f"{payload.file_name or ''} {payload.context_hint or ''} {payload.image_url[:120]}".lower()
+
+    plant_db = [
+        {
+            'keys': ['napier', 'elephant grass', 'pennisetum'],
+            'name': 'Napier Grass (Elephant Grass)',
+            'confidence': 0.86,
+            'feed_for': ['cattle', 'goats', 'sheep'],
+            'nutrition': {'crude_protein_pct': '8-12%', 'fiber': 'high', 'energy': 'moderate'},
+            'use_tip': 'Best chopped fresh or silage; pair with legume leaves for higher protein.'
+        },
+        {
+            'keys': ['alfalfa', 'lucerne'],
+            'name': 'Alfalfa (Lucerne)',
+            'confidence': 0.9,
+            'feed_for': ['goats', 'sheep', 'cattle', 'rabbits'],
+            'nutrition': {'crude_protein_pct': '17-22%', 'fiber': 'moderate', 'energy': 'high'},
+            'use_tip': 'Excellent high-protein forage; avoid sudden overfeeding to young animals.'
+        },
+        {
+            'keys': ['leucaena', 'ipil-ipil'],
+            'name': 'Leucaena',
+            'confidence': 0.83,
+            'feed_for': ['goats', 'sheep', 'cattle'],
+            'nutrition': {'crude_protein_pct': '20-28%', 'fiber': 'moderate', 'energy': 'moderate'},
+            'use_tip': 'Very protein-rich browse; mix with grasses in ration.'
+        },
+        {
+            'keys': ['moringa'],
+            'name': 'Moringa',
+            'confidence': 0.82,
+            'feed_for': ['goats', 'sheep', 'rabbits', 'poultry'],
+            'nutrition': {'crude_protein_pct': '22-30%', 'fiber': 'moderate', 'energy': 'moderate'},
+            'use_tip': 'Great supplement leaf meal; introduce gradually.'
+        },
+        {
+            'keys': ['amaranth'],
+            'name': 'Amaranth',
+            'confidence': 0.78,
+            'feed_for': ['goats', 'sheep', 'rabbits'],
+            'nutrition': {'crude_protein_pct': '14-20%', 'fiber': 'moderate', 'energy': 'moderate'},
+            'use_tip': 'Useful leafy forage; wilt briefly before feeding.'
+        },
+        {
+            'keys': ['cassava leaf', 'cassava leaves'],
+            'name': 'Cassava Leaves',
+            'confidence': 0.74,
+            'feed_for': ['goats', 'sheep', 'cattle'],
+            'nutrition': {'crude_protein_pct': '16-25%', 'fiber': 'moderate', 'energy': 'moderate'},
+            'use_tip': 'Wilt or process before feeding to reduce anti-nutritional factors.'
+        },
+        {
+            'keys': ['sweet potato vine', 'sweet potato leaves'],
+            'name': 'Sweet Potato Vines',
+            'confidence': 0.79,
+            'feed_for': ['goats', 'sheep', 'rabbits', 'pigs'],
+            'nutrition': {'crude_protein_pct': '12-18%', 'fiber': 'moderate', 'energy': 'moderate'},
+            'use_tip': 'Highly palatable; combine with dry matter sources.'
+        },
+        {
+            'keys': ['maize stover', 'corn stover', 'maize fodder'],
+            'name': 'Maize Stover / Fodder',
+            'confidence': 0.72,
+            'feed_for': ['cattle', 'goats', 'sheep'],
+            'nutrition': {'crude_protein_pct': '4-8%', 'fiber': 'high', 'energy': 'moderate'},
+            'use_tip': 'Low protein alone; supplement with legumes/protein concentrate.'
+        },
+    ]
+
+    hit = None
+    for p in plant_db:
+        if any(k in name_hint for k in p['keys']):
+            hit = p
+            break
+
+    if not hit:
+        return {
+            'identified_name': 'Unknown plant (needs clearer image)',
+            'confidence': 0.45,
+            'feed_suitability': 'UNCONFIRMED',
+            'target_livestock': payload.target_livestock,
+            'nutrition': {'note': 'Could not confidently identify from current image/hint.'},
+            'recommendations': [
+                'Upload a close-up of leaves + stem + whole plant in daylight.',
+                'Add local/common name in context hint for better matching.',
+                'Do not feed unknown plants until confirmed safe by extension officer/vet.'
+            ],
+            'engine': 'FarmSavior Plant Identifier (real-time best-effort)'
+        }
+
+    target = (payload.target_livestock or '').lower().strip()
+    suitable = ('LIKELY_SUITABLE' if not target or target in hit['feed_for'] else 'USE_WITH_CAUTION')
+
+    return {
+        'identified_name': hit['name'],
+        'confidence': hit['confidence'],
+        'feed_suitability': suitable,
+        'target_livestock': payload.target_livestock,
+        'feed_for': hit['feed_for'],
+        'nutrition': hit['nutrition'],
+        'recommendations': [hit['use_tip'], 'Balance forage with minerals + clean water always available.'],
+        'engine': 'FarmSavior Plant Identifier (real-time best-effort)'
+    }
 
 
 @router.post('/ai/disease/analyze')

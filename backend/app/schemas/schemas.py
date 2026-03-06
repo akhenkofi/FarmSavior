@@ -253,3 +253,11 @@ class CommunityPostIn(BaseModel):
 
 class CommunityCommentIn(BaseModel):
     text: str
+
+
+class PlantIdentifyIn(BaseModel):
+    user_id: Optional[int] = None
+    image_url: str
+    file_name: Optional[str] = None
+    context_hint: Optional[str] = None
+    target_livestock: Optional[str] = None

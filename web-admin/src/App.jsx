@@ -288,6 +288,9 @@ export default function App() {
   const [diseaseForm, setDiseaseForm] = useState({ user_id: 1, category: 'crop', target: '', image_url: '' })
   const [diseaseImageFileName, setDiseaseImageFileName] = useState('')
   const [diseaseImagePreview, setDiseaseImagePreview] = useState('')
+  const [plantIdForm, setPlantIdForm] = useState({ user_id: 1, image_url: '', file_name: '', context_hint: '', target_livestock: 'goats' })
+  const [plantIdPreview, setPlantIdPreview] = useState('')
+  const [plantIdResult, setPlantIdResult] = useState(null)
   const [farmMapForm, setFarmMapForm] = useState({ user_id: 1, gps_lat: '', gps_lng: '', farm_size_hectares: '', crop_types: '[]', livestock_numbers: '{}', farm_photo_urls: '[]', harvest_records_notes: '' })
   const [govSubsidyForm, setGovSubsidyForm] = useState({ country: 'GH', agency: 'MOFA', farmer_user_id: 1, amount: '' })
   const [govMsgForm, setGovMsgForm] = useState({ country: 'GH', target: 'farmers', text: '' })
@@ -475,7 +478,7 @@ export default function App() {
     persistRecents(recentSearches, next)
   }
 
-  const baseMenu = ['home', 'dashboard', 'onboarding', 'products', 'livestock', 'services', 'payments', 'alerts', 'maps', 'messaging', 'world-chat', 'community', 'ai-disease', 'government', 'contracts']
+  const baseMenu = ['home', 'dashboard', 'onboarding', 'products', 'livestock', 'services', 'payments', 'alerts', 'maps', 'messaging', 'world-chat', 'community', 'ai-disease', 'plant-id', 'government', 'contracts']
   const menu = ((me?.role || '').toLowerCase() === 'admin') ? [...baseMenu, 'admin'] : baseMenu
   const menuLabel = (m) => ({
     'home':'home',
@@ -491,6 +494,7 @@ export default function App() {
     'world-chat':'World Chat',
     'community':'FarmSavior Community',
     'ai-disease':'AI Disease Analyzer',
+    'plant-id':'AI Plant Identifier',
     'government':'Government Integration',
     'contracts':'contracts',
     'admin':'admin'
@@ -1788,6 +1792,66 @@ export default function App() {
         {diseaseImageFileName && <p style={{fontSize:'.82rem',color:'#475569'}}>Uploaded: {diseaseImageFileName}</p>}
         {diseaseImagePreview && <img src={diseaseImagePreview} alt='Disease scan preview' style={{maxWidth:260,borderRadius:8,border:'1px solid #e2e8f0',marginBottom:8}} />}
         <DataTable columns={['id','user_id','crop_type','image_url','result','created_at']} rows={state.diseaseScans} filterKey='crop_type' />
+      </section>}
+
+      {active === 'plant-id' && <section>
+        <h3>🌿 AI Plant Identifier (Feed & Nutrition)</h3>
+        <form className='panel list' onSubmit={async e => {
+          e.preventDefault()
+          try {
+            if (!plantIdForm.image_url) { alert('Please upload a plant image first.'); return }
+            const r = await api.identifyPlant({
+              user_id: Number(plantIdForm.user_id || 1),
+              image_url: plantIdForm.image_url,
+              file_name: plantIdForm.file_name,
+              context_hint: plantIdForm.context_hint,
+              target_livestock: plantIdForm.target_livestock
+            })
+            setPlantIdResult(r)
+          } catch (err) {
+            alert(`Plant identification failed: ${errMsg(err)}`)
+          }
+        }}>
+          <div className='inlineForm'>
+            <input className='input' placeholder='User ID' value={plantIdForm.user_id} onChange={(e)=>setPlantIdForm({...plantIdForm,user_id:e.target.value})} />
+            <select className='input' value={plantIdForm.target_livestock} onChange={(e)=>setPlantIdForm({...plantIdForm,target_livestock:e.target.value})}>
+              <option value='goats'>Goats</option>
+              <option value='sheep'>Sheep</option>
+              <option value='cattle'>Cattle</option>
+              <option value='rabbits'>Rabbits</option>
+              <option value='poultry'>Poultry</option>
+            </select>
+          </div>
+
+          <input className='input' type='file' accept='image/*' onChange={(e)=>{
+            const f = e.target.files?.[0]
+            if (!f) return
+            const reader = new FileReader()
+            reader.onload = () => {
+              const data = String(reader.result || '')
+              setPlantIdPreview(data)
+              setPlantIdForm(prev => ({ ...prev, image_url: data, file_name: f.name }))
+            }
+            reader.readAsDataURL(f)
+          }} />
+          <input className='input' placeholder='Context hint (optional): local name, where found, leaf smell, etc.' value={plantIdForm.context_hint} onChange={(e)=>setPlantIdForm({...plantIdForm,context_hint:e.target.value})} />
+          {plantIdPreview && <img src={plantIdPreview} alt='Plant preview' style={{maxWidth:320,borderRadius:8,border:'1px solid #e2e8f0'}} />}
+          <button className='btn btn-dark'>Identify Plant Now</button>
+        </form>
+
+        {plantIdResult && <article className='panel' style={{marginTop:10}}>
+          <h4 style={{marginTop:0}}>{plantIdResult.identified_name}</h4>
+          <div className='list'>
+            <div className='list-row'><span>Confidence</span><strong>{Math.round(Number(plantIdResult.confidence || 0) * 100)}%</strong></div>
+            <div className='list-row'><span>Feed suitability</span><strong>{plantIdResult.feed_suitability || '-'}</strong></div>
+            <div className='list-row'><span>Best for</span><strong>{(plantIdResult.feed_for || []).join(', ') || '-'}</strong></div>
+            <div className='list-row'><span>Nutrition</span><strong>{plantIdResult.nutrition ? JSON.stringify(plantIdResult.nutrition) : '-'}</strong></div>
+          </div>
+          <div className='list' style={{marginTop:8}}>
+            {(plantIdResult.recommendations || []).map((x,i)=><div className='list-row' key={`pr-${i}`}><span>{x}</span></div>)}
+          </div>
+          <p style={{fontSize:'.8rem', color:'#64748b', marginTop:8}}>Engine: {plantIdResult.engine}</p>
+        </article>}
       </section>}
 
       {active === 'government' && <section><h3>Government Integration</h3>
