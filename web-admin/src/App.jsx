@@ -213,7 +213,7 @@ export default function App() {
   const [me, setMe] = useState(null)
   const lastTrackRef = useRef('')
 
-  const [signup, setSignup] = useState({ full_name: '', phone: '', country: 'GH', region: '', user_type: 'Farmer', password: '' })
+  const [signup, setSignup] = useState({ full_name: '', phone: '', country: 'GH', region: '', user_type: 'Farmer', password: '', accept_terms: true, accept_privacy: true, consent_analytics: true, consent_personalization: true, consent_marketing: false, consent_aggregated_insights: true })
   const [login, setLogin] = useState({ phone: '', password: '' })
   const [otp, setOtp] = useState({ phone: '', code: '' })
 
@@ -871,13 +871,62 @@ export default function App() {
           <div className='tabs'>{['login', 'signup', 'otp'].map(m => <button key={m} className={`tab ${authMode === m ? 'active' : ''}`} onClick={() => setAuthMode(m)}>{m.toUpperCase()}</button>)}</div>
 
           {authMode === 'signup' && <form className='list' onSubmit={async (e) => {
-            try { e.preventDefault(); const r = await api.register(signup); setPhoneForOtp(signup.phone); setOtp({ ...otp, phone: signup.phone }); setAuthMode('otp'); setAuthMsg(`Registered. Use OTP: ${r.otp_mock_code}`); } catch (e) { setAuthMsg(`Signup failed: ${errMsg(e)}`) }
+            try {
+              e.preventDefault();
+              if (!signup.accept_terms || !signup.accept_privacy) { setAuthMsg('Please accept Terms and Privacy to continue.'); return }
+              const payload = {
+                full_name: signup.full_name,
+                phone: signup.phone,
+                country: signup.country,
+                region: signup.region,
+                user_type: signup.user_type,
+                password: signup.password,
+              }
+              const r = await api.register(payload)
+              await api.trackAnalyticsEvent({
+                event_name: 'consent_captured',
+                country: signup.country,
+                role_hint: signup.user_type,
+                properties: {
+                  accept_terms: !!signup.accept_terms,
+                  accept_privacy: !!signup.accept_privacy,
+                  consent_analytics: !!signup.consent_analytics,
+                  consent_personalization: !!signup.consent_personalization,
+                  consent_marketing: !!signup.consent_marketing,
+                  consent_aggregated_insights: !!signup.consent_aggregated_insights,
+                  consent_version: 'v1',
+                  captured_at_utc: new Date().toISOString()
+                }
+              }).catch(() => {})
+              try {
+                localStorage.setItem('farmsavior_consent', JSON.stringify({
+                  accept_terms: !!signup.accept_terms,
+                  accept_privacy: !!signup.accept_privacy,
+                  consent_analytics: !!signup.consent_analytics,
+                  consent_personalization: !!signup.consent_personalization,
+                  consent_marketing: !!signup.consent_marketing,
+                  consent_aggregated_insights: !!signup.consent_aggregated_insights,
+                  consent_version: 'v1',
+                  captured_at_utc: new Date().toISOString()
+                }))
+              } catch {}
+              setPhoneForOtp(signup.phone); setOtp({ ...otp, phone: signup.phone }); setAuthMode('otp'); setAuthMsg(`Registered. Use OTP: ${r.otp_mock_code}`);
+            } catch (e) { setAuthMsg(`Signup failed: ${errMsg(e)}`) }
           }}>
             <input className='input' placeholder='Full name' value={signup.full_name} onChange={e => setSignup({ ...signup, full_name: e.target.value })} required />
             <input className='input' placeholder='Phone' value={signup.phone} onChange={e => setSignup({ ...signup, phone: e.target.value })} required />
             <div className='row2'><select className='input' value={signup.country} onChange={e => setSignup({ ...signup, country: e.target.value })}>{countries.map(c => <option key={c}>{c}</option>)}</select><input className='input' placeholder='Region' value={signup.region} onChange={e => setSignup({ ...signup, region: e.target.value })} required /></div>
             <select className='input' value={signup.user_type} onChange={e => setSignup({ ...signup, user_type: e.target.value })}>{userTypes.map(u => <option key={u}>{u}</option>)}</select>
             <input className='input' type='password' placeholder='Password' value={signup.password} onChange={e => setSignup({ ...signup, password: e.target.value })} required />
+            <div className='panel' style={{padding:8, background:'#f8fafc'}}>
+              <label style={{display:'block',fontSize:'.84rem'}}><input type='checkbox' checked={signup.accept_terms} onChange={e => setSignup({ ...signup, accept_terms: e.target.checked })} /> I agree to Terms of Service.</label>
+              <label style={{display:'block',fontSize:'.84rem'}}><input type='checkbox' checked={signup.accept_privacy} onChange={e => setSignup({ ...signup, accept_privacy: e.target.checked })} /> I agree to Privacy Policy.</label>
+              <label style={{display:'block',fontSize:'.84rem'}}><input type='checkbox' checked={signup.consent_analytics} onChange={e => setSignup({ ...signup, consent_analytics: e.target.checked })} /> Help improve FarmSavior with usage analytics.</label>
+              <label style={{display:'block',fontSize:'.84rem'}}><input type='checkbox' checked={signup.consent_personalization} onChange={e => setSignup({ ...signup, consent_personalization: e.target.checked })} /> Personalize feed, recommendations, and alerts.</label>
+              <label style={{display:'block',fontSize:'.84rem'}}><input type='checkbox' checked={signup.consent_marketing} onChange={e => setSignup({ ...signup, consent_marketing: e.target.checked })} /> Receive product updates and offers.</label>
+              <label style={{display:'block',fontSize:'.84rem'}}><input type='checkbox' checked={signup.consent_aggregated_insights} onChange={e => setSignup({ ...signup, consent_aggregated_insights: e.target.checked })} /> Allow anonymized aggregated insights for ecosystem reports.</label>
+              <div style={{fontSize:'.76rem', color:'#64748b', marginTop:6}}>You can update these preferences anytime in account settings.</div>
+            </div>
             <button className='btn btn-dark'>Create Account</button>
           </form>}
 
