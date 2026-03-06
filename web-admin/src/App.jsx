@@ -249,7 +249,7 @@ export default function App() {
   const [login, setLogin] = useState({ phone: '', password: '' })
   const [otp, setOtp] = useState({ phone: '', code: '' })
 
-  const [idForm, setIdForm] = useState({ user_id: 1, id_type: 'GhanaCard', id_number: '', id_photo_url: '', facial_verification_flag: false })
+  const [idForm, setIdForm] = useState({ user_id: 1, id_type: 'GhanaCard', id_number: '', id_photo_url: '', id_front_photo_url: '', id_back_photo_url: '', facial_verification_flag: false })
   const [passportForm, setPassportForm] = useState({ user_id: 1, gps_lat: '', gps_lng: '', farm_size_hectares: '', crop_types: '[]', livestock_numbers: '{}', farm_photo_urls: '[]', harvest_records_notes: '' })
   const [cropForm, setCropForm] = useState({ farmer_id: 1, crop_name: '', quantity_kg: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
   const [cropEdit, setCropEdit] = useState({ id: '', farmer_id: 1, crop_name: '', quantity_kg: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
@@ -1509,7 +1509,9 @@ export default function App() {
             <input className='input' type='number' placeholder='User ID' value={idForm.user_id} onChange={e => setIdForm({ ...idForm, user_id: e.target.value })} />
             <select className='input' value={idForm.id_type} onChange={e => setIdForm({ ...idForm, id_type: e.target.value })}><option>GhanaCard</option><option>NIN</option><option>BF National ID</option></select>
             <input className='input' placeholder='ID Number' value={idForm.id_number} onChange={e => setIdForm({ ...idForm, id_number: e.target.value })} />
-            <input className='input' placeholder='ID Photo URL' value={idForm.id_photo_url} onChange={e => setIdForm({ ...idForm, id_photo_url: e.target.value })} />
+            <input className='input' placeholder='ID Photo URL (legacy/single)' value={idForm.id_photo_url} onChange={e => setIdForm({ ...idForm, id_photo_url: e.target.value })} />
+            <input className='input' placeholder='ID Front Photo URL' value={idForm.id_front_photo_url} onChange={e => setIdForm({ ...idForm, id_front_photo_url: e.target.value })} />
+            <input className='input' placeholder='ID Back Photo URL' value={idForm.id_back_photo_url} onChange={e => setIdForm({ ...idForm, id_back_photo_url: e.target.value })} />
             <label><input type='checkbox' checked={idForm.facial_verification_flag} onChange={e => setIdForm({ ...idForm, facial_verification_flag: e.target.checked })} /> Facial verification done</label>
             <button className='btn btn-dark'>Save ID Verification</button>
           </form></article>

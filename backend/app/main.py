@@ -18,6 +18,13 @@ def ensure_runtime_columns():
                 cols = {c['name'] for c in inspector.get_columns('community_profiles')}
                 if 'username' not in cols:
                     conn.execute(text('ALTER TABLE community_profiles ADD COLUMN username VARCHAR(80)'))
+
+            if 'id_verifications' in tables:
+                vcols = {c['name'] for c in inspector.get_columns('id_verifications')}
+                if 'id_front_photo_url' not in vcols:
+                    conn.execute(text('ALTER TABLE id_verifications ADD COLUMN id_front_photo_url VARCHAR(500)'))
+                if 'id_back_photo_url' not in vcols:
+                    conn.execute(text('ALTER TABLE id_verifications ADD COLUMN id_back_photo_url VARCHAR(500)'))
     except Exception:
         pass
 

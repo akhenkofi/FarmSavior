@@ -92,19 +92,30 @@ GOV_SOURCES = [
 ]
 
 
+def _valid_photo_url(v: Optional[str]):
+    return bool(v and str(v).startswith(('http://', 'https://', 'data:image/')))
+
+
 def _ai_review_id_verification(rec: IDVerification):
     score = 0.0
     reasons = []
 
     if rec.id_number and len(str(rec.id_number).strip()) >= 8:
-        score += 0.45
+        score += 0.35
     else:
         reasons.append('ID number too short')
 
-    if rec.id_photo_url and str(rec.id_photo_url).startswith(('http://', 'https://')):
-        score += 0.35
+    has_front = _valid_photo_url(getattr(rec, 'id_front_photo_url', None))
+    has_back = _valid_photo_url(getattr(rec, 'id_back_photo_url', None))
+    has_legacy = _valid_photo_url(getattr(rec, 'id_photo_url', None))
+
+    if has_front and has_back:
+        score += 0.45
+    elif has_legacy:
+        score += 0.20
+        reasons.append('Only single ID image provided (front+back required for full approval)')
     else:
-        reasons.append('ID photo URL missing/invalid')
+        reasons.append('ID photos missing/invalid')
 
     if rec.facial_verification_flag:
         score += 0.20
@@ -114,6 +125,24 @@ def _ai_review_id_verification(rec: IDVerification):
     status = 'APPROVED' if score >= 0.75 else 'DENIED'
     reason = 'Auto AI analyzer: ' + ('; '.join(reasons) if reasons else 'All checks passed')
     return status, round(score, 3), reason
+
+
+def _require_transact_verified_user(db: Session, user_id: int, label: str = 'User'):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail=f'{label} not found')
+
+    latest = db.query(IDVerification).filter(IDVerification.user_id == user_id).order_by(IDVerification.created_at.desc(), IDVerification.id.desc()).first()
+    review = db.query(VerificationReview).filter(VerificationReview.user_id == user_id).order_by(VerificationReview.reviewed_at.desc().nullslast(), VerificationReview.id.desc()).first()
+
+    if not latest or not review or review.status != 'APPROVED':
+        raise HTTPException(status_code=403, detail=f'{label} must complete ID verification and be approved before transacting')
+
+    if str(user.country.value if hasattr(user.country, 'value') else user.country).upper() == 'GH' and str(latest.id_type) == 'GhanaCard':
+        if not (_valid_photo_url(getattr(latest, 'id_front_photo_url', None)) and _valid_photo_url(getattr(latest, 'id_back_photo_url', None))):
+            raise HTTPException(status_code=403, detail=f'{label} must submit Ghana Card front and back images before transacting')
+
+    return True
 
 
 def _ai_review_change(module: str, payload: dict):
@@ -312,7 +341,10 @@ def analytics_users_summary():
 
 @router.post('/onboarding/id-verification')
 def create_id_verification(payload: IDVerificationIn, db: Session = Depends(get_db)):
-    rec = IDVerification(**payload.model_dump())
+    data = payload.model_dump()
+    if not data.get('id_front_photo_url'):
+        data['id_front_photo_url'] = data.get('id_photo_url')
+    rec = IDVerification(**data)
     db.add(rec)
     db.commit()
     db.refresh(rec)
@@ -352,6 +384,8 @@ def list_verification_applications(db: Session = Depends(get_db)):
         'id_type': iv.id_type,
         'id_number': iv.id_number,
         'id_photo_url': iv.id_photo_url,
+        'id_front_photo_url': iv.id_front_photo_url,
+        'id_back_photo_url': iv.id_back_photo_url,
         'facial_verification_flag': iv.facial_verification_flag,
         'status': r.status,
         'ai_score': r.ai_score,
@@ -1435,6 +1469,7 @@ def list_farmer_profiles(db: Session = Depends(get_db)):
 
 @router.post('/marketplace/listings')
 def create_listing(payload: CropListingIn, db: Session = Depends(get_db)):
+    _require_transact_verified_user(db, int(payload.farmer_id), 'Seller')
     listing = CropListing(**payload.model_dump())
     db.add(listing)
     db.commit()
@@ -1488,6 +1523,7 @@ def patch_listing_price_qty(listing_id: int, payload: dict = Body(...), db: Sess
 
 @router.post('/marketplace/livestock')
 def create_livestock_listing(payload: LivestockListingIn, db: Session = Depends(get_db)):
+    _require_transact_verified_user(db, int(payload.farmer_id), 'Seller')
     listing = LivestockListing(**payload.model_dump())
     db.add(listing)
     db.commit()
@@ -1798,6 +1834,7 @@ def livestock_subscription_verify(reference: str, db: Session = Depends(get_db))
 
 @router.post('/marketplace/offers')
 def create_offer(payload: OfferIn, db: Session = Depends(get_db)):
+    _require_transact_verified_user(db, int(payload.buyer_id), 'Buyer')
     offer = ListingOffer(**payload.model_dump())
     db.add(offer)
     db.commit()
@@ -1926,6 +1963,8 @@ def update_storage_reservation(reservation_id: int, payload: StorageReservationI
 
 @router.post('/payments')
 def create_payment(payload: PaymentIn, db: Session = Depends(get_db)):
+    _require_transact_verified_user(db, int(payload.payer_id), 'Payer')
+    _require_transact_verified_user(db, int(payload.payee_id), 'Payee')
     provider_currency = {
         'GH': 'GHS',
         'NG': 'NGN',

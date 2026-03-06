@@ -36,6 +36,8 @@ class IDVerificationIn(BaseModel):
     id_type: Literal['GhanaCard', 'NIN', 'BF National ID']
     id_number: str
     id_photo_url: str
+    id_front_photo_url: Optional[str] = None
+    id_back_photo_url: Optional[str] = None
     facial_verification_flag: bool = False
 
 

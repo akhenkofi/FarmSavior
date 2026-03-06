@@ -51,6 +51,8 @@ class IDVerification(Base):
     id_type = Column(String(80), nullable=False)
     id_number = Column(String(120), nullable=False)
     id_photo_url = Column(String(500), nullable=False)
+    id_front_photo_url = Column(String(500), nullable=True)
+    id_back_photo_url = Column(String(500), nullable=True)
     facial_verification_flag = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
