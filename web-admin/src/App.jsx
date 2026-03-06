@@ -1030,6 +1030,22 @@ export default function App() {
       </article>
 
       <article className='panel' style={{marginTop:10}}>
+        <div className='list-row'>
+          <h3 style={{margin:0}}>📸 FarmSavior Community</h3>
+          <button className='btn btn-dark' onClick={()=>{ if (token) { goToAppSection('community'); return } setAuthMode('login'); setAuthMsg(t('Sign in to join FarmSavior Community.','Connectez-vous pour rejoindre la communauté FarmSavior.')) }}>{t('Open Community','Ouvrir la communauté')}</button>
+        </div>
+        <div className='list' style={{maxHeight:220, overflow:'auto'}}>
+          {communityPosts.slice(0, 4).map((p)=><div key={`pub-cp-${p.id}`} className='panel' style={{padding:8}}>
+            <div style={{fontWeight:700}}>{p.author_name || `User ${p.user_id}`} {p.author_country ? `(${p.author_country})` : ''}</div>
+            {!!p.text && <div style={{fontSize:'.9rem'}}>{String(p.text).slice(0, 140)}{String(p.text).length > 140 ? '…' : ''}</div>}
+            {p.media_url && <div style={{fontSize:'.8rem', color:'#64748b'}}>{p.media_type || 'MEDIA'} attached</div>}
+            <div style={{fontSize:'.8rem', color:'#64748b'}}>👍 {p.likes_count || 0} • 💬 {p.comments_count || 0}</div>
+          </div>)}
+          {!communityPosts.length && <div className='list-row'><span>{t('No community posts yet.','Aucune publication communautaire pour le moment.')}</span></div>}
+        </div>
+      </article>
+
+      <article className='panel' style={{marginTop:10}}>
         <div className='list-row' style={{marginBottom:8}}>
           <h3 style={{margin:0}}>💱 {t('Global Currency Converter (Realtime)','Convertisseur de devises mondial (temps réel)')}</h3>
           <button className='btn' onClick={()=>setShowCurrencyConverter(v=>!v)}>{showCurrencyConverter ? t('Hide','Masquer') : t('Show','Afficher')}</button>
