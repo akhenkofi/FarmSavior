@@ -346,6 +346,10 @@ export default function App() {
     if (authPrompt === 'login' && !token) {
       setAuthMode('login')
       setAuthMsg('Please sign in or create an account to continue.')
+      setTimeout(() => {
+        const el = document.getElementById('access-portal')
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 80)
     }
   }, [authPrompt, token])
 
@@ -727,6 +731,13 @@ export default function App() {
         <p style={{fontSize:'.8rem',opacity:.9,marginTop:8}}>{t('Safety notice: Content and AI outputs are guidance only. Verify locally with qualified agronomy/veterinary professionals before acting.','Avis de sécurité : le contenu et les résultats IA sont indicatifs. Vérifiez localement avec des professionnels qualifiés (agronomie/vétérinaire) avant d’agir.')}</p>
       </div>
 
+      {!token && authPrompt === 'login' && <div className='panel' style={{marginTop:10, background:'#ecfeff', border:'1px solid #99f6e4'}}>
+        <div className='list-row'>
+          <span>{t('Please sign in or create an account to continue.','Veuillez vous connecter ou créer un compte pour continuer.')}</span>
+          <button type='button' className='btn btn-dark' onClick={()=>{ const el=document.getElementById('access-portal'); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}) }}>{t('Go to Access Portal','Aller au portail d’accès')}</button>
+        </div>
+      </div>}
+
       <div className='three-col' style={{marginTop:10}}>
         <article className='panel' style={{minHeight: showHighDemandProducts ? 430 : 'auto'}}>
           <div className='list-row' style={{marginBottom:8}}>
@@ -821,7 +832,7 @@ export default function App() {
           <p style={{fontSize:'.82rem', color:'#64748b'}}>Sources and image credits are shown on each story.</p>
         </article>
 
-        <article className='panel'>
+        <article className='panel' id='access-portal'>
           <h3>{t('Access Portal','Portail d’accès')}</h3>
           {token && <div className='panel' style={{padding:10, marginBottom:10, background:'#ecfeff', border:'1px solid #99f6e4'}}>
             <div style={{fontWeight:700, marginBottom:6}}>{t('You are signed in.','Vous êtes connecté.')}</div>
