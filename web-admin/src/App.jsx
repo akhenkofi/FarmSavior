@@ -190,6 +190,8 @@ export default function App() {
   const [uiLang, setUiLang] = useState(() => localStorage.getItem('farmsavior_ui_lang') || 'en')
   const [phoneForOtp, setPhoneForOtp] = useState('')
   const [authMsg, setAuthMsg] = useState('')
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [pendingFeatureLabel, setPendingFeatureLabel] = useState('')
   const [active, setActive] = useState(initialSection)
   const [homeQuery, setHomeQuery] = useState('')
   const [publicQuery, setPublicQuery] = useState('')
@@ -346,11 +348,9 @@ export default function App() {
     if (authPrompt === 'login' && !token) {
       setAuthMode('login')
       setAuthMsg('Please sign in or create an account to continue.')
-      setTimeout(() => {
-        const el = document.getElementById('access-portal')
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 80)
+      setShowAuthModal(true)
     }
+    if (token) setShowAuthModal(false)
   }, [authPrompt, token])
 
   useEffect(() => {
@@ -456,6 +456,16 @@ export default function App() {
 
   const goToAppSection = (section = 'home') => {
     window.location.href = `/?public=0&go=${encodeURIComponent(section)}`
+  }
+
+  const handleProtectedAction = (section, label = '') => {
+    if (token) {
+      goToAppSection(section)
+      return
+    }
+    setPendingFeatureLabel(label || section)
+    setAuthMode('login')
+    setShowAuthModal(true)
   }
 
   const recentsKey = `farmsavior_recents_${(token || 'guest').slice(0, 12)}`
@@ -734,7 +744,19 @@ export default function App() {
       {!token && authPrompt === 'login' && <div className='panel' style={{marginTop:10, background:'#ecfeff', border:'1px solid #99f6e4'}}>
         <div className='list-row'>
           <span>{t('Please sign in or create an account to continue.','Veuillez vous connecter ou créer un compte pour continuer.')}</span>
-          <button type='button' className='btn btn-dark' onClick={()=>{ const el=document.getElementById('access-portal'); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}) }}>{t('Go to Access Portal','Aller au portail d’accès')}</button>
+          <button type='button' className='btn btn-dark' onClick={()=>setShowAuthModal(true)}>{t('Open Login Popup','Ouvrir la fenêtre de connexion')}</button>
+        </div>
+      </div>}
+
+      {!token && showAuthModal && <div style={{position:'fixed',inset:0,background:'rgba(2,6,23,.55)',zIndex:2000,display:'grid',placeItems:'center',padding:16}}>
+        <div className='panel' style={{width:'min(520px,96vw)', border:'2px solid #99f6e4'}}>
+          <h3 style={{marginTop:0}}>{t('Sign in required','Connexion requise')}</h3>
+          <p style={{marginTop:0,color:'#475569'}}>{pendingFeatureLabel ? t(`To access ${pendingFeatureLabel}, please sign in or create an account.`,`Pour accéder à ${pendingFeatureLabel}, veuillez vous connecter ou créer un compte.`) : t('Please sign in or create an account to continue.','Veuillez vous connecter ou créer un compte pour continuer.')}</p>
+          <div className='inlineForm' style={{marginBottom:0}}>
+            <button type='button' className='btn btn-dark' onClick={()=>{ setAuthMode('login'); setShowAuthModal(false); const el=document.getElementById('access-portal'); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}) }}>{t('Sign In','Se connecter')}</button>
+            <button type='button' className='btn' onClick={()=>{ setAuthMode('signup'); setShowAuthModal(false); const el=document.getElementById('access-portal'); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}) }}>{t('Create Account','Créer un compte')}</button>
+            <button type='button' className='btn' onClick={()=>setShowAuthModal(false)}>{t('Cancel','Annuler')}</button>
+          </div>
         </div>
       </div>}
 
@@ -774,17 +796,17 @@ export default function App() {
         <article className='panel'>
           <h3>{t('🧠 Popular Actions','🧠 Actions populaires')}</h3>
           <div className='list'>
-            <div className='list-row'><span>{t('List Product','Publier un produit')}</span><a className='btn' href={token ? '/?public=0&go=products' : '/?public=1&auth=login&go=products'}>{t('Start','Démarrer')}</a></div>
-            <div className='list-row'><span>{t('List Services','Publier des services')}</span><a className='btn' href={token ? '/?public=0&go=services' : '/?public=1&auth=login&go=services'}>{t('Start','Démarrer')}</a></div>
-            <div className='list-row'><span>{t('List Machinery for Rent','Publier des machines à louer')}</span><a className='btn' href={token ? '/?public=0&go=services' : '/?public=1&auth=login&go=services'}>{t('Start','Démarrer')}</a></div>
-            <div className='list-row'><span>{t('Rent Machinery','Louer des machines')}</span><a className='btn' href={token ? '/?public=0&go=services' : '/?public=1&auth=login&go=services'}>{t('Start','Démarrer')}</a></div>
-            <div className='list-row'><span>{t('Request Logistics / Transport','Demander logistique / transport')}</span><a className='btn' href={token ? '/?public=0&go=services' : '/?public=1&auth=login&go=services'}>{t('Start','Démarrer')}</a></div>
-            <div className='list-row'><span>{t('Find Storage / Cold Room','Trouver stockage / chambre froide')}</span><a className='btn' href={token ? '/?public=0&go=services' : '/?public=1&auth=login&go=services'}>{t('Start','Démarrer')}</a></div>
-            <div className='list-row'><span>{t('AI Disease Analyzer','Analyseur IA des maladies')}</span><a className='btn' href={token ? '/?public=0&go=ai-disease' : '/?public=1&auth=login&go=ai-disease'}>{t('Open','Ouvrir')}</a></div>
-            <div className='list-row'><span>{t('AI Plant Identifier','Identificateur IA des plantes')}</span><a className='btn' href={token ? '/?public=0&go=plant-id' : '/?public=1&auth=login&go=plant-id'}>{t('Open','Ouvrir')}</a></div>
-            <div className='list-row'><span>{t('AI Insect & Pest Identifier','Identificateur IA insectes et ravageurs')}</span><a className='btn' href={token ? '/?public=0&go=pest-id' : '/?public=1&auth=login&go=pest-id'}>{t('Open','Ouvrir')}</a></div>
-            <div className='list-row'><span>{t('Farm GPS Mapping','Cartographie GPS des fermes')}</span><a className='btn' href={token ? '/?public=0&go=maps' : '/?public=1&auth=login&go=maps'}>{t('Open','Ouvrir')}</a></div>
-            <div className='list-row'><span>{t('Global World Chat','Chat mondial')}</span><a className='btn' href={token ? '/?public=0&go=world-chat' : '/?public=1&auth=login&go=world-chat'}>{t('Open','Ouvrir')}</a></div>
+            <div className='list-row'><span>{t('List Product','Publier un produit')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('products', 'List Product')}>{t('Start','Démarrer')}</button></div>
+            <div className='list-row'><span>{t('List Services','Publier des services')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'List Services')}>{t('Start','Démarrer')}</button></div>
+            <div className='list-row'><span>{t('List Machinery for Rent','Publier des machines à louer')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'List Machinery for Rent')}>{t('Start','Démarrer')}</button></div>
+            <div className='list-row'><span>{t('Rent Machinery','Louer des machines')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'Rent Machinery')}>{t('Start','Démarrer')}</button></div>
+            <div className='list-row'><span>{t('Request Logistics / Transport','Demander logistique / transport')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'Request Logistics / Transport')}>{t('Start','Démarrer')}</button></div>
+            <div className='list-row'><span>{t('Find Storage / Cold Room','Trouver stockage / chambre froide')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'Find Storage / Cold Room')}>{t('Start','Démarrer')}</button></div>
+            <div className='list-row'><span>{t('AI Disease Analyzer','Analyseur IA des maladies')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('ai-disease', 'AI Disease Analyzer')}>{t('Open','Ouvrir')}</button></div>
+            <div className='list-row'><span>{t('AI Plant Identifier','Identificateur IA des plantes')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('plant-id', 'AI Plant Identifier')}>{t('Open','Ouvrir')}</button></div>
+            <div className='list-row'><span>{t('AI Insect & Pest Identifier','Identificateur IA insectes et ravageurs')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('pest-id', 'AI Insect & Pest Identifier')}>{t('Open','Ouvrir')}</button></div>
+            <div className='list-row'><span>{t('Farm GPS Mapping','Cartographie GPS des fermes')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('maps', 'Farm GPS Mapping')}>{t('Open','Ouvrir')}</button></div>
+            <div className='list-row'><span>{t('Global World Chat','Chat mondial')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('world-chat', 'Global World Chat')}>{t('Open','Ouvrir')}</button></div>
           </div>
           <p style={{fontSize:'.82rem', color:'#64748b'}}>{t('You can browse publicly; posting, renting, contacting providers, and transactions require sign-in.','Vous pouvez parcourir publiquement ; publier, louer, contacter des prestataires et effectuer des transactions nécessite une connexion.')}</p>
         </article>
