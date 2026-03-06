@@ -296,7 +296,11 @@ export default function App() {
   const [showCurrencyConverter, setShowCurrencyConverter] = useState(false)
   const [showUnitConverter, setShowUnitConverter] = useState(false)
 
-  const t = (en, fr) => (uiLang === 'fr' ? fr : en)
+  const t = (en, fr, zh) => {
+    if (uiLang === 'fr') return fr
+    if (uiLang === 'zh') return zh || en
+    return en
+  }
   const displayProductName = (name) => (uiLang === 'fr' ? (productNameFr[name] || name) : name)
   const displayServiceName = (name) => (uiLang === 'fr' ? (serviceNameFr[name] || name) : name)
   const displayWeatherCondition = (condition) => {
@@ -741,7 +745,7 @@ export default function App() {
 
   const currencyName = (code) => {
     try {
-      const dn = new Intl.DisplayNames([uiLang === 'fr' ? 'fr' : 'en'], { type: 'currency' })
+      const dn = new Intl.DisplayNames([uiLang === 'fr' ? 'fr' : (uiLang === 'zh' ? 'zh' : 'en')], { type: 'currency' })
       return dn.of(code) || code
     } catch {
       return code
@@ -812,9 +816,9 @@ export default function App() {
             <option value='GH'>Ghana</option><option value='NG'>Nigeria</option><option value='BF'>Burkina Faso</option>
           </select>
           <select className='input' value={uiLang} onChange={(e)=>setUiLang(e.target.value)}>
-            <option value='en'>English</option><option value='fr'>Français</option>
+            <option value='en'>English</option><option value='fr'>Français</option><option value='zh'>中文</option>
           </select>
-          <div className='list-row' style={{padding:'6px 10px', background:'rgba(255,255,255,.85)'}}><span>{t('Currency','Devise')}</span><strong>{currencyByCountry[uiCountry]}</strong></div>
+          <div className='list-row' style={{padding:'6px 10px', background:'rgba(255,255,255,.85)'}}><span>{t('Currency','Devise','货币')}</span><strong>{currencyByCountry[uiCountry]}</strong></div>
           <div className='list-row' style={{padding:'6px 10px', background:'rgba(255,255,255,.85)'}}><span>{t('Payment methods','Moyens de paiement')}</span><strong>{paymentProviders[uiCountry].join(', ')}</strong></div>
         </div>
         <form className='inlineForm' onSubmit={(e)=>{e.preventDefault(); addRecentSearch(publicQuery)}} style={{background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.25)'}}>
@@ -1337,9 +1341,9 @@ export default function App() {
             <option value='GH'>Ghana</option><option value='NG'>Nigeria</option><option value='BF'>Burkina Faso</option>
           </select>
           <select className='input' value={uiLang} onChange={(e)=>setUiLang(e.target.value)}>
-            <option value='en'>English</option><option value='fr'>Français</option>
+            <option value='en'>English</option><option value='fr'>Français</option><option value='zh'>中文</option>
           </select>
-          <button className='btn btn-dark' onClick={() => setActive('home')}>{t('← Main Interface','← Interface principale')}</button>
+          <button className='btn btn-dark' onClick={() => setActive('home')}>{t('← Main Interface','← Interface principale','← 主界面')}</button>
           <button className='btn' onClick={() => setActive('products')}>{t('Products','Produits')}</button>
           <button className='btn' onClick={() => setActive('livestock')}>{t('Livestock','Élevage')}</button>
           <button className='btn' onClick={() => setActive('services')}>{t('Services','Services')}</button>
