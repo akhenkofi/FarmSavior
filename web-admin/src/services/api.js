@@ -96,3 +96,11 @@ export const postWorldChatMessage = async (payload) => (await api.post('/chat/wo
 export const fetchWorldChatModerationQueue = async (limit = 100) => (await api.get('/chat/world/moderation/queue', { params: { limit } })).data
 export const setWorldChatModerationAction = async (payload) => (await api.post('/chat/world/moderation/action', payload)).data
 export const sanctionWorldChatUser = async (userId, payload) => (await api.post(`/chat/world/users/${userId}/sanction`, payload)).data
+
+export const fetchCommunityProfileMe = async () => (await api.get('/community/profile/me')).data
+export const saveCommunityProfileMe = async (payload) => (await api.post('/community/profile/me', payload)).data
+export const fetchCommunityPosts = async (limit = 60) => (await api.get('/community/posts', { params: { limit } })).data
+export const createCommunityPost = async (payload) => (await api.post('/community/posts', payload)).data
+export const toggleCommunityPostLike = async (postId) => (await api.post(`/community/posts/${postId}/like`)).data
+export const fetchCommunityPostComments = async (postId) => (await api.get(`/community/posts/${postId}/comments`)).data
+export const addCommunityPostComment = async (postId, payload) => (await api.post(`/community/posts/${postId}/comments`, payload)).data

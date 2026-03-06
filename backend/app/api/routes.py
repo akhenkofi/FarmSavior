@@ -19,7 +19,8 @@ from app.models.models import (
     UserRole, CountryCode, IDVerification, FarmPassport,
     LivestockListing, EquipmentRental, StorageReservation, TradeContract, VerificationReview, UpdateReview,
     DeviceToken, DiseaseScan, SheepGoatRecord, SheepGoatBreedingGroup, SheepGoatSubscription,
-    WorldChatMessage, WorldChatUserModeration
+    WorldChatMessage, WorldChatUserModeration,
+    CommunityProfile, CommunityPost, CommunityPostLike, CommunityPostComment
 )
 from app.schemas.schemas import (
     UserCreate, UserLogin, OTPVerify, TokenResponse, FarmerProfileIn,
@@ -28,7 +29,8 @@ from app.schemas.schemas import (
     LivestockListingIn, EquipmentRentalIn, StorageReservationIn, ContractIn,
     VerificationDecisionIn, DeviceTokenIn, DiseaseAnalyzeIn,
     SheepGoatRecordIn, SheepGoatBreedingGroupIn, SheepGoatSubscriptionIn,
-    WorldChatMessageIn, WorldChatModerationActionIn, WorldChatUserSanctionIn
+    WorldChatMessageIn, WorldChatModerationActionIn, WorldChatUserSanctionIn,
+    CommunityProfileIn, CommunityPostIn, CommunityCommentIn
 )
 from app.core.config import settings
 from app.core.security import create_access_token, hash_password, verify_password, decode_access_token
@@ -911,6 +913,132 @@ def world_chat_user_sanction(user_id: int, payload: WorldChatUserSanctionIn, aut
     db.commit()
     db.refresh(rec)
     return rec
+
+
+@router.get('/community/profile/me')
+def community_profile_me(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    u = _current_user_from_auth(authorization, db)
+    p = db.query(CommunityProfile).filter(CommunityProfile.user_id == u.id).first()
+    if not p:
+        p = CommunityProfile(user_id=u.id)
+        db.add(p)
+        db.commit()
+        db.refresh(p)
+    return p
+
+
+@router.post('/community/profile/me')
+def community_profile_upsert(payload: CommunityProfileIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    u = _current_user_from_auth(authorization, db)
+    p = db.query(CommunityProfile).filter(CommunityProfile.user_id == u.id).first()
+    if not p:
+        p = CommunityProfile(user_id=u.id)
+        db.add(p)
+    for k, v in payload.model_dump().items():
+        setattr(p, k, v)
+    db.commit()
+    db.refresh(p)
+    return p
+
+
+@router.get('/community/posts')
+def community_posts(limit: int = 60, db: Session = Depends(get_db)):
+    n = max(1, min(limit, 200))
+    rows = db.query(CommunityPost).filter(CommunityPost.status == 'VISIBLE').order_by(CommunityPost.id.desc()).limit(n).all()
+    out = []
+    for r in rows:
+        likes = db.query(func.count(CommunityPostLike.id)).filter(CommunityPostLike.post_id == r.id).scalar() or 0
+        comments = db.query(func.count(CommunityPostComment.id)).filter(CommunityPostComment.post_id == r.id).scalar() or 0
+        out.append({
+            'id': r.id,
+            'user_id': r.user_id,
+            'author_name': r.author_name,
+            'author_country': r.author_country,
+            'text': r.text,
+            'media_url': r.media_url,
+            'media_type': r.media_type,
+            'tags': r.tags,
+            'created_at': r.created_at,
+            'likes_count': likes,
+            'comments_count': comments,
+        })
+    return out
+
+
+@router.post('/community/posts')
+def community_create_post(payload: CommunityPostIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    u = _current_user_from_auth(authorization, db)
+    text = (payload.text or '').strip()
+    media_url = (payload.media_url or '').strip() or None
+    if not text and not media_url:
+        raise HTTPException(status_code=400, detail='Post must include text or media')
+
+    moderation = _moderate_world_chat_text(text or 'safe media post')
+    status = 'VISIBLE' if moderation['action'] == 'allow' else 'HIDDEN'
+
+    post = CommunityPost(
+        user_id=u.id,
+        author_name=u.full_name,
+        author_country=u.country.value if hasattr(u.country, 'value') else str(u.country),
+        text=text,
+        media_url=media_url,
+        media_type=payload.media_type or ('IMAGE' if media_url else 'TEXT'),
+        tags=(payload.tags or '').strip(),
+        status=status,
+        moderation_label=moderation['label'],
+        moderation_reason=moderation['reason']
+    )
+    db.add(post)
+    db.commit()
+    db.refresh(post)
+    return post
+
+
+@router.post('/community/posts/{post_id}/like')
+def community_like_post(post_id: int, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    u = _current_user_from_auth(authorization, db)
+    post = db.query(CommunityPost).filter(CommunityPost.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail='Post not found')
+
+    existing = db.query(CommunityPostLike).filter(CommunityPostLike.post_id == post_id, CommunityPostLike.user_id == u.id).first()
+    if existing:
+        db.delete(existing)
+        db.commit()
+        return {'liked': False}
+
+    rec = CommunityPostLike(post_id=post_id, user_id=u.id)
+    db.add(rec)
+    db.commit()
+    return {'liked': True}
+
+
+@router.get('/community/posts/{post_id}/comments')
+def community_comments(post_id: int, db: Session = Depends(get_db)):
+    rows = db.query(CommunityPostComment).filter(CommunityPostComment.post_id == post_id).order_by(CommunityPostComment.id.asc()).all()
+    return rows
+
+
+@router.post('/community/posts/{post_id}/comments')
+def community_add_comment(post_id: int, payload: CommunityCommentIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    u = _current_user_from_auth(authorization, db)
+    post = db.query(CommunityPost).filter(CommunityPost.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail='Post not found')
+
+    text = (payload.text or '').strip()
+    if not text:
+        raise HTTPException(status_code=400, detail='Comment cannot be empty')
+
+    moderation = _moderate_world_chat_text(text)
+    if moderation['action'] == 'block':
+        raise HTTPException(status_code=400, detail='Comment blocked by safety filter')
+
+    c = CommunityPostComment(post_id=post_id, user_id=u.id, author_name=u.full_name, text=text)
+    db.add(c)
+    db.commit()
+    db.refresh(c)
+    return c
 
 
 @router.post('/ai/disease/analyze')

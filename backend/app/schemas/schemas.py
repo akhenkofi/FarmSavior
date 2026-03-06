@@ -233,3 +233,22 @@ class WorldChatUserSanctionIn(BaseModel):
     mute_minutes: int = 0
     ban: bool = False
     reason: Optional[str] = None
+
+
+class CommunityProfileIn(BaseModel):
+    avatar_url: Optional[str] = None
+    bio: Optional[str] = ''
+    farm_life: Optional[str] = ''
+    interests: Optional[str] = 'farming,gardening'
+    visibility: Optional[Literal['PUBLIC', 'FOLLOWERS']] = 'PUBLIC'
+
+
+class CommunityPostIn(BaseModel):
+    text: Optional[str] = ''
+    media_url: Optional[str] = None
+    media_type: Optional[Literal['TEXT', 'IMAGE', 'VIDEO']] = 'TEXT'
+    tags: Optional[str] = ''
+
+
+class CommunityCommentIn(BaseModel):
+    text: str

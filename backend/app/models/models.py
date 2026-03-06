@@ -348,3 +348,49 @@ class WorldChatUserModeration(Base):
     strike_count = Column(Integer, default=0)
     last_reason = Column(String(255), nullable=True)
     updated_at = Column(DateTime, default=datetime.utcnow)
+
+
+class CommunityProfile(Base):
+    __tablename__ = 'community_profiles'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, unique=True, index=True)
+    avatar_url = Column(String(500), nullable=True)
+    bio = Column(Text, default='')
+    farm_life = Column(Text, default='')
+    interests = Column(String(255), default='farming,gardening')
+    visibility = Column(String(20), default='PUBLIC')
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class CommunityPost(Base):
+    __tablename__ = 'community_posts'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    author_name = Column(String(120), nullable=True)
+    author_country = Column(String(10), nullable=True)
+    text = Column(Text, default='')
+    media_url = Column(String(500), nullable=True)
+    media_type = Column(String(20), default='TEXT')  # TEXT|IMAGE|VIDEO
+    tags = Column(String(255), default='')
+    status = Column(String(20), default='VISIBLE')  # VISIBLE|HIDDEN
+    moderation_label = Column(String(40), nullable=True)
+    moderation_reason = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+class CommunityPostLike(Base):
+    __tablename__ = 'community_post_likes'
+    id = Column(Integer, primary_key=True)
+    post_id = Column(Integer, ForeignKey('community_posts.id'), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class CommunityPostComment(Base):
+    __tablename__ = 'community_post_comments'
+    id = Column(Integer, primary_key=True)
+    post_id = Column(Integer, ForeignKey('community_posts.id'), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    author_name = Column(String(120), nullable=True)
+    text = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)

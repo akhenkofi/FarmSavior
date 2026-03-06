@@ -198,6 +198,13 @@ export default function App() {
   const [worldChatText, setWorldChatText] = useState('')
   const [worldChatMsg, setWorldChatMsg] = useState('')
   const [worldChatQueue, setWorldChatQueue] = useState([])
+
+  const [communityProfile, setCommunityProfile] = useState({ avatar_url: '', bio: '', farm_life: '', interests: 'farming,gardening', visibility: 'PUBLIC' })
+  const [communityPosts, setCommunityPosts] = useState([])
+  const [communityPostForm, setCommunityPostForm] = useState({ text: '', media_url: '', media_type: 'TEXT', tags: '' })
+  const [communityCommentText, setCommunityCommentText] = useState({})
+  const [communityComments, setCommunityComments] = useState({})
+
   const [state, setState] = useState({ metrics: {}, users: [], listings: [], livestock: [], logistics: [], equipment: [], storage: [], payments: [], alerts: [], contracts: [], idv: [], passports: [], verificationApps: [], approvedAccounts: [], deviceTokens: [], diseaseScans: [], disputes: [], fraudFlags: [], news: [], publicWeather: [], govPrograms: [], spotTrading: [], spotHistory: [], tradeExportStats: [], livestockPlans: [] })
   const [me, setMe] = useState(null)
   const lastTrackRef = useRef('')
@@ -313,6 +320,15 @@ export default function App() {
     setWorldChatQueue(rows || [])
   }
 
+  const loadCommunity = async () => {
+    const [p, posts] = await Promise.all([
+      api.fetchCommunityProfileMe().catch(() => null),
+      api.fetchCommunityPosts(80).catch(() => [])
+    ])
+    if (p) setCommunityProfile(p)
+    setCommunityPosts(posts || [])
+  }
+
   useEffect(() => { if (token) load().catch(console.error) }, [token, alertCountryFilter])
 
   useEffect(() => {
@@ -329,6 +345,13 @@ export default function App() {
     const id = setInterval(() => { loadWorldChatQueue().catch(() => {}) }, 8000)
     return () => clearInterval(id)
   }, [token, me?.role])
+
+  useEffect(() => {
+    if (!token) return
+    loadCommunity().catch(() => {})
+    const id = setInterval(() => { loadCommunity().catch(() => {}) }, 7000)
+    return () => clearInterval(id)
+  }, [token])
 
   useEffect(() => {
     const key = `${token ? 'auth' : 'guest'}|${active}|${uiCountry}|${uiLang}`
@@ -449,7 +472,7 @@ export default function App() {
     persistRecents(recentSearches, next)
   }
 
-  const baseMenu = ['home', 'dashboard', 'onboarding', 'products', 'livestock', 'services', 'payments', 'alerts', 'maps', 'messaging', 'world-chat', 'ai-disease', 'government', 'contracts']
+  const baseMenu = ['home', 'dashboard', 'onboarding', 'products', 'livestock', 'services', 'payments', 'alerts', 'maps', 'messaging', 'world-chat', 'community', 'ai-disease', 'government', 'contracts']
   const menu = ((me?.role || '').toLowerCase() === 'admin') ? [...baseMenu, 'admin'] : baseMenu
   const menuLabel = (m) => ({
     'home':'home',
@@ -463,6 +486,7 @@ export default function App() {
     'maps':'maps',
     'messaging':'messaging',
     'world-chat':'World Chat',
+    'community':'FarmSavior Community',
     'ai-disease':'AI Disease Analyzer',
     'government':'Government Integration',
     'contracts':'contracts',
@@ -1542,6 +1566,71 @@ export default function App() {
             {!worldChatQueue.length && <div className='list-row'><span>No flagged messages.</span></div>}
           </div>
         </article>}
+      </section>}
+
+      {active === 'community' && <section>
+        <h3>📸 FarmSavior Community</h3>
+        <div className='two-col'>
+          <article className='panel'>
+            <h4>My Community Profile</h4>
+            <form className='list' onSubmit={async(e)=>{e.preventDefault(); await api.saveCommunityProfileMe(communityProfile); await loadCommunity(); alert('Profile updated')}}>
+              <input className='input' placeholder='Profile picture URL' value={communityProfile.avatar_url || ''} onChange={(e)=>setCommunityProfile({...communityProfile, avatar_url:e.target.value})} />
+              <input className='input' placeholder='Bio' value={communityProfile.bio || ''} onChange={(e)=>setCommunityProfile({...communityProfile, bio:e.target.value})} />
+              <input className='input' placeholder='Farm life details' value={communityProfile.farm_life || ''} onChange={(e)=>setCommunityProfile({...communityProfile, farm_life:e.target.value})} />
+              <input className='input' placeholder='Interests/tags (comma separated)' value={communityProfile.interests || ''} onChange={(e)=>setCommunityProfile({...communityProfile, interests:e.target.value})} />
+              <select className='input' value={communityProfile.visibility || 'PUBLIC'} onChange={(e)=>setCommunityProfile({...communityProfile, visibility:e.target.value})}>
+                <option value='PUBLIC'>Public</option>
+                <option value='FOLLOWERS'>Followers only</option>
+              </select>
+              <button className='btn btn-dark'>Save Profile</button>
+            </form>
+          </article>
+          <article className='panel'>
+            <h4>Create Post</h4>
+            <form className='list' onSubmit={async(e)=>{e.preventDefault(); await api.createCommunityPost(communityPostForm); setCommunityPostForm({ text:'', media_url:'', media_type:'TEXT', tags:'' }); await loadCommunity(); }}>
+              <textarea className='input' rows={4} placeholder='Share your farm update, innovation, or product...' value={communityPostForm.text} onChange={(e)=>setCommunityPostForm({...communityPostForm, text:e.target.value})} />
+              <input className='input' placeholder='Image/Video URL (optional)' value={communityPostForm.media_url} onChange={(e)=>setCommunityPostForm({...communityPostForm, media_url:e.target.value})} />
+              <select className='input' value={communityPostForm.media_type} onChange={(e)=>setCommunityPostForm({...communityPostForm, media_type:e.target.value})}>
+                <option value='TEXT'>Text</option>
+                <option value='IMAGE'>Image</option>
+                <option value='VIDEO'>Video</option>
+              </select>
+              <input className='input' placeholder='Tags (e.g. goats, irrigation, organic)' value={communityPostForm.tags} onChange={(e)=>setCommunityPostForm({...communityPostForm, tags:e.target.value})} />
+              <button className='btn btn-dark'>Post to Community</button>
+            </form>
+          </article>
+        </div>
+
+        <article className='panel' style={{marginTop:10}}>
+          <h4>Global Feed</h4>
+          <div className='list'>
+            {communityPosts.map((p)=><div key={`cp-${p.id}`} className='panel' style={{padding:10}}>
+              <div className='list-row'>
+                <strong>{p.author_name || `User ${p.user_id}`} {p.author_country ? `(${p.author_country})` : ''}</strong>
+                <span style={{fontSize:'.78rem', color:'#64748b'}}>{String(p.created_at || '').replace('T',' ').slice(0,16)}</span>
+              </div>
+              {p.text && <div style={{margin:'6px 0', whiteSpace:'pre-wrap'}}>{p.text}</div>}
+              {p.media_url && (
+                p.media_type === 'VIDEO'
+                  ? <video src={p.media_url} controls style={{width:'100%', maxHeight:300, borderRadius:8}} />
+                  : <img src={p.media_url} alt='community post' style={{width:'100%', maxHeight:320, objectFit:'cover', borderRadius:8}} />
+              )}
+              {!!p.tags && <div style={{fontSize:'.82rem', color:'#0284c7', marginTop:6}}>#{String(p.tags).split(',').map(s=>s.trim()).filter(Boolean).join(' #')}</div>}
+              <div className='list-row' style={{marginTop:8}}>
+                <button className='btn' onClick={async()=>{ await api.toggleCommunityPostLike(p.id); await loadCommunity(); }}>👍 Like ({p.likes_count || 0})</button>
+                <button className='btn' onClick={async()=>{ const rows=await api.fetchCommunityPostComments(p.id).catch(()=>[]); setCommunityComments(prev=>({...prev,[p.id]:rows||[]})) }}>💬 Comments ({p.comments_count || 0})</button>
+              </div>
+              <div className='inlineForm' style={{marginTop:6}}>
+                <input className='input' placeholder='Write comment...' value={communityCommentText[p.id] || ''} onChange={(e)=>setCommunityCommentText(prev=>({...prev,[p.id]:e.target.value}))} />
+                <button className='btn' onClick={async()=>{ const txt=(communityCommentText[p.id]||'').trim(); if(!txt) return; await api.addCommunityPostComment(p.id,{text:txt}); setCommunityCommentText(prev=>({...prev,[p.id]:''})); const rows=await api.fetchCommunityPostComments(p.id).catch(()=>[]); setCommunityComments(prev=>({...prev,[p.id]:rows||[]})); await loadCommunity(); }}>Send</button>
+              </div>
+              {(communityComments[p.id] || []).length > 0 && <div className='list' style={{marginTop:6}}>
+                {(communityComments[p.id] || []).slice(-5).map((c)=><div className='list-row' key={`cc-${c.id}`}><span><strong>{c.author_name || `User ${c.user_id}`}:</strong> {c.text}</span></div>)}
+              </div>}
+            </div>)}
+            {!communityPosts.length && <div className='list-row'><span>No community posts yet.</span></div>}
+          </div>
+        </article>
       </section>}
 
       {active === 'ai-disease' && <section><h3>AI Disease Analyzer</h3>
