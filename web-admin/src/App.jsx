@@ -730,6 +730,15 @@ export default function App() {
   }, [state.logistics, state.equipment, state.storage])
 
   const publicGovRows = state.govPrograms.length ? state.govPrograms : featuredGovSeed
+  const safeGovHeadline = (row) => {
+    const raw = String(row?.headline || '')
+    const status = String(row?.status || '').toLowerCase()
+    const lower = raw.toLowerCase()
+    if (status.includes('error') || lower.includes('error') || lower.includes('could not auto-fetch') || lower.includes('timeout') || lower.includes('errno') || lower.includes('failure')) {
+      return t('Program details temporarily unavailable. Open source page.', 'Détails du programme temporairement indisponibles. Ouvrez la page source.', '项目详情暂时不可用。请打开来源页面。')
+    }
+    return raw || t('Official program update', 'Mise à jour officielle du programme', '官方项目更新')
+  }
   const publicSpotRows = state.spotTrading.length ? state.spotTrading : featuredSpotSeed
   const publicSpotHistoryRows = state.spotHistory.length ? state.spotHistory : featuredSpotHistorySeed
   const spotUnitByCommodity = {
@@ -1120,7 +1129,7 @@ export default function App() {
         <div className='list'>
           {publicGovRows.slice(0, 6).map((g, i) => (
             <div className='list-row' key={`gov-${i}`}>
-              <span>{g.country} • {g.agency} • {g.headline} ({g.status || 'ok'})</span>
+              <span>{g.country} • {g.agency} • {safeGovHeadline(g)} ({String(g.status || 'ok').toLowerCase().includes('error') ? t('unavailable','indisponible','不可用') : (g.status || 'ok')})</span>
               <a className='btn' href={g.source_url} target='_blank' rel='noreferrer'>{t('Programs Page','Page des programmes')}</a>
             </div>
           ))}
@@ -2286,7 +2295,7 @@ export default function App() {
           <div className='list'>
             {(state.govPrograms || []).map((g, i) => (
               <div className='list-row' key={`gov-int-${i}`}>
-                <span><strong>{g.country}</strong> • {g.agency} — {g.headline}</span>
+                <span><strong>{g.country}</strong> • {g.agency} — {safeGovHeadline(g)}</span>
                 <a className='btn' href={g.source_url} target='_blank' rel='noreferrer'>Open Source</a>
               </div>
             ))}
