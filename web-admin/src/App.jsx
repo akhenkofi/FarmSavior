@@ -1110,31 +1110,31 @@ export default function App() {
           <p>{authMsg}</p>
 
           <div className='panel' style={{marginTop:10,padding:10,background:'#f8fafc'}}>
-            <h4 style={{margin:'0 0 6px'}}>{t('🌍 Global World Chat','🌍 Chat mondial')}</h4>
+            <h4 style={{margin:'0 0 6px'}}>{t('🌍 Global World Chat','🌍 Chat mondial','🌍 全球世界聊天')}</h4>
             <div className='list' style={{maxHeight:180, overflow:'auto'}}>
               {worldChat.slice(-5).map((m)=><div className='list-row' key={`pub-wc-${m.id}`}><span><strong>{m.user_name || `User ${m.user_id}`}:</strong> {m.text}</span></div>)}
               {!worldChat.length && <div className='list-row'><span>{t('No messages yet.','Aucun message pour le moment.')}</span></div>}
             </div>
             <div className='list-row' style={{marginTop:8}}>
-              <span>{t('Join the conversation with farmers worldwide.','Rejoignez la conversation avec des agriculteurs du monde entier.')}</span>
-              <button type='button' className='btn' onClick={()=>handleProtectedAction('world-chat', 'Global World Chat')}>{t('Open Chat','Ouvrir le chat')}</button>
+              <span>{t('Join the conversation with farmers worldwide.','Rejoignez la conversation avec des agriculteurs du monde entier.','与全球农民一起加入对话。')}</span>
+              <button type='button' className='btn' onClick={()=>handleProtectedAction('world-chat', 'Global World Chat')}>{t('Open Chat','Ouvrir le chat','打开聊天')}</button>
             </div>
           </div>
 
           <div className='panel' style={{marginTop:10,padding:10,background:'#f8fafc'}}>
-            <h4 style={{margin:'0 0 6px'}}>{t('📲 Download App to Phone','📲 Télécharger l’application sur le téléphone')}</h4>
+            <h4 style={{margin:'0 0 6px'}}>{t('📲 Download App to Phone','📲 Télécharger l’application sur le téléphone','📲 下载到手机')}</h4>
             <div style={{fontSize:'.84rem',color:'#334155'}}>
-              <div><strong>{t('iPhone (Safari):','iPhone (Safari) :')}</strong> {t('Open farmsavior.com → Share → Add to Home Screen.','Ouvrez farmsavior.com → Partager → Sur l’écran d’accueil.')}</div>
-              <div><strong>{t('Android (Chrome):','Android (Chrome) :')}</strong> {t('Open farmsavior.com → ⋮ menu → Install app / Add to Home screen.','Ouvrez farmsavior.com → menu ⋮ → Installer l’app / Ajouter à l’écran d’accueil.')}</div>
+              <div><strong>{t('iPhone (Safari):','iPhone (Safari) :','iPhone（Safari）：')}</strong> {t('Open farmsavior.com → Share → Add to Home Screen.','Ouvrez farmsavior.com → Partager → Sur l’écran d’accueil.','打开 farmsavior.com → 分享 → 添加到主屏幕。')}</div>
+              <div><strong>{t('Android (Chrome):','Android (Chrome) :','Android（Chrome）：')}</strong> {t('Open farmsavior.com → ⋮ menu → Install app / Add to Home screen.','Ouvrez farmsavior.com → menu ⋮ → Installer l’app / Ajouter à l’écran d’accueil.','打开 farmsavior.com → ⋮ 菜单 → 安装应用 / 添加到主屏幕。')}</div>
             </div>
           </div>
 
           <div className='list-row' style={{marginTop:12}}>
-            <h3 style={{margin:0}}>{t('📈 Spot Trading (Ghana • Nigeria • Burkina Faso • World Avg)','📈 Trading Spot (Ghana • Nigeria • Burkina Faso • Moyenne mondiale)')}</h3>
+            <h3 style={{margin:0}}>{t('📈 Spot Trading (Ghana • Nigeria • Burkina Faso • World Avg)','📈 Trading Spot (Ghana • Nigeria • Burkina Faso • Moyenne mondiale)','📈 现货交易（加纳 • 尼日利亚 • 布基纳法索 • 全球均值）')}</h3>
             <button className='btn' onClick={() => window.print()}>{t('Export Briefing (PDF)','Exporter le briefing (PDF)')}</button>
           </div>
           <p style={{fontSize:'.8rem', color:'#64748b', margin:'6px 0 8px'}}>
-            {t('Units: GH in GHS per market unit, NG in NGN per market unit, BF in XOF per market unit, World Avg in USD reference unit.','Unités : GH en GHS par unité de marché, NG en NGN par unité de marché, BF en XOF par unité de marché, moyenne mondiale en unité de référence USD.')}
+            {t('Units: GH in GHS per market unit, NG in NGN per market unit, BF in XOF per market unit, World Avg in USD reference unit.','Unités : GH en GHS par unité de marché, NG en NGN par unité de marché, BF en XOF par unité de marché, moyenne mondiale en unité de référence USD.','单位：GH 以 GHS/市场单位，NG 以 NGN/市场单位，BF 以 XOF/市场单位，全球均值以 USD 参考单位。')}
           </p>
           <div className='tabs' style={{marginTop:8, marginBottom:8, flexWrap:'wrap'}}>
             {publicSpotRows.map((r, i) => (
@@ -1162,12 +1162,12 @@ export default function App() {
                 const units = spotUnits(r.commodity)
                 return <div key={`st-right-${i}`} className='panel' style={{padding:10}}>
                   <div style={{fontWeight:700, marginBottom:6}}>{r.commodity}</div>
-                  <div style={{fontSize:12,color:'#64748b',marginBottom:6}}>{t('Date','Date')}: {r.updated_at_utc || hist.updated_at_utc || t('Live feed','Flux en direct')}</div>
-                  <div style={{fontSize:12,color:'#64748b',marginBottom:6}}>{t('Market units','Unités de marché')}: GH {units.GH} • NG {units.NG} • BF {units.BF} • World {units.WORLD_AVG}</div>
+                  <div style={{fontSize:12,color:'#64748b',marginBottom:6}}>{t('Date','Date','日期')}: {r.updated_at_utc || hist.updated_at_utc || t('Live feed','Flux en direct','实时数据')}</div>
+                  <div style={{fontSize:12,color:'#64748b',marginBottom:6}}>{t('Market units','Unités de marché','市场单位')}: GH {units.GH} • NG {units.NG} • BF {units.BF} • {t('World','Monde','全球')} {units.WORLD_AVG}</div>
                   <div className='list-row'><span>{t('Ghana','Ghana')} ({r.GH} GHS)</span><div style={{height:8,width:bar(r.GH),background:'#16a34a',borderRadius:99}} /></div>
                   <div className='list-row'><span>{t('Nigeria','Nigeria')} ({r.NG} NGN)</span><div style={{height:8,width:bar(r.NG),background:'#0284c7',borderRadius:99}} /></div>
                   <div className='list-row'><span>{t('Burkina Faso','Burkina Faso')} ({r.BF} XOF)</span><div style={{height:8,width:bar(r.BF),background:'#ea580c',borderRadius:99}} /></div>
-                  <div className='list-row'><span>{t('World Avg','Moyenne mondiale')} ({r.WORLD_AVG} USD)</span><div style={{height:8,width:bar(r.WORLD_AVG),background:'#334155',borderRadius:99}} /></div>
+                  <div className='list-row'><span>{t('World Avg','Moyenne mondiale','全球均值')} ({r.WORLD_AVG} USD)</span><div style={{height:8,width:bar(r.WORLD_AVG),background:'#334155',borderRadius:99}} /></div>
                   <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#475569',marginTop:6}}>
                     <span>7d: {hist.change_pct_7d ?? 0}%</span><span>30d: {hist.change_pct_30d ?? 0}%</span>
                   </div>
@@ -1458,8 +1458,8 @@ export default function App() {
 
         <article className='panel' style={{marginTop:10}}>
           <div className='list-row'>
-            <h3 style={{margin:0}}>{t('🌍 Global World Chat','🌍 Chat mondial','🌍 全球聊天')}</h3>
-            <button type='button' className='btn btn-dark' onClick={() => handleProtectedAction('world-chat', 'Global World Chat')}>Open World Chat</button>
+            <h3 style={{margin:0}}>{t('🌍 Global World Chat','🌍 Chat mondial','🌍 全球世界聊天')}</h3>
+            <button type='button' className='btn btn-dark' onClick={() => handleProtectedAction('world-chat', 'Global World Chat')}>{t('Open World Chat','Ouvrir le chat mondial','打开全球聊天')}</button>
           </div>
           <div className='list' style={{maxHeight:180, overflow:'auto'}}>
             {worldChat.slice(-6).map((m)=><div className='list-row' key={`home-wc-${m.id}`}><span><strong>{m.user_name || `User ${m.user_id}`}:</strong> {m.text}</span></div>)}
