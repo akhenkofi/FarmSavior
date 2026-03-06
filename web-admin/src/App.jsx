@@ -1001,13 +1001,8 @@ export default function App() {
             } catch (e) { setAuthMsg(`Signup failed: ${errMsg(e)}`) }
           }}>
             <input className='input' placeholder='Full name' value={signup.full_name} onChange={e => setSignup({ ...signup, full_name: e.target.value })} required />
-            <select className='input' value={signup.signup_method} onChange={e => setSignup({ ...signup, signup_method: e.target.value })}>
-              <option value='phone'>Sign up with Phone</option>
-              <option value='email'>Sign up with Email</option>
-            </select>
-            {signup.signup_method === 'phone'
-              ? <input className='input' placeholder='Phone' value={signup.phone} onChange={e => setSignup({ ...signup, phone: e.target.value })} required />
-              : <input className='input' placeholder='Email' value={signup.email} onChange={e => setSignup({ ...signup, email: e.target.value })} required />}
+            <input className='input' placeholder='Phone' value={signup.phone} onChange={e => setSignup({ ...signup, signup_method: 'phone', phone: e.target.value })} required />
+            <div style={{fontSize:'.76rem', color:'#64748b'}}>Phone OTP signup is active. Email OTP will be re-enabled after dedicated mail sender configuration.</div>
             <div className='row2'><select className='input' value={signup.country} onChange={e => setSignup({ ...signup, country: e.target.value })}>{countries.map(c => <option key={c}>{c}</option>)}</select><input className='input' placeholder='Region' value={signup.region} onChange={e => setSignup({ ...signup, region: e.target.value })} required /></div>
             <select className='input' value={signup.user_type} onChange={e => setSignup({ ...signup, user_type: e.target.value })}>{userTypes.map(u => <option key={u}>{u}</option>)}</select>
             <input className='input' type='password' placeholder='Password' value={signup.password} onChange={e => setSignup({ ...signup, password: e.target.value })} required />
