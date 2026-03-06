@@ -2183,16 +2183,29 @@ export default function App() {
         </article>}
       </section>}
 
-      {active === 'government' && <section><h3>Government Integration</h3>
-        <article className='panel'>
-          <h4>Official Programs & Subsidies (auto-check)</h4>
-          <DataTable columns={['country','agency','headline','status','source_url','last_checked_utc']} rows={state.govPrograms} filterKey='agency' />
-          <p style={{fontSize:'.82rem', color:'#64748b'}}>Best-effort direct checks from official ministry websites. Open source links for complete current program details.</p>
+      {active === 'government' && <section><h3>Government Programs</h3>
+        <article className='panel' style={{marginBottom:10}}>
+          <div style={{fontWeight:700, marginBottom:6}}>What this section does</div>
+          <div style={{fontSize:'.9rem', color:'#475569'}}>This page helps farmers discover official agriculture programs, grants, and ministry updates by country. Use the source links to apply directly on official government portals.</div>
         </article>
 
-        <div className='two-col' style={{marginTop:10}}>
+        <article className='panel'>
+          <h4>Official Programs & Subsidies (auto-check)</h4>
+          <div className='list'>
+            {(state.govPrograms || []).map((g, i) => (
+              <div className='list-row' key={`gov-int-${i}`}>
+                <span><strong>{g.country}</strong> • {g.agency} — {g.headline}</span>
+                <a className='btn' href={g.source_url} target='_blank' rel='noreferrer'>Open Source</a>
+              </div>
+            ))}
+            {!(state.govPrograms || []).length && <div className='list-row'><span>No official programs loaded yet.</span></div>}
+          </div>
+          <p style={{fontSize:'.82rem', color:'#64748b'}}>Information is best-effort. Always verify eligibility, deadlines, and requirements on official websites before applying.</p>
+        </article>
+
+        {((me?.role || '').toLowerCase() === 'admin') && <div className='two-col' style={{marginTop:10}}>
           <article className='panel'>
-            <h4>Distribute Subsidy</h4>
+            <h4>Admin: Record Subsidy Distribution</h4>
             <form className='list' onSubmit={async e => { e.preventDefault(); await api.govDistributeSubsidy({ ...govSubsidyForm, farmer_user_id: Number(govSubsidyForm.farmer_user_id), amount: Number(govSubsidyForm.amount) }); alert('Subsidy recorded successfully'); await load(); }}>
               <select className='input' value={govSubsidyForm.country} onChange={(e)=>setGovSubsidyForm({...govSubsidyForm,country:e.target.value})}><option value='GH'>Ghana</option><option value='NG'>Nigeria</option><option value='BF'>Burkina Faso</option></select>
               <input className='input' placeholder='Agency' value={govSubsidyForm.agency} onChange={(e)=>setGovSubsidyForm({...govSubsidyForm,agency:e.target.value})} />
@@ -2203,7 +2216,7 @@ export default function App() {
           </article>
 
           <article className='panel'>
-            <h4>Communicate with Farmers</h4>
+            <h4>Admin: Send Government Notice</h4>
             <form className='list' onSubmit={async e => { e.preventDefault(); await api.govCommunicate(govMsgForm); alert('Government message queued'); }}>
               <select className='input' value={govMsgForm.country} onChange={(e)=>setGovMsgForm({...govMsgForm,country:e.target.value})}><option value='GH'>Ghana</option><option value='NG'>Nigeria</option><option value='BF'>Burkina Faso</option></select>
               <input className='input' placeholder='Target (farmers/coops/all)' value={govMsgForm.target} onChange={(e)=>setGovMsgForm({...govMsgForm,target:e.target.value})} />
@@ -2211,7 +2224,7 @@ export default function App() {
               <button className='btn btn-dark'>Send Notice</button>
             </form>
           </article>
-        </div>
+        </div>}
       </section>}
 
       {active === 'contracts' && <section><h3>Cross-Border Contracts (MVP)</h3><form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.createContract({ ...contractForm, quantity: Number(contractForm.quantity), price: Number(contractForm.price), delivery_date: new Date(contractForm.delivery_date).toISOString() }); await load() }}>
