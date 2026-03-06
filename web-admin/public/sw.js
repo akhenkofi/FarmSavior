@@ -1,4 +1,4 @@
-const CACHE_NAME = 'farmsavior-pwa-v8';
+const CACHE_NAME = 'farmsavior-pwa-v9';
 const URLS_TO_CACHE = ['/', '/manifest.webmanifest', '/assets/farmsavior-logo.jpg'];
 
 self.addEventListener('install', (event) => {
