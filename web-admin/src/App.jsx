@@ -250,6 +250,10 @@ export default function App() {
   const [otp, setOtp] = useState({ phone: '', code: '' })
 
   const [idForm, setIdForm] = useState({ user_id: 1, id_type: 'GhanaCard', id_number: '', id_photo_url: '', id_front_photo_url: '', id_back_photo_url: '', facial_verification_flag: false })
+  const [accountForm, setAccountForm] = useState({ full_name: '', region: '' })
+  const [passwordForm, setPasswordForm] = useState({ current_password: '', new_password: '' })
+  const [myIdVerification, setMyIdVerification] = useState({ application: null, review: null })
+  const [myIdForm, setMyIdForm] = useState({ id_type: 'GhanaCard', id_number: '', id_photo_url: '', id_front_photo_url: '', id_back_photo_url: '', facial_verification_flag: false })
   const [passportForm, setPassportForm] = useState({ user_id: 1, gps_lat: '', gps_lng: '', farm_size_hectares: '', crop_types: '[]', livestock_numbers: '{}', farm_photo_urls: '[]', harvest_records_notes: '' })
   const [cropForm, setCropForm] = useState({ farmer_id: 1, crop_name: '', quantity_kg: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
   const [cropEdit, setCropEdit] = useState({ id: '', farmer_id: 1, crop_name: '', quantity_kg: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
@@ -338,6 +342,22 @@ export default function App() {
   const load = async () => {
     const meRes = await api.fetchMe().catch(() => null)
     setMe(meRes)
+    if (meRes) {
+      setAccountForm({ full_name: meRes.full_name || '', region: meRes.region || '' })
+      setIdForm(prev => ({ ...prev, user_id: meRes.id || prev.user_id }))
+      const mine = await api.fetchMyIdVerification().catch(() => ({ application: null, review: null }))
+      setMyIdVerification(mine || { application: null, review: null })
+      if (mine?.application) {
+        setMyIdForm({
+          id_type: mine.application.id_type || 'GhanaCard',
+          id_number: mine.application.id_number || '',
+          id_photo_url: mine.application.id_photo_url || '',
+          id_front_photo_url: mine.application.id_front_photo_url || '',
+          id_back_photo_url: mine.application.id_back_photo_url || '',
+          facial_verification_flag: !!mine.application.facial_verification_flag
+        })
+      }
+    }
     const isAdmin = (meRes?.role || '').toLowerCase() === 'admin'
 
     const [metrics, users, listings, livestock, logistics, equipment, storage, payments, alerts, contracts, idv, passports, regions, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, publicWeather, govPrograms, spotTrading, spotHistory, tradeExportStats, livestockPlans] = await Promise.all([
@@ -1504,6 +1524,64 @@ export default function App() {
       </section>}
 
       {active === 'onboarding' && <section>
+        <div className='two-col' style={{marginBottom:12}}>
+          <article className='panel'>
+            <h3>My Account</h3>
+            <form className='list' onSubmit={async e => {
+              e.preventDefault()
+              try {
+                const updated = await api.updateMe(accountForm)
+                setMe(updated)
+                alert('Profile updated successfully.')
+              } catch (e) { alert(errMsg(e)) }
+            }}>
+              <input className='input' placeholder='Full name' value={accountForm.full_name} onChange={e => setAccountForm({ ...accountForm, full_name: e.target.value })} />
+              <input className='input' placeholder='Region' value={accountForm.region} onChange={e => setAccountForm({ ...accountForm, region: e.target.value })} />
+              <input className='input' value={me?.phone || ''} disabled />
+              <div style={{fontSize:'.78rem',color:'#64748b'}}>Phone changes require OTP re-verification (coming next).</div>
+              <button className='btn btn-dark'>Save Profile</button>
+            </form>
+            <hr style={{border:'none',borderTop:'1px solid #e2e8f0', margin:'10px 0'}} />
+            <form className='list' onSubmit={async e => {
+              e.preventDefault()
+              try {
+                await api.changePassword(passwordForm)
+                setPasswordForm({ current_password: '', new_password: '' })
+                alert('Password changed successfully.')
+              } catch (e) { alert(errMsg(e)) }
+            }}>
+              <input className='input' type='password' placeholder='Current password' value={passwordForm.current_password} onChange={e => setPasswordForm({ ...passwordForm, current_password: e.target.value })} />
+              <input className='input' type='password' placeholder='New password (min 6 chars)' value={passwordForm.new_password} onChange={e => setPasswordForm({ ...passwordForm, new_password: e.target.value })} />
+              <button className='btn'>Change Password</button>
+            </form>
+          </article>
+
+          <article className='panel'>
+            <h3>My Verification Status</h3>
+            <div className='list'>
+              <div className='list-row'><span>Current status</span><strong>{myIdVerification?.review?.status || 'NOT_SUBMITTED'}</strong></div>
+              <div className='list-row'><span>ID type</span><strong>{myIdVerification?.application?.id_type || '-'}</strong></div>
+              <div className='list-row'><span>Reviewed at</span><strong>{String(myIdVerification?.review?.reviewed_at || '-').slice(0, 16)}</strong></div>
+            </div>
+            <form className='list' onSubmit={async e => {
+              e.preventDefault()
+              try {
+                await api.submitMyIdVerification(myIdForm)
+                alert('Verification update submitted. Status set to PENDING re-review.')
+                await load()
+              } catch (e) { alert(errMsg(e)) }
+            }}>
+              <select className='input' value={myIdForm.id_type} onChange={e => setMyIdForm({ ...myIdForm, id_type: e.target.value })}><option>GhanaCard</option><option>NIN</option><option>BF National ID</option></select>
+              <input className='input' placeholder='ID Number' value={myIdForm.id_number} onChange={e => setMyIdForm({ ...myIdForm, id_number: e.target.value })} />
+              <input className='input' placeholder='ID Front Photo URL' value={myIdForm.id_front_photo_url} onChange={e => setMyIdForm({ ...myIdForm, id_front_photo_url: e.target.value })} />
+              <input className='input' placeholder='ID Back Photo URL' value={myIdForm.id_back_photo_url} onChange={e => setMyIdForm({ ...myIdForm, id_back_photo_url: e.target.value })} />
+              <label><input type='checkbox' checked={myIdForm.facial_verification_flag} onChange={e => setMyIdForm({ ...myIdForm, facial_verification_flag: e.target.checked })} /> Facial verification done</label>
+              <button className='btn btn-dark'>Submit Verification Update</button>
+            </form>
+            <div style={{fontSize:'.78rem',color:'#64748b',marginTop:6}}>If you update ID details after approval, your verification goes through re-review for safety.</div>
+          </article>
+        </div>
+
         <div className='two-col'>
           <article className='panel'><h3>ID Verification</h3><form className='list' onSubmit={async e => { e.preventDefault(); await api.createIdVerification({ ...idForm, user_id: Number(idForm.user_id) }); await load() }}>
             <input className='input' type='number' placeholder='User ID' value={idForm.user_id} onChange={e => setIdForm({ ...idForm, user_id: e.target.value })} />
@@ -1527,7 +1605,7 @@ export default function App() {
           </form></article>
         </div>
 
-        <article className='panel' style={{marginTop: 12}}>
+        {((me?.role || '').toLowerCase() === 'admin') && <article className='panel' style={{marginTop: 12}}>
           <div className='panelHeadActions'>
             <h3>Verification Applications</h3>
             <button className='btn btn-dark' onClick={async () => { await api.analyzeAllVerifications(); await load(); }}>AI Analyze & Decide All</button>
@@ -1539,12 +1617,12 @@ export default function App() {
             <button className='btn btn-dark' onClick={async ()=>{ const id=Number(document.getElementById('verifyAppId').value); if(id){ await api.setVerificationDecision(id,{status:'APPROVED'}); await load(); }}}>Approve</button>
             <button className='btn btn-dark' onClick={async ()=>{ const id=Number(document.getElementById('verifyAppId').value); if(id){ await api.setVerificationDecision(id,{status:'DENIED'}); await load(); }}}>Deny</button>
           </div>
-        </article>
+        </article>}
 
-        <article className='panel' style={{marginTop: 12}}>
+        {((me?.role || '').toLowerCase() === 'admin') && <article className='panel' style={{marginTop: 12}}>
           <h3>Verified Accounts (Approved)</h3>
           <DataTable columns={['user_id','full_name','phone','country','role','verified_status','ai_score']} rows={state.approvedAccounts} filterKey='full_name' />
-        </article>
+        </article>}
       </section>}
 
       {active === 'products' && <section><h3>Product Listings</h3><form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.createListing({ ...cropForm, farmer_id: Number(cropForm.farmer_id), quantity_kg: Number(cropForm.quantity_kg), unit_price: Number(cropForm.unit_price) }); await load() }}>

@@ -31,6 +31,8 @@ export const register = async (payload) => (await api.post('/auth/register', pay
 export const login = async (payload) => (await api.post('/auth/login', payload)).data
 export const verifyOtp = async (payload) => (await api.post('/auth/verify-otp', payload)).data
 export const fetchMe = async () => (await api.get('/auth/me')).data
+export const updateMe = async (payload) => (await api.put('/auth/me', payload)).data
+export const changePassword = async (payload) => (await api.post('/auth/change-password', payload)).data
 
 export const fetchMetrics = async () => (await api.get('/admin/metrics')).data
 export const fetchAdminDisputes = async () => (await api.get('/admin/disputes')).data
@@ -75,6 +77,8 @@ export const updateContract = async (id, payload) => (await api.put(`/trade/cont
 
 export const fetchIdVerifications = async () => (await api.get('/onboarding/id-verification')).data
 export const createIdVerification = async (payload) => (await api.post('/onboarding/id-verification', payload)).data
+export const fetchMyIdVerification = async () => (await api.get('/onboarding/id-verification/me')).data
+export const submitMyIdVerification = async (payload) => (await api.post('/onboarding/id-verification/me', payload)).data
 
 export const fetchPassports = async () => (await api.get('/onboarding/farm-passport')).data
 export const createPassport = async (payload) => (await api.post('/onboarding/farm-passport', payload)).data

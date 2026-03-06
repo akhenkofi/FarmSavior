@@ -25,13 +25,13 @@ from app.models.models import (
 from app.schemas.schemas import (
     UserCreate, UserLogin, OTPVerify, TokenResponse, FarmerProfileIn,
     CropListingIn, OfferIn, LogisticsIn, LogisticsAcceptIn,
-    PaymentIn, WeatherAlertIn, IDVerificationIn, FarmPassportIn,
+    PaymentIn, WeatherAlertIn, IDVerificationIn, IDVerificationSelfIn, FarmPassportIn,
     LivestockListingIn, EquipmentRentalIn, StorageReservationIn, ContractIn,
     VerificationDecisionIn, DeviceTokenIn, DiseaseAnalyzeIn,
     SheepGoatRecordIn, SheepGoatBreedingGroupIn, SheepGoatSubscriptionIn,
     WorldChatMessageIn, WorldChatModerationActionIn, WorldChatUserSanctionIn,
     CommunityProfileIn, CommunityPostIn, CommunityCommentIn,
-    PlantIdentifyIn, PestIdentifyIn
+    PlantIdentifyIn, PestIdentifyIn, AccountUpdateIn, PasswordChangeIn
 )
 from app.core.config import settings
 from app.core.security import create_access_token, hash_password, verify_password, decode_access_token
@@ -277,6 +277,38 @@ def auth_me(authorization: Optional[str] = Header(None), db: Session = Depends(g
     }
 
 
+@router.put('/auth/me')
+def update_auth_me(payload: AccountUpdateIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    u = _current_user_from_auth(authorization, db)
+    data = payload.model_dump(exclude_none=True)
+    if 'full_name' in data and str(data['full_name']).strip():
+        u.full_name = str(data['full_name']).strip()
+    if 'region' in data and str(data['region']).strip():
+        u.region = str(data['region']).strip()
+    db.commit()
+    db.refresh(u)
+    return {
+        'id': u.id,
+        'full_name': u.full_name,
+        'phone': u.phone,
+        'country': u.country.value if hasattr(u.country, 'value') else str(u.country),
+        'region': u.region,
+        'role': u.role.value if hasattr(u.role, 'value') else str(u.role)
+    }
+
+
+@router.post('/auth/change-password')
+def change_password(payload: PasswordChangeIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    u = _current_user_from_auth(authorization, db)
+    if not verify_password(payload.current_password, u.hashed_password or ''):
+        raise HTTPException(status_code=400, detail='Current password is incorrect')
+    if len(payload.new_password or '') < 6:
+        raise HTTPException(status_code=400, detail='New password must be at least 6 characters')
+    u.hashed_password = hash_password(payload.new_password)
+    db.commit()
+    return {'message': 'Password updated successfully'}
+
+
 @router.get('/users')
 def list_users(db: Session = Depends(get_db)):
     return db.query(User).all()
@@ -364,6 +396,61 @@ def create_id_verification(payload: IDVerificationIn, db: Session = Depends(get_
 @router.get('/onboarding/id-verification')
 def list_id_verifications(db: Session = Depends(get_db)):
     return db.query(IDVerification).order_by(IDVerification.id.desc()).all()
+
+
+@router.get('/onboarding/id-verification/me')
+def my_latest_id_verification(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    u = _current_user_from_auth(authorization, db)
+    iv = db.query(IDVerification).filter(IDVerification.user_id == u.id).order_by(IDVerification.created_at.desc(), IDVerification.id.desc()).first()
+    if not iv:
+        return {'application': None, 'review': None}
+    review = db.query(VerificationReview).filter(VerificationReview.id_verification_id == iv.id).first()
+    return {
+        'application': {
+            'id': iv.id,
+            'id_type': iv.id_type,
+            'id_number': iv.id_number,
+            'id_photo_url': iv.id_photo_url,
+            'id_front_photo_url': iv.id_front_photo_url,
+            'id_back_photo_url': iv.id_back_photo_url,
+            'facial_verification_flag': iv.facial_verification_flag,
+            'created_at': iv.created_at
+        },
+        'review': {
+            'status': review.status,
+            'ai_score': review.ai_score,
+            'ai_reason': review.ai_reason,
+            'reviewer_note': review.reviewer_note,
+            'reviewed_at': review.reviewed_at
+        } if review else None
+    }
+
+
+@router.post('/onboarding/id-verification/me')
+def submit_my_id_verification(payload: IDVerificationSelfIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    u = _current_user_from_auth(authorization, db)
+    data = payload.model_dump()
+    if not data.get('id_photo_url'):
+        data['id_photo_url'] = data.get('id_front_photo_url') or ''
+    if not data.get('id_front_photo_url'):
+        data['id_front_photo_url'] = data.get('id_photo_url')
+
+    rec = IDVerification(user_id=u.id, **data)
+    db.add(rec)
+    db.commit()
+    db.refresh(rec)
+
+    review = VerificationReview(
+        id_verification_id=rec.id,
+        user_id=u.id,
+        status='PENDING',
+        ai_score=0,
+        ai_reason='Awaiting analysis'
+    )
+    db.add(review)
+    db.commit()
+
+    return {'message': 'Verification update submitted for re-review', 'id_verification_id': rec.id, 'status': 'PENDING'}
 
 
 @router.get('/verification/applications')

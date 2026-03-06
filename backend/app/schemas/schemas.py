@@ -21,6 +21,16 @@ class UserLogin(BaseModel):
     password: str
 
 
+class AccountUpdateIn(BaseModel):
+    full_name: Optional[str] = None
+    region: Optional[str] = None
+
+
+class PasswordChangeIn(BaseModel):
+    current_password: str
+    new_password: str
+
+
 class OTPVerify(BaseModel):
     phone: str
     code: str
@@ -36,6 +46,15 @@ class IDVerificationIn(BaseModel):
     id_type: Literal['GhanaCard', 'NIN', 'BF National ID']
     id_number: str
     id_photo_url: str
+    id_front_photo_url: Optional[str] = None
+    id_back_photo_url: Optional[str] = None
+    facial_verification_flag: bool = False
+
+
+class IDVerificationSelfIn(BaseModel):
+    id_type: Literal['GhanaCard', 'NIN', 'BF National ID']
+    id_number: str
+    id_photo_url: str = ''
     id_front_photo_url: Optional[str] = None
     id_back_photo_url: Optional[str] = None
     facial_verification_flag: bool = False
