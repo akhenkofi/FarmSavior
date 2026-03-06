@@ -238,6 +238,8 @@ export default function App() {
   const [unitValue, setUnitValue] = useState('1')
   const [unitFrom, setUnitFrom] = useState('ha')
   const [unitTo, setUnitTo] = useState('ac')
+  const [showCurrencyConverter, setShowCurrencyConverter] = useState(false)
+  const [showUnitConverter, setShowUnitConverter] = useState(false)
 
   const t = (en, fr) => (uiLang === 'fr' ? fr : en)
   const displayProductName = (name) => (uiLang === 'fr' ? (productNameFr[name] || name) : name)
@@ -923,7 +925,11 @@ export default function App() {
       </article>
 
       <article className='panel' style={{marginTop:10}}>
-        <h3>💱 {t('Global Currency Converter (Realtime)','Convertisseur de devises mondial (temps réel)')}</h3>
+        <div className='list-row' style={{marginBottom:8}}>
+          <h3 style={{margin:0}}>💱 {t('Global Currency Converter (Realtime)','Convertisseur de devises mondial (temps réel)')}</h3>
+          <button className='btn' onClick={()=>setShowCurrencyConverter(v=>!v)}>{showCurrencyConverter ? t('Hide','Masquer') : t('Show','Afficher')}</button>
+        </div>
+        {showCurrencyConverter && <>
         <div className='inlineForm'>
           <input className='input' type='number' step='any' min='0' value={fxAmount} onChange={(e)=>setFxAmount(e.target.value)} placeholder={t('Amount','Montant')} />
           <select className='input' value={fxBase} onChange={(e)=>setFxBase(e.target.value)}>
@@ -940,10 +946,15 @@ export default function App() {
           })}
           {!fxRows.length && <div className='list-row'><span>{t('No rates available right now.','Aucun taux disponible pour le moment.')}</span></div>}
         </div>
+        </>}
       </article>
 
       <article className='panel' style={{marginTop:10}}>
-        <h3>📏 {t('Farmer Unit Converter','Convertisseur d’unités agricoles')}</h3>
+        <div className='list-row' style={{marginBottom:8}}>
+          <h3 style={{margin:0}}>📏 {t('Farmer Unit Converter','Convertisseur d’unités agricoles')}</h3>
+          <button className='btn' onClick={()=>setShowUnitConverter(v=>!v)}>{showUnitConverter ? t('Hide','Masquer') : t('Show','Afficher')}</button>
+        </div>
+        {showUnitConverter && <>
         <div className='inlineForm'>
           <input className='input' type='number' step='any' value={unitValue} onChange={(e)=>setUnitValue(e.target.value)} placeholder={t('Value','Valeur')} />
           <select className='input' value={unitFrom} onChange={(e)=>setUnitFrom(e.target.value)}>
@@ -964,6 +975,7 @@ export default function App() {
           )}
         </div>
         <p style={{fontSize:'.82rem',color:'#64748b',marginTop:8}}>{t('Includes common farming units: meters, feet, kilometers, hectares, acres, grams, kilograms, pounds, and tons.','Inclut les unités agricoles courantes : mètres, pieds, kilomètres, hectares, acres, grammes, kilogrammes, livres et tonnes.')}</p>
+        </>}
       </article>
 
       <div className='panel' style={{marginTop:10, fontSize:'.84rem', color:'#475569', display:'flex', gap:14, flexWrap:'wrap'}}>
@@ -1034,7 +1046,11 @@ export default function App() {
         </div>
 
         <article className='panel' style={{marginTop:10}}>
-          <h3>💱 Global Currency Converter (Realtime)</h3>
+          <div className='list-row' style={{marginBottom:8}}>
+            <h3 style={{margin:0}}>💱 Global Currency Converter (Realtime)</h3>
+            <button className='btn' onClick={()=>setShowCurrencyConverter(v=>!v)}>{showCurrencyConverter ? 'Hide' : 'Show'}</button>
+          </div>
+          {showCurrencyConverter && <>
           <div className='inlineForm'>
             <input className='input' type='number' step='any' min='0' value={fxAmount} onChange={(e)=>setFxAmount(e.target.value)} placeholder='Amount' />
             <select className='input' value={fxBase} onChange={(e)=>setFxBase(e.target.value)}>
@@ -1051,10 +1067,15 @@ export default function App() {
             })}
             {!fxRows.length && <div className='list-row'><span>No rates available right now.</span></div>}
           </div>
+          </>}
         </article>
 
         <article className='panel' style={{marginTop:10}}>
-          <h3>📏 Farmer Unit Converter</h3>
+          <div className='list-row' style={{marginBottom:8}}>
+            <h3 style={{margin:0}}>📏 Farmer Unit Converter</h3>
+            <button className='btn' onClick={()=>setShowUnitConverter(v=>!v)}>{showUnitConverter ? 'Hide' : 'Show'}</button>
+          </div>
+          {showUnitConverter && <>
           <div className='inlineForm'>
             <input className='input' type='number' step='any' value={unitValue} onChange={(e)=>setUnitValue(e.target.value)} placeholder='Value' />
             <select className='input' value={unitFrom} onChange={(e)=>setUnitFrom(e.target.value)}>
@@ -1074,6 +1095,7 @@ export default function App() {
               </div>
             )}
           </div>
+          </>}
         </article>
       </section>}
 
