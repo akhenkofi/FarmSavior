@@ -921,8 +921,14 @@ def community_profile_me(authorization: Optional[str] = Header(None), db: Sessio
     u = _current_user_from_auth(authorization, db)
     p = db.query(CommunityProfile).filter(CommunityProfile.user_id == u.id).first()
     if not p:
-        p = CommunityProfile(user_id=u.id)
+        base = ''.join(ch for ch in (u.full_name or 'farmer').lower() if ch.isalnum())[:14] or 'farmer'
+        p = CommunityProfile(user_id=u.id, username=f"{base}{u.id}")
         db.add(p)
+        db.commit()
+        db.refresh(p)
+    elif not p.username:
+        base = ''.join(ch for ch in (u.full_name or 'farmer').lower() if ch.isalnum())[:14] or 'farmer'
+        p.username = f"{base}{u.id}"
         db.commit()
         db.refresh(p)
     return p
@@ -935,8 +941,16 @@ def community_profile_upsert(payload: CommunityProfileIn, authorization: Optiona
     if not p:
         p = CommunityProfile(user_id=u.id)
         db.add(p)
-    for k, v in payload.model_dump().items():
+    data = payload.model_dump()
+    username = (data.get('username') or '').strip().lower().replace(' ', '')
+    if username:
+        username = ''.join(ch for ch in username if ch.isalnum() or ch in ['_', '.'])[:30]
+        data['username'] = username
+    for k, v in data.items():
         setattr(p, k, v)
+    if not p.username:
+        base = ''.join(ch for ch in (u.full_name or 'farmer').lower() if ch.isalnum())[:14] or 'farmer'
+        p.username = f"{base}{u.id}"
     db.commit()
     db.refresh(p)
     return p
@@ -977,9 +991,12 @@ def community_create_post(payload: CommunityPostIn, authorization: Optional[str]
     moderation = _moderate_world_chat_text(text or 'safe media post')
     status = 'VISIBLE' if moderation['action'] == 'allow' else 'HIDDEN'
 
+    profile = db.query(CommunityProfile).filter(CommunityProfile.user_id == u.id).first()
+    author_display = f"@{profile.username}" if profile and profile.username else u.full_name
+
     post = CommunityPost(
         user_id=u.id,
-        author_name=u.full_name,
+        author_name=author_display,
         author_country=u.country.value if hasattr(u.country, 'value') else str(u.country),
         text=text,
         media_url=media_url,

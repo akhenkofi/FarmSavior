@@ -202,7 +202,7 @@ export default function App() {
   const [worldChatMsg, setWorldChatMsg] = useState('')
   const [worldChatQueue, setWorldChatQueue] = useState([])
 
-  const [communityProfile, setCommunityProfile] = useState({ avatar_url: '', cover_image_url: '', bio: '', farm_life: '', interests: 'farming,gardening', visibility: 'PUBLIC' })
+  const [communityProfile, setCommunityProfile] = useState({ username: '', avatar_url: '', cover_image_url: '', bio: '', farm_life: '', interests: 'farming,gardening', visibility: 'PUBLIC' })
   const [communityPosts, setCommunityPosts] = useState([])
   const [communityFeedMode, setCommunityFeedMode] = useState('for-you')
   const [communityPostForm, setCommunityPostForm] = useState({ text: '', media_url: '', media_type: 'TEXT', tags: '' })
@@ -1323,7 +1323,7 @@ export default function App() {
               alt='Community avatar'
               style={{position:'absolute',left:10,bottom:-22,width:56,height:56,objectFit:'cover',borderRadius:'50%',border:'3px solid #fff',boxShadow:'0 6px 12px rgba(0,0,0,.2)'}}
             />
-            <div style={{position:'absolute',left:74,bottom:8,color:'#fff',fontWeight:700,textShadow:'0 1px 2px rgba(0,0,0,.6)'}}>{me?.full_name || 'Your Community Profile'}</div>
+            <div style={{position:'absolute',left:74,bottom:8,color:'#fff',fontWeight:700,textShadow:'0 1px 2px rgba(0,0,0,.6)'}}>{(me?.full_name || 'Your Community Profile') + (communityProfile.username ? ` • @${communityProfile.username}` : '')}</div>
           </div>
 
           <div className='list' style={{maxHeight:220, overflow:'auto', marginTop:26}}>
@@ -1846,6 +1846,7 @@ export default function App() {
             </div>
             <div style={{paddingLeft:4, marginTop:28, marginBottom:8}}>
               <div style={{fontSize:'1rem',fontWeight:700,color:'#0f172a'}}>{me?.full_name || 'Your profile'}</div>
+              <div style={{fontSize:'.82rem',color:'#0284c7',fontWeight:600}}>@{communityProfile.username || 'set_username'}</div>
               <div style={{fontSize:'.85rem',color:'#475569'}}>{communityProfile.bio || 'Add a short bio to attract followers.'}</div>
             </div>
             <form className='list' onSubmit={async(e)=>{e.preventDefault(); await api.saveCommunityProfileMe(communityProfile); await loadCommunity(); alert('Profile updated')}}>
@@ -1866,6 +1867,7 @@ export default function App() {
                 reader.onload = () => setCommunityProfile(prev => ({ ...prev, cover_image_url: String(reader.result || '') }))
                 reader.readAsDataURL(f)
               }} />
+              <input className='input' placeholder='Username (e.g. akhen_farmer)' value={communityProfile.username || ''} onChange={(e)=>setCommunityProfile({...communityProfile, username:e.target.value.toLowerCase().replace(/\s+/g,'')})} />
               <input className='input' placeholder='Bio' value={communityProfile.bio || ''} onChange={(e)=>setCommunityProfile({...communityProfile, bio:e.target.value})} />
               <input className='input' placeholder='Farm life details' value={communityProfile.farm_life || ''} onChange={(e)=>setCommunityProfile({...communityProfile, farm_life:e.target.value})} />
               <input className='input' placeholder='Interests/tags (comma separated)' value={communityProfile.interests || ''} onChange={(e)=>setCommunityProfile({...communityProfile, interests:e.target.value})} />

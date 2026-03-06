@@ -354,6 +354,7 @@ class CommunityProfile(Base):
     __tablename__ = 'community_profiles'
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False, unique=True, index=True)
+    username = Column(String(80), nullable=True, index=True)
     avatar_url = Column(Text, nullable=True)
     cover_image_url = Column(Text, nullable=True)
     bio = Column(Text, default='')

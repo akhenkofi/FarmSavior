@@ -236,6 +236,7 @@ class WorldChatUserSanctionIn(BaseModel):
 
 
 class CommunityProfileIn(BaseModel):
+    username: Optional[str] = None
     avatar_url: Optional[str] = None
     cover_image_url: Optional[str] = None
     bio: Optional[str] = ''

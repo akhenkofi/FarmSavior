@@ -2,10 +2,27 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.data_lake import write_jsonl
+from sqlalchemy import inspect, text
 from app.db.session import Base, engine
 from app.api.routes import router
 
 Base.metadata.create_all(bind=engine)
+
+
+def ensure_runtime_columns():
+    try:
+        inspector = inspect(engine)
+        tables = set(inspector.get_table_names())
+        with engine.begin() as conn:
+            if 'community_profiles' in tables:
+                cols = {c['name'] for c in inspector.get_columns('community_profiles')}
+                if 'username' not in cols:
+                    conn.execute(text('ALTER TABLE community_profiles ADD COLUMN username VARCHAR(80)'))
+    except Exception:
+        pass
+
+
+ensure_runtime_columns()
 
 app = FastAPI(title=settings.APP_NAME, version='0.1.0')
 
