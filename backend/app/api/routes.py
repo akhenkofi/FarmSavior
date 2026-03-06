@@ -1127,12 +1127,13 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
     db.refresh(rec)
 
     payment_url = ''
+    payment_init_error = ''
     if settings.PAYSTACK_SECRET_KEY:
         user = db.query(User).filter(User.id == (payload.user_id or 0)).first() if payload.user_id else None
         customer_name = user.full_name if user and user.full_name else 'FarmSavior User'
-        customer_email = f"user{payload.user_id or 0}@farmsavior.app"
+        customer_email = f"user{payload.user_id or 0}@farmsavior.com"
         if user and getattr(user, 'phone', None):
-            customer_email = f"{str(user.phone).replace('+','').replace(' ','')}@farmsavior.app"
+            customer_email = f"{str(user.phone).replace('+','').replace(' ','')}@farmsavior.com"
 
         # Paystack expects amount in smallest currency unit (kobo/pesewas/cents)
         amount_minor = int(round(float(amount) * 100))
@@ -1165,8 +1166,11 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
             with urlopen(req, timeout=15) as resp:
                 ps_resp = json.loads(resp.read().decode('utf-8', errors='ignore'))
             payment_url = (((ps_resp or {}).get('data') or {}).get('authorization_url') or '')
-        except Exception:
+            if not payment_url:
+                payment_init_error = str((ps_resp or {}).get('message') or 'Paystack did not return authorization_url')
+        except Exception as e:
             payment_url = ''
+            payment_init_error = str(e)
 
     return {
         'message': 'checkout created',
@@ -1175,6 +1179,7 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
         'amount_usd': amount_usd,
         'payment_url': payment_url,
         'payment_provider': 'paystack' if settings.PAYSTACK_SECRET_KEY else 'not_configured',
+        'payment_init_error': payment_init_error,
         'payout_routing': payout_details,
         'routing_rule': 'GH/GHS -> Ghana MoMo; all others -> US bank'
     }
