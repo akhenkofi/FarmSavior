@@ -101,7 +101,10 @@ const newsTitleFr = {
 const newsTitleZh = {
   'West Africa input prices ease as supply chains stabilize': '随着供应链稳定，西非农业投入品价格回落',
   'Moisture outlook improves for rice and maize belts': '稻米和玉米主产带的湿度前景改善',
-  'Regional livestock demand remains strong ahead of market week': '市场周前区域畜牧需求仍然强劲'
+  'Regional livestock demand remains strong ahead of market week': '市场周前区域畜牧需求仍然强劲',
+  'Official Program Updates': '官方项目更新',
+  'Program Announcements': '项目公告',
+  'Actualités du secteur': '行业动态'
 }
 
 const zhMap = {
@@ -129,7 +132,15 @@ const zhMap = {
   'Search products, livestock, services…': '搜索产品、牲畜、服务…',
   'No community posts yet.': '暂无社区帖子。',
   'Image credit: source / Unsplash': '图片来源：source / Unsplash',
-  'Sources and image credits are shown on each story.': '每条资讯都显示来源与图片署名。'
+  'Sources and image credits are shown on each story.': '每条资讯都显示来源与图片署名。',
+  'Forecast': '预报',
+  'forecast': '预报',
+  'Update forecast': '更新预报',
+  'Weather forecast': '天气预报',
+  'Official Program Updates': '官方项目更新',
+  'Program Announcements': '项目公告',
+  '7d': '7天',
+  '30d': '30天'
 }
 
 const polygonAreaHectares = (points = []) => {
@@ -364,9 +375,29 @@ export default function App() {
     }
     return map[normalized] || weatherConditionFr[raw] || raw
   }
-  const displayNewsTitle = (title) => (uiLang === 'fr' ? (newsTitleFr[title] || title) : (uiLang === 'zh' ? (newsTitleZh[title] || zhMap[title] || title) : title))
+  const displayNewsTitle = (title) => {
+    if (uiLang === 'fr') return newsTitleFr[title] || title
+    if (uiLang === 'zh') return newsTitleZh[title] || zhMap[title] || '农业新闻更新'
+    return title
+  }
   const displayCountryLabel = (code) => (uiLang === 'zh' ? (countryLabelsZh[code] || countryLabels[code] || code) : (countryLabels[code] || code))
-  const displayCommodityName = (name) => (uiLang === 'zh' ? (zhMap[name] || name) : name)
+  const displayCommodityName = (name) => {
+    if (uiLang !== 'zh') return name
+    const raw = String(name || '')
+    const key = raw.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+    const byKey = {
+      'poultry': '家禽',
+      'sheep goats': '羊与山羊',
+      'sheep & goats': '羊与山羊',
+      'cattle': '牛',
+      'rice': '大米',
+      'maize': '玉米',
+      'wheat': '小麦',
+      'soybeans': '大豆',
+      'cocoa': '可可'
+    }
+    return zhMap[raw] || byKey[key] || raw
+  }
   const displayPlanName = (name) => {
     if (uiLang !== 'zh') return name
     return String(name || '')
@@ -814,8 +845,32 @@ export default function App() {
     rice: { GH: 'per 50kg bag', NG: 'per 50kg bag', BF: 'per 50kg bag', WORLD_AVG: 'per metric ton (reference)' },
     soybeans: { GH: 'per 100kg bag', NG: 'per 100kg bag', BF: 'per 100kg bag', WORLD_AVG: 'per metric ton (reference)' }
   }
-  const spotUnits = (commodity) => spotUnitByCommodity[String(commodity || '').toLowerCase()] || { GH: 'per market unit', NG: 'per market unit', BF: 'per market unit', WORLD_AVG: 'reference unit' }
+  const spotUnits = (commodity) => {
+    const units = spotUnitByCommodity[String(commodity || '').toLowerCase()] || { GH: 'per market unit', NG: 'per market unit', BF: 'per market unit', WORLD_AVG: 'reference unit' }
+    if (uiLang !== 'zh') return units
+    const map = {
+      'per 100kg bag': '每100公斤袋',
+      'per 50kg bag': '每50公斤袋',
+      'per metric ton (reference)': '每公吨（参考）',
+      'per market unit': '每市场单位',
+      'reference unit': '参考单位'
+    }
+    return {
+      GH: map[units.GH] || units.GH,
+      NG: map[units.NG] || units.NG,
+      BF: map[units.BF] || units.BF,
+      WORLD_AVG: map[units.WORLD_AVG] || units.WORLD_AVG
+    }
+  }
   const publicTradeRows = state.tradeExportStats.length ? state.tradeExportStats : featuredTradeExportSeed
+  const displayProvenance = (text) => {
+    const raw = String(text || '')
+    if (uiLang !== 'zh') return raw
+    if (!raw) return 'FarmSavior 市场数据'
+    if (raw.toLowerCase().includes('aggregated marketplace listings')) return 'FarmSavior 聚合市场挂牌数据（含连续性种子回退）'
+    if (raw === 'FarmSavior baseline feed') return 'FarmSavior 基线数据流'
+    return zhMap[raw] || raw
+  }
   const publicLivestockPlans = state.livestockPlans.length ? state.livestockPlans : featuredLivestockPlansSeed
 
   const favoriteCurrencies = ['GHS', 'NGN', 'XOF', 'USD', 'EUR', 'GBP']
@@ -1010,7 +1065,12 @@ export default function App() {
                 <img src={n.image_url || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80'} alt={n.title} className='news-img' />
                 <div className='news-body'>
                   <a href={n.url} target='_blank' rel='noreferrer' className='news-title'>{displayNewsTitle(n.title)}</a>
-                  <div className='news-meta'>{(uiLang === 'zh' && n.source === 'FarmSavior News Desk') ? 'FarmSavior 新闻台' : n.source} {n.published ? `• ${uiLang === 'fr' && n.published === 'Live' ? 'En direct' : (uiLang === 'zh' && n.published === 'Live' ? '实时' : n.published)}` : ''}</div>
+                  <div className='news-meta'>{uiLang === 'zh' ? ({
+                    'FarmSavior News Desk': 'FarmSavior 新闻台',
+                    'FarmSavior Wire': 'FarmSavior 快讯',
+                    'FarmSavior Weather Desk': 'FarmSavior 天气台',
+                    'FarmSavior Markets': 'FarmSavior 市场台'
+                  }[n.source] || 'FarmSavior 新闻') : n.source} {n.published ? `• ${uiLang === 'fr' && n.published === 'Live' ? 'En direct' : (uiLang === 'zh' && n.published === 'Live' ? '实时' : n.published)}` : ''}</div>
                   <div className='news-credit'>{n.image_credit || t('Image credit: source / Unsplash','Crédit image : source / Unsplash','图片来源：source / Unsplash')}</div>
                 </div>
               </div>
@@ -1133,16 +1193,16 @@ export default function App() {
           </div>
 
           <div className='panel' style={{marginTop:10,padding:10,background:'#f8fafc'}}>
-            <h4 style={{margin:'0 0 6px'}}>{t('📲 Download App to Phone','📲 Télécharger l’application sur le téléphone','📲 下载到手机')}</h4>
+            <h4 style={{margin:'0 0 6px'}}>{uiLang === 'zh' ? '📲 下载到手机' : t('📲 Download App to Phone','📲 Télécharger l’application sur le téléphone','📲 下载到手机')}</h4>
             <div style={{fontSize:'.84rem',color:'#334155'}}>
-              <div><strong>{t('iPhone (Safari):','iPhone (Safari) :','iPhone（Safari）：')}</strong> {t('Open farmsavior.com → Share → Add to Home Screen.','Ouvrez farmsavior.com → Partager → Sur l’écran d’accueil.','打开 farmsavior.com → 分享 → 添加到主屏幕。')}</div>
-              <div><strong>{t('Android (Chrome):','Android (Chrome) :','Android（Chrome）：')}</strong> {t('Open farmsavior.com → ⋮ menu → Install app / Add to Home screen.','Ouvrez farmsavior.com → menu ⋮ → Installer l’app / Ajouter à l’écran d’accueil.','打开 farmsavior.com → ⋮ 菜单 → 安装应用 / 添加到主屏幕。')}</div>
+              <div><strong>{uiLang === 'zh' ? 'iPhone（Safari）：' : t('iPhone (Safari):','iPhone (Safari) :','iPhone（Safari）：')}</strong> {uiLang === 'zh' ? '打开 farmsavior.com → 分享 → 添加到主屏幕。' : t('Open farmsavior.com → Share → Add to Home Screen.','Ouvrez farmsavior.com → Partager → Sur l’écran d’accueil.','打开 farmsavior.com → 分享 → 添加到主屏幕。')}</div>
+              <div><strong>{uiLang === 'zh' ? 'Android（Chrome）：' : t('Android (Chrome):','Android (Chrome) :','Android（Chrome）：')}</strong> {uiLang === 'zh' ? '打开 farmsavior.com → ⋮ 菜单 → 安装应用 / 添加到主屏幕。' : t('Open farmsavior.com → ⋮ menu → Install app / Add to Home screen.','Ouvrez farmsavior.com → menu ⋮ → Installer l’app / Ajouter à l’écran d’accueil.','打开 farmsavior.com → ⋮ 菜单 → 安装应用 / 添加到主屏幕。')}</div>
             </div>
           </div>
 
           <div className='list-row' style={{marginTop:12}}>
             <h3 style={{margin:0}}>{t('📈 Spot Trading (Ghana • Nigeria • Burkina Faso • World Avg)','📈 Trading Spot (Ghana • Nigeria • Burkina Faso • Moyenne mondiale)','📈 现货交易（加纳 • 尼日利亚 • 布基纳法索 • 全球均值）')}</h3>
-            <button className='btn' onClick={() => window.print()}>{t('Export Briefing (PDF)','Exporter le briefing (PDF)')}</button>
+            <button className='btn' onClick={() => window.print()}>{t('Export Briefing (PDF)','Exporter le briefing (PDF)','导出简报（PDF）')}</button>
           </div>
           <p style={{fontSize:'.8rem', color:'#64748b', margin:'6px 0 8px'}}>
             {t('Units: GH in GHS per market unit, NG in NGN per market unit, BF in XOF per market unit, World Avg in USD reference unit.','Unités : GH en GHS par unité de marché, NG en NGN par unité de marché, BF en XOF par unité de marché, moyenne mondiale en unité de référence USD.','单位：GH 以 GHS/市场单位，NG 以 NGN/市场单位，BF 以 XOF/市场单位，全球均值以 USD 参考单位。')}
@@ -1154,7 +1214,7 @@ export default function App() {
                 className={`tab ${expandedSpotCommodity === r.commodity ? 'active' : ''}`}
                 onClick={() => setExpandedSpotCommodity(r.commodity)}
               >
-                {r.commodity}
+                {displayCommodityName(r.commodity)}
               </button>
             ))}
           </div>
@@ -1172,20 +1232,20 @@ export default function App() {
                 const points = t7.map((v, idx) => `${(idx/Math.max(1,t7.length-1))*180},${28-((v-min)/Math.max(1,(max7-min)))*24}`).join(' ')
                 const units = spotUnits(r.commodity)
                 return <div key={`st-right-${i}`} className='panel' style={{padding:10}}>
-                  <div style={{fontWeight:700, marginBottom:6}}>{r.commodity}</div>
+                  <div style={{fontWeight:700, marginBottom:6}}>{displayCommodityName(r.commodity)}</div>
                   <div style={{fontSize:12,color:'#64748b',marginBottom:6}}>{t('Date','Date','日期')}: {r.updated_at_utc || hist.updated_at_utc || t('Live feed','Flux en direct','实时数据')}</div>
                   <div style={{fontSize:12,color:'#64748b',marginBottom:6}}>{t('Market units','Unités de marché','市场单位')}: GH {units.GH} • NG {units.NG} • BF {units.BF} • {t('World','Monde','全球')} {units.WORLD_AVG}</div>
-                  <div className='list-row'><span>{t('Ghana','Ghana')} ({r.GH} GHS)</span><div style={{height:8,width:bar(r.GH),background:'#16a34a',borderRadius:99}} /></div>
-                  <div className='list-row'><span>{t('Nigeria','Nigeria')} ({r.NG} NGN)</span><div style={{height:8,width:bar(r.NG),background:'#0284c7',borderRadius:99}} /></div>
-                  <div className='list-row'><span>{t('Burkina Faso','Burkina Faso')} ({r.BF} XOF)</span><div style={{height:8,width:bar(r.BF),background:'#ea580c',borderRadius:99}} /></div>
+                  <div className='list-row'><span>{t('Ghana','Ghana','加纳')} ({r.GH} GHS)</span><div style={{height:8,width:bar(r.GH),background:'#16a34a',borderRadius:99}} /></div>
+                  <div className='list-row'><span>{t('Nigeria','Nigeria','尼日利亚')} ({r.NG} NGN)</span><div style={{height:8,width:bar(r.NG),background:'#0284c7',borderRadius:99}} /></div>
+                  <div className='list-row'><span>{t('Burkina Faso','Burkina Faso','布基纳法索')} ({r.BF} XOF)</span><div style={{height:8,width:bar(r.BF),background:'#ea580c',borderRadius:99}} /></div>
                   <div className='list-row'><span>{t('World Avg','Moyenne mondiale','全球均值')} ({r.WORLD_AVG} USD)</span><div style={{height:8,width:bar(r.WORLD_AVG),background:'#334155',borderRadius:99}} /></div>
                   <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#475569',marginTop:6}}>
-                    <span>7d: {hist.change_pct_7d ?? 0}%</span><span>30d: {hist.change_pct_30d ?? 0}%</span>
+                    <span>{t('7d','7j','7天')}: {hist.change_pct_7d ?? 0}%</span><span>{t('30d','30j','30天')}: {hist.change_pct_30d ?? 0}%</span>
                   </div>
                   <svg width='180' height='32' style={{marginTop:4, background:'#f8fafc', borderRadius:6}}>
                     <polyline fill='none' stroke='#0f766e' strokeWidth='2' points={points || '0,28 180,4'} />
                   </svg>
-                  <div style={{fontSize:11,color:'#64748b'}}>{t('Source','Source')}: {hist.provenance || t('FarmSavior market feed','Flux marché FarmSavior')}</div>
+                  <div style={{fontSize:11,color:'#64748b'}}>{t('Source','Source','来源')}: {displayProvenance(hist.provenance || t('FarmSavior market feed','Flux marché FarmSavior','FarmSavior 市场数据'))}</div>
                 </div>
               })}
           </div>
