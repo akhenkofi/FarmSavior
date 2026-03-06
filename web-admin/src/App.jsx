@@ -705,7 +705,7 @@ export default function App() {
       </div>
 
       <div className='three-col' style={{marginTop:10}}>
-        <article className='panel' style={{minHeight: 430}}>
+        <article className='panel' style={{minHeight: showHighDemandProducts ? 430 : 'auto'}}>
           <div className='list-row' style={{marginBottom:8}}>
             <h3 style={{margin:0}}>{t('🔥 High Demand Products','🔥 Produits à forte demande')}</h3>
             <button className='btn' onClick={()=>setShowHighDemandProducts(v=>!v)}>{showHighDemandProducts ? t('Hide','Masquer') : t('Show','Afficher')}</button>
@@ -721,7 +721,7 @@ export default function App() {
           </div>}
         </article>
 
-        <article className='panel' style={{minHeight: 430}}>
+        <article className='panel' style={{minHeight: showHighDemandServices ? 430 : 'auto'}}>
           <div className='list-row' style={{marginBottom:8}}>
             <h3 style={{margin:0}}>{t('🚚 High Demand Services','🚚 Services à forte demande')}</h3>
             <button className='btn' onClick={()=>setShowHighDemandServices(v=>!v)}>{showHighDemandServices ? t('Hide','Masquer') : t('Show','Afficher')}</button>
