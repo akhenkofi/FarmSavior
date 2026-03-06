@@ -238,6 +238,8 @@ export default function App() {
   const [contractEdit, setContractEdit] = useState({ id: '', origin_country: 'GH', destination_country: 'NG', commodity: '', quantity: '', price: '', delivery_date: '', payment_terms: '', status: 'DRAFT' })
   const [mapCountry, setMapCountry] = useState('GH')
   const [expandedWeatherCountry, setExpandedWeatherCountry] = useState('GH')
+  const [showHighDemandProducts, setShowHighDemandProducts] = useState(false)
+  const [showHighDemandServices, setShowHighDemandServices] = useState(false)
   const [expandedSpotCommodity, setExpandedSpotCommodity] = useState('')
   const [expandedTradeCommodity, setExpandedTradeCommodity] = useState('')
   const [expandedTradeSections, setExpandedTradeSections] = useState({})
@@ -704,8 +706,11 @@ export default function App() {
 
       <div className='three-col' style={{marginTop:10}}>
         <article className='panel' style={{minHeight: 430}}>
-          <h3>{t('🔥 High Demand Products','🔥 Produits à forte demande')}</h3>
-          <div className='list'>
+          <div className='list-row' style={{marginBottom:8}}>
+            <h3 style={{margin:0}}>{t('🔥 High Demand Products','🔥 Produits à forte demande')}</h3>
+            <button className='btn' onClick={()=>setShowHighDemandProducts(v=>!v)}>{showHighDemandProducts ? t('Hide','Masquer') : t('Show','Afficher')}</button>
+          </div>
+          {showHighDemandProducts && <div className='list'>
             {lockDemandCount(
               featuredProductsSeed.filter(x => !publicQuery || `${x.name}`.toLowerCase().includes(publicQuery.toLowerCase())),
               (n) => ({ name: `Market item ${n}` })
@@ -713,12 +718,15 @@ export default function App() {
               const inventory = Number(productInventoryByName.get(x.name) || 0)
               return <div className='list-row' key={`p-${i}`}><span>{displayProductName(x.name)}</span><strong>{inventory.toLocaleString()}</strong></div>
             })}
-          </div>
+          </div>}
         </article>
 
         <article className='panel' style={{minHeight: 430}}>
-          <h3>{t('🚚 High Demand Services','🚚 Services à forte demande')}</h3>
-          <div className='list'>
+          <div className='list-row' style={{marginBottom:8}}>
+            <h3 style={{margin:0}}>{t('🚚 High Demand Services','🚚 Services à forte demande')}</h3>
+            <button className='btn' onClick={()=>setShowHighDemandServices(v=>!v)}>{showHighDemandServices ? t('Hide','Masquer') : t('Show','Afficher')}</button>
+          </div>
+          {showHighDemandServices && <div className='list'>
             {lockDemandCount(
               featuredServicesSeed.filter(x => !publicQuery || `${x.name}`.toLowerCase().includes(publicQuery.toLowerCase())),
               (n) => ({ name: `Service slot ${n}` })
@@ -726,7 +734,7 @@ export default function App() {
               const inventory = Number(serviceInventoryByName.get(x.name) || 0)
               return <div className='list-row' key={`s-${i}`}><span>{displayServiceName(x.name)}</span><strong>{inventory.toLocaleString()}</strong></div>
             })}
-          </div>
+          </div>}
         </article>
 
         <article className='panel'>
