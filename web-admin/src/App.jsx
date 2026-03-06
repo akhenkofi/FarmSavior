@@ -578,23 +578,23 @@ export default function App() {
         <article className='panel'>
           <h3>{t('🧠 Popular Actions','🧠 Actions populaires')}</h3>
           <div className='list'>
-            <div className='list-row'><span>List Product</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('products'); return } setAuthMode('signup'); setAuthMsg('Create an account or log in to list a product.'); }}>Start</button></div>
-            <div className='list-row'><span>List Services</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('services'); return } setAuthMode('signup'); setAuthMsg('Create an account or log in to list your services.'); }}>Start</button></div>
-            <div className='list-row'><span>List Machinery for Rent</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('services'); return } setAuthMode('signup'); setAuthMsg('Sign up or log in to list machinery for rent.'); }}>Start</button></div>
-            <div className='list-row'><span>Rent Machinery</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('services'); return } setAuthMode('login'); setAuthMsg('Log in to rent machinery and contact providers.'); }}>Start</button></div>
-            <div className='list-row'><span>Request Logistics / Transport</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('services'); return } setAuthMode('login'); setAuthMsg('Log in to request transport services.'); }}>Start</button></div>
-            <div className='list-row'><span>Find Storage / Cold Room</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('services'); return } setAuthMode('login'); setAuthMsg('Log in to reserve storage facilities.'); }}>Start</button></div>
-            <div className='list-row'><span>AI Disease Analyzer</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('ai-disease'); return } setAuthMode('login'); setAuthMsg('Please sign in to use AI Disease Analyzer.'); }}>Open</button></div>
-            <div className='list-row'><span>Farm GPS Mapping</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('maps'); return } setAuthMode('login'); setAuthMsg('Please sign in to map farms and save data.'); }}>Open</button></div>
+            <div className='list-row'><span>{t('List Product','Publier un produit')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('products'); return } setAuthMode('signup'); setAuthMsg(t('Create an account or log in to list a product.','Créez un compte ou connectez-vous pour publier un produit.')); }}>{t('Start','Démarrer')}</button></div>
+            <div className='list-row'><span>{t('List Services','Publier des services')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('services'); return } setAuthMode('signup'); setAuthMsg(t('Create an account or log in to list your services.','Créez un compte ou connectez-vous pour publier vos services.')); }}>{t('Start','Démarrer')}</button></div>
+            <div className='list-row'><span>{t('List Machinery for Rent','Publier des machines à louer')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('services'); return } setAuthMode('signup'); setAuthMsg(t('Sign up or log in to list machinery for rent.','Inscrivez-vous ou connectez-vous pour publier des machines à louer.')); }}>{t('Start','Démarrer')}</button></div>
+            <div className='list-row'><span>{t('Rent Machinery','Louer des machines')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('services'); return } setAuthMode('login'); setAuthMsg(t('Log in to rent machinery and contact providers.','Connectez-vous pour louer des machines et contacter les prestataires.')); }}>{t('Start','Démarrer')}</button></div>
+            <div className='list-row'><span>{t('Request Logistics / Transport','Demander logistique / transport')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('services'); return } setAuthMode('login'); setAuthMsg(t('Log in to request transport services.','Connectez-vous pour demander des services de transport.')); }}>{t('Start','Démarrer')}</button></div>
+            <div className='list-row'><span>{t('Find Storage / Cold Room','Trouver stockage / chambre froide')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('services'); return } setAuthMode('login'); setAuthMsg(t('Log in to reserve storage facilities.','Connectez-vous pour réserver des installations de stockage.')); }}>{t('Start','Démarrer')}</button></div>
+            <div className='list-row'><span>{t('AI Disease Analyzer','Analyseur IA des maladies')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('ai-disease'); return } setAuthMode('login'); setAuthMsg(t('Please sign in to use AI Disease Analyzer.','Veuillez vous connecter pour utiliser l’analyseur IA des maladies.')); }}>{t('Open','Ouvrir')}</button></div>
+            <div className='list-row'><span>{t('Farm GPS Mapping','Cartographie GPS des fermes')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('maps'); return } setAuthMode('login'); setAuthMsg(t('Please sign in to map farms and save data.','Veuillez vous connecter pour cartographier les fermes et enregistrer les données.')); }}>{t('Open','Ouvrir')}</button></div>
           </div>
-          <p style={{fontSize:'.82rem', color:'#64748b'}}>You can browse publicly; posting, renting, contacting providers, and transactions require sign-in.</p>
+          <p style={{fontSize:'.82rem', color:'#64748b'}}>{t('You can browse publicly; posting, renting, contacting providers, and transactions require sign-in.','Vous pouvez parcourir publiquement ; publier, louer, contacter des prestataires et effectuer des transactions nécessite une connexion.')}</p>
         </article>
       </div>
 
       <div className='two-col' style={{marginTop:10}}>
         <article className='panel'>
-          <h3>🌤️ 9-City Weather Forecast (Ghana • Nigeria • Burkina Faso)</h3>
-          <p style={{fontSize:'.82rem', color:'#64748b', margin:'4px 0 10px'}}>Country codes: GH = Ghana, NG = Nigeria, BF = Burkina Faso.</p>
+          <h3>{t('🌤️ 9-City Weather Forecast (Ghana • Nigeria • Burkina Faso)','🌤️ Prévisions météo de 9 villes (Ghana • Nigeria • Burkina Faso)')}</h3>
+          <p style={{fontSize:'.82rem', color:'#64748b', margin:'4px 0 10px'}}>{t('Country codes: GH = Ghana, NG = Nigeria, BF = Burkina Faso.','Codes pays : GH = Ghana, NG = Nigeria, BF = Burkina Faso.')}</p>
           <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
             {['GH','NG','BF'].map((c) => (
               <button key={`wx-${c}`} className={`tab ${expandedWeatherCountry === c ? 'active' : ''}`} onClick={() => setExpandedWeatherCountry(c)}>
