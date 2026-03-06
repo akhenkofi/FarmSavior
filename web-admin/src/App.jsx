@@ -1154,12 +1154,12 @@ export default function App() {
       </div>
 
       <article className='panel' style={{marginTop:10}}>
-        <h3>{t('🏛️ Government Programs & Subsidies (Ghana • Nigeria • Burkina Faso)','🏛️ Programmes gouvernementaux & subventions (Ghana • Nigeria • Burkina Faso)')}</h3>
+        <h3>{t('🏛️ Government Programs & Subsidies (Ghana • Nigeria • Burkina Faso)','🏛️ Programmes gouvernementaux & subventions (Ghana • Nigeria • Burkina Faso)','🏛️ 政府项目与补贴（加纳・尼日利亚・布基纳法索）')}</h3>
         <div className='list'>
           {publicGovRows.slice(0, 6).map((g, i) => (
             <div className='list-row' key={`gov-${i}`}>
               <span>{g.country} • {g.agency} • {safeGovHeadline(g)} ({String(g.status || 'ok').toLowerCase().includes('error') ? t('unavailable','indisponible','不可用') : (g.status || 'ok')})</span>
-              <a className='btn' href={g.source_url} target='_blank' rel='noreferrer'>{t('Programs Page','Page des programmes')}</a>
+              <a className='btn' href={g.source_url} target='_blank' rel='noreferrer'>{t('Programs Page','Page des programmes','项目页面')}</a>
             </div>
           ))}
           {false && <div className='list-row'><span>Loading official ministry programs…</span></div>}
@@ -1167,8 +1167,8 @@ export default function App() {
       </article>
 
       <article className='panel' style={{marginTop:10}}>
-        <h3>{t('🌍 Current Export/Import Statistics (Top 10 + Volumes)','🌍 Statistiques actuelles export/import (Top 10 + volumes)')}</h3>
-        <p style={{fontSize:'.85rem',color:'#475569'}}>{t('Select a commodity below to expand its export/import rankings.','Sélectionnez une marchandise ci-dessous pour afficher ses classements export/import.')}</p>
+        <h3>{t('🌍 Current Export/Import Statistics (Top 10 + Volumes)','🌍 Statistiques actuelles export/import (Top 10 + volumes)','🌍 当前进出口统计（前10名+总量）')}</h3>
+        <p style={{fontSize:'.85rem',color:'#475569'}}>{t('Select a commodity below to expand its export/import rankings.','Sélectionnez une marchandise ci-dessous pour afficher ses classements export/import.','请选择下方商品以展开查看其进出口排名。')}</p>
 
         <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
           {publicTradeRows.map((c, i) => {
@@ -1192,7 +1192,7 @@ export default function App() {
               <h4 style={{marginTop:0}}>{c.commodity}</h4>
 
               <div className='list-row' style={{marginBottom:6}}>
-                <div style={{fontWeight:600}}>{t('Top 10 Exporters','Top 10 exportateurs')}</div>
+                <div style={{fontWeight:600}}>{t('Top 10 Exporters','Top 10 exportateurs','前10大出口国')}</div>
                 <button className='btn' onClick={() => setExpandedTradeSections((s) => ({ ...s, [`${c.commodity_key || c.commodity}-exp`]: !s[`${c.commodity_key || c.commodity}-exp`] }))}>
                   {expandedTradeSections[`${c.commodity_key || c.commodity}-exp`] ? t('Hide','Masquer') : t('Show','Afficher')}
                 </button>
@@ -1207,7 +1207,7 @@ export default function App() {
               </div>}
 
               <div className='list-row' style={{margin:'10px 0 6px'}}>
-                <div style={{fontWeight:600}}>{t('Top 10 Importers','Top 10 importateurs')}</div>
+                <div style={{fontWeight:600}}>{t('Top 10 Importers','Top 10 importateurs','前10大进口国')}</div>
                 <button className='btn' onClick={() => setExpandedTradeSections((s) => ({ ...s, [`${c.commodity_key || c.commodity}-imp`]: !s[`${c.commodity_key || c.commodity}-imp`] }))}>
                   {expandedTradeSections[`${c.commodity_key || c.commodity}-imp`] ? t('Hide','Masquer') : t('Show','Afficher')}
                 </button>
