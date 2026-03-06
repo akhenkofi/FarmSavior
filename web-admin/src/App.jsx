@@ -233,7 +233,21 @@ export default function App() {
   const t = (en, fr) => (uiLang === 'fr' ? fr : en)
   const displayProductName = (name) => (uiLang === 'fr' ? (productNameFr[name] || name) : name)
   const displayServiceName = (name) => (uiLang === 'fr' ? (serviceNameFr[name] || name) : name)
-  const displayWeatherCondition = (condition) => (uiLang === 'fr' ? (weatherConditionFr[condition] || condition) : condition)
+  const displayWeatherCondition = (condition) => {
+    if (uiLang !== 'fr') return condition
+    const raw = String(condition || '')
+    const normalized = raw.toLowerCase()
+    const map = {
+      'partly cloudy': 'Partiellement nuageux',
+      'cloudy': 'Nuageux',
+      'sunny': 'Ensoleillé',
+      'humid': 'Humide',
+      'hot': 'Chaud',
+      'clear': 'Dégagé',
+      'warm': 'Doux'
+    }
+    return map[normalized] || weatherConditionFr[raw] || raw
+  }
   const displayNewsTitle = (title) => (uiLang === 'fr' ? (newsTitleFr[title] || title) : title)
 
   useEffect(() => {
@@ -739,7 +753,7 @@ export default function App() {
           {publicGovRows.slice(0, 6).map((g, i) => (
             <div className='list-row' key={`gov-${i}`}>
               <span>{g.country} • {g.agency} • {g.headline} ({g.status || 'ok'})</span>
-              <a className='btn' href={g.source_url} target='_blank' rel='noreferrer'>Programs Page</a>
+              <a className='btn' href={g.source_url} target='_blank' rel='noreferrer'>{t('Programs Page','Page des programmes')}</a>
             </div>
           ))}
           {false && <div className='list-row'><span>Loading official ministry programs…</span></div>}
@@ -747,8 +761,8 @@ export default function App() {
       </article>
 
       <article className='panel' style={{marginTop:10}}>
-        <h3>🌍 Current Export/Import Statistics (Top 10 + Volumes)</h3>
-        <p style={{fontSize:'.85rem',color:'#475569'}}>Select a commodity below to expand its export/import rankings.</p>
+        <h3>{t('🌍 Current Export/Import Statistics (Top 10 + Volumes)','🌍 Statistiques actuelles export/import (Top 10 + volumes)')}</h3>
+        <p style={{fontSize:'.85rem',color:'#475569'}}>{t('Select a commodity below to expand its export/import rankings.','Sélectionnez une marchandise ci-dessous pour afficher ses classements export/import.')}</p>
 
         <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
           {publicTradeRows.map((c, i) => {
@@ -770,7 +784,7 @@ export default function App() {
           .map((c, i) => (
             <div className='panel' key={`trade-expanded-${i}`} style={{padding:10}}>
               <h4 style={{marginTop:0}}>{c.commodity}</h4>
-              <div style={{fontWeight:600, marginBottom:6}}>Top 10 Exporters</div>
+              <div style={{fontWeight:600, marginBottom:6}}>{t('Top 10 Exporters','Top 10 exportateurs')}</div>
               <div className='list'>
                 {(c.top_exporters || []).slice(0,10).map((r) => (
                   <div className='list-row' key={`exp-${c.commodity_key}-${r.rank}`}>
@@ -779,7 +793,7 @@ export default function App() {
                   </div>
                 ))}
               </div>
-              <div style={{fontWeight:600, margin:'10px 0 6px'}}>Top 10 Importers</div>
+              <div style={{fontWeight:600, margin:'10px 0 6px'}}>{t('Top 10 Importers','Top 10 importateurs')}</div>
               <div className='list'>
                 {(c.top_importers || []).slice(0,10).map((r) => (
                   <div className='list-row' key={`imp-${c.commodity_key}-${r.rank}`}>
@@ -795,10 +809,10 @@ export default function App() {
       </article>
 
       <article className='panel' style={{marginTop:10}}>
-        <h3>🐑 Sheep & Goats Records & Intelligence Platform (Africa-Wide)</h3>
-        <p style={{fontSize:'.85rem',color:'#475569'}}>A production-grade livestock records system for sheep and goats, with traceability, breeding performance, health tracking, and subscription-based access for operators across Africa.</p>
-        <p style={{fontSize:'.82rem',color:'#64748b',marginTop:4}}>Pricing auto-displays in your selected country currency. Settlement can route to Ghana Mobile Money or US bank account once payout details are configured.</p>
-        <h4 style={{margin:'8px 0'}}>Select Your Subscription Plan</h4>
+        <h3>{t('🐑 Sheep & Goats Records & Intelligence Platform (Africa-Wide)','🐑 Plateforme de registres et d’intelligence ovins/caprins (Afrique entière)')}</h3>
+        <p style={{fontSize:'.85rem',color:'#475569'}}>{t('A production-grade livestock records system for sheep and goats, with traceability, breeding performance, health tracking, and subscription-based access for operators across Africa.','Un système professionnel de registres d’élevage pour ovins et caprins, avec traçabilité, performance de reproduction, suivi sanitaire et accès par abonnement pour les opérateurs en Afrique.')}</p>
+        <p style={{fontSize:'.82rem',color:'#64748b',marginTop:4}}>{t('Pricing auto-displays in your selected country currency. Settlement can route to Ghana Mobile Money or US bank account once payout details are configured.','Les prix s’affichent automatiquement dans la devise du pays sélectionné. Le règlement peut être acheminé vers Mobile Money Ghana ou un compte bancaire US une fois les détails de paiement configurés.')}</p>
+        <h4 style={{margin:'8px 0'}}>{t('Select Your Subscription Plan','Sélectionnez votre plan d’abonnement')}</h4>
         <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
           {publicLivestockPlans.map((p, i) => {
             const key = p.plan_code || p.name || `plan-${i}`
@@ -830,11 +844,11 @@ export default function App() {
                     })
                     if (r.payment_url) {
                       window.open(r.payment_url, '_blank')
-                      alert(`Checkout started. Complete payment to activate. Ref: ${r.reference}`)
+                      alert(t(`Checkout started. Complete payment to activate. Ref: ${r.reference}`,`Paiement initié. Finalisez le paiement pour activer. Réf : ${r.reference}`))
                     } else {
-                      alert(`Checkout created (payment provider not configured). Ref: ${r.reference}`)
+                      alert(t(`Checkout created (payment provider not configured). Ref: ${r.reference}`,`Paiement créé (prestataire non configuré). Réf : ${r.reference}`))
                     }
-                  } catch (e) { alert(`Checkout failed: ${errMsg(e)}`) }
+                  } catch (e) { alert(t(`Checkout failed: ${errMsg(e)}`,`Échec du paiement : ${errMsg(e)}`)) }
                 }}>Subscribe</button>
               </div>
             </div>
