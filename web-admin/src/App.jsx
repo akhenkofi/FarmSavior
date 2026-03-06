@@ -716,6 +716,7 @@ export default function App() {
           <button className='btn btn-dark'>{t('Search','Rechercher')}</button>
           <button type='button' className='btn' onClick={()=>setPublicQuery('')}>{t('Clear','Effacer')}</button>
         </form>
+        <p style={{fontSize:'.8rem',opacity:.9,marginTop:8}}>{t('Safety notice: Content and AI outputs are guidance only. Verify locally with qualified agronomy/veterinary professionals before acting.','Avis de sécurité : le contenu et les résultats IA sont indicatifs. Vérifiez localement avec des professionnels qualifiés (agronomie/vétérinaire) avant d’agir.')}</p>
       </div>
 
       <div className='three-col' style={{marginTop:10}}>
@@ -761,6 +762,8 @@ export default function App() {
             <div className='list-row'><span>{t('Request Logistics / Transport','Demander logistique / transport')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('services'); return } setAuthMode('login'); setAuthMsg(t('Log in to request transport services.','Connectez-vous pour demander des services de transport.')); }}>{t('Start','Démarrer')}</button></div>
             <div className='list-row'><span>{t('Find Storage / Cold Room','Trouver stockage / chambre froide')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('services'); return } setAuthMode('login'); setAuthMsg(t('Log in to reserve storage facilities.','Connectez-vous pour réserver des installations de stockage.')); }}>{t('Start','Démarrer')}</button></div>
             <div className='list-row'><span>{t('AI Disease Analyzer','Analyseur IA des maladies')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('ai-disease'); return } setAuthMode('login'); setAuthMsg(t('Please sign in to use AI Disease Analyzer.','Veuillez vous connecter pour utiliser l’analyseur IA des maladies.')); }}>{t('Open','Ouvrir')}</button></div>
+            <div className='list-row'><span>{t('AI Plant Identifier','Identificateur IA des plantes')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('plant-id'); return } setAuthMode('login'); setAuthMsg(t('Please sign in to use AI Plant Identifier.','Veuillez vous connecter pour utiliser l’identificateur IA des plantes.')); }}>{t('Open','Ouvrir')}</button></div>
+            <div className='list-row'><span>{t('AI Insect & Pest Identifier','Identificateur IA insectes et ravageurs')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('pest-id'); return } setAuthMode('login'); setAuthMsg(t('Please sign in to use AI pest identification.','Veuillez vous connecter pour utiliser l’identification IA des ravageurs.')); }}>{t('Open','Ouvrir')}</button></div>
             <div className='list-row'><span>{t('Farm GPS Mapping','Cartographie GPS des fermes')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('maps'); return } setAuthMode('login'); setAuthMsg(t('Please sign in to map farms and save data.','Veuillez vous connecter pour cartographier les fermes et enregistrer les données.')); }}>{t('Open','Ouvrir')}</button></div>
             <div className='list-row'><span>{t('Global World Chat','Chat mondial')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('world-chat'); return } setAuthMode('login'); setAuthMsg(t('Please sign in to post in World Chat.','Veuillez vous connecter pour publier dans le chat mondial.')); }}>{t('Open','Ouvrir')}</button></div>
           </div>
@@ -1159,11 +1162,17 @@ export default function App() {
           <button className='btn' onClick={() => setActive('products')}>{t('Products','Produits')}</button>
           <button className='btn' onClick={() => setActive('livestock')}>{t('Livestock','Élevage')}</button>
           <button className='btn' onClick={() => setActive('services')}>{t('Services','Services')}</button>
+          <button className='btn' onClick={() => setActive('ai-disease')}>{t('AI Disease','IA maladies')}</button>
+          <button className='btn' onClick={() => setActive('plant-id')}>{t('Plant ID','ID plante')}</button>
+          <button className='btn' onClick={() => setActive('pest-id')}>{t('Pest ID','ID ravageurs')}</button>
         </div>
         <div style={{display:'flex', gap:8}}>
           <button className='btn btn-dark' onClick={() => setActive('onboarding')}>{t('My Account','Mon compte')}</button>
           <button className='btn' onClick={goToPublicHomepage}>{t('Public Homepage','Page publique')}</button>
         </div>
+      </div>
+      <div className='panel' style={{marginBottom:10,fontSize:'.8rem',color:'#475569'}}>
+        {t('Legal/Safety: AI and market outputs are informational. Always verify diagnosis, dosage, legal approvals, and withdrawal periods with local professionals before action.','Juridique/Sécurité : les résultats IA et marché sont informatifs. Vérifiez toujours diagnostic, dosage, autorisations légales et délais d’attente avec des professionnels locaux avant action.')}
       </div>
       {active === 'home' && <section>
         <h2>{t('Main App Homepage','Page d’accueil de l’application')}</h2>

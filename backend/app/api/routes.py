@@ -1042,9 +1042,61 @@ def community_add_comment(post_id: int, payload: CommunityCommentIn, authorizati
     return c
 
 
+def _extract_base64_payload(data_url: str) -> str:
+    s = (data_url or '').strip()
+    if s.startswith('data:') and ',' in s:
+        return s.split(',', 1)[1]
+    return s
+
+
 @router.post('/ai/plants/identify')
 def ai_plant_identify(payload: PlantIdentifyIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
     _current_user_from_auth(authorization, db)  # signed-in users only
+
+    # Try production-grade external model first when key is configured.
+    api_key = (getattr(settings, 'PLANT_ID_API_KEY', '') or '').strip()
+    if api_key:
+        try:
+            img_b64 = _extract_base64_payload(payload.image_url)
+            req_body = {
+                'images': [img_b64],
+                'similar_images': True,
+                'plant_details': ['common_names', 'wiki_description', 'taxonomy', 'url']
+            }
+            req = Request(
+                'https://api.plant.id/v2/identify',
+                data=json.dumps(req_body).encode('utf-8'),
+                headers={
+                    'Content-Type': 'application/json',
+                    'Api-Key': api_key
+                },
+                method='POST'
+            )
+            with urlopen(req, timeout=25) as resp:
+                ext = json.loads(resp.read().decode('utf-8', errors='ignore'))
+            suggestions = (ext or {}).get('suggestions') or []
+            if suggestions:
+                top = suggestions[0]
+                name = top.get('plant_name') or top.get('plant_details', {}).get('common_names', ['Unknown plant'])[0]
+                prob = float(top.get('probability', 0) or 0)
+                common = (top.get('plant_details', {}) or {}).get('common_names') or []
+                wiki = ((top.get('plant_details', {}) or {}).get('wiki_description') or {}).get('value', '')
+                return {
+                    'identified_name': name,
+                    'confidence': round(prob, 4),
+                    'feed_suitability': 'CHECK_FEED_COMPATIBILITY',
+                    'target_livestock': payload.target_livestock,
+                    'feed_for': [],
+                    'nutrition': {'note': 'External identification matched. Verify feed suitability locally before feeding.'},
+                    'recommendations': [
+                        f"Common names: {', '.join(common[:5])}" if common else 'No common names available.',
+                        (wiki[:220] + '...') if wiki and len(wiki) > 220 else (wiki or 'No wiki description available.'),
+                        'Confirm plant safety/toxicity with local extension officer before feeding livestock.'
+                    ],
+                    'engine': 'Plant.id API + FarmSavior safety layer'
+                }
+        except Exception:
+            pass
 
     name_hint = f"{payload.file_name or ''} {payload.context_hint or ''} {payload.image_url[:120]}".lower()
 

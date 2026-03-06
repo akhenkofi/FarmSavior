@@ -18,5 +18,8 @@ class Settings(BaseSettings):
     PAYSTACK_WEBHOOK_SECRET: str = ''
     PAYSTACK_CALLBACK_URL: str = 'https://www.farmsavior.com/?public=0&go=onboarding'
 
+    # Optional external AI connectors
+    PLANT_ID_API_KEY: str = ''
+
 
 settings = Settings()
