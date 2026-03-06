@@ -235,6 +235,10 @@ export default function App() {
   const [fxUpdatedAt, setFxUpdatedAt] = useState('')
   const [fxQuery, setFxQuery] = useState('')
 
+  const [unitValue, setUnitValue] = useState('1')
+  const [unitFrom, setUnitFrom] = useState('ha')
+  const [unitTo, setUnitTo] = useState('ac')
+
   const t = (en, fr) => (uiLang === 'fr' ? fr : en)
   const displayProductName = (name) => (uiLang === 'fr' ? (productNameFr[name] || name) : name)
   const displayServiceName = (name) => (uiLang === 'fr' ? (serviceNameFr[name] || name) : name)
@@ -560,6 +564,35 @@ export default function App() {
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([code, rate]) => ({ code, value: (amount * Number(rate || 0)) }))
   }, [fxRates, fxAmount, fxQuery])
+
+  const unitDefs = {
+    m: { label: 'Meters (m)', type: 'length', toBase: (v) => v, fromBase: (v) => v },
+    ft: { label: 'Feet (ft)', type: 'length', toBase: (v) => v * 0.3048, fromBase: (v) => v / 0.3048 },
+    km: { label: 'Kilometers (km)', type: 'length', toBase: (v) => v * 1000, fromBase: (v) => v / 1000 },
+    mi: { label: 'Miles (mi)', type: 'length', toBase: (v) => v * 1609.344, fromBase: (v) => v / 1609.344 },
+
+    ha: { label: 'Hectares (ha)', type: 'area', toBase: (v) => v, fromBase: (v) => v },
+    ac: { label: 'Acres (ac)', type: 'area', toBase: (v) => v * 0.40468564224, fromBase: (v) => v / 0.40468564224 },
+    m2: { label: 'Square meters (m²)', type: 'area', toBase: (v) => v / 10000, fromBase: (v) => v * 10000 },
+
+    kg: { label: 'Kilograms (kg)', type: 'weight', toBase: (v) => v, fromBase: (v) => v },
+    g: { label: 'Grams (g)', type: 'weight', toBase: (v) => v / 1000, fromBase: (v) => v * 1000 },
+    lb: { label: 'Pounds (lb)', type: 'weight', toBase: (v) => v * 0.45359237, fromBase: (v) => v / 0.45359237 },
+    t: { label: 'Metric tons (t)', type: 'weight', toBase: (v) => v * 1000, fromBase: (v) => v / 1000 }
+  }
+
+  const unitCodes = Object.keys(unitDefs)
+  const convertedUnitValue = useMemo(() => {
+    const n = Number(unitValue || 0)
+    if (!Number.isFinite(n)) return ''
+    const from = unitDefs[unitFrom]
+    const to = unitDefs[unitTo]
+    if (!from || !to) return ''
+    if (from.type !== to.type) return ''
+    const base = from.toBase(n)
+    const out = to.fromBase(base)
+    return Number.isFinite(out) ? out : ''
+  }, [unitValue, unitFrom, unitTo])
 
   const selectedCurrency = currencyByCountry[uiCountry] || 'USD'
   const formatLocalPrice = (usd) => {
@@ -909,6 +942,30 @@ export default function App() {
         </div>
       </article>
 
+      <article className='panel' style={{marginTop:10}}>
+        <h3>📏 {t('Farmer Unit Converter','Convertisseur d’unités agricoles')}</h3>
+        <div className='inlineForm'>
+          <input className='input' type='number' step='any' value={unitValue} onChange={(e)=>setUnitValue(e.target.value)} placeholder={t('Value','Valeur')} />
+          <select className='input' value={unitFrom} onChange={(e)=>setUnitFrom(e.target.value)}>
+            {unitCodes.map((code)=><option key={`from-${code}`} value={code}>{unitDefs[code].label}</option>)}
+          </select>
+          <select className='input' value={unitTo} onChange={(e)=>setUnitTo(e.target.value)}>
+            {unitCodes.map((code)=><option key={`to-${code}`} value={code}>{unitDefs[code].label}</option>)}
+          </select>
+        </div>
+        <div className='list'>
+          {unitDefs[unitFrom]?.type !== unitDefs[unitTo]?.type ? (
+            <div className='list-row'><span>{t('Please choose units of the same type (length/area/weight).','Veuillez choisir des unités du même type (longueur/surface/poids).')}</span></div>
+          ) : (
+            <div className='list-row'>
+              <span>{unitValue || 0} {unitFrom} =</span>
+              <strong>{convertedUnitValue === '' ? '—' : Number(convertedUnitValue).toLocaleString(undefined, { maximumFractionDigits: 6 })} {unitTo}</strong>
+            </div>
+          )}
+        </div>
+        <p style={{fontSize:'.82rem',color:'#64748b',marginTop:8}}>{t('Includes common farming units: meters, feet, kilometers, hectares, acres, grams, kilograms, pounds, and tons.','Inclut les unités agricoles courantes : mètres, pieds, kilomètres, hectares, acres, grammes, kilogrammes, livres et tonnes.')}</p>
+      </article>
+
       <div className='panel' style={{marginTop:10, fontSize:'.84rem', color:'#475569', display:'flex', gap:14, flexWrap:'wrap'}}>
         <a href='/privacy-policy.html' target='_blank' rel='noreferrer'>Privacy Policy</a>
         <a href='/terms-of-service.html' target='_blank' rel='noreferrer'>Terms of Service</a>
@@ -993,6 +1050,29 @@ export default function App() {
               return <div className='list-row' key={r.code}><span>{r.code}</span><strong>{formatted}</strong></div>
             })}
             {!fxRows.length && <div className='list-row'><span>No rates available right now.</span></div>}
+          </div>
+        </article>
+
+        <article className='panel' style={{marginTop:10}}>
+          <h3>📏 Farmer Unit Converter</h3>
+          <div className='inlineForm'>
+            <input className='input' type='number' step='any' value={unitValue} onChange={(e)=>setUnitValue(e.target.value)} placeholder='Value' />
+            <select className='input' value={unitFrom} onChange={(e)=>setUnitFrom(e.target.value)}>
+              {unitCodes.map((code)=><option key={`app-from-${code}`} value={code}>{unitDefs[code].label}</option>)}
+            </select>
+            <select className='input' value={unitTo} onChange={(e)=>setUnitTo(e.target.value)}>
+              {unitCodes.map((code)=><option key={`app-to-${code}`} value={code}>{unitDefs[code].label}</option>)}
+            </select>
+          </div>
+          <div className='list'>
+            {unitDefs[unitFrom]?.type !== unitDefs[unitTo]?.type ? (
+              <div className='list-row'><span>Please choose units of the same type (length/area/weight).</span></div>
+            ) : (
+              <div className='list-row'>
+                <span>{unitValue || 0} {unitFrom} =</span>
+                <strong>{convertedUnitValue === '' ? '—' : Number(convertedUnitValue).toLocaleString(undefined, { maximumFractionDigits: 6 })} {unitTo}</strong>
+              </div>
+            )}
           </div>
         </article>
       </section>}
