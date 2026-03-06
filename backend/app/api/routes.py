@@ -1136,7 +1136,8 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
 
     payment_url = ''
     payment_init_error = ''
-    if settings.PAYSTACK_SECRET_KEY:
+    paystack_secret = (settings.PAYSTACK_SECRET_KEY or '').strip()
+    if paystack_secret:
         user = db.query(User).filter(User.id == (payload.user_id or 0)).first() if payload.user_id else None
         customer_name = user.full_name if user and user.full_name else 'FarmSavior User'
         customer_email = f"user{payload.user_id or 0}@farmsavior.com"
@@ -1167,7 +1168,7 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
                 data=json.dumps(ps_payload).encode('utf-8'),
                 headers={
                     'Content-Type': 'application/json',
-                    'Authorization': f'Bearer {settings.PAYSTACK_SECRET_KEY}'
+                    'Authorization': f'Bearer {paystack_secret}'
                 },
                 method='POST'
             )
@@ -1202,13 +1203,14 @@ def livestock_subscription_verify(reference: str, db: Session = Depends(get_db))
     if rec.status == 'ACTIVE':
         return {'message': 'already active', 'reference': reference, 'status': rec.status}
 
-    if not settings.PAYSTACK_SECRET_KEY:
+    paystack_secret = (settings.PAYSTACK_SECRET_KEY or '').strip()
+    if not paystack_secret:
         return {'message': 'payment provider not configured', 'reference': reference, 'status': rec.status}
 
     try:
         req = Request(
             f'https://api.paystack.co/transaction/verify/{reference}',
-            headers={'Authorization': f'Bearer {settings.PAYSTACK_SECRET_KEY}'},
+            headers={'Authorization': f'Bearer {paystack_secret}'},
             method='GET'
         )
         with urlopen(req, timeout=15) as resp:
