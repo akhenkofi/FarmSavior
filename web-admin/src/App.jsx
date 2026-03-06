@@ -559,13 +559,29 @@ export default function App() {
   const publicTradeRows = state.tradeExportStats.length ? state.tradeExportStats : featuredTradeExportSeed
   const publicLivestockPlans = state.livestockPlans.length ? state.livestockPlans : featuredLivestockPlansSeed
 
+  const favoriteCurrencies = ['GHS', 'NGN', 'XOF', 'USD', 'EUR', 'GBP']
+
+  const currencyName = (code) => {
+    try {
+      const dn = new Intl.DisplayNames([uiLang === 'fr' ? 'fr' : 'en'], { type: 'currency' })
+      return dn.of(code) || code
+    } catch {
+      return code
+    }
+  }
+
   const fxRows = useMemo(() => {
     const amount = Number(fxAmount || 0)
+    const q = String(fxQuery || '').trim().toLowerCase()
     return Object.entries(fxRates || {})
-      .filter(([code]) => !fxQuery || code.toLowerCase().includes(fxQuery.toLowerCase()))
+      .filter(([code]) => {
+        if (!q) return true
+        const name = currencyName(code).toLowerCase()
+        return code.toLowerCase().includes(q) || name.includes(q)
+      })
       .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([code, rate]) => ({ code, value: (amount * Number(rate || 0)) }))
-  }, [fxRates, fxAmount, fxQuery])
+      .map(([code, rate]) => ({ code, name: currencyName(code), value: (amount * Number(rate || 0)) }))
+  }, [fxRates, fxAmount, fxQuery, uiLang])
 
   const unitDefs = {
     m: { label: 'Meters (m)', type: 'length', toBase: (v) => v, fromBase: (v) => v },
@@ -933,16 +949,22 @@ export default function App() {
         <div className='inlineForm'>
           <input className='input' type='number' step='any' min='0' value={fxAmount} onChange={(e)=>setFxAmount(e.target.value)} placeholder={t('Amount','Montant')} />
           <select className='input' value={fxBase} onChange={(e)=>setFxBase(e.target.value)}>
-            {Object.keys(fxRates || {}).sort().map((c)=><option key={c} value={c}>{c}</option>)}
+            {Object.keys(fxRates || {}).sort().map((c)=><option key={c} value={c}>{c} — {currencyName(c)}</option>)}
             {!Object.keys(fxRates || {}).length && <option value='USD'>USD</option>}
           </select>
           <input className='input' value={fxQuery} onChange={(e)=>setFxQuery(e.target.value)} placeholder={t('Filter currency (e.g., GHS, NGN, EUR)','Filtrer devise (ex: GHS, NGN, EUR)')} />
+        </div>
+        <div className='tabs' style={{marginBottom:8, flexWrap:'wrap'}}>
+          {favoriteCurrencies.map((c)=>(
+            <button key={`fav-pub-${c}`} className='tab' onClick={()=>setFxQuery(c)}>{c}</button>
+          ))}
+          <button className='tab' onClick={()=>setFxQuery('')}>{t('All','Tout')}</button>
         </div>
         <p style={{fontSize:'.82rem',color:'#64748b',margin:'6px 0 10px'}}>{t('Rates source','Source des taux')}: open.er-api.com • {t('Last updated','Dernière mise à jour')}: {fxUpdatedAt || '—'}</p>
         <div className='list' style={{maxHeight:320, overflow:'auto'}}>
           {fxRows.map((r)=>{
             const formatted = Number.isFinite(r.value) ? r.value.toLocaleString(undefined, { maximumFractionDigits: 4 }) : '0'
-            return <div className='list-row' key={`pub-fx-${r.code}`}><span>{r.code}</span><strong>{formatted}</strong></div>
+            return <div className='list-row' key={`pub-fx-${r.code}`}><span>{r.code} — {r.name}</span><strong>{formatted}</strong></div>
           })}
           {!fxRows.length && <div className='list-row'><span>{t('No rates available right now.','Aucun taux disponible pour le moment.')}</span></div>}
         </div>
@@ -1054,16 +1076,22 @@ export default function App() {
           <div className='inlineForm'>
             <input className='input' type='number' step='any' min='0' value={fxAmount} onChange={(e)=>setFxAmount(e.target.value)} placeholder='Amount' />
             <select className='input' value={fxBase} onChange={(e)=>setFxBase(e.target.value)}>
-              {Object.keys(fxRates || {}).sort().map((c)=><option key={c} value={c}>{c}</option>)}
+              {Object.keys(fxRates || {}).sort().map((c)=><option key={c} value={c}>{c} — {currencyName(c)}</option>)}
               {!Object.keys(fxRates || {}).length && <option value='USD'>USD</option>}
             </select>
             <input className='input' value={fxQuery} onChange={(e)=>setFxQuery(e.target.value)} placeholder='Filter currency (e.g., GHS, NGN, EUR)' />
+          </div>
+          <div className='tabs' style={{marginBottom:8, flexWrap:'wrap'}}>
+            {favoriteCurrencies.map((c)=>(
+              <button key={`fav-app-${c}`} className='tab' onClick={()=>setFxQuery(c)}>{c}</button>
+            ))}
+            <button className='tab' onClick={()=>setFxQuery('')}>All</button>
           </div>
           <p style={{fontSize:'.82rem',color:'#64748b',margin:'6px 0 10px'}}>Rates source: open.er-api.com • Last updated: {fxUpdatedAt || '—'}</p>
           <div className='list' style={{maxHeight:320, overflow:'auto'}}>
             {fxRows.map((r)=>{
               const formatted = Number.isFinite(r.value) ? r.value.toLocaleString(undefined, { maximumFractionDigits: 4 }) : '0'
-              return <div className='list-row' key={r.code}><span>{r.code}</span><strong>{formatted}</strong></div>
+              return <div className='list-row' key={r.code}><span>{r.code} — {r.name}</span><strong>{formatted}</strong></div>
             })}
             {!fxRows.length && <div className='list-row'><span>No rates available right now.</span></div>}
           </div>
