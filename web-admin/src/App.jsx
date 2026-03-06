@@ -105,20 +105,31 @@ const newsTitleZh = {
 }
 
 const zhMap = {
-  'home':'首页','dashboard':'仪表盘','onboarding':'账户','products':'产品','livestock':'牲畜','services':'服务','payments':'支付','alerts':'预警','maps':'地图','messaging':'消息','World Chat':'世界聊天','FarmSavior Community':'FarmSavior 社区','AI Disease Analyzer':'AI 病害分析','AI Plant Identifier':'AI 植物识别','AI Insect & Pest Identifier':'AI 昆虫与害虫识别','Government Programs':'政府项目','contracts':'合同','admin':'管理员',
-  'Hide':'隐藏','Show':'显示','Open':'打开','Start':'开始','Login':'登录','Sign In':'登录','Create Account':'创建账户','Cancel':'取消','Currency':'货币','Payment methods':'支付方式','Products':'产品','logout':'退出登录',
-  'No messages yet.':'暂无消息。','Open Chat':'打开聊天','Go to My Account':'前往我的账户','Popular Actions':'热门操作','Global World Chat':'全球聊天','Map System (Google Maps) + Farm GPS Mapping':'地图系统（Google 地图）+ 农场 GPS 标注',
-  'Government Programs & Subsidies (Ghana • Nigeria • Burkina Faso)':'政府项目与补贴（加纳・尼日利亚・布基纳法索）','Programs Page':'项目页面','Current Export/Import Statistics (Top 10 + Volumes)':'当前进出口统计（前10名+总量）',
-  'Program details temporarily unavailable. Open source page.':'项目详情暂时不可用。请打开来源页面。','unavailable':'不可用','Official program update':'官方项目更新',
-  'Please sign in or create an account to continue.':'请登录或创建账户以继续。','Sign in required':'需要登录','Open Login Popup':'打开登录弹窗',
-  'Phone':'手机号','Phone or Email':'手机号或邮箱','Password':'密码','OTP Code':'验证码','Verify OTP':'验证 OTP',
-  'My Account':'我的账户','My Verification Status':'我的认证状态','Save Profile':'保存资料','Change Password':'修改密码',
-  'Community':'社区','World Chat':'世界聊天','Government Programs':'政府项目','Main Interface':'主界面',
-  'Goats':'山羊','Sheep':'绵羊','Day-old Chicks':'雏鸡','Cows':'奶牛','Cashew':'腰果','Mango':'芒果','Coconuts':'椰子','Coffee':'咖啡','Cocoa':'可可','Rice':'大米',
-  'Tractor hire (4WD)':'四驱拖拉机租赁','Combine harvester rental':'联合收割机租赁','Cold room storage':'冷库储存','Long-haul truck logistics':'长途卡车物流','Farm spraying service':'农场喷洒服务','Irrigation setup service':'灌溉安装服务','Feed supply delivery':'饲料配送','Warehouse monthly leasing':'仓库月租','Farm consultancy':'农业咨询','Ram/Buck/Bull rentals':'公羊/种公山羊/公牛租赁',
-  'Government Programs & Subsidies (Ghana • Nigeria • Burkina Faso)':'政府项目与补贴（加纳 • 尼日利亚 • 布基纳法索）','Current Export/Import Statistics (Top 10 + Volumes)':'当前进出口统计（前10 + 总量）','Top 10 Exporters':'前10大出口国','Top 10 Importers':'前10大进口国',
-  'Access Portal':'访问入口','Global World Chat':'全球世界聊天','Download App to Phone':'下载到手机','Spot Trading (Ghana • Nigeria • Burkina Faso • World Avg)':'现货交易（加纳 • 尼日利亚 • 布基纳法索 • 全球均值）','Legal & Safety Notice':'法律与安全声明',
-  'High Demand Products':'高需求产品','High Demand Services':'高需求服务','Popular Actions':'热门操作','Programs Page':'项目页面'
+  'home': '首页', 'dashboard': '仪表盘', 'onboarding': '账户', 'products': '产品', 'livestock': '牲畜', 'services': '服务', 'payments': '支付', 'alerts': '预警', 'maps': '地图', 'messaging': '消息', 'World Chat': '世界聊天', 'FarmSavior Community': 'FarmSavior 社区', 'AI Disease Analyzer': 'AI 病害分析', 'AI Plant Identifier': 'AI 植物识别', 'AI Insect & Pest Identifier': 'AI 昆虫与害虫识别', 'Government Programs': '政府项目', 'contracts': '合同', 'admin': '管理员',
+  'Hide': '隐藏', 'Show': '显示', 'Open': '打开', 'Start': '开始', 'Login': '登录', 'Sign In': '登录', 'Create Account': '创建账户', 'Cancel': '取消', 'Currency': '货币', 'Payment methods': '支付方式', 'Products': '产品', 'logout': '退出登录',
+  'No messages yet.': '暂无消息。', 'Open Chat': '打开聊天', 'Open World Chat': '打开全球聊天', 'Go to My Account': '前往我的账户', 'Popular Actions': '热门操作', 'Global World Chat': '全球世界聊天', 'Map System (Google Maps) + Farm GPS Mapping': '地图系统（Google 地图）+ 农场 GPS 标注',
+  'Government Programs & Subsidies (Ghana • Nigeria • Burkina Faso)': '政府项目与补贴（加纳 • 尼日利亚 • 布基纳法索）', 'Programs Page': '项目页面', 'Current Export/Import Statistics (Top 10 + Volumes)': '当前进出口统计（前10 + 总量）', 'Top 10 Exporters': '前10大出口国', 'Top 10 Importers': '前10大进口国',
+  'Program details temporarily unavailable. Open source page.': '项目详情暂时不可用。请打开来源页面。', 'unavailable': '不可用', 'Official program update': '官方项目更新',
+  'Please sign in or create an account to continue.': '请登录或创建账户以继续。', 'Sign in required': '需要登录', 'Open Login Popup': '打开登录弹窗',
+  'Phone': '手机号', 'Phone or Email': '手机号或邮箱', 'Password': '密码', 'OTP Code': '验证码', 'Verify OTP': '验证 OTP',
+  'My Account': '我的账户', 'My Verification Status': '我的认证状态', 'Save Profile': '保存资料', 'Change Password': '修改密码',
+  'Main Interface': '主界面', 'Main App Homepage': '主应用首页', 'Public Homepage': '公开首页',
+  'Goats': '山羊', 'Sheep': '绵羊', 'Day-old Chicks': '雏鸡', 'Cows': '奶牛', 'Cashew': '腰果', 'Mango': '芒果', 'Coconuts': '椰子', 'Coffee': '咖啡', 'Cocoa': '可可', 'Rice': '大米', 'Maize': '玉米', 'Wheat': '小麦', 'Soybeans': '大豆', 'Poultry': '家禽', 'Sheep & Goats': '羊与山羊', 'Cattle': '牛',
+  'Tractor hire (4WD)': '四驱拖拉机租赁', 'Combine harvester rental': '联合收割机租赁', 'Cold room storage': '冷库储存', 'Long-haul truck logistics': '长途卡车物流', 'Farm spraying service': '农场喷洒服务', 'Irrigation setup service': '灌溉安装服务', 'Feed supply delivery': '饲料配送', 'Warehouse monthly leasing': '仓库月租', 'Farm consultancy': '农业咨询', 'Ram/Buck/Bull rentals': '公羊/种公山羊/公牛租赁',
+  'Access Portal': '访问入口', 'Download App to Phone': '下载到手机', 'Spot Trading (Ghana • Nigeria • Burkina Faso • World Avg)': '现货交易（加纳 • 尼日利亚 • 布基纳法索 • 全球均值）', 'Legal & Safety Notice': '法律与安全声明', 'High Demand Products': '高需求产品', 'High Demand Services': '高需求服务',
+  'FarmSavior Marketplace Live': 'FarmSavior 市场实时',
+  'High-demand products and services across Ghana, Nigeria, and Burkina Faso. Browse freely. To contact providers or use tools, sign up/sign in.': '覆盖加纳、尼日利亚和布基纳法索的高需求产品与服务。可自由浏览；联系服务商或使用工具请注册/登录。',
+  'Safety notice: Content and AI outputs are guidance only. Verify locally with qualified agronomy/veterinary professionals before acting.': '安全提示：内容和AI结果仅供参考。行动前请在本地与合格的农学/兽医专业人士核实。',
+  'You are signed in.': '你已登录。', 'Log out': '退出登录',
+  'Export Briefing (PDF)': '导出简报（PDF）', 'Source': '来源', 'FarmSavior market feed': 'FarmSavior 市场数据',
+  'Amount': '金额', 'Filter currency (e.g., GHS, NGN, EUR)': '筛选货币（例如 GHS、NGN、EUR）', 'All': '全部', 'Rates source': '汇率来源', 'Last updated': '最后更新', 'No rates available right now.': '当前暂无汇率数据。',
+  'Value': '数值', 'Please choose units of the same type (length/area/weight).': '请选择同类型单位（长度/面积/重量）。', 'Includes common farming units: meters, feet, kilometers, hectares, acres, grams, kilograms, pounds, and tons.': '包含常见农业单位：米、英尺、公里、公顷、英亩、克、千克、磅和吨。',
+  'Services': '服务', 'AI Disease': 'AI 病害', 'Plant ID': '植物识别', 'Pest ID': '害虫识别',
+  'Legal/Safety: AI and market outputs are informational. Always verify diagnosis, dosage, legal approvals, and withdrawal periods with local professionals before action.': '法律/安全：AI与市场输出仅供参考。采取行动前，请与当地专业人士核实诊断、剂量、合规批准及停药期。',
+  'Search products, livestock, services…': '搜索产品、牲畜、服务…',
+  'No community posts yet.': '暂无社区帖子。',
+  'Image credit: source / Unsplash': '图片来源：source / Unsplash',
+  'Sources and image credits are shown on each story.': '每条资讯都显示来源与图片署名。'
 }
 
 const polygonAreaHectares = (points = []) => {
