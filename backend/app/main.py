@@ -25,6 +25,18 @@ def ensure_runtime_columns():
                     conn.execute(text('ALTER TABLE id_verifications ADD COLUMN id_front_photo_url VARCHAR(500)'))
                 if 'id_back_photo_url' not in vcols:
                     conn.execute(text('ALTER TABLE id_verifications ADD COLUMN id_back_photo_url VARCHAR(500)'))
+
+            if 'users' in tables:
+                ucols = {c['name'] for c in inspector.get_columns('users')}
+                if 'email' not in ucols:
+                    conn.execute(text('ALTER TABLE users ADD COLUMN email VARCHAR(160)'))
+
+            if 'otp_codes' in tables:
+                ocols = {c['name'] for c in inspector.get_columns('otp_codes')}
+                if 'destination' not in ocols:
+                    conn.execute(text('ALTER TABLE otp_codes ADD COLUMN destination VARCHAR(160)'))
+                if 'channel' not in ocols:
+                    conn.execute(text("ALTER TABLE otp_codes ADD COLUMN channel VARCHAR(20) DEFAULT 'phone'"))
     except Exception:
         pass
 

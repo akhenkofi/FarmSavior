@@ -9,15 +9,17 @@ UserType = Literal['Farmer', 'Buyer', 'Transporter', 'EquipmentProvider', 'Stora
 
 class UserCreate(BaseModel):
     full_name: str
-    phone: str
     country: Country
     region: str
     user_type: UserType
     password: Optional[str] = None
+    signup_method: Literal['phone', 'email'] = 'phone'
+    phone: Optional[str] = None
+    email: Optional[str] = None
 
 
 class UserLogin(BaseModel):
-    phone: str
+    identifier: str
     password: str
 
 
@@ -32,7 +34,7 @@ class PasswordChangeIn(BaseModel):
 
 
 class OTPVerify(BaseModel):
-    phone: str
+    destination: str
     code: str
 
 

@@ -1,9 +1,12 @@
 import random
 import json
 import hashlib
+import smtplib
+from email.message import EmailMessage
 from datetime import datetime, timedelta
 from typing import Optional, Any
 from urllib.request import Request, urlopen
+from urllib.parse import urlencode
 import xml.etree.ElementTree as ET
 import re
 import ssl
@@ -187,15 +190,61 @@ def _save_update_review(db: Session, module: str, record_id: int, action: str, p
     db.commit()
 
 
+def _send_otp(destination: str, method: str, code: str):
+    message = f"Your FarmSavior OTP is {code}. It expires soon."
+    if method == 'email' and settings.SMTP_HOST and settings.SMTP_USER and settings.SMTP_PASS:
+        msg = EmailMessage()
+        msg['Subject'] = 'FarmSavior verification code'
+        msg['From'] = settings.SMTP_FROM
+        msg['To'] = destination
+        msg.set_content(message)
+        with smtplib.SMTP(settings.SMTP_HOST, int(settings.SMTP_PORT or 587), timeout=12) as smtp:
+            smtp.starttls()
+            smtp.login(settings.SMTP_USER, settings.SMTP_PASS)
+            smtp.send_message(msg)
+        return {'sent': True, 'channel': 'email'}
+
+    if method == 'phone' and settings.TWILIO_ACCOUNT_SID and settings.TWILIO_AUTH_TOKEN and settings.TWILIO_FROM_NUMBER:
+        url = f"https://api.twilio.com/2010-04-01/Accounts/{settings.TWILIO_ACCOUNT_SID}/Messages.json"
+        body = urlencode({'To': destination, 'From': settings.TWILIO_FROM_NUMBER, 'Body': message}).encode('utf-8')
+        req = Request(url, data=body)
+        import base64
+        token = base64.b64encode(f"{settings.TWILIO_ACCOUNT_SID}:{settings.TWILIO_AUTH_TOKEN}".encode()).decode()
+        req.add_header('Authorization', f'Basic {token}')
+        req.add_header('Content-Type', 'application/x-www-form-urlencoded')
+        with urlopen(req, timeout=12) as _:
+            pass
+        return {'sent': True, 'channel': 'phone'}
+
+    return {'sent': False, 'channel': method}
+
+
 @router.post('/auth/register')
 def register_user(payload: UserCreate, db: Session = Depends(get_db)):
-    exists = db.query(User).filter(User.phone == payload.phone).first()
-    if exists:
-        raise HTTPException(status_code=400, detail='Phone already registered')
+    method = (payload.signup_method or 'phone').lower()
+    if method == 'phone':
+        if not payload.phone:
+            raise HTTPException(status_code=400, detail='Phone is required for phone signup')
+        exists = db.query(User).filter(User.phone == payload.phone).first()
+        if exists:
+            raise HTTPException(status_code=400, detail='Phone already registered')
+        dest = payload.phone
+    elif method == 'email':
+        if not payload.email:
+            raise HTTPException(status_code=400, detail='Email is required for email signup')
+        exists = db.query(User).filter(User.email == payload.email.lower()).first()
+        if exists:
+            raise HTTPException(status_code=400, detail='Email already registered')
+        if not payload.phone:
+            payload.phone = f"TMP-{int(datetime.utcnow().timestamp())}-{random.randint(1000,9999)}"
+        dest = payload.email.lower()
+    else:
+        raise HTTPException(status_code=400, detail='Unsupported signup method')
 
     user = User(
         full_name=payload.full_name,
         phone=payload.phone,
+        email=(payload.email.lower() if payload.email else None),
         country=CountryCode(payload.country),
         region=payload.region,
         role=UserRole(payload.user_type),
@@ -206,10 +255,11 @@ def register_user(payload: UserCreate, db: Session = Depends(get_db)):
     db.refresh(user)
 
     code = f"{random.randint(100000, 999999)}"
-    db.add(OTPCode(phone=payload.phone, code=code))
+    db.add(OTPCode(phone=payload.phone, destination=dest, channel=method, code=code))
     db.commit()
 
-    return {'user_id': user.id, 'otp_mock_code': code, 'message': 'OTP sent (mock)'}
+    delivery = _send_otp(dest, method, code)
+    return {'user_id': user.id, 'otp_sent': delivery.get('sent', False), 'otp_channel': method, 'otp_destination': dest, 'otp_mock_code': code, 'message': 'OTP sent'}
 
 
 @router.post('/auth/login', response_model=TokenResponse)
@@ -221,6 +271,7 @@ def login_user(payload: UserLogin, db: Session = Depends(get_db)):
         admin = User(
             full_name='FarmSavior Admin',
             phone=admin_phone,
+            email='admin@farmsavior.local',
             country=CountryCode.gh,
             region='HQ',
             role=UserRole.admin,
@@ -230,26 +281,28 @@ def login_user(payload: UserLogin, db: Session = Depends(get_db)):
         db.add(admin)
         db.commit()
 
-    user = db.query(User).filter(User.phone == payload.phone).first()
+    ident = (payload.identifier or '').strip().lower()
+    user = db.query(User).filter((User.phone == ident) | (User.email == ident)).first()
     if not user or not user.hashed_password or not verify_password(payload.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail='Invalid phone or password')
-    return TokenResponse(access_token=create_access_token(subject=payload.phone))
+        raise HTTPException(status_code=401, detail='Invalid login credentials')
+    return TokenResponse(access_token=create_access_token(subject=str(user.id)))
 
 
 @router.post('/auth/verify-otp', response_model=TokenResponse)
 def verify_otp(payload: OTPVerify, db: Session = Depends(get_db)):
-    otp = db.query(OTPCode).filter(OTPCode.phone == payload.phone, OTPCode.is_used == False).order_by(OTPCode.id.desc()).first()
+    dest = (payload.destination or '').strip().lower()
+    otp = db.query(OTPCode).filter((OTPCode.destination == dest) | (OTPCode.phone == payload.destination), OTPCode.is_used == False).order_by(OTPCode.id.desc()).first()
     if not otp:
         raise HTTPException(status_code=404, detail='OTP not found')
     if payload.code not in [otp.code, settings.OTP_BYPASS_CODE]:
         raise HTTPException(status_code=400, detail='Invalid OTP')
     otp.is_used = True
-    user = db.query(User).filter(User.phone == payload.phone).first()
+    user = db.query(User).filter((User.phone == otp.phone) | (User.email == otp.destination)).first()
     if user:
         user.is_verified = True
     db.commit()
 
-    return TokenResponse(access_token=create_access_token(subject=payload.phone))
+    return TokenResponse(access_token=create_access_token(subject=str(user.id)))
 
 
 def _current_user_from_auth(authorization: Optional[str], db: Session):
@@ -257,8 +310,12 @@ def _current_user_from_auth(authorization: Optional[str], db: Session):
         raise HTTPException(status_code=401, detail='Missing bearer token')
     token = authorization.split(' ', 1)[1]
     payload = decode_access_token(token)
-    phone = payload.get('sub')
-    user = db.query(User).filter(User.phone == phone).first()
+    sub = str(payload.get('sub') or '').strip()
+    user = None
+    if sub.isdigit():
+        user = db.query(User).filter(User.id == int(sub)).first()
+    if not user:
+        user = db.query(User).filter((User.phone == sub) | (User.email == sub.lower())).first()
     if not user:
         raise HTTPException(status_code=401, detail='User not found')
     return user
@@ -271,6 +328,7 @@ def auth_me(authorization: Optional[str] = Header(None), db: Session = Depends(g
         'id': u.id,
         'full_name': u.full_name,
         'phone': u.phone,
+        'email': u.email,
         'country': u.country.value if hasattr(u.country, 'value') else str(u.country),
         'region': u.region,
         'role': u.role.value if hasattr(u.role, 'value') else str(u.role)
@@ -291,6 +349,7 @@ def update_auth_me(payload: AccountUpdateIn, authorization: Optional[str] = Head
         'id': u.id,
         'full_name': u.full_name,
         'phone': u.phone,
+        'email': u.email,
         'country': u.country.value if hasattr(u.country, 'value') else str(u.country),
         'region': u.region,
         'role': u.role.value if hasattr(u.role, 'value') else str(u.role)
@@ -907,8 +966,8 @@ def _moderate_world_chat_text(text: str) -> dict:
 
 
 @router.get('/chat/world/messages')
-def world_chat_messages(limit: int = 60, db: Session = Depends(get_db)):
-    n = max(1, min(limit, 200))
+def world_chat_messages(limit: int = 120, db: Session = Depends(get_db)):
+    n = max(1, min(limit, 1000))
     rows = db.query(WorldChatMessage).filter(WorldChatMessage.status == 'VISIBLE').order_by(WorldChatMessage.id.desc()).limit(n).all()
     return list(reversed([{
         'id': r.id,
@@ -943,29 +1002,18 @@ def world_chat_post(payload: WorldChatMessageIn, authorization: Optional[str] = 
 
     moderation = _moderate_world_chat_text(payload.text)
     action = moderation['action']
-    status = 'VISIBLE' if action == 'allow' else 'HIDDEN'
 
     msg = WorldChatMessage(
         user_id=user.id,
         user_name=user.full_name,
         user_country=user.country.value if hasattr(user.country, 'value') else str(user.country),
         text=(payload.text or '').strip(),
-        status=status,
+        status='VISIBLE',
         moderation_label=moderation['label'],
         moderation_score=float(moderation['score']),
         moderation_reason=moderation['reason'],
     )
     db.add(msg)
-
-    if action in ['hide', 'block']:
-        if not sanction:
-            sanction = WorldChatUserModeration(user_id=user.id, strike_count=0)
-            db.add(sanction)
-        sanction.strike_count = int(sanction.strike_count or 0) + 1
-        sanction.last_reason = moderation['reason']
-        sanction.updated_at = now
-        if sanction.strike_count >= 3 and not sanction.muted_until:
-            sanction.muted_until = now + timedelta(minutes=30)
 
     db.commit()
     db.refresh(msg)

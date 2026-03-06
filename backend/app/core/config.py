@@ -10,6 +10,15 @@ class Settings(BaseSettings):
     DATABASE_URL: str = 'sqlite:///./farmsavior.db'
     OTP_BYPASS_CODE: str = '123456'
 
+    # OTP delivery (optional providers)
+    SMTP_HOST: str = ''
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ''
+    SMTP_PASS: str = ''
+    SMTP_FROM: str = 'no-reply@farmsavior.com'
+    TWILIO_ACCOUNT_SID: str = ''
+    TWILIO_AUTH_TOKEN: str = ''
+    TWILIO_FROM_NUMBER: str = ''
     OWNER_PAYOUT_MOMO_GH: str = ''
     OWNER_PAYOUT_US_BANK: str = ''
 

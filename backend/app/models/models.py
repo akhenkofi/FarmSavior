@@ -25,6 +25,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     full_name = Column(String(120), nullable=False)
     phone = Column(String(30), unique=True, nullable=False, index=True)
+    email = Column(String(160), unique=True, nullable=True, index=True)
     country = Column(Enum(CountryCode), nullable=False)
     region = Column(String(120), default='Unknown')
     role = Column(Enum(UserRole), nullable=False)
@@ -39,6 +40,8 @@ class OTPCode(Base):
     __tablename__ = 'otp_codes'
     id = Column(Integer, primary_key=True)
     phone = Column(String(30), index=True)
+    destination = Column(String(160), index=True, nullable=True)
+    channel = Column(String(20), default='phone')
     code = Column(String(6), nullable=False)
     is_used = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)

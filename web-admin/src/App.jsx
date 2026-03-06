@@ -245,9 +245,9 @@ export default function App() {
   const [me, setMe] = useState(null)
   const lastTrackRef = useRef('')
 
-  const [signup, setSignup] = useState({ full_name: '', phone: '', country: 'GH', region: '', user_type: 'Farmer', password: '', accept_terms: true, accept_privacy: true, consent_analytics: true, consent_personalization: true, consent_marketing: false, consent_aggregated_insights: true })
-  const [login, setLogin] = useState({ phone: '', password: '' })
-  const [otp, setOtp] = useState({ phone: '', code: '' })
+  const [signup, setSignup] = useState({ full_name: '', signup_method: 'phone', phone: '', email: '', country: 'GH', region: '', user_type: 'Farmer', password: '', accept_terms: true, accept_privacy: true, consent_analytics: true, consent_personalization: true, consent_marketing: false, consent_aggregated_insights: true })
+  const [login, setLogin] = useState({ identifier: '', password: '' })
+  const [otp, setOtp] = useState({ destination: '', code: '' })
 
   const [idForm, setIdForm] = useState({ user_id: 1, id_type: 'GhanaCard', id_number: '', id_photo_url: '', id_front_photo_url: '', id_back_photo_url: '', facial_verification_flag: false })
   const [accountForm, setAccountForm] = useState({ full_name: '', region: '' })
@@ -377,7 +377,7 @@ export default function App() {
   }
 
   const loadWorldChat = async () => {
-    const rows = await api.fetchWorldChatMessages(120).catch(() => [])
+    const rows = await api.fetchWorldChatMessages(500).catch(() => [])
     setWorldChat(rows || [])
   }
 
@@ -960,7 +960,9 @@ export default function App() {
               if (!signup.accept_terms || !signup.accept_privacy) { setAuthMsg('Please accept Terms and Privacy to continue.'); return }
               const payload = {
                 full_name: signup.full_name,
-                phone: signup.phone,
+                signup_method: signup.signup_method,
+                phone: signup.signup_method === 'phone' ? signup.phone : undefined,
+                email: signup.signup_method === 'email' ? signup.email : undefined,
                 country: signup.country,
                 region: signup.region,
                 user_type: signup.user_type,
@@ -994,11 +996,18 @@ export default function App() {
                   captured_at_utc: new Date().toISOString()
                 }))
               } catch {}
-              setPhoneForOtp(signup.phone); setOtp({ ...otp, phone: signup.phone }); setAuthMode('otp'); setAuthMsg(`Registered. Use OTP: ${r.otp_mock_code}`);
+              const dest = r.otp_destination || (signup.signup_method === 'email' ? signup.email : signup.phone)
+              setPhoneForOtp(dest); setOtp({ ...otp, destination: dest }); setAuthMode('otp'); setAuthMsg(r.otp_sent ? `OTP sent to ${dest}` : `OTP queued for ${dest}. Use code: ${r.otp_mock_code}`);
             } catch (e) { setAuthMsg(`Signup failed: ${errMsg(e)}`) }
           }}>
             <input className='input' placeholder='Full name' value={signup.full_name} onChange={e => setSignup({ ...signup, full_name: e.target.value })} required />
-            <input className='input' placeholder='Phone' value={signup.phone} onChange={e => setSignup({ ...signup, phone: e.target.value })} required />
+            <select className='input' value={signup.signup_method} onChange={e => setSignup({ ...signup, signup_method: e.target.value })}>
+              <option value='phone'>Sign up with Phone</option>
+              <option value='email'>Sign up with Email</option>
+            </select>
+            {signup.signup_method === 'phone'
+              ? <input className='input' placeholder='Phone' value={signup.phone} onChange={e => setSignup({ ...signup, phone: e.target.value })} required />
+              : <input className='input' placeholder='Email' value={signup.email} onChange={e => setSignup({ ...signup, email: e.target.value })} required />}
             <div className='row2'><select className='input' value={signup.country} onChange={e => setSignup({ ...signup, country: e.target.value })}>{countries.map(c => <option key={c}>{c}</option>)}</select><input className='input' placeholder='Region' value={signup.region} onChange={e => setSignup({ ...signup, region: e.target.value })} required /></div>
             <select className='input' value={signup.user_type} onChange={e => setSignup({ ...signup, user_type: e.target.value })}>{userTypes.map(u => <option key={u}>{u}</option>)}</select>
             <input className='input' type='password' placeholder='Password' value={signup.password} onChange={e => setSignup({ ...signup, password: e.target.value })} required />
@@ -1017,7 +1026,7 @@ export default function App() {
           {authMode === 'login' && <form className='list' onSubmit={async (e) => {
             try { e.preventDefault(); const r = await api.login(login); saveToken(r.access_token) } catch (e) { setAuthMsg(`Login failed: ${errMsg(e)}`) }
           }}>
-            <input className='input' placeholder='Phone' value={login.phone} onChange={e => setLogin({ ...login, phone: e.target.value })} required />
+            <input className='input' placeholder='Phone or Email' value={login.identifier} onChange={e => setLogin({ ...login, identifier: e.target.value })} required />
             <input className='input' type='password' placeholder='Password' value={login.password} onChange={e => setLogin({ ...login, password: e.target.value })} required />
             <button className='btn btn-dark'>Login</button>
           </form>}
@@ -1025,7 +1034,7 @@ export default function App() {
           {authMode === 'otp' && <form className='list' onSubmit={async (e) => {
             try { e.preventDefault(); const r = await api.verifyOtp(otp); saveToken(r.access_token) } catch (e) { setAuthMsg(`OTP verification failed: ${errMsg(e)}`) }
           }}>
-            <input className='input' placeholder='Phone' value={otp.phone || phoneForOtp} onChange={e => setOtp({ ...otp, phone: e.target.value })} required />
+            <input className='input' placeholder='Phone or Email' value={otp.destination || phoneForOtp} onChange={e => setOtp({ ...otp, destination: e.target.value })} required />
             <input className='input' placeholder='OTP Code' value={otp.code} onChange={e => setOtp({ ...otp, code: e.target.value })} required />
             <button className='btn btn-dark'>Verify OTP</button>
           </form>}
