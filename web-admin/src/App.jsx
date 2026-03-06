@@ -199,7 +199,7 @@ export default function App() {
   const [worldChatMsg, setWorldChatMsg] = useState('')
   const [worldChatQueue, setWorldChatQueue] = useState([])
 
-  const [communityProfile, setCommunityProfile] = useState({ avatar_url: '', bio: '', farm_life: '', interests: 'farming,gardening', visibility: 'PUBLIC' })
+  const [communityProfile, setCommunityProfile] = useState({ avatar_url: '', cover_image_url: '', bio: '', farm_life: '', interests: 'farming,gardening', visibility: 'PUBLIC' })
   const [communityPosts, setCommunityPosts] = useState([])
   const [communityFeedMode, setCommunityFeedMode] = useState('for-you')
   const [communityPostForm, setCommunityPostForm] = useState({ text: '', media_url: '', media_type: 'TEXT', tags: '' })
@@ -1136,6 +1136,17 @@ export default function App() {
         </div>
 
         <article className='panel' style={{marginTop:10}}>
+          <div className='list-row'>
+            <h3 style={{margin:0}}>🌍 Global World Chat</h3>
+            <button className='btn btn-dark' onClick={() => setActive('world-chat')}>Open World Chat</button>
+          </div>
+          <div className='list' style={{maxHeight:180, overflow:'auto'}}>
+            {worldChat.slice(-6).map((m)=><div className='list-row' key={`home-wc-${m.id}`}><span><strong>{m.user_name || `User ${m.user_id}`}:</strong> {m.text}</span></div>)}
+            {!worldChat.length && <div className='list-row'><span>No messages yet.</span></div>}
+          </div>
+        </article>
+
+        <article className='panel' style={{marginTop:10}}>
           <div className='list-row' style={{marginBottom:8}}>
             <h3 style={{margin:0}}>💱 Global Currency Converter (Realtime)</h3>
             <button className='btn' onClick={()=>setShowCurrencyConverter(v=>!v)}>{showCurrencyConverter ? 'Hide' : 'Show'}</button>
@@ -1588,7 +1599,8 @@ export default function App() {
           <article className='panel'>
             <h4>My Community Profile</h4>
             <form className='list' onSubmit={async(e)=>{e.preventDefault(); await api.saveCommunityProfileMe(communityProfile); await loadCommunity(); alert('Profile updated')}}>
-              <input className='input' placeholder='Profile picture URL' value={communityProfile.avatar_url || ''} onChange={(e)=>setCommunityProfile({...communityProfile, avatar_url:e.target.value})} />
+              <input className='input' placeholder='Display picture URL' value={communityProfile.avatar_url || ''} onChange={(e)=>setCommunityProfile({...communityProfile, avatar_url:e.target.value})} />
+              <input className='input' placeholder='Cover image URL' value={communityProfile.cover_image_url || ''} onChange={(e)=>setCommunityProfile({...communityProfile, cover_image_url:e.target.value})} />
               <input className='input' placeholder='Bio' value={communityProfile.bio || ''} onChange={(e)=>setCommunityProfile({...communityProfile, bio:e.target.value})} />
               <input className='input' placeholder='Farm life details' value={communityProfile.farm_life || ''} onChange={(e)=>setCommunityProfile({...communityProfile, farm_life:e.target.value})} />
               <input className='input' placeholder='Interests/tags (comma separated)' value={communityProfile.interests || ''} onChange={(e)=>setCommunityProfile({...communityProfile, interests:e.target.value})} />
