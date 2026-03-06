@@ -874,9 +874,9 @@ export default function App() {
       <div className='panel' style={{background:'linear-gradient(120deg,#0b3b2e,#0e7490)', color:'#fff'}}>
         <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:8}}>
           <img src='/assets/farmsavior-logo.jpg' alt='FarmSavior logo' style={{width:72,height:72,borderRadius:12,objectFit:'cover',border:'2px solid rgba(255,255,255,.3)'}} />
-          <h2 style={{margin:0}}>{t('FarmSavior Marketplace Live','Marché FarmSavior en direct')}</h2>
+          <h2 style={{margin:0}}>{t('FarmSavior Marketplace Live','Marché FarmSavior en direct','FarmSavior 市场实时')}</h2>
         </div>
-        <p style={{opacity:.95}}>{t('High-demand products and services across Ghana, Nigeria, and Burkina Faso. Browse freely. To contact providers or use tools, sign up/sign in.','Produits et services à forte demande au Ghana, au Nigeria et au Burkina Faso. Parcourez librement. Pour contacter les fournisseurs ou utiliser les outils, inscrivez-vous/connectez-vous.')}</p>
+        <p style={{opacity:.95}}>{t('High-demand products and services across Ghana, Nigeria, and Burkina Faso. Browse freely. To contact providers or use tools, sign up/sign in.','Produits et services à forte demande au Ghana, au Nigeria et au Burkina Faso. Parcourez librement. Pour contacter les fournisseurs ou utiliser les outils, inscrivez-vous/connectez-vous.','覆盖加纳、尼日利亚和布基纳法索的高需求产品与服务。可自由浏览；联系服务商或使用工具请注册/登录。')}</p>
         <div className='inlineForm' style={{background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.25)', marginBottom:8}}>
           <select className='input' value={uiCountry} onChange={(e)=>setUiCountry(e.target.value)}>
             <option value='GH'>Ghana</option><option value='NG'>Nigeria</option><option value='BF'>Burkina Faso</option>
@@ -892,7 +892,7 @@ export default function App() {
           <button className='btn btn-dark'>{t('Search','Rechercher','搜索')}</button>
           <button type='button' className='btn' onClick={()=>setPublicQuery('')}>{t('Clear','Effacer','清除')}</button>
         </form>
-        <p style={{fontSize:'.8rem',opacity:.9,marginTop:8}}>{t('Safety notice: Content and AI outputs are guidance only. Verify locally with qualified agronomy/veterinary professionals before acting.','Avis de sécurité : le contenu et les résultats IA sont indicatifs. Vérifiez localement avec des professionnels qualifiés (agronomie/vétérinaire) avant d’agir.')}</p>
+        <p style={{fontSize:'.8rem',opacity:.9,marginTop:8}}>{t('Safety notice: Content and AI outputs are guidance only. Verify locally with qualified agronomy/veterinary professionals before acting.','Avis de sécurité : le contenu et les résultats IA sont indicatifs. Vérifiez localement avec des professionnels qualifiés (agronomie/vétérinaire) avant d’agir.','安全提示：内容和AI结果仅供参考。行动前请在本地与合格的农学/兽医专业人士核实。')}</p>
       </div>
 
       {!token && authPrompt === 'login' && <div className='panel' style={{marginTop:10, background:'#ecfeff', border:'1px solid #99f6e4'}}>
@@ -960,7 +960,7 @@ export default function App() {
             <div className='list-row'><span>{t('AI Plant Identifier','Identificateur IA des plantes','AI 植物识别')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('plant-id', 'AI Plant Identifier')}>{t('Open','Ouvrir')}</button></div>
             <div className='list-row'><span>{t('AI Insect & Pest Identifier','Identificateur IA insectes et ravageurs','AI 昆虫与害虫识别')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('pest-id', 'AI Insect & Pest Identifier')}>{t('Open','Ouvrir')}</button></div>
             <div className='list-row'><span>{t('Farm GPS Mapping','Cartographie GPS des fermes','农场GPS标注')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('maps', 'Farm GPS Mapping')}>{t('Open','Ouvrir')}</button></div>
-            <div className='list-row'><span>{t('Global World Chat','Chat mondial','全球聊天')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('world-chat', 'Global World Chat')}>{t('Open','Ouvrir')}</button></div>
+            <div className='list-row'><span>{t('Global World Chat','Chat mondial','全球聊天')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('world-chat', 'Global World Chat')}>{t('Open','Ouvrir','打开')}</button></div>
           </div>
           <p style={{fontSize:'.82rem', color:'#64748b'}}>{t('You can browse publicly; posting, renting, contacting providers, and transactions require sign-in.','Vous pouvez parcourir publiquement ; publier, louer, contacter des prestataires et effectuer des transactions nécessite une connexion.','你可以公开浏览；发布、租赁、联系服务商和交易需要登录。')}</p>
         </article>
@@ -1320,7 +1320,7 @@ export default function App() {
 
       <article className='panel' style={{marginTop:10}}>
         <div className='list-row' style={{marginBottom:8}}>
-          <h3 style={{margin:0}}>💱 {t('Global Currency Converter (Realtime)','Convertisseur de devises mondial (temps réel)')}</h3>
+          <h3 style={{margin:0}}>💱 {t('Global Currency Converter (Realtime)','Convertisseur de devises mondial (temps réel)','全球货币转换器（实时）')}</h3>
           <button className='btn' onClick={()=>setShowCurrencyConverter(v=>!v)}>{showCurrencyConverter ? t('Hide','Masquer') : t('Show','Afficher')}</button>
         </div>
         {showCurrencyConverter && <>
@@ -1351,7 +1351,7 @@ export default function App() {
 
       <article className='panel' style={{marginTop:10}}>
         <div className='list-row' style={{marginBottom:8}}>
-          <h3 style={{margin:0}}>📏 {t('Farmer Unit Converter','Convertisseur d’unités agricoles')}</h3>
+          <h3 style={{margin:0}}>📏 {t('Farmer Unit Converter','Convertisseur d’unités agricoles','农户单位换算器')}</h3>
           <button className='btn' onClick={()=>setShowUnitConverter(v=>!v)}>{showUnitConverter ? t('Hide','Masquer') : t('Show','Afficher')}</button>
         </div>
         {showUnitConverter && <>
@@ -1380,7 +1380,7 @@ export default function App() {
 
       <article className='panel' style={{marginTop:10, fontSize:'.82rem', color:'#475569'}}>
         <strong>{t('Legal & Safety Notice','Avis juridique et sécurité')}</strong>
-        <div style={{marginTop:6}}>{t('Information in marketplace, AI tools, weather, plant/pest insights, and community content is provided as guidance only and does not replace professional agronomy, veterinary, legal, or financial advice. Always verify locally before acting.','Les informations du marché, des outils IA, de la météo, des analyses plantes/ravageurs et du contenu communautaire sont fournies à titre indicatif et ne remplacent pas les conseils professionnels en agronomie, vétérinaire, juridique ou financier. Vérifiez toujours localement avant d’agir.')}</div>
+        <div style={{marginTop:6}}>{t('Information in marketplace, AI tools, weather, plant/pest insights, and community content is provided as guidance only and does not replace professional agronomy, veterinary, legal, or financial advice. Always verify locally before acting.','Les informations du marché, des outils IA, de la météo, des analyses plantes/ravageurs et du contenu communautaire sont fournies à titre indicatif et ne remplacent pas les conseils professionnels en agronomie, vétérinaire, juridique ou financier. Vérifiez toujours localement avant d’agir.','市场、AI工具、天气、植物/害虫洞察和社区内容仅供参考，不可替代农业、兽医、法律或金融专业意见。请在本地核实后再行动。')}</div>
       </article>
 
       <div className='panel' style={{marginTop:10, fontSize:'.84rem', color:'#475569', display:'flex', gap:14, flexWrap:'wrap'}}>
