@@ -194,6 +194,10 @@ export default function App() {
   const [publicQuery, setPublicQuery] = useState('')
   const [recentSearches, setRecentSearches] = useState([])
   const [recentViewed, setRecentViewed] = useState([])
+  const [worldChat, setWorldChat] = useState([])
+  const [worldChatText, setWorldChatText] = useState('')
+  const [worldChatMsg, setWorldChatMsg] = useState('')
+  const [worldChatQueue, setWorldChatQueue] = useState([])
   const [state, setState] = useState({ metrics: {}, users: [], listings: [], livestock: [], logistics: [], equipment: [], storage: [], payments: [], alerts: [], contracts: [], idv: [], passports: [], verificationApps: [], approvedAccounts: [], deviceTokens: [], diseaseScans: [], disputes: [], fraudFlags: [], news: [], publicWeather: [], govPrograms: [], spotTrading: [], spotHistory: [], tradeExportStats: [], livestockPlans: [] })
   const [me, setMe] = useState(null)
   const lastTrackRef = useRef('')
@@ -298,7 +302,33 @@ export default function App() {
     setState({ metrics, users, listings, livestock, logistics, equipment, storage, payments, alerts, contracts, idv, passports, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, publicWeather, govPrograms: govPrograms.items || [], spotTrading: spotTrading.items || [], spotHistory: spotHistory.items || [], tradeExportStats: tradeExportStats.items || [], livestockPlans: livestockPlans.plans || [] })
   }
 
+  const loadWorldChat = async () => {
+    const rows = await api.fetchWorldChatMessages(120).catch(() => [])
+    setWorldChat(rows || [])
+  }
+
+  const loadWorldChatQueue = async () => {
+    if ((me?.role || '').toLowerCase() !== 'admin') return
+    const rows = await api.fetchWorldChatModerationQueue(120).catch(() => [])
+    setWorldChatQueue(rows || [])
+  }
+
   useEffect(() => { if (token) load().catch(console.error) }, [token, alertCountryFilter])
+
+  useEffect(() => {
+    if (!token) return
+    loadWorldChat().catch(() => {})
+    const id = setInterval(() => { loadWorldChat().catch(() => {}) }, 5000)
+    return () => clearInterval(id)
+  }, [token])
+
+  useEffect(() => {
+    if (!token) return
+    if ((me?.role || '').toLowerCase() !== 'admin') return
+    loadWorldChatQueue().catch(() => {})
+    const id = setInterval(() => { loadWorldChatQueue().catch(() => {}) }, 8000)
+    return () => clearInterval(id)
+  }, [token, me?.role])
 
   useEffect(() => {
     const key = `${token ? 'auth' : 'guest'}|${active}|${uiCountry}|${uiLang}`
@@ -419,7 +449,7 @@ export default function App() {
     persistRecents(recentSearches, next)
   }
 
-  const baseMenu = ['home', 'dashboard', 'onboarding', 'products', 'livestock', 'services', 'payments', 'alerts', 'maps', 'messaging', 'ai-disease', 'government', 'contracts']
+  const baseMenu = ['home', 'dashboard', 'onboarding', 'products', 'livestock', 'services', 'payments', 'alerts', 'maps', 'messaging', 'world-chat', 'ai-disease', 'government', 'contracts']
   const menu = ((me?.role || '').toLowerCase() === 'admin') ? [...baseMenu, 'admin'] : baseMenu
   const menuLabel = (m) => ({
     'home':'home',
@@ -432,6 +462,7 @@ export default function App() {
     'alerts':'alerts',
     'maps':'maps',
     'messaging':'messaging',
+    'world-chat':'World Chat',
     'ai-disease':'AI Disease Analyzer',
     'government':'Government Integration',
     'contracts':'contracts',
@@ -1449,6 +1480,68 @@ export default function App() {
           <button className='btn btn-dark'>Register Device Token</button>
         </form>
         <DataTable columns={['id','user_id','platform','token','created_at']} rows={state.deviceTokens} filterKey='platform' />
+      </section>}
+
+      {active === 'world-chat' && <section>
+        <h3>🌍 Global Farmers World Chat (AI Moderated)</h3>
+        <form className='inlineForm' onSubmit={async e => {
+          e.preventDefault()
+          try {
+            if (!worldChatText.trim()) return
+            const r = await api.postWorldChatMessage({ text: worldChatText })
+            setWorldChatText('')
+            if (r.status !== 'VISIBLE') {
+              setWorldChatMsg(`Message held by safety filter: ${r.moderation_reason || 'review required'}`)
+            } else {
+              setWorldChatMsg('Message posted')
+            }
+            await loadWorldChat()
+            if ((me?.role || '').toLowerCase() === 'admin') await loadWorldChatQueue()
+          } catch (e) {
+            setWorldChatMsg(errMsg(e))
+          }
+        }}>
+          <input className='input' placeholder='Share with farmers worldwide…' value={worldChatText} onChange={(e)=>setWorldChatText(e.target.value)} maxLength={900} />
+          <button className='btn btn-dark'>Send</button>
+        </form>
+        {worldChatMsg && <p style={{fontSize:'.85rem',color:'#475569'}}>{worldChatMsg}</p>}
+
+        <article className='panel'>
+          <h4>Live Global Feed</h4>
+          <div className='list' style={{maxHeight:420, overflow:'auto'}}>
+            {worldChat.map((m) => (
+              <div className='list-row' key={`wc-${m.id}`} style={{alignItems:'flex-start'}}>
+                <div>
+                  <div style={{fontWeight:700}}>{m.user_name || `User ${m.user_id}`} {m.user_country ? `(${m.user_country})` : ''}</div>
+                  <div style={{whiteSpace:'pre-wrap'}}>{m.text}</div>
+                </div>
+                <span style={{fontSize:'.75rem',color:'#64748b'}}>{String(m.created_at || '').replace('T',' ').slice(0,16)}</span>
+              </div>
+            ))}
+            {!worldChat.length && <div className='list-row'><span>No world chat messages yet.</span></div>}
+          </div>
+        </article>
+
+        {(me?.role || '').toLowerCase() === 'admin' && <article className='panel' style={{marginTop:10}}>
+          <h4>Moderation Queue</h4>
+          <div className='list' style={{maxHeight:360, overflow:'auto'}}>
+            {worldChatQueue.map((q) => (
+              <div key={`wq-${q.id}`} className='panel' style={{padding:10, marginBottom:8}}>
+                <div style={{fontWeight:700, marginBottom:4}}>#{q.id} • {q.user_name || `User ${q.user_id}`} • {q.moderation_label}</div>
+                <div style={{fontSize:'.86rem', color:'#475569', marginBottom:6}}>{q.text}</div>
+                <div style={{fontSize:'.78rem', color:'#64748b', marginBottom:6}}>Reason: {q.moderation_reason || '-'} | Score: {Number(q.moderation_score || 0).toFixed(2)}</div>
+                <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+                  <button className='btn' onClick={async()=>{ await api.setWorldChatModerationAction({ message_id:q.id, action:'approve' }); await loadWorldChatQueue(); await loadWorldChat(); }}>Approve</button>
+                  <button className='btn' onClick={async()=>{ await api.setWorldChatModerationAction({ message_id:q.id, action:'hide' }); await loadWorldChatQueue(); }}>Hide</button>
+                  <button className='btn' onClick={async()=>{ await api.setWorldChatModerationAction({ message_id:q.id, action:'delete', reason:'Removed by admin' }); await loadWorldChatQueue(); }}>Delete</button>
+                  <button className='btn' onClick={async()=>{ await api.sanctionWorldChatUser(q.user_id, { mute_minutes: 30, reason: 'World chat abuse' }); await loadWorldChatQueue(); }}>Mute 30m</button>
+                  <button className='btn' onClick={async()=>{ await api.sanctionWorldChatUser(q.user_id, { ban: true, reason: 'Severe abuse' }); await loadWorldChatQueue(); }}>Ban user</button>
+                </div>
+              </div>
+            ))}
+            {!worldChatQueue.length && <div className='list-row'><span>No flagged messages.</span></div>}
+          </div>
+        </article>}
       </section>}
 
       {active === 'ai-disease' && <section><h3>AI Disease Analyzer</h3>

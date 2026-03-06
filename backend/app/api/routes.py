@@ -1,7 +1,7 @@
 import random
 import json
 import hashlib
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional, Any
 from urllib.request import Request, urlopen
 import xml.etree.ElementTree as ET
@@ -18,7 +18,8 @@ from app.models.models import (
     LogisticsRequest, LogisticsStatus, Payment, WeatherAlert,
     UserRole, CountryCode, IDVerification, FarmPassport,
     LivestockListing, EquipmentRental, StorageReservation, TradeContract, VerificationReview, UpdateReview,
-    DeviceToken, DiseaseScan, SheepGoatRecord, SheepGoatBreedingGroup, SheepGoatSubscription
+    DeviceToken, DiseaseScan, SheepGoatRecord, SheepGoatBreedingGroup, SheepGoatSubscription,
+    WorldChatMessage, WorldChatUserModeration
 )
 from app.schemas.schemas import (
     UserCreate, UserLogin, OTPVerify, TokenResponse, FarmerProfileIn,
@@ -26,7 +27,8 @@ from app.schemas.schemas import (
     PaymentIn, WeatherAlertIn, IDVerificationIn, FarmPassportIn,
     LivestockListingIn, EquipmentRentalIn, StorageReservationIn, ContractIn,
     VerificationDecisionIn, DeviceTokenIn, DiseaseAnalyzeIn,
-    SheepGoatRecordIn, SheepGoatBreedingGroupIn, SheepGoatSubscriptionIn
+    SheepGoatRecordIn, SheepGoatBreedingGroupIn, SheepGoatSubscriptionIn,
+    WorldChatMessageIn, WorldChatModerationActionIn, WorldChatUserSanctionIn
 )
 from app.core.config import settings
 from app.core.security import create_access_token, hash_password, verify_password, decode_access_token
@@ -741,6 +743,174 @@ def register_device_token(payload: DeviceTokenIn, db: Session = Depends(get_db))
 @router.get('/messaging/device-token')
 def list_device_tokens(db: Session = Depends(get_db)):
     return db.query(DeviceToken).order_by(DeviceToken.id.desc()).all()
+
+
+def _is_admin_user(user: User) -> bool:
+    role = user.role.value if hasattr(user.role, 'value') else str(user.role)
+    return str(role).lower() == 'admin'
+
+
+def _moderate_world_chat_text(text: str) -> dict:
+    raw = (text or '').strip()
+    lower = raw.lower()
+
+    if not raw:
+        return {'label': 'SPAM', 'score': 0.99, 'action': 'block', 'reason': 'Empty message'}
+
+    bad_abuse = ['idiot', 'stupid', 'fool', 'bastard']
+    bad_hate = ['kill all', 'ethnic cleanse']
+    bad_scam = ['send otp', 'investment doubling', 'crypto giveaway', 'wire money', 'bank pin']
+    bad_sex = ['nude', 'sex video']
+    bad_violence = ['murder', 'bomb']
+
+    repeated = len(raw) > 12 and len(set(raw.lower())) < max(3, len(raw) // 6)
+    has_link = 'http://' in lower or 'https://' in lower or 'www.' in lower
+
+    if any(k in lower for k in bad_hate):
+        return {'label': 'HATE', 'score': 0.99, 'action': 'block', 'reason': 'Hate speech pattern'}
+    if any(k in lower for k in bad_violence):
+        return {'label': 'VIOLENCE', 'score': 0.96, 'action': 'block', 'reason': 'Violence pattern'}
+    if any(k in lower for k in bad_sex):
+        return {'label': 'SEXUAL', 'score': 0.95, 'action': 'block', 'reason': 'Sexual content pattern'}
+    if any(k in lower for k in bad_scam) or (has_link and 'whatsapp' in lower and 'pay' in lower):
+        return {'label': 'SCAM', 'score': 0.94, 'action': 'block', 'reason': 'Scam pattern'}
+    if any(k in lower for k in bad_abuse):
+        return {'label': 'ABUSE', 'score': 0.82, 'action': 'hide', 'reason': 'Abusive language'}
+    if repeated or raw.count('\n') > 8 or len(raw) > 800:
+        return {'label': 'SPAM', 'score': 0.88, 'action': 'hide', 'reason': 'Spam-like pattern'}
+
+    return {'label': 'SAFE', 'score': 0.03, 'action': 'allow', 'reason': 'Clean'}
+
+
+@router.get('/chat/world/messages')
+def world_chat_messages(limit: int = 60, db: Session = Depends(get_db)):
+    n = max(1, min(limit, 200))
+    rows = db.query(WorldChatMessage).filter(WorldChatMessage.status == 'VISIBLE').order_by(WorldChatMessage.id.desc()).limit(n).all()
+    return list(reversed([{
+        'id': r.id,
+        'user_id': r.user_id,
+        'user_name': r.user_name,
+        'user_country': r.user_country,
+        'text': r.text,
+        'created_at': r.created_at,
+    } for r in rows]))
+
+
+@router.post('/chat/world/messages')
+def world_chat_post(payload: WorldChatMessageIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    user = _current_user_from_auth(authorization, db)
+
+    sanction = db.query(WorldChatUserModeration).filter(WorldChatUserModeration.user_id == user.id).first()
+    now = datetime.utcnow()
+    if sanction:
+        if sanction.is_banned:
+            raise HTTPException(status_code=403, detail='You are banned from world chat')
+        if sanction.muted_until and sanction.muted_until > now:
+            raise HTTPException(status_code=429, detail=f'You are muted until {sanction.muted_until.isoformat()}')
+
+    # basic anti-spam rate limit
+    window_start = now - timedelta(minutes=1)
+    sent_last_min = db.query(func.count(WorldChatMessage.id)).filter(
+        WorldChatMessage.user_id == user.id,
+        WorldChatMessage.created_at >= window_start
+    ).scalar() or 0
+    if sent_last_min >= 8:
+        raise HTTPException(status_code=429, detail='Rate limit reached. Please slow down.')
+
+    moderation = _moderate_world_chat_text(payload.text)
+    action = moderation['action']
+    status = 'VISIBLE' if action == 'allow' else 'HIDDEN'
+
+    msg = WorldChatMessage(
+        user_id=user.id,
+        user_name=user.full_name,
+        user_country=user.country.value if hasattr(user.country, 'value') else str(user.country),
+        text=(payload.text or '').strip(),
+        status=status,
+        moderation_label=moderation['label'],
+        moderation_score=float(moderation['score']),
+        moderation_reason=moderation['reason'],
+    )
+    db.add(msg)
+
+    if action in ['hide', 'block']:
+        if not sanction:
+            sanction = WorldChatUserModeration(user_id=user.id, strike_count=0)
+            db.add(sanction)
+        sanction.strike_count = int(sanction.strike_count or 0) + 1
+        sanction.last_reason = moderation['reason']
+        sanction.updated_at = now
+        if sanction.strike_count >= 3 and not sanction.muted_until:
+            sanction.muted_until = now + timedelta(minutes=30)
+
+    db.commit()
+    db.refresh(msg)
+
+    return {
+        'id': msg.id,
+        'status': msg.status,
+        'moderation_label': msg.moderation_label,
+        'moderation_reason': msg.moderation_reason,
+        'created_at': msg.created_at,
+    }
+
+
+@router.get('/chat/world/moderation/queue')
+def world_chat_queue(limit: int = 100, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    user = _current_user_from_auth(authorization, db)
+    if not _is_admin_user(user):
+        raise HTTPException(status_code=403, detail='Admin only')
+    n = max(1, min(limit, 300))
+    rows = db.query(WorldChatMessage).filter(WorldChatMessage.status != 'VISIBLE').order_by(WorldChatMessage.id.desc()).limit(n).all()
+    return rows
+
+
+@router.post('/chat/world/moderation/action')
+def world_chat_moderation_action(payload: WorldChatModerationActionIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    user = _current_user_from_auth(authorization, db)
+    if not _is_admin_user(user):
+        raise HTTPException(status_code=403, detail='Admin only')
+    row = db.query(WorldChatMessage).filter(WorldChatMessage.id == payload.message_id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail='Message not found')
+
+    if payload.action == 'approve':
+        row.status = 'VISIBLE'
+    elif payload.action == 'hide':
+        row.status = 'HIDDEN'
+    else:
+        row.status = 'BLOCKED'
+
+    if payload.reason:
+        row.moderation_reason = payload.reason
+    db.commit()
+    db.refresh(row)
+    return {'message': 'moderation action applied', 'id': row.id, 'status': row.status}
+
+
+@router.post('/chat/world/users/{user_id}/sanction')
+def world_chat_user_sanction(user_id: int, payload: WorldChatUserSanctionIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    user = _current_user_from_auth(authorization, db)
+    if not _is_admin_user(user):
+        raise HTTPException(status_code=403, detail='Admin only')
+
+    target = db.query(User).filter(User.id == user_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail='Target user not found')
+
+    rec = db.query(WorldChatUserModeration).filter(WorldChatUserModeration.user_id == user_id).first()
+    if not rec:
+        rec = WorldChatUserModeration(user_id=user_id)
+        db.add(rec)
+
+    rec.is_banned = bool(payload.ban)
+    rec.muted_until = datetime.utcnow() + timedelta(minutes=max(0, payload.mute_minutes)) if payload.mute_minutes > 0 else None
+    rec.last_reason = payload.reason or rec.last_reason
+    rec.updated_at = datetime.utcnow()
+
+    db.commit()
+    db.refresh(rec)
+    return rec
 
 
 @router.post('/ai/disease/analyze')

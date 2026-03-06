@@ -1,5 +1,5 @@
 import enum
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Boolean, Text, Enum
 from sqlalchemy.orm import relationship
 from app.db.session import Base
@@ -323,3 +323,28 @@ class SheepGoatSubscription(Base):
     started_at = Column(DateTime, default=datetime.utcnow)
     ends_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class WorldChatMessage(Base):
+    __tablename__ = 'world_chat_messages'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    user_name = Column(String(120), nullable=True)
+    user_country = Column(String(10), nullable=True)
+    text = Column(Text, nullable=False)
+    status = Column(String(20), default='VISIBLE')  # VISIBLE|HIDDEN|BLOCKED
+    moderation_label = Column(String(40), nullable=True)  # SAFE|SPAM|ABUSE|SCAM|SEXUAL|VIOLENCE
+    moderation_score = Column(Float, default=0)
+    moderation_reason = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+class WorldChatUserModeration(Base):
+    __tablename__ = 'world_chat_user_moderation'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, unique=True, index=True)
+    muted_until = Column(DateTime, nullable=True)
+    is_banned = Column(Boolean, default=False)
+    strike_count = Column(Integer, default=0)
+    last_reason = Column(String(255), nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow)

@@ -90,3 +90,9 @@ export const fetchDiseaseScans = async () => (await api.get('/ai/disease/scans')
 
 export const trackAnalyticsEvent = async (payload) => (await api.post('/analytics/events', payload)).data
 export const fetchUsersAnalyticsSummary = async () => (await api.get('/analytics/users/summary')).data
+
+export const fetchWorldChatMessages = async (limit = 80) => (await api.get('/chat/world/messages', { params: { limit } })).data
+export const postWorldChatMessage = async (payload) => (await api.post('/chat/world/messages', payload)).data
+export const fetchWorldChatModerationQueue = async (limit = 100) => (await api.get('/chat/world/moderation/queue', { params: { limit } })).data
+export const setWorldChatModerationAction = async (payload) => (await api.post('/chat/world/moderation/action', payload)).data
+export const sanctionWorldChatUser = async (userId, payload) => (await api.post(`/chat/world/users/${userId}/sanction`, payload)).data

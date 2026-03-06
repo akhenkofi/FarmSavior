@@ -217,3 +217,19 @@ class SheepGoatSubscriptionIn(BaseModel):
     country: str = 'GH'
     billing_cycle: Literal['monthly', 'yearly'] = 'monthly'
     currency: str
+
+
+class WorldChatMessageIn(BaseModel):
+    text: str
+
+
+class WorldChatModerationActionIn(BaseModel):
+    message_id: int
+    action: Literal['approve', 'hide', 'delete'] = 'approve'
+    reason: Optional[str] = None
+
+
+class WorldChatUserSanctionIn(BaseModel):
+    mute_minutes: int = 0
+    ban: bool = False
+    reason: Optional[str] = None
