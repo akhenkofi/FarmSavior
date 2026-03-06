@@ -5,6 +5,12 @@ const errMsg = (e) => e?.response?.data?.detail || e?.message || 'Request failed
 
 const countries = ['GH', 'NG', 'BF']
 const countryLabels = { GH: 'Ghana (GH)', NG: 'Nigeria (NG)', BF: 'Burkina Faso (BF)' }
+const mapBoundsByCountry = {
+  GH: { minLng: -3.5, minLat: 4.5, maxLng: 1.5, maxLat: 11.5, iframe: 'https://www.openstreetmap.org/export/embed.html?bbox=-3.5%2C4.5%2C1.5%2C11.5&layer=mapnik' },
+  NG: { minLng: 2.5, minLat: 4.0, maxLng: 15.5, maxLat: 14.5, iframe: 'https://www.openstreetmap.org/export/embed.html?bbox=2.5%2C4.0%2C15.5%2C14.5&layer=mapnik' },
+  BF: { minLng: -6.5, minLat: 9.0, maxLng: 3.0, maxLat: 15.5, iframe: 'https://www.openstreetmap.org/export/embed.html?bbox=-6.5%2C9.0%2C3.0%2C15.5&layer=mapnik' }
+}
+
 const userTypes = ['Farmer', 'Buyer', 'Transporter', 'EquipmentProvider', 'StorageProvider']
 const cropOptions = ['Cassava','Maize','Tomato','Rice','Yam','Plantain','Onion','Pepper','Cocoa','Sorghum','Millet','Groundnut']
 const animalOptions = ['Poultry','Goats','Sheep','Cattle','Rabbits','Grasscutters','Horses','Dogs']
@@ -79,6 +85,32 @@ const newsTitleFr = {
   'West Africa input prices ease as supply chains stabilize': 'Les prix des intrants en Afrique de l’Ouest baissent avec la stabilisation des chaînes d’approvisionnement',
   'Moisture outlook improves for rice and maize belts': 'Les perspectives d’humidité s’améliorent pour les zones de riz et de maïs',
   'Regional livestock demand remains strong ahead of market week': 'La demande régionale en bétail reste forte avant la semaine de marché'
+}
+
+const polygonAreaHectares = (points = []) => {
+  if (!points || points.length < 3) return 0
+  const meanLat = points.reduce((s, p) => s + Number(p.lat || 0), 0) / points.length
+  const mPerDegLat = 111320
+  const mPerDegLng = 111320 * Math.cos((meanLat * Math.PI) / 180)
+  let sum = 0
+  for (let i = 0; i < points.length; i++) {
+    const a = points[i]
+    const b = points[(i + 1) % points.length]
+    const ax = Number(a.lng) * mPerDegLng
+    const ay = Number(a.lat) * mPerDegLat
+    const bx = Number(b.lng) * mPerDegLng
+    const by = Number(b.lat) * mPerDegLat
+    sum += (ax * by) - (bx * ay)
+  }
+  const sqm = Math.abs(sum) / 2
+  return sqm / 10000
+}
+
+const polygonCentroid = (points = []) => {
+  if (!points.length) return null
+  const lat = points.reduce((s, p) => s + Number(p.lat || 0), 0) / points.length
+  const lng = points.reduce((s, p) => s + Number(p.lng || 0), 0) / points.length
+  return { lat, lng }
 }
 
 const featuredWeatherSeed = [
@@ -240,6 +272,7 @@ export default function App() {
   const [contractForm, setContractForm] = useState({ origin_country: 'GH', destination_country: 'NG', commodity: '', quantity: '', price: '', delivery_date: '', payment_terms: '', status: 'DRAFT' })
   const [contractEdit, setContractEdit] = useState({ id: '', origin_country: 'GH', destination_country: 'NG', commodity: '', quantity: '', price: '', delivery_date: '', payment_terms: '', status: 'DRAFT' })
   const [mapCountry, setMapCountry] = useState('GH')
+  const [mapPolygonPoints, setMapPolygonPoints] = useState([])
   const [expandedWeatherCountry, setExpandedWeatherCountry] = useState('GH')
   const [showHighDemandProducts, setShowHighDemandProducts] = useState(false)
   const [showHighDemandServices, setShowHighDemandServices] = useState(false)
@@ -466,6 +499,36 @@ export default function App() {
     setPendingFeatureLabel(label || section)
     setAuthMode('login')
     setShowAuthModal(true)
+  }
+
+  const onMapOverlayClick = (e) => {
+    const bounds = mapBoundsByCountry[mapCountry]
+    if (!bounds) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const xRatio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width))
+    const yRatio = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height))
+    const lng = bounds.minLng + xRatio * (bounds.maxLng - bounds.minLng)
+    const lat = bounds.maxLat - yRatio * (bounds.maxLat - bounds.minLat)
+    const point = { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) }
+    setMapPolygonPoints(prev => [...prev, point])
+    setFarmMapForm(prev => ({ ...prev, gps_lat: `${point.lat}`, gps_lng: `${point.lng}` }))
+  }
+
+  const applyPolygonToFarmForm = () => {
+    if (mapPolygonPoints.length < 3) return
+    const c = polygonCentroid(mapPolygonPoints)
+    const area = polygonAreaHectares(mapPolygonPoints)
+    setFarmMapForm(prev => ({
+      ...prev,
+      gps_lat: `${Number(c?.lat || 0).toFixed(6)}`,
+      gps_lng: `${Number(c?.lng || 0).toFixed(6)}`,
+      farm_size_hectares: area > 0 ? Number(area.toFixed(2)).toString() : prev.farm_size_hectares,
+      harvest_records_notes: JSON.stringify({
+        ...(prev.harvest_records_notes ? (() => { try { return JSON.parse(prev.harvest_records_notes) } catch { return { note: prev.harvest_records_notes } } })() : {}),
+        map_country: mapCountry,
+        boundary_points: mapPolygonPoints
+      })
+    }))
   }
 
   const recentsKey = `farmsavior_recents_${(token || 'guest').slice(0, 12)}`
@@ -1685,16 +1748,29 @@ export default function App() {
 
       {active === 'maps' && <section><h3>Map System (Google Maps) + Farm GPS Mapping</h3>
         <div className='inlineForm'>
-          <select className='input' value={mapCountry} onChange={(e)=>setMapCountry(e.target.value)}>
+          <select className='input' value={mapCountry} onChange={(e)=>{ setMapCountry(e.target.value); setMapPolygonPoints([]) }}>
             <option value='GH'>Ghana</option><option value='NG'>Nigeria</option><option value='BF'>Burkina Faso</option>
           </select>
           <button className='btn btn-dark' onClick={() => window.open('https://maps.google.com', '_blank')}>Open Google Maps</button>
         </div>
         <div className='panel'>
-          {mapCountry === 'GH' && <iframe title='Ghana map' width='100%' height='320' style={{border:0}} loading='lazy' src='https://www.openstreetmap.org/export/embed.html?bbox=-3.5%2C4.5%2C1.5%2C11.5&layer=mapnik' />}
-          {mapCountry === 'NG' && <iframe title='Nigeria map' width='100%' height='320' style={{border:0}} loading='lazy' src='https://www.openstreetmap.org/export/embed.html?bbox=2.5%2C4.0%2C15.5%2C14.5&layer=mapnik' />}
-          {mapCountry === 'BF' && <iframe title='Burkina Faso map' width='100%' height='320' style={{border:0}} loading='lazy' src='https://www.openstreetmap.org/export/embed.html?bbox=-6.5%2C9.0%2C3.0%2C15.5&layer=mapnik' />}
-          <p style={{fontSize:'.85rem', color:'#64748b'}}>Step 1: Open map. Step 2: Drop pin in Google Maps. Step 3: copy lat/lng below and save farm profile.</p>
+          <div style={{position:'relative'}}>
+            <iframe title={`${mapCountry} map`} width='100%' height='320' style={{border:0, borderRadius:10}} loading='lazy' src={mapBoundsByCountry[mapCountry].iframe} />
+            <div
+              role='button'
+              title='Tap to add boundary points'
+              onClick={onMapOverlayClick}
+              style={{position:'absolute', inset:0, cursor:'crosshair', background:'rgba(2,132,199,0.06)', borderRadius:10}}
+            />
+          </div>
+          <p style={{fontSize:'.85rem', color:'#64748b', marginTop:8}}>Tap directly on the map to mark farm boundary points. Add at least 3 points, then click “Use Boundary”.</p>
+          <div className='inlineForm'>
+            <button type='button' className='btn' onClick={()=>setMapPolygonPoints([])}>Clear Points</button>
+            <button type='button' className='btn' onClick={()=>setMapPolygonPoints(prev => prev.slice(0, -1))}>Undo Last</button>
+            <button type='button' className='btn btn-dark' disabled={mapPolygonPoints.length < 3} onClick={applyPolygonToFarmForm}>Use Boundary</button>
+          </div>
+          <div style={{fontSize:'.82rem', color:'#475569'}}>Points: {mapPolygonPoints.length} {mapPolygonPoints.length > 0 ? `• Est. Area: ${polygonAreaHectares(mapPolygonPoints).toFixed(2)} ha` : ''}</div>
+          {mapPolygonPoints.length > 0 && <div style={{fontSize:'.78rem', color:'#64748b', maxHeight:80, overflow:'auto', marginTop:4}}>{mapPolygonPoints.map((p, i)=>`#${i+1} (${p.lat}, ${p.lng})`).join('  |  ')}</div>}
         </div>
 
         <form className='inlineForm' onSubmit={async (e) => {
