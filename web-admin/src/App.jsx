@@ -1069,7 +1069,7 @@ export default function App() {
               </div>
               <div className='list-row' style={{marginTop:8}}>
                 <button className='btn btn-dark' onClick={async () => {
-                  if (!token) { setAuthMode('login'); setAuthMsg('Please login to subscribe.'); return }
+                  if (!token) { handleProtectedAction('onboarding', 'Subscription checkout'); return }
                   try {
                     const r = await api.checkoutLivestockRecordsPlan({
                       user_id: Number(me?.id || 1),
@@ -1095,7 +1095,7 @@ export default function App() {
       <article className='panel' style={{marginTop:10}}>
         <div className='list-row'>
           <h3 style={{margin:0}}>📸 FarmSavior Community</h3>
-          <button className='btn btn-dark' onClick={()=>{ if (token) { goToAppSection('community'); return } setAuthMode('login'); setAuthMsg(t('Sign in to join FarmSavior Community.','Connectez-vous pour rejoindre la communauté FarmSavior.')) }}>{t('Open Community','Ouvrir la communauté')}</button>
+          <button className='btn btn-dark' onClick={()=>handleProtectedAction('community', 'FarmSavior Community')}>{t('Open Community','Ouvrir la communauté')}</button>
         </div>
         <div className='list' style={{maxHeight:220, overflow:'auto'}}>
           {communityPosts.slice(0, 4).map((p)=><div key={`pub-cp-${p.id}`} className='panel' style={{padding:8}}>
