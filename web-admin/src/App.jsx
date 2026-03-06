@@ -1647,10 +1647,19 @@ export default function App() {
       </section>}
 
       {active === 'community' && <section>
-        <h3>📸 FarmSavior Community</h3>
+        <div className='panel' style={{background:'linear-gradient(120deg,#065f46,#0ea5e9)', color:'#fff', marginBottom:10}}>
+          <h3 style={{marginTop:0}}>📸 FarmSavior Community</h3>
+          <p style={{margin:0, opacity:.95}}>Share farm life, innovations, products, and short videos with growers worldwide.</p>
+        </div>
+
         <div className='two-col'>
           <article className='panel'>
             <h4>My Community Profile</h4>
+            {!!communityProfile.cover_image_url && <img src={communityProfile.cover_image_url} alt='Cover' style={{width:'100%',height:130,objectFit:'cover',borderRadius:10,border:'1px solid #e2e8f0',marginBottom:8}} />}
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
+              {!!communityProfile.avatar_url && <img src={communityProfile.avatar_url} alt='Avatar' style={{width:72,height:72,objectFit:'cover',borderRadius:'50%',border:'2px solid #fff',boxShadow:'0 2px 10px rgba(0,0,0,.12)'}} />}
+              <div style={{fontSize:'.85rem',color:'#475569'}}>{communityProfile.bio || 'Add a short bio to attract followers.'}</div>
+            </div>
             <form className='list' onSubmit={async(e)=>{e.preventDefault(); await api.saveCommunityProfileMe(communityProfile); await loadCommunity(); alert('Profile updated')}}>
               <label style={{fontSize:'.85rem',color:'#475569'}}>Display picture</label>
               <input className='input' type='file' accept='image/*' onChange={(e)=>{
@@ -1660,7 +1669,6 @@ export default function App() {
                 reader.onload = () => setCommunityProfile(prev => ({ ...prev, avatar_url: String(reader.result || '') }))
                 reader.readAsDataURL(f)
               }} />
-              {!!communityProfile.avatar_url && <img src={communityProfile.avatar_url} alt='Display preview' style={{width:96,height:96,objectFit:'cover',borderRadius:12,border:'1px solid #e2e8f0'}} />}
 
               <label style={{fontSize:'.85rem',color:'#475569'}}>Cover image</label>
               <input className='input' type='file' accept='image/*' onChange={(e)=>{
@@ -1670,7 +1678,6 @@ export default function App() {
                 reader.onload = () => setCommunityProfile(prev => ({ ...prev, cover_image_url: String(reader.result || '') }))
                 reader.readAsDataURL(f)
               }} />
-              {!!communityProfile.cover_image_url && <img src={communityProfile.cover_image_url} alt='Cover preview' style={{width:'100%',maxHeight:180,objectFit:'cover',borderRadius:10,border:'1px solid #e2e8f0'}} />}
               <input className='input' placeholder='Bio' value={communityProfile.bio || ''} onChange={(e)=>setCommunityProfile({...communityProfile, bio:e.target.value})} />
               <input className='input' placeholder='Farm life details' value={communityProfile.farm_life || ''} onChange={(e)=>setCommunityProfile({...communityProfile, farm_life:e.target.value})} />
               <input className='input' placeholder='Interests/tags (comma separated)' value={communityProfile.interests || ''} onChange={(e)=>setCommunityProfile({...communityProfile, interests:e.target.value})} />
@@ -1681,6 +1688,7 @@ export default function App() {
               <button className='btn btn-dark'>Save Profile</button>
             </form>
           </article>
+
           <article className='panel'>
             <h4>Create Post</h4>
             <form className='list' onSubmit={async(e)=>{e.preventDefault(); await api.createCommunityPost(communityPostForm); setCommunityPostForm({ text:'', media_url:'', media_type:'TEXT', tags:'' }); await loadCommunity(); }}>
@@ -1705,14 +1713,13 @@ export default function App() {
         </div>
 
         <article className='panel' style={{marginTop:10}}>
-          <h4>Global Feed</h4>
           <div className='tabs' style={{marginBottom:8, flexWrap:'wrap'}}>
             <button className={`tab ${communityFeedMode === 'for-you' ? 'active' : ''}`} onClick={()=>setCommunityFeedMode('for-you')}>For You</button>
             <button className={`tab ${communityFeedMode === 'following' ? 'active' : ''}`} onClick={()=>setCommunityFeedMode('following')}>Following</button>
             <button className={`tab ${communityFeedMode === 'reels' ? 'active' : ''}`} onClick={()=>setCommunityFeedMode('reels')}>FarmReels</button>
           </div>
           <div className='list'>
-            {(communityFeedMode === 'reels' ? communityPosts.filter(x => String(x.media_type || '').toUpperCase() === 'VIDEO') : communityPosts).map((p)=><div key={`cp-${p.id}`} className='panel' style={{padding:10}}>
+            {(communityFeedMode === 'reels' ? communityPosts.filter(x => String(x.media_type || '').toUpperCase() === 'VIDEO') : communityPosts).map((p)=><div key={`cp-${p.id}`} className='panel' style={{padding:10,border:'1px solid #dbe6df',boxShadow:'0 1px 6px rgba(0,0,0,.05)'}}>
               <div className='list-row'>
                 <strong>{p.author_name || `User ${p.user_id}`} {p.author_country ? `(${p.author_country})` : ''}</strong>
                 <span style={{fontSize:'.78rem', color:'#64748b'}}>{String(p.created_at || '').replace('T',' ').slice(0,16)}</span>
@@ -1720,8 +1727,8 @@ export default function App() {
               {p.text && <div style={{margin:'6px 0', whiteSpace:'pre-wrap'}}>{p.text}</div>}
               {p.media_url && (
                 p.media_type === 'VIDEO'
-                  ? <video src={p.media_url} controls style={{width:'100%', maxHeight:300, borderRadius:8}} />
-                  : <img src={p.media_url} alt='community post' style={{width:'100%', maxHeight:320, objectFit:'cover', borderRadius:8}} />
+                  ? <video src={p.media_url} controls style={{width:'100%', maxHeight:360, borderRadius:10, background:'#000'}} />
+                  : <img src={p.media_url} alt='community post' style={{width:'100%', maxHeight:360, objectFit:'cover', borderRadius:10}} />
               )}
               {!!p.tags && <div style={{fontSize:'.82rem', color:'#0284c7', marginTop:6}}>#{String(p.tags).split(',').map(s=>s.trim()).filter(Boolean).join(' #')}</div>}
               <div className='list-row' style={{marginTop:8}}>
