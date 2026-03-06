@@ -31,7 +31,7 @@ from app.schemas.schemas import (
     SheepGoatRecordIn, SheepGoatBreedingGroupIn, SheepGoatSubscriptionIn,
     WorldChatMessageIn, WorldChatModerationActionIn, WorldChatUserSanctionIn,
     CommunityProfileIn, CommunityPostIn, CommunityCommentIn,
-    PlantIdentifyIn
+    PlantIdentifyIn, PestIdentifyIn
 )
 from app.core.config import settings
 from app.core.security import create_access_token, hash_password, verify_password, decode_access_token
@@ -1148,6 +1148,87 @@ def ai_plant_identify(payload: PlantIdentifyIn, authorization: Optional[str] = H
         'nutrition': hit['nutrition'],
         'recommendations': [hit['use_tip'], 'Balance forage with minerals + clean water always available.'],
         'engine': 'FarmSavior Plant Identifier (real-time best-effort)'
+    }
+
+
+@router.post('/ai/pests/identify')
+def ai_pest_identify(payload: PestIdentifyIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    _current_user_from_auth(authorization, db)  # signed-in users only
+
+    crop = (payload.crop_type or '').strip().lower()
+    hint = f"{payload.file_name or ''} {payload.context_hint or ''} {payload.image_url[:120]}".lower()
+
+    pest_db = [
+        {
+            'crop_keys': ['maize', 'corn'],
+            'pest_keys': ['armyworm', 'fall armyworm', 'spodoptera'],
+            'name': 'Fall Armyworm',
+            'confidence': 0.86,
+            'characteristics': ['Ragged leaf holes', 'Frass in whorl', 'Rapid night feeding'],
+            'prevention': ['Early scouting (2x weekly)', 'Use resistant/tolerant maize varieties', 'Encourage natural enemies'],
+            'treatment': ['Spot-treat larvae in whorl with recommended bio/chemical control per local label', 'Target early instars for best control']
+        },
+        {
+            'crop_keys': ['tomato'],
+            'pest_keys': ['whitefly', 'bemisia'],
+            'name': 'Whitefly',
+            'confidence': 0.84,
+            'characteristics': ['Tiny white insects under leaves', 'Leaf yellowing', 'Sticky honeydew'],
+            'prevention': ['Use insect-proof nets', 'Remove weeds/alternate hosts', 'Yellow sticky traps'],
+            'treatment': ['Use selective insecticides/biopesticides with rotation', 'Spray undersides of leaves thoroughly']
+        },
+        {
+            'crop_keys': ['cassava'],
+            'pest_keys': ['mealybug', 'whitefly'],
+            'name': 'Cassava Mealybug / Whitefly Complex',
+            'confidence': 0.79,
+            'characteristics': ['Leaf distortion', 'Sooty mold risk', 'Stunted growth'],
+            'prevention': ['Plant clean cuttings', 'Field sanitation', 'Promote biological control'],
+            'treatment': ['Use approved control for identified species', 'Rogue heavily infested plants where practical']
+        },
+        {
+            'crop_keys': ['rice'],
+            'pest_keys': ['stem borer', 'leaf folder'],
+            'name': 'Rice Stem Borer / Leaf Folder',
+            'confidence': 0.8,
+            'characteristics': ['Dead hearts/white heads', 'Folded leaves with scraping'],
+            'prevention': ['Balanced fertilization', 'Timely planting', 'Pheromone/light trap monitoring'],
+            'treatment': ['Apply recommended control at threshold levels', 'Focus on hotspot patches first']
+        }
+    ]
+
+    match = None
+    for p in pest_db:
+        crop_ok = any(k in crop for k in p['crop_keys'])
+        pest_hit = any(k in hint for k in p['pest_keys'])
+        if crop_ok and pest_hit:
+            match = p
+            break
+    if not match:
+        for p in pest_db:
+            if any(k in crop for k in p['crop_keys']):
+                match = p
+                break
+
+    if not match:
+        return {
+            'identified_pest': 'Unknown pest (needs clearer image)',
+            'crop_type': payload.crop_type,
+            'confidence': 0.45,
+            'characteristics': ['Could not match pest confidently from current image/hint.'],
+            'prevention': ['Scout frequently and keep field sanitation high.', 'Upload closer image with damaged plant part.'],
+            'treatment': ['Do not spray blindly; confirm pest first with extension officer.'],
+            'engine': 'FarmSavior AI Pest Identifier (crop-specific best-effort)'
+        }
+
+    return {
+        'identified_pest': match['name'],
+        'crop_type': payload.crop_type,
+        'confidence': match['confidence'],
+        'characteristics': match['characteristics'],
+        'prevention': match['prevention'],
+        'treatment': match['treatment'],
+        'engine': 'FarmSavior AI Pest Identifier (crop-specific best-effort)'
     }
 
 

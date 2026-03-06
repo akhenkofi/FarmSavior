@@ -87,6 +87,7 @@ export const fetchDeviceTokens = async () => (await api.get('/messaging/device-t
 
 export const analyzeDisease = async (payload) => (await api.post('/ai/disease/analyze', payload)).data
 export const identifyPlant = async (payload) => (await api.post('/ai/plants/identify', payload)).data
+export const identifyPest = async (payload) => (await api.post('/ai/pests/identify', payload)).data
 export const fetchDiseaseScans = async () => (await api.get('/ai/disease/scans')).data
 
 export const trackAnalyticsEvent = async (payload) => (await api.post('/analytics/events', payload)).data

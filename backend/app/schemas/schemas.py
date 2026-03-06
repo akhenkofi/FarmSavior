@@ -261,3 +261,11 @@ class PlantIdentifyIn(BaseModel):
     file_name: Optional[str] = None
     context_hint: Optional[str] = None
     target_livestock: Optional[str] = None
+
+
+class PestIdentifyIn(BaseModel):
+    user_id: Optional[int] = None
+    crop_type: str
+    image_url: str
+    file_name: Optional[str] = None
+    context_hint: Optional[str] = None

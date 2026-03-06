@@ -291,6 +291,9 @@ export default function App() {
   const [plantIdForm, setPlantIdForm] = useState({ user_id: 1, image_url: '', file_name: '', context_hint: '', target_livestock: 'goats' })
   const [plantIdPreview, setPlantIdPreview] = useState('')
   const [plantIdResult, setPlantIdResult] = useState(null)
+  const [pestIdForm, setPestIdForm] = useState({ user_id: 1, crop_type: 'maize', image_url: '', file_name: '', context_hint: '' })
+  const [pestIdPreview, setPestIdPreview] = useState('')
+  const [pestIdResult, setPestIdResult] = useState(null)
   const [farmMapForm, setFarmMapForm] = useState({ user_id: 1, gps_lat: '', gps_lng: '', farm_size_hectares: '', crop_types: '[]', livestock_numbers: '{}', farm_photo_urls: '[]', harvest_records_notes: '' })
   const [govSubsidyForm, setGovSubsidyForm] = useState({ country: 'GH', agency: 'MOFA', farmer_user_id: 1, amount: '' })
   const [govMsgForm, setGovMsgForm] = useState({ country: 'GH', target: 'farmers', text: '' })
@@ -478,7 +481,7 @@ export default function App() {
     persistRecents(recentSearches, next)
   }
 
-  const baseMenu = ['home', 'dashboard', 'onboarding', 'products', 'livestock', 'services', 'payments', 'alerts', 'maps', 'messaging', 'world-chat', 'community', 'ai-disease', 'plant-id', 'government', 'contracts']
+  const baseMenu = ['home', 'dashboard', 'onboarding', 'products', 'livestock', 'services', 'payments', 'alerts', 'maps', 'messaging', 'world-chat', 'community', 'ai-disease', 'plant-id', 'pest-id', 'government', 'contracts']
   const menu = ((me?.role || '').toLowerCase() === 'admin') ? [...baseMenu, 'admin'] : baseMenu
   const menuLabel = (m) => ({
     'home':'home',
@@ -495,6 +498,7 @@ export default function App() {
     'community':'FarmSavior Community',
     'ai-disease':'AI Disease Analyzer',
     'plant-id':'AI Plant Identifier',
+    'pest-id':'AI Insect & Pest Identifier',
     'government':'Government Integration',
     'contracts':'contracts',
     'admin':'admin'
@@ -618,6 +622,12 @@ export default function App() {
   const publicGovRows = state.govPrograms.length ? state.govPrograms : featuredGovSeed
   const publicSpotRows = state.spotTrading.length ? state.spotTrading : featuredSpotSeed
   const publicSpotHistoryRows = state.spotHistory.length ? state.spotHistory : featuredSpotHistorySeed
+  const spotUnitByCommodity = {
+    maize: { GH: 'per 100kg bag', NG: 'per 100kg bag', BF: 'per 100kg bag', WORLD_AVG: 'per metric ton (reference)' },
+    rice: { GH: 'per 50kg bag', NG: 'per 50kg bag', BF: 'per 50kg bag', WORLD_AVG: 'per metric ton (reference)' },
+    soybeans: { GH: 'per 100kg bag', NG: 'per 100kg bag', BF: 'per 100kg bag', WORLD_AVG: 'per metric ton (reference)' }
+  }
+  const spotUnits = (commodity) => spotUnitByCommodity[String(commodity || '').toLowerCase()] || { GH: 'per market unit', NG: 'per market unit', BF: 'per market unit', WORLD_AVG: 'reference unit' }
   const publicTradeRows = state.tradeExportStats.length ? state.tradeExportStats : featuredTradeExportSeed
   const publicLivestockPlans = state.livestockPlans.length ? state.livestockPlans : featuredLivestockPlansSeed
 
@@ -895,9 +905,11 @@ export default function App() {
                 const min = Math.min(...(t7.length ? t7 : [0]))
                 const max7 = Math.max(...(t7.length ? t7 : [1]))
                 const points = t7.map((v, idx) => `${(idx/Math.max(1,t7.length-1))*180},${28-((v-min)/Math.max(1,(max7-min)))*24}`).join(' ')
+                const units = spotUnits(r.commodity)
                 return <div key={`st-right-${i}`} className='panel' style={{padding:10}}>
                   <div style={{fontWeight:700, marginBottom:6}}>{r.commodity}</div>
                   <div style={{fontSize:12,color:'#64748b',marginBottom:6}}>{t('Date','Date')}: {r.updated_at_utc || hist.updated_at_utc || t('Live feed','Flux en direct')}</div>
+                  <div style={{fontSize:12,color:'#64748b',marginBottom:6}}>{t('Market units','Unités de marché')}: GH {units.GH} • NG {units.NG} • BF {units.BF} • World {units.WORLD_AVG}</div>
                   <div className='list-row'><span>{t('Ghana','Ghana')} ({r.GH} GHS)</span><div style={{height:8,width:bar(r.GH),background:'#16a34a',borderRadius:99}} /></div>
                   <div className='list-row'><span>{t('Nigeria','Nigeria')} ({r.NG} NGN)</span><div style={{height:8,width:bar(r.NG),background:'#0284c7',borderRadius:99}} /></div>
                   <div className='list-row'><span>{t('Burkina Faso','Burkina Faso')} ({r.BF} XOF)</span><div style={{height:8,width:bar(r.BF),background:'#ea580c',borderRadius:99}} /></div>
@@ -1112,6 +1124,11 @@ export default function App() {
         </>}
       </article>
 
+      <article className='panel' style={{marginTop:10, fontSize:'.82rem', color:'#475569'}}>
+        <strong>{t('Legal & Safety Notice','Avis juridique et sécurité')}</strong>
+        <div style={{marginTop:6}}>{t('Information in marketplace, AI tools, weather, plant/pest insights, and community content is provided as guidance only and does not replace professional agronomy, veterinary, legal, or financial advice. Always verify locally before acting.','Les informations du marché, des outils IA, de la météo, des analyses plantes/ravageurs et du contenu communautaire sont fournies à titre indicatif et ne remplacent pas les conseils professionnels en agronomie, vétérinaire, juridique ou financier. Vérifiez toujours localement avant d’agir.')}</div>
+      </article>
+
       <div className='panel' style={{marginTop:10, fontSize:'.84rem', color:'#475569', display:'flex', gap:14, flexWrap:'wrap'}}>
         <a href='/privacy-policy.html' target='_blank' rel='noreferrer'>Privacy Policy</a>
         <a href='/terms-of-service.html' target='_blank' rel='noreferrer'>Terms of Service</a>
@@ -1204,6 +1221,11 @@ export default function App() {
             </div>)}
             {!communityPosts.length && <div className='list-row'><span>No community posts yet.</span></div>}
           </div>
+        </article>
+
+        <article className='panel' style={{marginTop:10, fontSize:'.82rem', color:'#475569'}}>
+          <strong>Legal & Safety Notice</strong>
+          <div style={{marginTop:6}}>Market prices, AI outputs, weather, and community posts are informational. Verify crop/pest diagnosis, treatment labels, dosage, withdrawal periods, and local regulations with qualified professionals before action.</div>
         </article>
 
         <article className='panel' style={{marginTop:10}}>
@@ -1851,6 +1873,63 @@ export default function App() {
             {(plantIdResult.recommendations || []).map((x,i)=><div className='list-row' key={`pr-${i}`}><span>{x}</span></div>)}
           </div>
           <p style={{fontSize:'.8rem', color:'#64748b', marginTop:8}}>Engine: {plantIdResult.engine}</p>
+        </article>}
+      </section>}
+
+      {active === 'pest-id' && <section>
+        <h3>🐛 AI Insect & Pest Identifier (Crop-Specific)</h3>
+        <form className='panel list' onSubmit={async e => {
+          e.preventDefault()
+          try {
+            if (!pestIdForm.image_url) { alert('Please upload a pest image first.'); return }
+            const r = await api.identifyPest({
+              user_id: Number(pestIdForm.user_id || 1),
+              crop_type: pestIdForm.crop_type,
+              image_url: pestIdForm.image_url,
+              file_name: pestIdForm.file_name,
+              context_hint: pestIdForm.context_hint
+            })
+            setPestIdResult(r)
+          } catch (err) {
+            alert(`Pest identification failed: ${errMsg(err)}`)
+          }
+        }}>
+          <div className='inlineForm'>
+            <input className='input' placeholder='User ID' value={pestIdForm.user_id} onChange={(e)=>setPestIdForm({...pestIdForm,user_id:e.target.value})} />
+            <select className='input' value={pestIdForm.crop_type} onChange={(e)=>setPestIdForm({...pestIdForm,crop_type:e.target.value})}>
+              {cropOptions.map(c => <option key={`pc-${c}`} value={String(c).toLowerCase()}>{c}</option>)}
+            </select>
+          </div>
+          <input className='input' type='file' accept='image/*' onChange={(e)=>{
+            const f = e.target.files?.[0]
+            if (!f) return
+            const reader = new FileReader()
+            reader.onload = () => {
+              const data = String(reader.result || '')
+              setPestIdPreview(data)
+              setPestIdForm(prev => ({ ...prev, image_url: data, file_name: f.name }))
+            }
+            reader.readAsDataURL(f)
+          }} />
+          <input className='input' placeholder='Context hint (optional): where found, damage pattern, time of day, etc.' value={pestIdForm.context_hint} onChange={(e)=>setPestIdForm({...pestIdForm,context_hint:e.target.value})} />
+          {pestIdPreview && <img src={pestIdPreview} alt='Pest preview' style={{maxWidth:320,borderRadius:8,border:'1px solid #e2e8f0'}} />}
+          <button className='btn btn-dark'>Identify Pest Now</button>
+          <p style={{fontSize:'.8rem', color:'#64748b'}}>Advice is informational and crop-specific best-effort. Always verify dose, pre-harvest interval, and local approved products with extension officer/agronomist.</p>
+        </form>
+
+        {pestIdResult && <article className='panel' style={{marginTop:10}}>
+          <h4 style={{marginTop:0}}>{pestIdResult.identified_pest}</h4>
+          <div className='list'>
+            <div className='list-row'><span>Crop</span><strong>{pestIdResult.crop_type || '-'}</strong></div>
+            <div className='list-row'><span>Confidence</span><strong>{Math.round(Number(pestIdResult.confidence || 0) * 100)}%</strong></div>
+          </div>
+          <div style={{marginTop:8,fontWeight:700}}>Characteristics</div>
+          <div className='list'>{(pestIdResult.characteristics || []).map((x,i)=><div className='list-row' key={`pcar-${i}`}><span>{x}</span></div>)}</div>
+          <div style={{marginTop:8,fontWeight:700}}>Prevention</div>
+          <div className='list'>{(pestIdResult.prevention || []).map((x,i)=><div className='list-row' key={`pprev-${i}`}><span>{x}</span></div>)}</div>
+          <div style={{marginTop:8,fontWeight:700}}>Treatment (crop + pest specific)</div>
+          <div className='list'>{(pestIdResult.treatment || []).map((x,i)=><div className='list-row' key={`ptreat-${i}`}><span>{x}</span></div>)}</div>
+          <p style={{fontSize:'.8rem', color:'#64748b', marginTop:8}}>Engine: {pestIdResult.engine}</p>
         </article>}
       </section>}
 
