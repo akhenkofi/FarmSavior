@@ -201,6 +201,7 @@ export default function App() {
 
   const [communityProfile, setCommunityProfile] = useState({ avatar_url: '', bio: '', farm_life: '', interests: 'farming,gardening', visibility: 'PUBLIC' })
   const [communityPosts, setCommunityPosts] = useState([])
+  const [communityFeedMode, setCommunityFeedMode] = useState('for-you')
   const [communityPostForm, setCommunityPostForm] = useState({ text: '', media_url: '', media_type: 'TEXT', tags: '' })
   const [communityCommentText, setCommunityCommentText] = useState({})
   const [communityComments, setCommunityComments] = useState({})
@@ -332,7 +333,6 @@ export default function App() {
   useEffect(() => { if (token) load().catch(console.error) }, [token, alertCountryFilter])
 
   useEffect(() => {
-    if (!token) return
     loadWorldChat().catch(() => {})
     const id = setInterval(() => { loadWorldChat().catch(() => {}) }, 5000)
     return () => clearInterval(id)
@@ -739,6 +739,7 @@ export default function App() {
             <div className='list-row'><span>{t('Find Storage / Cold Room','Trouver stockage / chambre froide')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('services'); return } setAuthMode('login'); setAuthMsg(t('Log in to reserve storage facilities.','Connectez-vous pour réserver des installations de stockage.')); }}>{t('Start','Démarrer')}</button></div>
             <div className='list-row'><span>{t('AI Disease Analyzer','Analyseur IA des maladies')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('ai-disease'); return } setAuthMode('login'); setAuthMsg(t('Please sign in to use AI Disease Analyzer.','Veuillez vous connecter pour utiliser l’analyseur IA des maladies.')); }}>{t('Open','Ouvrir')}</button></div>
             <div className='list-row'><span>{t('Farm GPS Mapping','Cartographie GPS des fermes')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('maps'); return } setAuthMode('login'); setAuthMsg(t('Please sign in to map farms and save data.','Veuillez vous connecter pour cartographier les fermes et enregistrer les données.')); }}>{t('Open','Ouvrir')}</button></div>
+            <div className='list-row'><span>{t('Global World Chat','Chat mondial')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('world-chat'); return } setAuthMode('login'); setAuthMsg(t('Please sign in to post in World Chat.','Veuillez vous connecter pour publier dans le chat mondial.')); }}>{t('Open','Ouvrir')}</button></div>
           </div>
           <p style={{fontSize:'.82rem', color:'#64748b'}}>{t('You can browse publicly; posting, renting, contacting providers, and transactions require sign-in.','Vous pouvez parcourir publiquement ; publier, louer, contacter des prestataires et effectuer des transactions nécessite une connexion.')}</p>
         </article>
@@ -830,6 +831,18 @@ export default function App() {
           </form>}
           </>}
           <p>{authMsg}</p>
+
+          <div className='panel' style={{marginTop:10,padding:10,background:'#f8fafc'}}>
+            <h4 style={{margin:'0 0 6px'}}>{t('🌍 Global World Chat','🌍 Chat mondial')}</h4>
+            <div className='list' style={{maxHeight:180, overflow:'auto'}}>
+              {worldChat.slice(-5).map((m)=><div className='list-row' key={`pub-wc-${m.id}`}><span><strong>{m.user_name || `User ${m.user_id}`}:</strong> {m.text}</span></div>)}
+              {!worldChat.length && <div className='list-row'><span>{t('No messages yet.','Aucun message pour le moment.')}</span></div>}
+            </div>
+            <div className='list-row' style={{marginTop:8}}>
+              <span>{t('Join the conversation with farmers worldwide.','Rejoignez la conversation avec des agriculteurs du monde entier.')}</span>
+              <button className='btn' onClick={()=>{ if (token) { goToAppSection('world-chat'); return } setAuthMode('login') }}>{t('Open Chat','Ouvrir le chat')}</button>
+            </div>
+          </div>
 
           <div className='panel' style={{marginTop:10,padding:10,background:'#f8fafc'}}>
             <h4 style={{margin:'0 0 6px'}}>{t('📲 Download App to Phone','📲 Télécharger l’application sur le téléphone')}</h4>
@@ -1511,22 +1524,23 @@ export default function App() {
         <form className='inlineForm' onSubmit={async e => {
           e.preventDefault()
           try {
-            if (!worldChatText.trim()) return
+            if (!worldChatText.trim()) { setWorldChatMsg('Type a message first.'); return }
+            setWorldChatMsg('Sending...')
             const r = await api.postWorldChatMessage({ text: worldChatText })
             setWorldChatText('')
             if (r.status !== 'VISIBLE') {
               setWorldChatMsg(`Message held by safety filter: ${r.moderation_reason || 'review required'}`)
             } else {
-              setWorldChatMsg('Message posted')
+              setWorldChatMsg('Message posted successfully')
             }
             await loadWorldChat()
             if ((me?.role || '').toLowerCase() === 'admin') await loadWorldChatQueue()
           } catch (e) {
-            setWorldChatMsg(errMsg(e))
+            setWorldChatMsg(`Send failed: ${errMsg(e)}`)
           }
         }}>
           <input className='input' placeholder='Share with farmers worldwide…' value={worldChatText} onChange={(e)=>setWorldChatText(e.target.value)} maxLength={900} />
-          <button className='btn btn-dark'>Send</button>
+          <button type='submit' className='btn btn-dark' disabled={!worldChatText.trim()}>Send</button>
         </form>
         {worldChatMsg && <p style={{fontSize:'.85rem',color:'#475569'}}>{worldChatMsg}</p>}
 
@@ -1603,8 +1617,13 @@ export default function App() {
 
         <article className='panel' style={{marginTop:10}}>
           <h4>Global Feed</h4>
+          <div className='tabs' style={{marginBottom:8, flexWrap:'wrap'}}>
+            <button className={`tab ${communityFeedMode === 'for-you' ? 'active' : ''}`} onClick={()=>setCommunityFeedMode('for-you')}>For You</button>
+            <button className={`tab ${communityFeedMode === 'following' ? 'active' : ''}`} onClick={()=>setCommunityFeedMode('following')}>Following</button>
+            <button className={`tab ${communityFeedMode === 'reels' ? 'active' : ''}`} onClick={()=>setCommunityFeedMode('reels')}>FarmReels</button>
+          </div>
           <div className='list'>
-            {communityPosts.map((p)=><div key={`cp-${p.id}`} className='panel' style={{padding:10}}>
+            {(communityFeedMode === 'reels' ? communityPosts.filter(x => String(x.media_type || '').toUpperCase() === 'VIDEO') : communityPosts).map((p)=><div key={`cp-${p.id}`} className='panel' style={{padding:10}}>
               <div className='list-row'>
                 <strong>{p.author_name || `User ${p.user_id}`} {p.author_country ? `(${p.author_country})` : ''}</strong>
                 <span style={{fontSize:'.78rem', color:'#64748b'}}>{String(p.created_at || '').replace('T',' ').slice(0,16)}</span>
@@ -1628,7 +1647,7 @@ export default function App() {
                 {(communityComments[p.id] || []).slice(-5).map((c)=><div className='list-row' key={`cc-${c.id}`}><span><strong>{c.author_name || `User ${c.user_id}`}:</strong> {c.text}</span></div>)}
               </div>}
             </div>)}
-            {!communityPosts.length && <div className='list-row'><span>No community posts yet.</span></div>}
+            {!(communityFeedMode === 'reels' ? communityPosts.filter(x => String(x.media_type || '').toUpperCase() === 'VIDEO').length : communityPosts.length) && <div className='list-row'><span>{communityFeedMode === 'reels' ? 'No FarmReels yet.' : 'No community posts yet.'}</span></div>}
           </div>
         </article>
       </section>}
