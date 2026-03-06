@@ -634,12 +634,12 @@ export default function App() {
         </article>
 
         <article className='panel'>
-          <h3>Access Portal</h3>
+          <h3>{t('Access Portal','Portail d’accès')}</h3>
           {token && <div className='panel' style={{padding:10, marginBottom:10, background:'#ecfeff', border:'1px solid #99f6e4'}}>
-            <div style={{fontWeight:700, marginBottom:6}}>You are signed in.</div>
+            <div style={{fontWeight:700, marginBottom:6}}>{t('You are signed in.','Vous êtes connecté.')}</div>
             <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
-              <button className='btn btn-dark' onClick={() => { window.location.href='/?public=0' }}>Go to My Account</button>
-              <button className='btn' onClick={() => { localStorage.removeItem('farmsavior_token'); setToken(''); setAuthMode('login') }}>Log out</button>
+              <button className='btn btn-dark' onClick={() => { window.location.href='/?public=0' }}>{t('Go to My Account','Aller à mon compte')}</button>
+              <button className='btn' onClick={() => { localStorage.removeItem('farmsavior_token'); setToken(''); setAuthMode('login') }}>{t('Log out','Se déconnecter')}</button>
             </div>
           </div>}
           {!token && <>
@@ -679,16 +679,16 @@ export default function App() {
           <p>{authMsg}</p>
 
           <div className='panel' style={{marginTop:10,padding:10,background:'#f8fafc'}}>
-            <h4 style={{margin:'0 0 6px'}}>📲 Download App to Phone</h4>
+            <h4 style={{margin:'0 0 6px'}}>{t('📲 Download App to Phone','📲 Télécharger l’application sur le téléphone')}</h4>
             <div style={{fontSize:'.84rem',color:'#334155'}}>
-              <div><strong>iPhone (Safari):</strong> Open farmsavior.com → Share → Add to Home Screen.</div>
-              <div><strong>Android (Chrome):</strong> Open farmsavior.com → ⋮ menu → Install app / Add to Home screen.</div>
+              <div><strong>{t('iPhone (Safari):','iPhone (Safari) :')}</strong> {t('Open farmsavior.com → Share → Add to Home Screen.','Ouvrez farmsavior.com → Partager → Sur l’écran d’accueil.')}</div>
+              <div><strong>{t('Android (Chrome):','Android (Chrome) :')}</strong> {t('Open farmsavior.com → ⋮ menu → Install app / Add to Home screen.','Ouvrez farmsavior.com → menu ⋮ → Installer l’app / Ajouter à l’écran d’accueil.')}</div>
             </div>
           </div>
 
           <div className='list-row' style={{marginTop:12}}>
-            <h3 style={{margin:0}}>📈 Spot Trading (Ghana • Nigeria • Burkina Faso • World Avg)</h3>
-            <button className='btn' onClick={() => window.print()}>Export Briefing (PDF)</button>
+            <h3 style={{margin:0}}>{t('📈 Spot Trading (Ghana • Nigeria • Burkina Faso • World Avg)','📈 Trading Spot (Ghana • Nigeria • Burkina Faso • Moyenne mondiale)')}</h3>
+            <button className='btn' onClick={() => window.print()}>{t('Export Briefing (PDF)','Exporter le briefing (PDF)')}</button>
           </div>
           <div className='tabs' style={{marginTop:8, marginBottom:8, flexWrap:'wrap'}}>
             {publicSpotRows.map((r, i) => (
@@ -715,18 +715,18 @@ export default function App() {
                 const points = t7.map((v, idx) => `${(idx/Math.max(1,t7.length-1))*180},${28-((v-min)/Math.max(1,(max7-min)))*24}`).join(' ')
                 return <div key={`st-right-${i}`} className='panel' style={{padding:10}}>
                   <div style={{fontWeight:700, marginBottom:6}}>{r.commodity}</div>
-                  <div style={{fontSize:12,color:'#64748b',marginBottom:6}}>Date: {r.updated_at_utc || hist.updated_at_utc || 'Live feed'}</div>
-                  <div className='list-row'><span>Ghana ({r.GH})</span><div style={{height:8,width:bar(r.GH),background:'#16a34a',borderRadius:99}} /></div>
-                  <div className='list-row'><span>Nigeria ({r.NG})</span><div style={{height:8,width:bar(r.NG),background:'#0284c7',borderRadius:99}} /></div>
-                  <div className='list-row'><span>Burkina Faso ({r.BF})</span><div style={{height:8,width:bar(r.BF),background:'#ea580c',borderRadius:99}} /></div>
-                  <div className='list-row'><span>World Avg ({r.WORLD_AVG})</span><div style={{height:8,width:bar(r.WORLD_AVG),background:'#334155',borderRadius:99}} /></div>
+                  <div style={{fontSize:12,color:'#64748b',marginBottom:6}}>{t('Date','Date')}: {r.updated_at_utc || hist.updated_at_utc || t('Live feed','Flux en direct')}</div>
+                  <div className='list-row'><span>{t('Ghana','Ghana')} ({r.GH})</span><div style={{height:8,width:bar(r.GH),background:'#16a34a',borderRadius:99}} /></div>
+                  <div className='list-row'><span>{t('Nigeria','Nigeria')} ({r.NG})</span><div style={{height:8,width:bar(r.NG),background:'#0284c7',borderRadius:99}} /></div>
+                  <div className='list-row'><span>{t('Burkina Faso','Burkina Faso')} ({r.BF})</span><div style={{height:8,width:bar(r.BF),background:'#ea580c',borderRadius:99}} /></div>
+                  <div className='list-row'><span>{t('World Avg','Moyenne mondiale')} ({r.WORLD_AVG})</span><div style={{height:8,width:bar(r.WORLD_AVG),background:'#334155',borderRadius:99}} /></div>
                   <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#475569',marginTop:6}}>
                     <span>7d: {hist.change_pct_7d ?? 0}%</span><span>30d: {hist.change_pct_30d ?? 0}%</span>
                   </div>
                   <svg width='180' height='32' style={{marginTop:4, background:'#f8fafc', borderRadius:6}}>
                     <polyline fill='none' stroke='#0f766e' strokeWidth='2' points={points || '0,28 180,4'} />
                   </svg>
-                  <div style={{fontSize:11,color:'#64748b'}}>Source: {hist.provenance || 'FarmSavior market feed'}</div>
+                  <div style={{fontSize:11,color:'#64748b'}}>{t('Source','Source')}: {hist.provenance || t('FarmSavior market feed','Flux marché FarmSavior')}</div>
                 </div>
               })}
           </div>
@@ -734,7 +734,7 @@ export default function App() {
       </div>
 
       <article className='panel' style={{marginTop:10}}>
-        <h3>🏛️ Government Programs & Subsidies (Ghana • Nigeria • Burkina Faso)</h3>
+        <h3>{t('🏛️ Government Programs & Subsidies (Ghana • Nigeria • Burkina Faso)','🏛️ Programmes gouvernementaux & subventions (Ghana • Nigeria • Burkina Faso)')}</h3>
         <div className='list'>
           {publicGovRows.slice(0, 6).map((g, i) => (
             <div className='list-row' key={`gov-${i}`}>
