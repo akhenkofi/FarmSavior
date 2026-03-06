@@ -65,6 +65,22 @@ const serviceNameFr = {
   'Ram/Buck/Bull rentals': 'Location de bélier/bouc/taureau'
 }
 
+const weatherConditionFr = {
+  'Partly cloudy': 'Partiellement nuageux',
+  'Cloudy': 'Nuageux',
+  'Sunny': 'Ensoleillé',
+  'Humid': 'Humide',
+  'Hot': 'Chaud',
+  'Clear': 'Dégagé',
+  'Warm': 'Doux'
+}
+
+const newsTitleFr = {
+  'West Africa input prices ease as supply chains stabilize': 'Les prix des intrants en Afrique de l’Ouest baissent avec la stabilisation des chaînes d’approvisionnement',
+  'Moisture outlook improves for rice and maize belts': 'Les perspectives d’humidité s’améliorent pour les zones de riz et de maïs',
+  'Regional livestock demand remains strong ahead of market week': 'La demande régionale en bétail reste forte avant la semaine de marché'
+}
+
 const featuredWeatherSeed = [
   { city: 'Accra', country: 'GH', condition: 'Partly cloudy', temperature_c: 29, humidity_pct: 74, rainfall_mm: 0.8 },
   { city: 'Kumasi', country: 'GH', condition: 'Cloudy', temperature_c: 27, humidity_pct: 79, rainfall_mm: 1.2 },
@@ -217,6 +233,8 @@ export default function App() {
   const t = (en, fr) => (uiLang === 'fr' ? fr : en)
   const displayProductName = (name) => (uiLang === 'fr' ? (productNameFr[name] || name) : name)
   const displayServiceName = (name) => (uiLang === 'fr' ? (serviceNameFr[name] || name) : name)
+  const displayWeatherCondition = (condition) => (uiLang === 'fr' ? (weatherConditionFr[condition] || condition) : condition)
+  const displayNewsTitle = (title) => (uiLang === 'fr' ? (newsTitleFr[title] || title) : title)
 
   useEffect(() => {
     localStorage.setItem('farmsavior_ui_lang', uiLang)
@@ -589,24 +607,24 @@ export default function App() {
               <div className='news-card' key={`w-${expandedWeatherCountry}-${i}`}>
                 <div className='news-body'>
                   <div className='news-title'>{w.city}, {w.country}</div>
-                  <div className='news-meta'>Condition: {w.condition || '-'}</div>
-                  <div className='news-meta'>Temp: {w.temperature_c}°C • Humidity: {w.humidity_pct}% • Rainfall: {w.rainfall_mm} mm</div>
+                  <div className='news-meta'>{t('Condition','Condition')}: {displayWeatherCondition(w.condition || '-')}</div>
+                  <div className='news-meta'>{t('Temp','Temp')}: {w.temperature_c}°C • {t('Humidity','Humidité')}: {w.humidity_pct}% • {t('Rainfall','Pluie')}: {w.rainfall_mm} mm</div>
                 </div>
               </div>
             ))}
           </div>
 
-          <p style={{fontSize:'.85rem', color:'#0f766e', marginTop:8}}>Free forecast preview for farmers. Sign up to unlock personalized alerts and farm-level recommendations.</p>
+          <p style={{fontSize:'.85rem', color:'#0f766e', marginTop:8}}>{t('Free forecast preview for farmers. Sign up to unlock personalized alerts and farm-level recommendations.','Aperçu météo gratuit pour les agriculteurs. Inscrivez-vous pour débloquer des alertes personnalisées et des recommandations au niveau de l’exploitation.')}</p>
 
 
-          <h3 style={{marginTop:12}}>📰 Ag News + Innovation</h3>
+          <h3 style={{marginTop:12}}>{t('📰 Ag News + Innovation','📰 Actualités agricoles + innovation')}</h3>
           <div className='news-grid'>
             {publicNewsRows.slice(0,8).map((n,i)=>(
               <div className='news-card' key={`n-${i}`}>
                 <img src={n.image_url || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80'} alt={n.title} className='news-img' />
                 <div className='news-body'>
-                  <a href={n.url} target='_blank' rel='noreferrer' className='news-title'>{n.title}</a>
-                  <div className='news-meta'>{n.source} {n.published ? `• ${n.published}` : ''}</div>
+                  <a href={n.url} target='_blank' rel='noreferrer' className='news-title'>{displayNewsTitle(n.title)}</a>
+                  <div className='news-meta'>{n.source} {n.published ? `• ${uiLang === 'fr' && n.published === 'Live' ? 'En direct' : n.published}` : ''}</div>
                   <div className='news-credit'>{n.image_credit || 'Image credit: source / Unsplash'}</div>
                 </div>
               </div>
