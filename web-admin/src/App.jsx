@@ -765,7 +765,7 @@ export default function App() {
             <div className='list-row'><span>{t('AI Plant Identifier','Identificateur IA des plantes')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('plant-id'); return } setAuthMode('login'); setAuthMsg(t('Please sign in to use AI Plant Identifier.','Veuillez vous connecter pour utiliser l’identificateur IA des plantes.')); }}>{t('Open','Ouvrir')}</button></div>
             <div className='list-row'><span>{t('AI Insect & Pest Identifier','Identificateur IA insectes et ravageurs')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('pest-id'); return } setAuthMode('login'); setAuthMsg(t('Please sign in to use AI pest identification.','Veuillez vous connecter pour utiliser l’identification IA des ravageurs.')); }}>{t('Open','Ouvrir')}</button></div>
             <div className='list-row'><span>{t('Farm GPS Mapping','Cartographie GPS des fermes')}</span><button className='btn' onClick={()=>{ if (token) { goToAppSection('maps'); return } setAuthMode('login'); setAuthMsg(t('Please sign in to map farms and save data.','Veuillez vous connecter pour cartographier les fermes et enregistrer les données.')); }}>{t('Open','Ouvrir')}</button></div>
-            <div className='list-row'><span>{t('Global World Chat','Chat mondial')}</span><button type='button' className='btn' onClick={()=>{ if (token) { goToAppSection('world-chat'); return } setAuthMode('login'); setAuthMsg(t('Please sign in to post in World Chat.','Veuillez vous connecter pour publier dans le chat mondial.')); }}>{t('Open','Ouvrir')}</button></div>
+            <div className='list-row'><span>{t('Global World Chat','Chat mondial')}</span><button type='button' className='btn' onClick={()=>{ if (token) { window.location.href='/?public=0&go=world-chat'; return } setAuthMode('login'); setAuthMsg(t('Please sign in to post in World Chat.','Veuillez vous connecter pour publier dans le chat mondial.')); }}>{t('Open','Ouvrir')}</button></div>
           </div>
           <p style={{fontSize:'.82rem', color:'#64748b'}}>{t('You can browse publicly; posting, renting, contacting providers, and transactions require sign-in.','Vous pouvez parcourir publiquement ; publier, louer, contacter des prestataires et effectuer des transactions nécessite une connexion.')}</p>
         </article>
@@ -866,7 +866,7 @@ export default function App() {
             </div>
             <div className='list-row' style={{marginTop:8}}>
               <span>{t('Join the conversation with farmers worldwide.','Rejoignez la conversation avec des agriculteurs du monde entier.')}</span>
-              <button type='button' className='btn' onClick={()=>{ if (token) { goToAppSection('world-chat'); return } setAuthMode('login') }}>{t('Open Chat','Ouvrir le chat')}</button>
+              <button type='button' className='btn' onClick={()=>{ if (token) { window.location.href='/?public=0&go=world-chat'; return } setAuthMode('login') }}>{t('Open Chat','Ouvrir le chat')}</button>
             </div>
           </div>
 
@@ -1208,7 +1208,7 @@ export default function App() {
         <article className='panel' style={{marginTop:10}}>
           <div className='list-row'>
             <h3 style={{margin:0}}>🌍 Global World Chat</h3>
-            <button type='button' className='btn btn-dark' onClick={() => goToAppSection('world-chat')}>Open World Chat</button>
+            <button type='button' className='btn btn-dark' onClick={() => { window.location.href='/?public=0&go=world-chat' }}>Open World Chat</button>
           </div>
           <div className='list' style={{maxHeight:180, overflow:'auto'}}>
             {worldChat.slice(-6).map((m)=><div className='list-row' key={`home-wc-${m.id}`}><span><strong>{m.user_name || `User ${m.user_id}`}:</strong> {m.text}</span></div>)}
