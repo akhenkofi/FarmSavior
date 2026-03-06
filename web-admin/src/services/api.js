@@ -11,6 +11,18 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+api.interceptors.response.use(
+  (res) => res,
+  (error) => {
+    const status = error?.response?.status
+    const detail = String(error?.response?.data?.detail || '').toLowerCase()
+    if (status === 401 || detail.includes('user not found') || detail.includes('missing bearer token')) {
+      localStorage.removeItem('farmsavior_token')
+    }
+    return Promise.reject(error)
+  }
+)
+
 export const register = async (payload) => (await api.post('/auth/register', payload)).data
 export const login = async (payload) => (await api.post('/auth/login', payload)).data
 export const verifyOtp = async (payload) => (await api.post('/auth/verify-otp', payload)).data

@@ -1638,7 +1638,14 @@ export default function App() {
             await loadWorldChat()
             if ((me?.role || '').toLowerCase() === 'admin') await loadWorldChatQueue()
           } catch (e) {
-            setWorldChatMsg(`Send failed: ${errMsg(e)}`)
+            const msg = errMsg(e)
+            if (String(msg).toLowerCase().includes('user not found') || String(msg).toLowerCase().includes('missing bearer token')) {
+              setWorldChatMsg('Session expired. Please sign in again, then resend your message.')
+              setToken('')
+              setAuthMode('login')
+            } else {
+              setWorldChatMsg(`Send failed: ${msg}`)
+            }
           }
         }}>
           <input className='input' placeholder='Share with farmers worldwide…' value={worldChatText} onChange={(e)=>setWorldChatText(e.target.value)} maxLength={900} />
