@@ -39,6 +39,32 @@ const featuredServiceBaselineCount = {
   'Farm consultancy': 1
 }
 
+const productNameFr = {
+  'Goats': 'Chèvres',
+  'Sheep': 'Moutons',
+  'Day-old Chicks': "Poussins d’un jour",
+  'Cows': 'Vaches',
+  'Cashew': 'Noix de cajou',
+  'Mango': 'Mangue',
+  'Coconuts': 'Noix de coco',
+  'Coffee': 'Café',
+  'Cocoa': 'Cacao',
+  'Rice': 'Riz'
+}
+
+const serviceNameFr = {
+  'Tractor hire (4WD)': 'Location de tracteur (4x4)',
+  'Combine harvester rental': 'Location de moissonneuse-batteuse',
+  'Cold room storage': 'Stockage en chambre froide',
+  'Long-haul truck logistics': 'Logistique camion longue distance',
+  'Farm spraying service': 'Service de pulvérisation agricole',
+  'Irrigation setup service': 'Service d’installation d’irrigation',
+  'Feed supply delivery': "Livraison d’aliments pour bétail",
+  'Warehouse monthly leasing': 'Location mensuelle d’entrepôt',
+  'Farm consultancy': 'Conseil agricole',
+  'Ram/Buck/Bull rentals': 'Location de bélier/bouc/taureau'
+}
+
 const featuredWeatherSeed = [
   { city: 'Accra', country: 'GH', condition: 'Partly cloudy', temperature_c: 29, humidity_pct: 74, rainfall_mm: 0.8 },
   { city: 'Kumasi', country: 'GH', condition: 'Cloudy', temperature_c: 27, humidity_pct: 79, rainfall_mm: 1.2 },
@@ -189,6 +215,8 @@ export default function App() {
   const [expandedLivestockPlan, setExpandedLivestockPlan] = useState('')
 
   const t = (en, fr) => (uiLang === 'fr' ? fr : en)
+  const displayProductName = (name) => (uiLang === 'fr' ? (productNameFr[name] || name) : name)
+  const displayServiceName = (name) => (uiLang === 'fr' ? (serviceNameFr[name] || name) : name)
 
   useEffect(() => {
     localStorage.setItem('farmsavior_ui_lang', uiLang)
@@ -511,7 +539,7 @@ export default function App() {
               (n) => ({ name: `Market item ${n}` })
             ).map((x,i)=>{
               const inventory = Number(productInventoryByName.get(x.name) || 0)
-              return <div className='list-row' key={`p-${i}`}><span>{x.name}</span><strong>{inventory.toLocaleString()}</strong></div>
+              return <div className='list-row' key={`p-${i}`}><span>{displayProductName(x.name)}</span><strong>{inventory.toLocaleString()}</strong></div>
             })}
           </div>
         </article>
@@ -524,7 +552,7 @@ export default function App() {
               (n) => ({ name: `Service slot ${n}` })
             ).map((x,i)=>{
               const inventory = Number(serviceInventoryByName.get(x.name) || 0)
-              return <div className='list-row' key={`s-${i}`}><span>{x.name}</span><strong>{inventory.toLocaleString()}</strong></div>
+              return <div className='list-row' key={`s-${i}`}><span>{displayServiceName(x.name)}</span><strong>{inventory.toLocaleString()}</strong></div>
             })}
           </div>
         </article>
