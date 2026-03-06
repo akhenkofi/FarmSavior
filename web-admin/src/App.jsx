@@ -874,9 +874,9 @@ export default function App() {
       <div className='panel' style={{background:'linear-gradient(120deg,#0b3b2e,#0e7490)', color:'#fff'}}>
         <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:8}}>
           <img src='/assets/farmsavior-logo.jpg' alt='FarmSavior logo' style={{width:72,height:72,borderRadius:12,objectFit:'cover',border:'2px solid rgba(255,255,255,.3)'}} />
-          <h2 style={{margin:0}}>{t('FarmSavior Marketplace Live','Marché FarmSavior en direct','FarmSavior 市场实时')}</h2>
+          <h2 style={{margin:0}}>{uiLang === 'zh' ? 'FarmSavior 市场实时' : t('FarmSavior Marketplace Live','Marché FarmSavior en direct')}</h2>
         </div>
-        <p style={{opacity:.95}}>{t('High-demand products and services across Ghana, Nigeria, and Burkina Faso. Browse freely. To contact providers or use tools, sign up/sign in.','Produits et services à forte demande au Ghana, au Nigeria et au Burkina Faso. Parcourez librement. Pour contacter les fournisseurs ou utiliser les outils, inscrivez-vous/connectez-vous.','覆盖加纳、尼日利亚和布基纳法索的高需求产品与服务。可自由浏览；联系服务商或使用工具请注册/登录。')}</p>
+        <p style={{opacity:.95}}>{uiLang === 'zh' ? '覆盖加纳、尼日利亚和布基纳法索的高需求产品与服务。可自由浏览；联系服务商或使用工具请注册/登录。' : t('High-demand products and services across Ghana, Nigeria, and Burkina Faso. Browse freely. To contact providers or use tools, sign up/sign in.','Produits et services à forte demande au Ghana, au Nigeria et au Burkina Faso. Parcourez librement. Pour contacter les fournisseurs ou utiliser les outils, inscrivez-vous/connectez-vous.')}</p>
         <div className='inlineForm' style={{background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.25)', marginBottom:8}}>
           <select className='input' value={uiCountry} onChange={(e)=>setUiCountry(e.target.value)}>
             <option value='GH'>Ghana</option><option value='NG'>Nigeria</option><option value='BF'>Burkina Faso</option>
@@ -885,14 +885,14 @@ export default function App() {
             <option value='en'>English</option><option value='fr'>Français</option><option value='zh'>中文</option>
           </select>
           <div className='list-row' style={{padding:'6px 10px', background:'rgba(255,255,255,.85)'}}><span>{t('Currency','Devise','货币')}</span><strong>{currencyByCountry[uiCountry]}</strong></div>
-          <div className='list-row' style={{padding:'6px 10px', background:'rgba(255,255,255,.85)'}}><span>{t('Payment methods','Moyens de paiement')}</span><strong>{paymentProviders[uiCountry].join(', ')}</strong></div>
+          <div className='list-row' style={{padding:'6px 10px', background:'rgba(255,255,255,.85)'}}><span>{t('Payment methods','Moyens de paiement','支付方式')}</span><strong>{paymentProviders[uiCountry].join(', ')}</strong></div>
         </div>
         <form className='inlineForm' onSubmit={(e)=>{e.preventDefault(); addRecentSearch(publicQuery)}} style={{background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.25)'}}>
-          <input className='input' placeholder={t('Search products, services, market activity…','Rechercher produits, services, activité du marché…')} value={publicQuery} onChange={(e)=>setPublicQuery(e.target.value)} />
+          <input className='input' placeholder={t('Search products, services, market activity…','Rechercher produits, services, activité du marché…','搜索产品、服务、市场动态…')} value={publicQuery} onChange={(e)=>setPublicQuery(e.target.value)} />
           <button className='btn btn-dark'>{t('Search','Rechercher','搜索')}</button>
           <button type='button' className='btn' onClick={()=>setPublicQuery('')}>{t('Clear','Effacer','清除')}</button>
         </form>
-        <p style={{fontSize:'.8rem',opacity:.9,marginTop:8}}>{t('Safety notice: Content and AI outputs are guidance only. Verify locally with qualified agronomy/veterinary professionals before acting.','Avis de sécurité : le contenu et les résultats IA sont indicatifs. Vérifiez localement avec des professionnels qualifiés (agronomie/vétérinaire) avant d’agir.','安全提示：内容和AI结果仅供参考。行动前请在本地与合格的农学/兽医专业人士核实。')}</p>
+        <p style={{fontSize:'.8rem',opacity:.9,marginTop:8}}>{uiLang === 'zh' ? '安全提示：内容和AI结果仅供参考。行动前请在本地与合格的农学/兽医专业人士核实。' : t('Safety notice: Content and AI outputs are guidance only. Verify locally with qualified agronomy/veterinary professionals before acting.','Avis de sécurité : le contenu et les résultats IA sont indicatifs. Vérifiez localement avec des professionnels qualifiés (agronomie/vétérinaire) avant d’agir.')}</p>
       </div>
 
       {!token && authPrompt === 'login' && <div className='panel' style={{marginTop:10, background:'#ecfeff', border:'1px solid #99f6e4'}}>
