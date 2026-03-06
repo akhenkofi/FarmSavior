@@ -355,6 +355,7 @@ class CommunityProfile(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False, unique=True, index=True)
     avatar_url = Column(String(500), nullable=True)
+    cover_image_url = Column(String(500), nullable=True)
     bio = Column(Text, default='')
     farm_life = Column(Text, default='')
     interests = Column(String(255), default='farming,gardening')

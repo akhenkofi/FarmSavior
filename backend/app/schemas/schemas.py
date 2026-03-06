@@ -237,6 +237,7 @@ class WorldChatUserSanctionIn(BaseModel):
 
 class CommunityProfileIn(BaseModel):
     avatar_url: Optional[str] = None
+    cover_image_url: Optional[str] = None
     bio: Optional[str] = ''
     farm_life: Optional[str] = ''
     interests: Optional[str] = 'farming,gardening'
