@@ -5,6 +5,7 @@ const errMsg = (e) => e?.response?.data?.detail || e?.message || 'Request failed
 
 const countries = ['GH', 'NG', 'BF']
 const countryLabels = { GH: 'Ghana (GH)', NG: 'Nigeria (NG)', BF: 'Burkina Faso (BF)' }
+const countryLabelsZh = { GH: '加纳 (GH)', NG: '尼日利亚 (NG)', BF: '布基纳法索 (BF)' }
 const mapBoundsByCountry = {
   GH: { minLng: -3.5, minLat: 4.5, maxLng: 1.5, maxLat: 11.5, iframe: 'https://www.openstreetmap.org/export/embed.html?bbox=-3.5%2C4.5%2C1.5%2C11.5&layer=mapnik' },
   NG: { minLng: 2.5, minLat: 4.0, maxLng: 15.5, maxLat: 14.5, iframe: 'https://www.openstreetmap.org/export/embed.html?bbox=2.5%2C4.0%2C15.5%2C14.5&layer=mapnik' },
@@ -353,6 +354,28 @@ export default function App() {
     return map[normalized] || weatherConditionFr[raw] || raw
   }
   const displayNewsTitle = (title) => (uiLang === 'fr' ? (newsTitleFr[title] || title) : (uiLang === 'zh' ? (newsTitleZh[title] || zhMap[title] || title) : title))
+  const displayCountryLabel = (code) => (uiLang === 'zh' ? (countryLabelsZh[code] || countryLabels[code] || code) : (countryLabels[code] || code))
+  const displayCommodityName = (name) => (uiLang === 'zh' ? (zhMap[name] || name) : name)
+  const displayPlanName = (name) => {
+    if (uiLang !== 'zh') return name
+    return String(name || '')
+      .replace('Sheep & Goats', '羊与山羊')
+      .replace('Starter', '入门版')
+      .replace('Pro', '专业版')
+      .replace('Enterprise', '企业版')
+  }
+  const displayFeature = (f) => {
+    if (uiLang !== 'zh') return f
+    const map = {
+      'Basic records': '基础记录',
+      'Health logs': '健康日志',
+      'Breeding groups': '繁育分组',
+      'Performance insights': '绩效洞察',
+      'Multi-farm': '多农场',
+      'Advanced analytics': '高级分析'
+    }
+    return map[f] || f
+  }
 
   useEffect(() => {
     localStorage.setItem('farmsavior_ui_lang', uiLang)
@@ -950,7 +973,7 @@ export default function App() {
           <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
             {['GH','NG','BF'].map((c) => (
               <button key={`wx-${c}`} className={`tab ${expandedWeatherCountry === c ? 'active' : ''}`} onClick={() => setExpandedWeatherCountry(c)}>
-                {countryLabels[c]}
+                {displayCountryLabel(c)}
               </button>
             ))}
           </div>
@@ -959,30 +982,30 @@ export default function App() {
               <div className='news-card' key={`w-${expandedWeatherCountry}-${i}`}>
                 <div className='news-body'>
                   <div className='news-title'>{w.city}, {w.country}</div>
-                  <div className='news-meta'>{t('Condition','Condition')}: {displayWeatherCondition(w.condition || '-')}</div>
-                  <div className='news-meta'>{t('Temp','Temp')}: {w.temperature_c}°C • {t('Humidity','Humidité')}: {w.humidity_pct}% • {t('Rainfall','Pluie')}: {w.rainfall_mm} mm</div>
+                  <div className='news-meta'>{t('Condition','Condition','天气状况')}: {displayWeatherCondition(w.condition || '-')}</div>
+                  <div className='news-meta'>{t('Temp','Temp','气温')}: {w.temperature_c}°C • {t('Humidity','Humidité','湿度')}: {w.humidity_pct}% • {t('Rainfall','Pluie','降雨量')}: {w.rainfall_mm} mm</div>
                 </div>
               </div>
             ))}
           </div>
 
-          <p style={{fontSize:'.85rem', color:'#0f766e', marginTop:8}}>{t('Free forecast preview for farmers. Sign up to unlock personalized alerts and farm-level recommendations.','Aperçu météo gratuit pour les agriculteurs. Inscrivez-vous pour débloquer des alertes personnalisées et des recommandations au niveau de l’exploitation.')}</p>
+          <p style={{fontSize:'.85rem', color:'#0f766e', marginTop:8}}>{t('Free forecast preview for farmers. Sign up to unlock personalized alerts and farm-level recommendations.','Aperçu météo gratuit pour les agriculteurs. Inscrivez-vous pour débloquer des alertes personnalisées et des recommandations au niveau de l’exploitation.','面向农户的免费天气预览。注册即可解锁个性化预警和农场级建议。')}</p>
 
 
-          <h3 style={{marginTop:12}}>{t('📰 Ag News + Innovation','📰 Actualités agricoles + innovation')}</h3>
+          <h3 style={{marginTop:12}}>{t('📰 Ag News + Innovation','📰 Actualités agricoles + innovation','📰 农业新闻与创新')}</h3>
           <div className='news-grid'>
             {publicNewsRows.slice(0,8).map((n,i)=>(
               <div className='news-card' key={`n-${i}`}>
                 <img src={n.image_url || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80'} alt={n.title} className='news-img' />
                 <div className='news-body'>
                   <a href={n.url} target='_blank' rel='noreferrer' className='news-title'>{displayNewsTitle(n.title)}</a>
-                  <div className='news-meta'>{n.source} {n.published ? `• ${uiLang === 'fr' && n.published === 'Live' ? 'En direct' : n.published}` : ''}</div>
-                  <div className='news-credit'>{n.image_credit || 'Image credit: source / Unsplash'}</div>
+                  <div className='news-meta'>{(uiLang === 'zh' && n.source === 'FarmSavior News Desk') ? 'FarmSavior 新闻台' : n.source} {n.published ? `• ${uiLang === 'fr' && n.published === 'Live' ? 'En direct' : (uiLang === 'zh' && n.published === 'Live' ? '实时' : n.published)}` : ''}</div>
+                  <div className='news-credit'>{n.image_credit || t('Image credit: source / Unsplash','Crédit image : source / Unsplash','图片来源：source / Unsplash')}</div>
                 </div>
               </div>
             ))}
           </div>
-          <p style={{fontSize:'.82rem', color:'#64748b'}}>Sources and image credits are shown on each story.</p>
+          <p style={{fontSize:'.82rem', color:'#64748b'}}>{t('Sources and image credits are shown on each story.','Les sources et crédits image sont affichés sur chaque article.','每条资讯都显示来源与图片署名。')}</p>
         </article>
 
         <article className='panel' id='access-portal'>
@@ -999,7 +1022,7 @@ export default function App() {
             <button className='tab active' type='button'>Main App</button>
           </div>
 
-          <div className='tabs'>{['login', 'signup', 'otp'].map(m => <button key={m} className={`tab ${authMode === m ? 'active' : ''}`} onClick={() => setAuthMode(m)}>{m.toUpperCase()}</button>)}</div>
+          <div className='tabs'>{['login', 'signup', 'otp'].map(m => <button key={m} className={`tab ${authMode === m ? 'active' : ''}`} onClick={() => setAuthMode(m)}>{m === 'login' ? t('LOGIN','LOGIN','登录') : (m === 'signup' ? t('SIGNUP','INSCRIPTION','注册') : t('OTP','OTP','验证码'))}</button>)}</div>
 
           {authMode === 'signup' && <form className='list' onSubmit={async (e) => {
             try {
@@ -1055,7 +1078,7 @@ export default function App() {
             <div style={{fontSize:'.76rem', color:'#64748b'}}>Phone OTP signup is active. Email OTP will be re-enabled after dedicated mail sender configuration.</div>
             <div className='row2'><select className='input' value={signup.country} onChange={e => setSignup({ ...signup, country: e.target.value })}>{countries.map(c => <option key={c}>{c}</option>)}</select><input className='input' placeholder='Region' value={signup.region} onChange={e => setSignup({ ...signup, region: e.target.value })} required /></div>
             <select className='input' value={signup.user_type} onChange={e => setSignup({ ...signup, user_type: e.target.value })}>{userTypes.map(u => <option key={u}>{u}</option>)}</select>
-            <input className='input' type='password' placeholder='Password' value={signup.password} onChange={e => setSignup({ ...signup, password: e.target.value })} required />
+            <input className='input' type='password' placeholder={t('Password','Mot de passe','密码')} value={signup.password} onChange={e => setSignup({ ...signup, password: e.target.value })} required />
             <div className='panel' style={{padding:8, background:'#f8fafc'}}>
               <label style={{display:'block',fontSize:'.84rem'}}><input type='checkbox' checked={signup.accept_terms} onChange={e => setSignup({ ...signup, accept_terms: e.target.checked })} /> I agree to Terms of Service.</label>
               <label style={{display:'block',fontSize:'.84rem'}}><input type='checkbox' checked={signup.accept_privacy} onChange={e => setSignup({ ...signup, accept_privacy: e.target.checked })} /> I agree to Privacy Policy.</label>
@@ -1071,15 +1094,15 @@ export default function App() {
           {authMode === 'login' && <form className='list' onSubmit={async (e) => {
             try { e.preventDefault(); const r = await api.login(login); saveToken(r.access_token) } catch (e) { setAuthMsg(`Login failed: ${errMsg(e)}`) }
           }}>
-            <input className='input' placeholder='Phone or Email' value={login.identifier} onChange={e => setLogin({ ...login, identifier: e.target.value })} required />
-            <input className='input' type='password' placeholder='Password' value={login.password} onChange={e => setLogin({ ...login, password: e.target.value })} required />
-            <button className='btn btn-dark'>Login</button>
+            <input className='input' placeholder={t('Phone or Email','Téléphone ou e-mail','手机号或邮箱')} value={login.identifier} onChange={e => setLogin({ ...login, identifier: e.target.value })} required />
+            <input className='input' type='password' placeholder={t('Password','Mot de passe','密码')} value={login.password} onChange={e => setLogin({ ...login, password: e.target.value })} required />
+            <button className='btn btn-dark'>{t('Login','Connexion','登录')}</button>
           </form>}
 
           {authMode === 'otp' && <form className='list' onSubmit={async (e) => {
             try { e.preventDefault(); const r = await api.verifyOtp(otp); saveToken(r.access_token) } catch (e) { setAuthMsg(`OTP verification failed: ${errMsg(e)}`) }
           }}>
-            <input className='input' placeholder='Phone or Email' value={otp.destination || phoneForOtp} onChange={e => setOtp({ ...otp, destination: e.target.value })} required />
+            <input className='input' placeholder={t('Phone or Email','Téléphone ou e-mail','手机号或邮箱')} value={otp.destination || phoneForOtp} onChange={e => setOtp({ ...otp, destination: e.target.value })} required />
             <input className='input' placeholder='OTP Code' value={otp.code} onChange={e => setOtp({ ...otp, code: e.target.value })} required />
             <button className='btn btn-dark'>Verify OTP</button>
           </form>}
@@ -1184,7 +1207,7 @@ export default function App() {
                 className={`tab ${expandedTradeCommodity === key ? 'active' : ''}`}
                 onClick={() => setExpandedTradeCommodity(key)}
               >
-                {c.commodity}
+                {displayCommodityName(c.commodity)}
               </button>
             )
           })}
@@ -1194,7 +1217,7 @@ export default function App() {
           .filter((c, i) => (c.commodity_key || c.commodity || `c-${i}`) === expandedTradeCommodity)
           .map((c, i) => (
             <div className='panel' key={`trade-expanded-${i}`} style={{padding:10}}>
-              <h4 style={{marginTop:0}}>{c.commodity}</h4>
+              <h4 style={{marginTop:0}}>{displayCommodityName(c.commodity)}</h4>
 
               <div className='list-row' style={{marginBottom:6}}>
                 <div style={{fontWeight:600}}>{t('Top 10 Exporters','Top 10 exportateurs','前10大出口国')}</div>
@@ -1232,14 +1255,14 @@ export default function App() {
       </article>
 
       <article className='panel' style={{marginTop:10}}>
-        <h3>{t('🐑 Sheep & Goats Records & Intelligence Platform (Africa-Wide)','🐑 Plateforme de registres et d’intelligence ovins/caprins (Afrique entière)')}</h3>
-        <p style={{fontSize:'.85rem',color:'#475569'}}>{t('A production-grade livestock records system for sheep and goats, with traceability, breeding performance, health tracking, and subscription-based access for operators across Africa.','Un système professionnel de registres d’élevage pour ovins et caprins, avec traçabilité, performance de reproduction, suivi sanitaire et accès par abonnement pour les opérateurs en Afrique.')}</p>
-        <p style={{fontSize:'.82rem',color:'#64748b',marginTop:4}}>{t('Pricing auto-displays in your selected country currency. Settlement can route to Ghana Mobile Money or US bank account once payout details are configured.','Les prix s’affichent automatiquement dans la devise du pays sélectionné. Le règlement peut être acheminé vers Mobile Money Ghana ou un compte bancaire US une fois les détails de paiement configurés.')}</p>
-        <h4 style={{margin:'8px 0'}}>{t('Select Your Subscription Plan','Sélectionnez votre plan d’abonnement')}</h4>
+        <h3>{t('🐑 Sheep & Goats Records & Intelligence Platform (Africa-Wide)','🐑 Plateforme de registres et d’intelligence ovins/caprins (Afrique entière)','🐑 羊与山羊记录与智能平台（非洲范围）')}</h3>
+        <p style={{fontSize:'.85rem',color:'#475569'}}>{t('A production-grade livestock records system for sheep and goats, with traceability, breeding performance, health tracking, and subscription-based access for operators across Africa.','Un système professionnel de registres d’élevage pour ovins et caprins, avec traçabilité, performance de reproduction, suivi sanitaire et accès par abonnement pour les opérateurs en Afrique.','面向非洲运营者的生产级羊与山羊记录系统，包含溯源、繁育绩效、健康追踪和订阅访问。')}</p>
+        <p style={{fontSize:'.82rem',color:'#64748b',marginTop:4}}>{t('Pricing auto-displays in your selected country currency. Settlement can route to Ghana Mobile Money or US bank account once payout details are configured.','Les prix s’affichent automatiquement dans la devise du pays sélectionné. Le règlement peut être acheminé vers Mobile Money Ghana ou un compte bancaire US une fois les détails de paiement configurés.','价格会按你选择的国家货币自动显示。配置收款后，可结算到加纳移动支付或美国银行账户。')}</p>
+        <h4 style={{margin:'8px 0'}}>{t('Select Your Subscription Plan','Sélectionnez votre plan d’abonnement','选择你的订阅方案')}</h4>
         <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
           {publicLivestockPlans.map((p, i) => {
             const key = p.plan_code || p.name || `plan-${i}`
-            return <button key={`plan-tab-${key}`} className={`tab ${expandedLivestockPlan === key ? 'active' : ''}`} onClick={() => setExpandedLivestockPlan(key)}>{p.name}</button>
+            return <button key={`plan-tab-${key}`} className={`tab ${expandedLivestockPlan === key ? 'active' : ''}`} onClick={() => setExpandedLivestockPlan(key)}>{displayPlanName(p.name)}</button>
           })}
         </div>
 
@@ -1248,11 +1271,11 @@ export default function App() {
             .filter((p, i) => (p.plan_code || p.name || `plan-${i}`) === expandedLivestockPlan)
             .map((p, i) => (
             <div className='panel' key={`plan-${i}`} style={{padding:10}}>
-              <h4 style={{marginTop:0}}>{p.name}</h4>
-              <div className='list-row'><span>Monthly</span><strong>{formatLocalPrice(p.monthly_usd)}</strong></div>
-              <div className='list-row'><span>Yearly</span><strong>{formatLocalPrice(p.yearly_usd)}</strong></div>
+              <h4 style={{marginTop:0}}>{displayPlanName(p.name)}</h4>
+              <div className='list-row'><span>{t('Monthly','Mensuel','月付')}</span><strong>{formatLocalPrice(p.monthly_usd)}</strong></div>
+              <div className='list-row'><span>{t('Yearly','Annuel','年付')}</span><strong>{formatLocalPrice(p.yearly_usd)}</strong></div>
               <div className='list'>
-                {(p.features || []).map((f, j) => <div className='list-row' key={`pf-${i}-${j}`}><span>{f}</span></div>)}
+                {(p.features || []).map((f, j) => <div className='list-row' key={`pf-${i}-${j}`}><span>{displayFeature(f)}</span></div>)}
               </div>
               <div className='list-row' style={{marginTop:8}}>
                 <button className='btn btn-dark' onClick={async () => {
@@ -1272,7 +1295,7 @@ export default function App() {
                       alert(t(`Checkout created (payment provider not configured). Ref: ${r.reference}`,`Paiement créé (prestataire non configuré). Réf : ${r.reference}`))
                     }
                   } catch (e) { alert(t(`Checkout failed: ${errMsg(e)}`,`Échec du paiement : ${errMsg(e)}`)) }
-                }}>Subscribe</button>
+                }}>{t('Subscribe','S’abonner','订阅')}</button>
               </div>
             </div>
           ))}
