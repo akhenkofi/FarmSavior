@@ -81,10 +81,38 @@ const weatherConditionFr = {
   'Warm': 'Doux'
 }
 
+const weatherConditionZh = {
+  'Partly cloudy': '局部多云',
+  'Cloudy': '多云',
+  'Sunny': '晴朗',
+  'Humid': '潮湿',
+  'Hot': '炎热',
+  'Clear': '晴天',
+  'Warm': '温暖'
+}
+
 const newsTitleFr = {
   'West Africa input prices ease as supply chains stabilize': 'Les prix des intrants en Afrique de l’Ouest baissent avec la stabilisation des chaînes d’approvisionnement',
   'Moisture outlook improves for rice and maize belts': 'Les perspectives d’humidité s’améliorent pour les zones de riz et de maïs',
   'Regional livestock demand remains strong ahead of market week': 'La demande régionale en bétail reste forte avant la semaine de marché'
+}
+
+const newsTitleZh = {
+  'West Africa input prices ease as supply chains stabilize': '随着供应链稳定，西非农业投入品价格回落',
+  'Moisture outlook improves for rice and maize belts': '稻米和玉米主产带的湿度前景改善',
+  'Regional livestock demand remains strong ahead of market week': '市场周前区域畜牧需求仍然强劲'
+}
+
+const zhMap = {
+  'home':'首页','dashboard':'仪表盘','onboarding':'账户','products':'产品','livestock':'牲畜','services':'服务','payments':'支付','alerts':'预警','maps':'地图','messaging':'消息','World Chat':'世界聊天','FarmSavior Community':'FarmSavior 社区','AI Disease Analyzer':'AI 病害分析','AI Plant Identifier':'AI 植物识别','AI Insect & Pest Identifier':'AI 昆虫与害虫识别','Government Programs':'政府项目','contracts':'合同','admin':'管理员',
+  'Hide':'隐藏','Show':'显示','Open':'打开','Start':'开始','Login':'登录','Sign In':'登录','Create Account':'创建账户','Cancel':'取消','Currency':'货币','Payment methods':'支付方式','Products':'产品','logout':'退出登录',
+  'No messages yet.':'暂无消息。','Open Chat':'打开聊天','Go to My Account':'前往我的账户','Popular Actions':'热门操作','Global World Chat':'全球聊天','Map System (Google Maps) + Farm GPS Mapping':'地图系统（Google 地图）+ 农场 GPS 标注',
+  'Government Programs & Subsidies (Ghana • Nigeria • Burkina Faso)':'政府项目与补贴（加纳・尼日利亚・布基纳法索）','Programs Page':'项目页面','Current Export/Import Statistics (Top 10 + Volumes)':'当前进出口统计（前10名+总量）',
+  'Program details temporarily unavailable. Open source page.':'项目详情暂时不可用。请打开来源页面。','unavailable':'不可用','Official program update':'官方项目更新',
+  'Please sign in or create an account to continue.':'请登录或创建账户以继续。','Sign in required':'需要登录','Open Login Popup':'打开登录弹窗',
+  'Phone':'手机号','Phone or Email':'手机号或邮箱','Password':'密码','OTP Code':'验证码','Verify OTP':'验证 OTP',
+  'My Account':'我的账户','My Verification Status':'我的认证状态','Save Profile':'保存资料','Change Password':'修改密码',
+  'Community':'社区','World Chat':'世界聊天','Government Programs':'政府项目','Main Interface':'主界面'
 }
 
 const polygonAreaHectares = (points = []) => {
@@ -298,12 +326,13 @@ export default function App() {
 
   const t = (en, fr, zh) => {
     if (uiLang === 'fr') return fr
-    if (uiLang === 'zh') return zh || en
+    if (uiLang === 'zh') return zh || zhMap[en] || en
     return en
   }
-  const displayProductName = (name) => (uiLang === 'fr' ? (productNameFr[name] || name) : name)
-  const displayServiceName = (name) => (uiLang === 'fr' ? (serviceNameFr[name] || name) : name)
+  const displayProductName = (name) => (uiLang === 'fr' ? (productNameFr[name] || name) : (uiLang === 'zh' ? (zhMap[name] || name) : name))
+  const displayServiceName = (name) => (uiLang === 'fr' ? (serviceNameFr[name] || name) : (uiLang === 'zh' ? (zhMap[name] || name) : name))
   const displayWeatherCondition = (condition) => {
+    if (uiLang === 'zh') return weatherConditionZh[condition] || condition
     if (uiLang !== 'fr') return condition
     const raw = String(condition || '')
     const normalized = raw.toLowerCase()
@@ -318,7 +347,7 @@ export default function App() {
     }
     return map[normalized] || weatherConditionFr[raw] || raw
   }
-  const displayNewsTitle = (title) => (uiLang === 'fr' ? (newsTitleFr[title] || title) : title)
+  const displayNewsTitle = (title) => (uiLang === 'fr' ? (newsTitleFr[title] || title) : (uiLang === 'zh' ? (newsTitleZh[title] || zhMap[title] || title) : title))
 
   useEffect(() => {
     localStorage.setItem('farmsavior_ui_lang', uiLang)
@@ -594,24 +623,24 @@ export default function App() {
   const baseMenu = ['home', 'dashboard', 'onboarding', 'products', 'livestock', 'services', 'payments', 'alerts', 'maps', 'messaging', 'world-chat', 'community', 'ai-disease', 'plant-id', 'pest-id', 'government', 'contracts']
   const menu = ((me?.role || '').toLowerCase() === 'admin') ? [...baseMenu, 'admin'] : baseMenu
   const menuLabel = (m) => ({
-    'home':'home',
-    'dashboard':'dashboard',
-    'onboarding':'onboarding',
-    'products':'products',
-    'livestock':'livestock',
-    'services':'services',
-    'payments':'payments',
-    'alerts':'alerts',
-    'maps':'maps',
-    'messaging':'messaging',
-    'world-chat':'World Chat',
-    'community':'FarmSavior Community',
-    'ai-disease':'AI Disease Analyzer',
-    'plant-id':'AI Plant Identifier',
-    'pest-id':'AI Insect & Pest Identifier',
-    'government':'Government Programs',
-    'contracts':'contracts',
-    'admin':'admin'
+    'home':t('home','home','首页'),
+    'dashboard':t('dashboard','dashboard','仪表盘'),
+    'onboarding':t('onboarding','onboarding','账户'),
+    'products':t('products','products','产品'),
+    'livestock':t('livestock','livestock','牲畜'),
+    'services':t('services','services','服务'),
+    'payments':t('payments','payments','支付'),
+    'alerts':t('alerts','alerts','预警'),
+    'maps':t('maps','maps','地图'),
+    'messaging':t('messaging','messaging','消息'),
+    'world-chat':t('World Chat','World Chat','世界聊天'),
+    'community':t('FarmSavior Community','FarmSavior Community','FarmSavior 社区'),
+    'ai-disease':t('AI Disease Analyzer','AI Disease Analyzer','AI 病害分析'),
+    'plant-id':t('AI Plant Identifier','AI Plant Identifier','AI 植物识别'),
+    'pest-id':t('AI Insect & Pest Identifier','AI Insect & Pest Identifier','AI 昆虫与害虫识别'),
+    'government':t('Government Programs','Government Programs','政府项目'),
+    'contracts':t('contracts','contracts','合同'),
+    'admin':t('admin','admin','管理员')
   }[m] || m)
 
   const kpis = useMemo(() => [
