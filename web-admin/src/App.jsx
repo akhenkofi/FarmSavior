@@ -1685,10 +1685,36 @@ export default function App() {
       </section>}
 
       {active === 'community' && <section>
-        <div className='panel' style={{background:'linear-gradient(120deg,#065f46,#0ea5e9)', color:'#fff', marginBottom:10}}>
-          <h3 style={{marginTop:0}}>📸 FarmSavior Community</h3>
-          <p style={{margin:0, opacity:.95}}>Share farm life, innovations, products, and short videos with growers worldwide.</p>
+        <div className='panel' style={{background:'linear-gradient(120deg,#065f46,#0ea5e9)', color:'#fff', marginBottom:10, position:'relative', overflow:'hidden'}}>
+          <div style={{position:'absolute', right:-20, top:-20, width:120, height:120, borderRadius:'50%', background:'rgba(255,255,255,.18)'}} />
+          <div style={{position:'absolute', right:60, bottom:-36, width:100, height:100, borderRadius:'50%', background:'rgba(255,255,255,.12)'}} />
+          <h3 style={{marginTop:0, position:'relative'}}>📸 FarmSavior Community</h3>
+          <p style={{margin:0, opacity:.95, position:'relative'}}>Share farm life, innovations, products, and short videos with growers worldwide.</p>
+          <div className='tabs' style={{marginTop:10, position:'relative'}}>
+            <span className='tab active'>🔥 Trending</span>
+            <span className='tab'>🎥 Reels</span>
+            <span className='tab'>🌱 Tips</span>
+            <span className='tab'>🛒 Products</span>
+          </div>
         </div>
+
+        <article className='panel' style={{marginBottom:10}}>
+          <h4 style={{marginTop:0}}>Stories</h4>
+          <div style={{display:'flex', gap:10, overflowX:'auto', paddingBottom:4}}>
+            {(communityPosts.filter(p=>p.media_url).slice(0,8).map(p=>p.media_url).concat([
+              'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=300&q=80',
+              'https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=300&q=80',
+              'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=300&q=80'
+            ])).slice(0,8).map((src, i) => (
+              <div key={`story-${i}`} style={{minWidth:74,textAlign:'center'}}>
+                <div style={{width:64,height:64,padding:2,borderRadius:'50%',background:'linear-gradient(45deg,#16a34a,#0ea5e9,#f97316)',margin:'0 auto'}}>
+                  <img src={src} alt='story' style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%',border:'2px solid #fff'}} />
+                </div>
+                <div style={{fontSize:11,color:'#475569',marginTop:4}}>Farmer {i+1}</div>
+              </div>
+            ))}
+          </div>
+        </article>
 
         <div className='two-col'>
           <article className='panel'>
@@ -1781,7 +1807,20 @@ export default function App() {
                 {(communityComments[p.id] || []).slice(-5).map((c)=><div className='list-row' key={`cc-${c.id}`}><span><strong>{c.author_name || `User ${c.user_id}`}:</strong> {c.text}</span></div>)}
               </div>}
             </div>)}
-            {!(communityFeedMode === 'reels' ? communityPosts.filter(x => String(x.media_type || '').toUpperCase() === 'VIDEO').length : communityPosts.length) && <div className='list-row'><span>{communityFeedMode === 'reels' ? 'No FarmReels yet.' : 'No community posts yet.'}</span></div>}
+            {!(communityFeedMode === 'reels' ? communityPosts.filter(x => String(x.media_type || '').toUpperCase() === 'VIDEO').length : communityPosts.length) && (
+              <div className='two-col'>
+                <div className='panel' style={{padding:8}}>
+                  <img src='https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=900&q=80' alt='showcase' style={{width:'100%',height:150,objectFit:'cover',borderRadius:8}} />
+                  <div style={{marginTop:6,fontWeight:700}}>Community highlights loading…</div>
+                  <div style={{fontSize:'.86rem',color:'#64748b'}}>Be the first to share your farm story.</div>
+                </div>
+                <div className='panel' style={{padding:8}}>
+                  <img src='https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=900&q=80' alt='showcase' style={{width:'100%',height:150,objectFit:'cover',borderRadius:8}} />
+                  <div style={{marginTop:6,fontWeight:700}}>{communityFeedMode === 'reels' ? 'No FarmReels yet.' : 'No community posts yet.'}</div>
+                  <div style={{fontSize:'.86rem',color:'#64748b'}}>Post updates, innovations, and products to light up this feed.</div>
+                </div>
+              </div>
+            )}
           </div>
         </article>
       </section>}
