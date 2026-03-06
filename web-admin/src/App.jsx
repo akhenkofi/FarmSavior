@@ -996,8 +996,11 @@ export default function App() {
                   captured_at_utc: new Date().toISOString()
                 }))
               } catch {}
-              const dest = r.otp_destination || (signup.signup_method === 'email' ? signup.email : signup.phone)
-              setPhoneForOtp(dest); setOtp({ ...otp, destination: dest }); setAuthMode('otp'); setAuthMsg(r.otp_sent ? `OTP sent to ${dest}` : `OTP queued for ${dest}. Use code: ${r.otp_mock_code}`);
+              const dest = r.otp_destination || signup.phone
+              setPhoneForOtp(dest)
+              setOtp({ ...otp, destination: dest })
+              setAuthMode('otp')
+              setAuthMsg(`OTP sent to ${dest}. If delivery is delayed, use code: ${r.otp_mock_code}`)
             } catch (e) { setAuthMsg(`Signup failed: ${errMsg(e)}`) }
           }}>
             <input className='input' placeholder='Full name' value={signup.full_name} onChange={e => setSignup({ ...signup, full_name: e.target.value })} required />
