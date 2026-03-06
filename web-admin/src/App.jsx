@@ -889,6 +889,26 @@ export default function App() {
         </div>
       </article>
 
+      <article className='panel' style={{marginTop:10}}>
+        <h3>💱 {t('Global Currency Converter (Realtime)','Convertisseur de devises mondial (temps réel)')}</h3>
+        <div className='inlineForm'>
+          <input className='input' type='number' step='any' min='0' value={fxAmount} onChange={(e)=>setFxAmount(e.target.value)} placeholder={t('Amount','Montant')} />
+          <select className='input' value={fxBase} onChange={(e)=>setFxBase(e.target.value)}>
+            {Object.keys(fxRates || {}).sort().map((c)=><option key={c} value={c}>{c}</option>)}
+            {!Object.keys(fxRates || {}).length && <option value='USD'>USD</option>}
+          </select>
+          <input className='input' value={fxQuery} onChange={(e)=>setFxQuery(e.target.value)} placeholder={t('Filter currency (e.g., GHS, NGN, EUR)','Filtrer devise (ex: GHS, NGN, EUR)')} />
+        </div>
+        <p style={{fontSize:'.82rem',color:'#64748b',margin:'6px 0 10px'}}>{t('Rates source','Source des taux')}: open.er-api.com • {t('Last updated','Dernière mise à jour')}: {fxUpdatedAt || '—'}</p>
+        <div className='list' style={{maxHeight:320, overflow:'auto'}}>
+          {fxRows.map((r)=>{
+            const formatted = Number.isFinite(r.value) ? r.value.toLocaleString(undefined, { maximumFractionDigits: 4 }) : '0'
+            return <div className='list-row' key={`pub-fx-${r.code}`}><span>{r.code}</span><strong>{formatted}</strong></div>
+          })}
+          {!fxRows.length && <div className='list-row'><span>{t('No rates available right now.','Aucun taux disponible pour le moment.')}</span></div>}
+        </div>
+      </article>
+
       <div className='panel' style={{marginTop:10, fontSize:'.84rem', color:'#475569', display:'flex', gap:14, flexWrap:'wrap'}}>
         <a href='/privacy-policy.html' target='_blank' rel='noreferrer'>Privacy Policy</a>
         <a href='/terms-of-service.html' target='_blank' rel='noreferrer'>Terms of Service</a>
