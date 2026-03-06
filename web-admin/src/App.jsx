@@ -333,6 +333,7 @@ export default function App() {
   const [farmMapForm, setFarmMapForm] = useState({ user_id: 1, gps_lat: '', gps_lng: '', farm_size_hectares: '', crop_types: '[]', livestock_numbers: '{}', farm_photo_urls: '[]', harvest_records_notes: '' })
   const [govSubsidyForm, setGovSubsidyForm] = useState({ country: 'GH', agency: 'MOFA', farmer_user_id: 1, amount: '' })
   const [govMsgForm, setGovMsgForm] = useState({ country: 'GH', target: 'farmers', text: '' })
+  const [showGovAdminTools, setShowGovAdminTools] = useState(false)
 
   const load = async () => {
     const meRes = await api.fetchMe().catch(() => null)
@@ -584,7 +585,7 @@ export default function App() {
     'ai-disease':'AI Disease Analyzer',
     'plant-id':'AI Plant Identifier',
     'pest-id':'AI Insect & Pest Identifier',
-    'government':'Government Integration',
+    'government':'Government Programs',
     'contracts':'contracts',
     'admin':'admin'
   }[m] || m)
@@ -2203,28 +2204,35 @@ export default function App() {
           <p style={{fontSize:'.82rem', color:'#64748b'}}>Information is best-effort. Always verify eligibility, deadlines, and requirements on official websites before applying.</p>
         </article>
 
-        {((me?.role || '').toLowerCase() === 'admin') && <div className='two-col' style={{marginTop:10}}>
-          <article className='panel'>
-            <h4>Admin: Record Subsidy Distribution</h4>
-            <form className='list' onSubmit={async e => { e.preventDefault(); await api.govDistributeSubsidy({ ...govSubsidyForm, farmer_user_id: Number(govSubsidyForm.farmer_user_id), amount: Number(govSubsidyForm.amount) }); alert('Subsidy recorded successfully'); await load(); }}>
-              <select className='input' value={govSubsidyForm.country} onChange={(e)=>setGovSubsidyForm({...govSubsidyForm,country:e.target.value})}><option value='GH'>Ghana</option><option value='NG'>Nigeria</option><option value='BF'>Burkina Faso</option></select>
-              <input className='input' placeholder='Agency' value={govSubsidyForm.agency} onChange={(e)=>setGovSubsidyForm({...govSubsidyForm,agency:e.target.value})} />
-              <input className='input' placeholder='Farmer User ID' value={govSubsidyForm.farmer_user_id} onChange={(e)=>setGovSubsidyForm({...govSubsidyForm,farmer_user_id:e.target.value})} />
-              <input className='input' placeholder='Amount' value={govSubsidyForm.amount} onChange={(e)=>setGovSubsidyForm({...govSubsidyForm,amount:e.target.value})} />
-              <button className='btn btn-dark'>Record Subsidy</button>
-            </form>
-          </article>
+        {((me?.role || '').toLowerCase() === 'admin') && <article className='panel' style={{marginTop:10}}>
+          <div className='list-row'>
+            <h4 style={{margin:0}}>Admin Tools</h4>
+            <button type='button' className='btn' onClick={()=>setShowGovAdminTools(v=>!v)}>{showGovAdminTools ? 'Hide' : 'Show'}</button>
+          </div>
+          <p style={{fontSize:'.82rem', color:'#64748b', marginTop:6}}>These controls are for official operators only.</p>
+          {showGovAdminTools && <div className='two-col' style={{marginTop:8}}>
+            <article className='panel'>
+              <h4>Record Subsidy Distribution</h4>
+              <form className='list' onSubmit={async e => { e.preventDefault(); await api.govDistributeSubsidy({ ...govSubsidyForm, farmer_user_id: Number(govSubsidyForm.farmer_user_id), amount: Number(govSubsidyForm.amount) }); alert('Subsidy recorded successfully'); await load(); }}>
+                <select className='input' value={govSubsidyForm.country} onChange={(e)=>setGovSubsidyForm({...govSubsidyForm,country:e.target.value})}><option value='GH'>Ghana</option><option value='NG'>Nigeria</option><option value='BF'>Burkina Faso</option></select>
+                <input className='input' placeholder='Agency' value={govSubsidyForm.agency} onChange={(e)=>setGovSubsidyForm({...govSubsidyForm,agency:e.target.value})} />
+                <input className='input' placeholder='Farmer User ID' value={govSubsidyForm.farmer_user_id} onChange={(e)=>setGovSubsidyForm({...govSubsidyForm,farmer_user_id:e.target.value})} />
+                <input className='input' placeholder='Amount' value={govSubsidyForm.amount} onChange={(e)=>setGovSubsidyForm({...govSubsidyForm,amount:e.target.value})} />
+                <button className='btn btn-dark'>Record Subsidy</button>
+              </form>
+            </article>
 
-          <article className='panel'>
-            <h4>Admin: Send Government Notice</h4>
-            <form className='list' onSubmit={async e => { e.preventDefault(); await api.govCommunicate(govMsgForm); alert('Government message queued'); }}>
-              <select className='input' value={govMsgForm.country} onChange={(e)=>setGovMsgForm({...govMsgForm,country:e.target.value})}><option value='GH'>Ghana</option><option value='NG'>Nigeria</option><option value='BF'>Burkina Faso</option></select>
-              <input className='input' placeholder='Target (farmers/coops/all)' value={govMsgForm.target} onChange={(e)=>setGovMsgForm({...govMsgForm,target:e.target.value})} />
-              <input className='input' placeholder='Message text' value={govMsgForm.text} onChange={(e)=>setGovMsgForm({...govMsgForm,text:e.target.value})} />
-              <button className='btn btn-dark'>Send Notice</button>
-            </form>
-          </article>
-        </div>}
+            <article className='panel'>
+              <h4>Send Government Notice</h4>
+              <form className='list' onSubmit={async e => { e.preventDefault(); await api.govCommunicate(govMsgForm); alert('Government message queued'); }}>
+                <select className='input' value={govMsgForm.country} onChange={(e)=>setGovMsgForm({...govMsgForm,country:e.target.value})}><option value='GH'>Ghana</option><option value='NG'>Nigeria</option><option value='BF'>Burkina Faso</option></select>
+                <input className='input' placeholder='Target (farmers/coops/all)' value={govMsgForm.target} onChange={(e)=>setGovMsgForm({...govMsgForm,target:e.target.value})} />
+                <input className='input' placeholder='Message text' value={govMsgForm.text} onChange={(e)=>setGovMsgForm({...govMsgForm,text:e.target.value})} />
+                <button className='btn btn-dark'>Send Notice</button>
+              </form>
+            </article>
+          </div>}
+        </article>}
       </section>}
 
       {active === 'contracts' && <section><h3>Cross-Border Contracts (MVP)</h3><form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.createContract({ ...contractForm, quantity: Number(contractForm.quantity), price: Number(contractForm.price), delivery_date: new Date(contractForm.delivery_date).toISOString() }); await load() }}>
