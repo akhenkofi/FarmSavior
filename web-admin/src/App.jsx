@@ -1652,8 +1652,25 @@ export default function App() {
           <article className='panel'>
             <h4>My Community Profile</h4>
             <form className='list' onSubmit={async(e)=>{e.preventDefault(); await api.saveCommunityProfileMe(communityProfile); await loadCommunity(); alert('Profile updated')}}>
-              <input className='input' placeholder='Display picture URL' value={communityProfile.avatar_url || ''} onChange={(e)=>setCommunityProfile({...communityProfile, avatar_url:e.target.value})} />
-              <input className='input' placeholder='Cover image URL' value={communityProfile.cover_image_url || ''} onChange={(e)=>setCommunityProfile({...communityProfile, cover_image_url:e.target.value})} />
+              <label style={{fontSize:'.85rem',color:'#475569'}}>Display picture</label>
+              <input className='input' type='file' accept='image/*' onChange={(e)=>{
+                const f = e.target.files?.[0]
+                if (!f) return
+                const reader = new FileReader()
+                reader.onload = () => setCommunityProfile(prev => ({ ...prev, avatar_url: String(reader.result || '') }))
+                reader.readAsDataURL(f)
+              }} />
+              {!!communityProfile.avatar_url && <img src={communityProfile.avatar_url} alt='Display preview' style={{width:96,height:96,objectFit:'cover',borderRadius:12,border:'1px solid #e2e8f0'}} />}
+
+              <label style={{fontSize:'.85rem',color:'#475569'}}>Cover image</label>
+              <input className='input' type='file' accept='image/*' onChange={(e)=>{
+                const f = e.target.files?.[0]
+                if (!f) return
+                const reader = new FileReader()
+                reader.onload = () => setCommunityProfile(prev => ({ ...prev, cover_image_url: String(reader.result || '') }))
+                reader.readAsDataURL(f)
+              }} />
+              {!!communityProfile.cover_image_url && <img src={communityProfile.cover_image_url} alt='Cover preview' style={{width:'100%',maxHeight:180,objectFit:'cover',borderRadius:10,border:'1px solid #e2e8f0'}} />}
               <input className='input' placeholder='Bio' value={communityProfile.bio || ''} onChange={(e)=>setCommunityProfile({...communityProfile, bio:e.target.value})} />
               <input className='input' placeholder='Farm life details' value={communityProfile.farm_life || ''} onChange={(e)=>setCommunityProfile({...communityProfile, farm_life:e.target.value})} />
               <input className='input' placeholder='Interests/tags (comma separated)' value={communityProfile.interests || ''} onChange={(e)=>setCommunityProfile({...communityProfile, interests:e.target.value})} />
@@ -1668,7 +1685,14 @@ export default function App() {
             <h4>Create Post</h4>
             <form className='list' onSubmit={async(e)=>{e.preventDefault(); await api.createCommunityPost(communityPostForm); setCommunityPostForm({ text:'', media_url:'', media_type:'TEXT', tags:'' }); await loadCommunity(); }}>
               <textarea className='input' rows={4} placeholder='Share your farm update, innovation, or product...' value={communityPostForm.text} onChange={(e)=>setCommunityPostForm({...communityPostForm, text:e.target.value})} />
-              <input className='input' placeholder='Image/Video URL (optional)' value={communityPostForm.media_url} onChange={(e)=>setCommunityPostForm({...communityPostForm, media_url:e.target.value})} />
+              <input className='input' type='file' accept='image/*,video/*' onChange={(e)=>{
+                const f = e.target.files?.[0]
+                if (!f) return
+                const inferredType = f.type.startsWith('video/') ? 'VIDEO' : 'IMAGE'
+                const reader = new FileReader()
+                reader.onload = () => setCommunityPostForm(prev => ({ ...prev, media_url: String(reader.result || ''), media_type: inferredType }))
+                reader.readAsDataURL(f)
+              }} />
               <select className='input' value={communityPostForm.media_type} onChange={(e)=>setCommunityPostForm({...communityPostForm, media_type:e.target.value})}>
                 <option value='TEXT'>Text</option>
                 <option value='IMAGE'>Image</option>

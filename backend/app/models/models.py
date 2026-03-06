@@ -354,8 +354,8 @@ class CommunityProfile(Base):
     __tablename__ = 'community_profiles'
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False, unique=True, index=True)
-    avatar_url = Column(String(500), nullable=True)
-    cover_image_url = Column(String(500), nullable=True)
+    avatar_url = Column(Text, nullable=True)
+    cover_image_url = Column(Text, nullable=True)
     bio = Column(Text, default='')
     farm_life = Column(Text, default='')
     interests = Column(String(255), default='farming,gardening')
@@ -370,7 +370,7 @@ class CommunityPost(Base):
     author_name = Column(String(120), nullable=True)
     author_country = Column(String(10), nullable=True)
     text = Column(Text, default='')
-    media_url = Column(String(500), nullable=True)
+    media_url = Column(Text, nullable=True)
     media_type = Column(String(20), default='TEXT')  # TEXT|IMAGE|VIDEO
     tags = Column(String(255), default='')
     status = Column(String(20), default='VISIBLE')  # VISIBLE|HIDDEN
