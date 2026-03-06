@@ -240,6 +240,7 @@ export default function App() {
   const [expandedWeatherCountry, setExpandedWeatherCountry] = useState('GH')
   const [expandedSpotCommodity, setExpandedSpotCommodity] = useState('')
   const [expandedTradeCommodity, setExpandedTradeCommodity] = useState('')
+  const [expandedTradeSections, setExpandedTradeSections] = useState({})
   const [expandedLivestockPlan, setExpandedLivestockPlan] = useState('')
   const [fxBase, setFxBase] = useState('USD')
   const [fxAmount, setFxAmount] = useState('1')
@@ -936,24 +937,36 @@ export default function App() {
           .map((c, i) => (
             <div className='panel' key={`trade-expanded-${i}`} style={{padding:10}}>
               <h4 style={{marginTop:0}}>{c.commodity}</h4>
-              <div style={{fontWeight:600, marginBottom:6}}>{t('Top 10 Exporters','Top 10 exportateurs')}</div>
-              <div className='list'>
+
+              <div className='list-row' style={{marginBottom:6}}>
+                <div style={{fontWeight:600}}>{t('Top 10 Exporters','Top 10 exportateurs')}</div>
+                <button className='btn' onClick={() => setExpandedTradeSections((s) => ({ ...s, [`${c.commodity_key || c.commodity}-exp`]: !s[`${c.commodity_key || c.commodity}-exp`] }))}>
+                  {expandedTradeSections[`${c.commodity_key || c.commodity}-exp`] ? t('Hide','Masquer') : t('Show','Afficher')}
+                </button>
+              </div>
+              {expandedTradeSections[`${c.commodity_key || c.commodity}-exp`] && <div className='list'>
                 {(c.top_exporters || []).slice(0,10).map((r) => (
                   <div className='list-row' key={`exp-${c.commodity_key}-${r.rank}`}>
                     <span>{r.rank}. {r.country}</span>
                     <strong>{Number(r.volume_tons || 0).toLocaleString()} t</strong>
                   </div>
                 ))}
+              </div>}
+
+              <div className='list-row' style={{margin:'10px 0 6px'}}>
+                <div style={{fontWeight:600}}>{t('Top 10 Importers','Top 10 importateurs')}</div>
+                <button className='btn' onClick={() => setExpandedTradeSections((s) => ({ ...s, [`${c.commodity_key || c.commodity}-imp`]: !s[`${c.commodity_key || c.commodity}-imp`] }))}>
+                  {expandedTradeSections[`${c.commodity_key || c.commodity}-imp`] ? t('Hide','Masquer') : t('Show','Afficher')}
+                </button>
               </div>
-              <div style={{fontWeight:600, margin:'10px 0 6px'}}>{t('Top 10 Importers','Top 10 importateurs')}</div>
-              <div className='list'>
+              {expandedTradeSections[`${c.commodity_key || c.commodity}-imp`] && <div className='list'>
                 {(c.top_importers || []).slice(0,10).map((r) => (
                   <div className='list-row' key={`imp-${c.commodity_key}-${r.rank}`}>
                     <span>{r.rank}. {r.country}</span>
                     <strong>{Number(r.volume_tons || 0).toLocaleString()} t</strong>
                   </div>
                 ))}
-              </div>
+              </div>}
             </div>
           ))}
 
