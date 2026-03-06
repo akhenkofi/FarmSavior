@@ -18,6 +18,10 @@ api.interceptors.response.use(
     const detail = String(error?.response?.data?.detail || '').toLowerCase()
     if (status === 401 || detail.includes('user not found') || detail.includes('missing bearer token')) {
       localStorage.removeItem('farmsavior_token')
+      if (typeof window !== 'undefined') {
+        const onPublic = window.location.search.includes('public=1')
+        if (!onPublic) window.location.href = '/?public=1&auth=login'
+      }
     }
     return Promise.reject(error)
   }

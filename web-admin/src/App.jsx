@@ -181,6 +181,7 @@ function DataTable({ columns, rows, filterKey, onEdit }) {
 export default function App() {
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams('')
   const forcePublicView = searchParams.get('public') === '1'
+  const authPrompt = searchParams.get('auth') || ''
   const initialSection = searchParams.get('go') || 'home'
   const [token, setToken] = useState(localStorage.getItem('farmsavior_token'))
   const [authMode, setAuthMode] = useState('login')
@@ -340,6 +341,13 @@ export default function App() {
   }
 
   useEffect(() => { if (token) load().catch(console.error) }, [token, alertCountryFilter])
+
+  useEffect(() => {
+    if (authPrompt === 'login' && !token) {
+      setAuthMode('login')
+      setAuthMsg('Please sign in or create an account to continue.')
+    }
+  }, [authPrompt, token])
 
   useEffect(() => {
     loadWorldChat().catch(() => {})
