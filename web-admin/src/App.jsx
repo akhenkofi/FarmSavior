@@ -865,6 +865,9 @@ export default function App() {
             <h3 style={{margin:0}}>{t('📈 Spot Trading (Ghana • Nigeria • Burkina Faso • World Avg)','📈 Trading Spot (Ghana • Nigeria • Burkina Faso • Moyenne mondiale)')}</h3>
             <button className='btn' onClick={() => window.print()}>{t('Export Briefing (PDF)','Exporter le briefing (PDF)')}</button>
           </div>
+          <p style={{fontSize:'.8rem', color:'#64748b', margin:'6px 0 8px'}}>
+            {t('Units: GH in GHS per market unit, NG in NGN per market unit, BF in XOF per market unit, World Avg in USD reference unit.','Unités : GH en GHS par unité de marché, NG en NGN par unité de marché, BF en XOF par unité de marché, moyenne mondiale en unité de référence USD.')}
+          </p>
           <div className='tabs' style={{marginTop:8, marginBottom:8, flexWrap:'wrap'}}>
             {publicSpotRows.map((r, i) => (
               <button
@@ -891,10 +894,10 @@ export default function App() {
                 return <div key={`st-right-${i}`} className='panel' style={{padding:10}}>
                   <div style={{fontWeight:700, marginBottom:6}}>{r.commodity}</div>
                   <div style={{fontSize:12,color:'#64748b',marginBottom:6}}>{t('Date','Date')}: {r.updated_at_utc || hist.updated_at_utc || t('Live feed','Flux en direct')}</div>
-                  <div className='list-row'><span>{t('Ghana','Ghana')} ({r.GH})</span><div style={{height:8,width:bar(r.GH),background:'#16a34a',borderRadius:99}} /></div>
-                  <div className='list-row'><span>{t('Nigeria','Nigeria')} ({r.NG})</span><div style={{height:8,width:bar(r.NG),background:'#0284c7',borderRadius:99}} /></div>
-                  <div className='list-row'><span>{t('Burkina Faso','Burkina Faso')} ({r.BF})</span><div style={{height:8,width:bar(r.BF),background:'#ea580c',borderRadius:99}} /></div>
-                  <div className='list-row'><span>{t('World Avg','Moyenne mondiale')} ({r.WORLD_AVG})</span><div style={{height:8,width:bar(r.WORLD_AVG),background:'#334155',borderRadius:99}} /></div>
+                  <div className='list-row'><span>{t('Ghana','Ghana')} ({r.GH} GHS)</span><div style={{height:8,width:bar(r.GH),background:'#16a34a',borderRadius:99}} /></div>
+                  <div className='list-row'><span>{t('Nigeria','Nigeria')} ({r.NG} NGN)</span><div style={{height:8,width:bar(r.NG),background:'#0284c7',borderRadius:99}} /></div>
+                  <div className='list-row'><span>{t('Burkina Faso','Burkina Faso')} ({r.BF} XOF)</span><div style={{height:8,width:bar(r.BF),background:'#ea580c',borderRadius:99}} /></div>
+                  <div className='list-row'><span>{t('World Avg','Moyenne mondiale')} ({r.WORLD_AVG} USD)</span><div style={{height:8,width:bar(r.WORLD_AVG),background:'#334155',borderRadius:99}} /></div>
                   <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#475569',marginTop:6}}>
                     <span>7d: {hist.change_pct_7d ?? 0}%</span><span>30d: {hist.change_pct_30d ?? 0}%</span>
                   </div>
