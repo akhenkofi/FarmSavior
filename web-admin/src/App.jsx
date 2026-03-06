@@ -112,7 +112,12 @@ const zhMap = {
   'Please sign in or create an account to continue.':'请登录或创建账户以继续。','Sign in required':'需要登录','Open Login Popup':'打开登录弹窗',
   'Phone':'手机号','Phone or Email':'手机号或邮箱','Password':'密码','OTP Code':'验证码','Verify OTP':'验证 OTP',
   'My Account':'我的账户','My Verification Status':'我的认证状态','Save Profile':'保存资料','Change Password':'修改密码',
-  'Community':'社区','World Chat':'世界聊天','Government Programs':'政府项目','Main Interface':'主界面'
+  'Community':'社区','World Chat':'世界聊天','Government Programs':'政府项目','Main Interface':'主界面',
+  'Goats':'山羊','Sheep':'绵羊','Day-old Chicks':'雏鸡','Cows':'奶牛','Cashew':'腰果','Mango':'芒果','Coconuts':'椰子','Coffee':'咖啡','Cocoa':'可可','Rice':'大米',
+  'Tractor hire (4WD)':'四驱拖拉机租赁','Combine harvester rental':'联合收割机租赁','Cold room storage':'冷库储存','Long-haul truck logistics':'长途卡车物流','Farm spraying service':'农场喷洒服务','Irrigation setup service':'灌溉安装服务','Feed supply delivery':'饲料配送','Warehouse monthly leasing':'仓库月租','Farm consultancy':'农业咨询','Ram/Buck/Bull rentals':'公羊/种公山羊/公牛租赁',
+  'Government Programs & Subsidies (Ghana • Nigeria • Burkina Faso)':'政府项目与补贴（加纳 • 尼日利亚 • 布基纳法索）','Current Export/Import Statistics (Top 10 + Volumes)':'当前进出口统计（前10 + 总量）','Top 10 Exporters':'前10大出口国','Top 10 Importers':'前10大进口国',
+  'Access Portal':'访问入口','Global World Chat':'全球世界聊天','Download App to Phone':'下载到手机','Spot Trading (Ghana • Nigeria • Burkina Faso • World Avg)':'现货交易（加纳 • 尼日利亚 • 布基纳法索 • 全球均值）','Legal & Safety Notice':'法律与安全声明',
+  'High Demand Products':'高需求产品','High Demand Services':'高需求服务','Popular Actions':'热门操作','Programs Page':'项目页面'
 }
 
 const polygonAreaHectares = (points = []) => {
