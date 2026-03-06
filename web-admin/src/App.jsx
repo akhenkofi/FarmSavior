@@ -861,8 +861,8 @@ export default function App() {
         </div>
         <form className='inlineForm' onSubmit={(e)=>{e.preventDefault(); addRecentSearch(publicQuery)}} style={{background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.25)'}}>
           <input className='input' placeholder={t('Search products, services, market activity…','Rechercher produits, services, activité du marché…')} value={publicQuery} onChange={(e)=>setPublicQuery(e.target.value)} />
-          <button className='btn btn-dark'>{t('Search','Rechercher')}</button>
-          <button type='button' className='btn' onClick={()=>setPublicQuery('')}>{t('Clear','Effacer')}</button>
+          <button className='btn btn-dark'>{t('Search','Rechercher','搜索')}</button>
+          <button type='button' className='btn' onClick={()=>setPublicQuery('')}>{t('Clear','Effacer','清除')}</button>
         </form>
         <p style={{fontSize:'.8rem',opacity:.9,marginTop:8}}>{t('Safety notice: Content and AI outputs are guidance only. Verify locally with qualified agronomy/veterinary professionals before acting.','Avis de sécurité : le contenu et les résultats IA sont indicatifs. Vérifiez localement avec des professionnels qualifiés (agronomie/vétérinaire) avant d’agir.')}</p>
       </div>
@@ -920,28 +920,28 @@ export default function App() {
         </article>
 
         <article className='panel'>
-          <h3>{t('🧠 Popular Actions','🧠 Actions populaires')}</h3>
+          <h3>{t('🧠 Popular Actions','🧠 Actions populaires','🧠 热门操作')}</h3>
           <div className='list'>
-            <div className='list-row'><span>{t('List Product','Publier un produit')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('products', 'List Product')}>{t('Start','Démarrer')}</button></div>
-            <div className='list-row'><span>{t('List Services','Publier des services')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'List Services')}>{t('Start','Démarrer')}</button></div>
-            <div className='list-row'><span>{t('List Machinery for Rent','Publier des machines à louer')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'List Machinery for Rent')}>{t('Start','Démarrer')}</button></div>
-            <div className='list-row'><span>{t('Rent Machinery','Louer des machines')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'Rent Machinery')}>{t('Start','Démarrer')}</button></div>
-            <div className='list-row'><span>{t('Request Logistics / Transport','Demander logistique / transport')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'Request Logistics / Transport')}>{t('Start','Démarrer')}</button></div>
-            <div className='list-row'><span>{t('Find Storage / Cold Room','Trouver stockage / chambre froide')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'Find Storage / Cold Room')}>{t('Start','Démarrer')}</button></div>
-            <div className='list-row'><span>{t('AI Disease Analyzer','Analyseur IA des maladies')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('ai-disease', 'AI Disease Analyzer')}>{t('Open','Ouvrir')}</button></div>
-            <div className='list-row'><span>{t('AI Plant Identifier','Identificateur IA des plantes')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('plant-id', 'AI Plant Identifier')}>{t('Open','Ouvrir')}</button></div>
-            <div className='list-row'><span>{t('AI Insect & Pest Identifier','Identificateur IA insectes et ravageurs')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('pest-id', 'AI Insect & Pest Identifier')}>{t('Open','Ouvrir')}</button></div>
-            <div className='list-row'><span>{t('Farm GPS Mapping','Cartographie GPS des fermes')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('maps', 'Farm GPS Mapping')}>{t('Open','Ouvrir')}</button></div>
-            <div className='list-row'><span>{t('Global World Chat','Chat mondial')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('world-chat', 'Global World Chat')}>{t('Open','Ouvrir')}</button></div>
+            <div className='list-row'><span>{t('List Product','Publier un produit','发布产品')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('products', 'List Product')}>{t('Start','Démarrer')}</button></div>
+            <div className='list-row'><span>{t('List Services','Publier des services','发布服务')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'List Services')}>{t('Start','Démarrer')}</button></div>
+            <div className='list-row'><span>{t('List Machinery for Rent','Publier des machines à louer','发布机械租赁')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'List Machinery for Rent')}>{t('Start','Démarrer')}</button></div>
+            <div className='list-row'><span>{t('Rent Machinery','Louer des machines','租用机械')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'Rent Machinery')}>{t('Start','Démarrer')}</button></div>
+            <div className='list-row'><span>{t('Request Logistics / Transport','Demander logistique / transport','请求物流/运输')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'Request Logistics / Transport')}>{t('Start','Démarrer')}</button></div>
+            <div className='list-row'><span>{t('Find Storage / Cold Room','Trouver stockage / chambre froide','寻找仓储/冷库')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'Find Storage / Cold Room')}>{t('Start','Démarrer')}</button></div>
+            <div className='list-row'><span>{t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('ai-disease', 'AI Disease Analyzer')}>{t('Open','Ouvrir')}</button></div>
+            <div className='list-row'><span>{t('AI Plant Identifier','Identificateur IA des plantes','AI 植物识别')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('plant-id', 'AI Plant Identifier')}>{t('Open','Ouvrir')}</button></div>
+            <div className='list-row'><span>{t('AI Insect & Pest Identifier','Identificateur IA insectes et ravageurs','AI 昆虫与害虫识别')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('pest-id', 'AI Insect & Pest Identifier')}>{t('Open','Ouvrir')}</button></div>
+            <div className='list-row'><span>{t('Farm GPS Mapping','Cartographie GPS des fermes','农场GPS标注')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('maps', 'Farm GPS Mapping')}>{t('Open','Ouvrir')}</button></div>
+            <div className='list-row'><span>{t('Global World Chat','Chat mondial','全球聊天')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('world-chat', 'Global World Chat')}>{t('Open','Ouvrir')}</button></div>
           </div>
-          <p style={{fontSize:'.82rem', color:'#64748b'}}>{t('You can browse publicly; posting, renting, contacting providers, and transactions require sign-in.','Vous pouvez parcourir publiquement ; publier, louer, contacter des prestataires et effectuer des transactions nécessite une connexion.')}</p>
+          <p style={{fontSize:'.82rem', color:'#64748b'}}>{t('You can browse publicly; posting, renting, contacting providers, and transactions require sign-in.','Vous pouvez parcourir publiquement ; publier, louer, contacter des prestataires et effectuer des transactions nécessite une connexion.','你可以公开浏览；发布、租赁、联系服务商和交易需要登录。')}</p>
         </article>
       </div>
 
       <div className='two-col' style={{marginTop:10}}>
         <article className='panel'>
-          <h3>{t('🌤️ 9-City Weather Forecast (Ghana • Nigeria • Burkina Faso)','🌤️ Prévisions météo de 9 villes (Ghana • Nigeria • Burkina Faso)')}</h3>
-          <p style={{fontSize:'.82rem', color:'#64748b', margin:'4px 0 10px'}}>{t('Country codes: GH = Ghana, NG = Nigeria, BF = Burkina Faso.','Codes pays : GH = Ghana, NG = Nigeria, BF = Burkina Faso.')}</p>
+          <h3>{t('🌤️ 9-City Weather Forecast (Ghana • Nigeria • Burkina Faso)','🌤️ Prévisions météo de 9 villes (Ghana • Nigeria • Burkina Faso)','🌤️ 9城天气预报（加纳 • 尼日利亚 • 布基纳法索）')}</h3>
+          <p style={{fontSize:'.82rem', color:'#64748b', margin:'4px 0 10px'}}>{t('Country codes: GH = Ghana, NG = Nigeria, BF = Burkina Faso.','Codes pays : GH = Ghana, NG = Nigeria, BF = Burkina Faso.','国家代码：GH=加纳，NG=尼日利亚，BF=布基纳法索。')}</p>
           <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
             {['GH','NG','BF'].map((c) => (
               <button key={`wx-${c}`} className={`tab ${expandedWeatherCountry === c ? 'active' : ''}`} onClick={() => setExpandedWeatherCountry(c)}>
@@ -981,7 +981,7 @@ export default function App() {
         </article>
 
         <article className='panel' id='access-portal'>
-          <h3>{t('Access Portal','Portail d’accès')}</h3>
+          <h3>{t('Access Portal','Portail d’accès','访问入口')}</h3>
           {token && <div className='panel' style={{padding:10, marginBottom:10, background:'#ecfeff', border:'1px solid #99f6e4'}}>
             <div style={{fontWeight:700, marginBottom:6}}>{t('You are signed in.','Vous êtes connecté.')}</div>
             <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
@@ -1401,7 +1401,7 @@ export default function App() {
         <h2>{t('Main App Homepage','Page d’accueil de l’application')}</h2>
         <form className='inlineForm' onSubmit={(e) => { e.preventDefault(); addRecentSearch(homeQuery) }}>
           <input className='input' placeholder={t('Search products, livestock, services…','Rechercher produits, élevage, services…')} value={homeQuery} onChange={(e)=>setHomeQuery(e.target.value)} />
-          <button className='btn btn-dark' type='submit'>{t('Search','Rechercher')}</button>
+          <button className='btn btn-dark' type='submit'>{t('Search','Rechercher','搜索')}</button>
         </form>
         <div className='two-col'>
           <article className='panel'>
