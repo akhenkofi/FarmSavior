@@ -1,5 +1,6 @@
 import random
 import json
+import hashlib
 from datetime import datetime
 from typing import Optional, Any
 from urllib.request import Request, urlopen
@@ -1181,14 +1182,17 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
             payment_url = ''
             payment_init_error = str(e)
 
+    key_fingerprint = hashlib.sha256(paystack_secret.encode('utf-8')).hexdigest()[:12] if paystack_secret else ''
+
     return {
         'message': 'checkout created',
         'reference': ref,
         'subscription': rec,
         'amount_usd': amount_usd,
         'payment_url': payment_url,
-        'payment_provider': 'paystack' if settings.PAYSTACK_SECRET_KEY else 'not_configured',
+        'payment_provider': 'paystack' if paystack_secret else 'not_configured',
         'payment_init_error': payment_init_error,
+        'paystack_key_fingerprint': key_fingerprint,
         'payout_routing': payout_details,
         'routing_rule': 'GH/GHS -> Ghana MoMo; all others -> US bank'
     }
