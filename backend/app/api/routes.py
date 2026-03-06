@@ -1111,14 +1111,22 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
         'us_bank_account': mask_value(settings.OWNER_PAYOUT_US_BANK),
     }
 
+    # Charge currency/amount used by payment gateway
+    charge_currency = cur
+    charge_amount = amount
+    if settings.PAYSTACK_SECRET_KEY:
+        # Merchant currently supports GHS live charges; force GHS until additional currencies are enabled on Paystack account.
+        charge_currency = 'GHS'
+        charge_amount = round(amount_usd * fx.get(charge_currency, 1.0), 2)
+
     ref = f"SGSUB-{int(datetime.utcnow().timestamp())}-{random.randint(100,999)}"
     rec = SheepGoatSubscription(
         user_id=payload.user_id,
         plan_code=payload.plan_code,
         country=country or payload.country,
         billing_cycle=payload.billing_cycle,
-        amount=amount,
-        currency=cur,
+        amount=charge_amount,
+        currency=charge_currency,
         status='PENDING_PAYMENT',
         reference=ref
     )
@@ -1136,8 +1144,8 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
             customer_email = f"{str(user.phone).replace('+','').replace(' ','')}@farmsavior.com"
 
         # Paystack expects amount in smallest currency unit (kobo/pesewas/cents)
-        amount_minor = int(round(float(amount) * 100))
-        ps_currency = cur if cur in ['NGN', 'GHS', 'USD', 'ZAR', 'KES'] else 'USD'
+        ps_currency = charge_currency
+        amount_minor = int(round(float(charge_amount) * 100))
 
         ps_payload = {
             'email': customer_email,
