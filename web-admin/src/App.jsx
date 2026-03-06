@@ -1276,8 +1276,8 @@ export default function App() {
 
       <article className='panel' style={{marginTop:10}}>
         <div className='list-row'>
-          <h3 style={{margin:0}}>📸 FarmSavior Community</h3>
-          <button className='btn btn-dark' onClick={()=>handleProtectedAction('community', 'FarmSavior Community')}>{t('Open Community','Ouvrir la communauté')}</button>
+          <h3 style={{margin:0}}>{t('📸 FarmSavior Community','📸 Communauté FarmSavior','📸 FarmSavior 社区')}</h3>
+          <button className='btn btn-dark' onClick={()=>handleProtectedAction('community', 'FarmSavior Community')}>{t('Open Community','Ouvrir la communauté','打开社区')}</button>
         </div>
         <div className='list' style={{maxHeight:220, overflow:'auto'}}>
           {communityPosts.slice(0, 4).map((p)=><div key={`pub-cp-${p.id}`} className='panel' style={{padding:8}}>
@@ -1405,7 +1405,7 @@ export default function App() {
         </form>
         <div className='two-col'>
           <article className='panel'>
-            <h3>Search Results</h3>
+            <h3>{t('Search Results','Résultats de recherche','搜索结果')}</h3>
             <div className='list'>
               {[...state.listings.map(x=>({type:'Product', id:x.id, name:x.crop_name, price:x.unit_price})), ...state.livestock.map(x=>({type:'Livestock', id:x.id, name:x.livestock_type, price:x.unit_price})), ...state.logistics.map(x=>({type:'Service', id:x.id, name:`${x.pickup_location} → ${x.dropoff_location}`, price:''}))]
                 .filter(x => !homeQuery || `${x.type} ${x.name}`.toLowerCase().includes(homeQuery.toLowerCase()))
@@ -1414,7 +1414,7 @@ export default function App() {
             </div>
           </article>
           <article className='panel'>
-            <h3>Recents</h3>
+            <h3>{t('Recents','Récents','最近')}</h3>
             <p><strong>Recent Searches</strong></p>
             <div className='list'>
               {recentSearches.map((s,i)=><div className='list-row' key={`s-${i}`}><span>{s}</span></div>)}
@@ -1430,7 +1430,7 @@ export default function App() {
 
         <article className='panel' style={{marginTop:10}}>
           <div className='list-row'>
-            <h3 style={{margin:0}}>🌍 Global World Chat</h3>
+            <h3 style={{margin:0}}>{t('🌍 Global World Chat','🌍 Chat mondial','🌍 全球聊天')}</h3>
             <button type='button' className='btn btn-dark' onClick={() => handleProtectedAction('world-chat', 'Global World Chat')}>Open World Chat</button>
           </div>
           <div className='list' style={{maxHeight:180, overflow:'auto'}}>
@@ -1441,8 +1441,8 @@ export default function App() {
 
         <article className='panel' style={{marginTop:10}}>
           <div className='list-row'>
-            <h3 style={{margin:0}}>📸 FarmSavior Community</h3>
-            <button className='btn btn-dark' onClick={() => setActive('community')}>Open Community</button>
+            <h3 style={{margin:0}}>{t('📸 FarmSavior Community','📸 Communauté FarmSavior','📸 FarmSavior 社区')}</h3>
+            <button className='btn btn-dark' onClick={() => setActive('community')}>{t('Open Community','Ouvrir la communauté','打开社区')}</button>
           </div>
 
           <div style={{position:'relative', marginBottom:10}}>
@@ -1477,7 +1477,7 @@ export default function App() {
 
         <article className='panel' style={{marginTop:10}}>
           <div className='list-row' style={{marginBottom:8}}>
-            <h3 style={{margin:0}}>💱 Global Currency Converter (Realtime)</h3>
+            <h3 style={{margin:0}}>{t('💱 Global Currency Converter (Realtime)','💱 Convertisseur de devises mondial (temps réel)','💱 全球货币转换器（实时）')}</h3>
             <button className='btn' onClick={()=>setShowCurrencyConverter(v=>!v)}>{showCurrencyConverter ? 'Hide' : 'Show'}</button>
           </div>
           {showCurrencyConverter && <>
@@ -1508,7 +1508,7 @@ export default function App() {
 
         <article className='panel' style={{marginTop:10}}>
           <div className='list-row' style={{marginBottom:8}}>
-            <h3 style={{margin:0}}>📏 Farmer Unit Converter</h3>
+            <h3 style={{margin:0}}>{t('📏 Farmer Unit Converter','📏 Convertisseur d’unités agriculteur','📏 农户单位换算器')}</h3>
             <button className='btn' onClick={()=>setShowUnitConverter(v=>!v)}>{showUnitConverter ? 'Hide' : 'Show'}</button>
           </div>
           {showUnitConverter && <>
@@ -1536,18 +1536,18 @@ export default function App() {
       </section>}
 
       {active === 'dashboard' && <section>
-        <h2>Admin Dashboard + Analytics</h2>
+        <h2>{t('Admin Dashboard + Analytics','Tableau de bord admin + analyses','管理员仪表盘 + 分析')}</h2>
         <div className='kpi-grid'>{kpis.map(([k, v]) => <article className='kpi-card' key={k}><p>{k}</p><strong>{v}</strong></article>)}</div>
 
         <div className='two-col'>
           <article className='panel'>
-            <h3>Crop Supply Forecasts</h3>
+            <h3>{t('Crop Supply Forecasts','Prévisions d’approvisionnement des cultures','作物供应预测')}</h3>
             <div className='list-row'><span>Total Crop Listings</span><strong>{state.listings.length}</strong></div>
             <div className='list-row'><span>Estimated Supply (kg)</span><strong>{state.listings.reduce((s,x)=>s+Number(x.quantity_kg||0),0).toFixed(0)}</strong></div>
             <div className='list-row'><span>30-day Outlook</span><strong>{state.listings.length > 5 ? 'High' : 'Moderate'}</strong></div>
           </article>
           <article className='panel'>
-            <h3>Regional Production Data</h3>
+            <h3>{t('Regional Production Data','Données de production régionales','区域生产数据')}</h3>
             {['GH','NG','BF'].map(c => {
               const count = state.listings.filter(x => x.country === c).length
               return <div className='list-row' key={c}><span>{c}</span><strong>{count} listings</strong></div>
@@ -1557,12 +1557,12 @@ export default function App() {
 
         <div className='two-col' style={{marginTop:10}}>
           <article className='panel'>
-            <h3>Market Price Trends</h3>
+            <h3>{t('Market Price Trends','Tendances des prix du marché','市场价格趋势')}</h3>
             <div className='list-row'><span>Avg Crop Unit Price</span><strong>{(state.listings.reduce((s,x)=>s+Number(x.unit_price||0),0) / Math.max(state.listings.length,1)).toFixed(2)}</strong></div>
             <div className='list-row'><span>Avg Livestock Unit Price</span><strong>{(state.livestock.reduce((s,x)=>s+Number(x.unit_price||0),0) / Math.max(state.livestock.length,1)).toFixed(2)}</strong></div>
           </article>
           <article className='panel'>
-            <h3>Logistics Activity + Farmer Growth</h3>
+            <h3>{t('Logistics Activity + Farmer Growth','Activité logistique + croissance des agriculteurs','物流活动 + 农户增长')}</h3>
             <div className='list-row'><span>Active Logistics Requests</span><strong>{state.logistics.length}</strong></div>
             <div className='list-row'><span>Farmer Profiles</span><strong>{state.users.filter(u => (u.role||'') === 'Farmer').length}</strong></div>
             <div className='list-row'><span>Growth Signal</span><strong>{state.users.length > 5 ? 'Growing' : 'Early Stage'}</strong></div>
@@ -1575,7 +1575,7 @@ export default function App() {
       {active === 'onboarding' && <section>
         <div className='two-col' style={{marginBottom:12}}>
           <article className='panel'>
-            <h3>My Account</h3>
+            <h3>{t('My Account','Mon compte','我的账户')}</h3>
             <form className='list' onSubmit={async e => {
               e.preventDefault()
               try {
@@ -1606,7 +1606,7 @@ export default function App() {
           </article>
 
           <article className='panel'>
-            <h3>My Verification Status</h3>
+            <h3>{t('My Verification Status','Mon statut de vérification','我的认证状态')}</h3>
             <div className='list'>
               <div className='list-row'><span>Current status</span><strong>{myIdVerification?.review?.status || 'NOT_SUBMITTED'}</strong></div>
               <div className='list-row'><span>ID type</span><strong>{myIdVerification?.application?.id_type || '-'}</strong></div>
@@ -1632,7 +1632,7 @@ export default function App() {
         </div>
 
         <div className='two-col'>
-          <article className='panel'><h3>ID Verification</h3><form className='list' onSubmit={async e => { e.preventDefault(); await api.createIdVerification({ ...idForm, user_id: Number(idForm.user_id) }); await load() }}>
+          <article className='panel'><h3>{t('ID Verification','Vérification d’identité','身份认证')}</h3><form className='list' onSubmit={async e => { e.preventDefault(); await api.createIdVerification({ ...idForm, user_id: Number(idForm.user_id) }); await load() }}>
             <input className='input' type='number' placeholder='User ID' value={idForm.user_id} onChange={e => setIdForm({ ...idForm, user_id: e.target.value })} />
             <select className='input' value={idForm.id_type} onChange={e => setIdForm({ ...idForm, id_type: e.target.value })}><option>GhanaCard</option><option>NIN</option><option>BF National ID</option></select>
             <input className='input' placeholder='ID Number' value={idForm.id_number} onChange={e => setIdForm({ ...idForm, id_number: e.target.value })} />
@@ -1642,7 +1642,7 @@ export default function App() {
             <label><input type='checkbox' checked={idForm.facial_verification_flag} onChange={e => setIdForm({ ...idForm, facial_verification_flag: e.target.checked })} /> Facial verification done</label>
             <button className='btn btn-dark'>Save ID Verification</button>
           </form></article>
-          <article className='panel'><h3>Digital Farm Passport</h3><form className='list' onSubmit={async e => { e.preventDefault(); await api.createPassport({ ...passportForm, user_id: Number(passportForm.user_id), gps_lat: Number(passportForm.gps_lat), gps_lng: Number(passportForm.gps_lng), farm_size_hectares: Number(passportForm.farm_size_hectares) }); await load() }}>
+          <article className='panel'><h3>{t('Digital Farm Passport','Passeport agricole numérique','数字农场护照')}</h3><form className='list' onSubmit={async e => { e.preventDefault(); await api.createPassport({ ...passportForm, user_id: Number(passportForm.user_id), gps_lat: Number(passportForm.gps_lat), gps_lng: Number(passportForm.gps_lng), farm_size_hectares: Number(passportForm.farm_size_hectares) }); await load() }}>
             <input className='input' type='number' placeholder='User ID' value={passportForm.user_id} onChange={e => setPassportForm({ ...passportForm, user_id: e.target.value })} />
             <div className='row2'><input className='input' placeholder='GPS Lat' value={passportForm.gps_lat} onChange={e => setPassportForm({ ...passportForm, gps_lat: e.target.value })} /><input className='input' placeholder='GPS Lng' value={passportForm.gps_lng} onChange={e => setPassportForm({ ...passportForm, gps_lng: e.target.value })} /></div>
             <input className='input' placeholder='Farm size (ha)' value={passportForm.farm_size_hectares} onChange={e => setPassportForm({ ...passportForm, farm_size_hectares: e.target.value })} />
@@ -1656,7 +1656,7 @@ export default function App() {
 
         {((me?.role || '').toLowerCase() === 'admin') && <article className='panel' style={{marginTop: 12}}>
           <div className='panelHeadActions'>
-            <h3>Verification Applications</h3>
+            <h3>{t('Verification Applications','Demandes de vérification','认证申请')}</h3>
             <button className='btn btn-dark' onClick={async () => { await api.analyzeAllVerifications(); await load(); }}>AI Analyze & Decide All</button>
           </div>
           <DataTable columns={['id_verification_id','full_name','phone','country','id_type','status','ai_score','ai_reason']} rows={state.verificationApps} filterKey='full_name' />
@@ -1669,12 +1669,12 @@ export default function App() {
         </article>}
 
         {((me?.role || '').toLowerCase() === 'admin') && <article className='panel' style={{marginTop: 12}}>
-          <h3>Verified Accounts (Approved)</h3>
+          <h3>{t('Verified Accounts (Approved)','Comptes vérifiés (approuvés)','已认证账户（已批准）')}</h3>
           <DataTable columns={['user_id','full_name','phone','country','role','verified_status','ai_score']} rows={state.approvedAccounts} filterKey='full_name' />
         </article>}
       </section>}
 
-      {active === 'products' && <section><h3>Product Listings</h3><form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.createListing({ ...cropForm, farmer_id: Number(cropForm.farmer_id), quantity_kg: Number(cropForm.quantity_kg), unit_price: Number(cropForm.unit_price) }); await load() }}>
+      {active === 'products' && <section><h3>{t('Product Listings','Annonces de produits','产品列表')}</h3><form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.createListing({ ...cropForm, farmer_id: Number(cropForm.farmer_id), quantity_kg: Number(cropForm.quantity_kg), unit_price: Number(cropForm.unit_price) }); await load() }}>
         <input className='input' placeholder='Crop' value={cropForm.crop_name} onChange={e => setCropForm({ ...cropForm, crop_name: e.target.value })} required />
         <input className='input' placeholder='Qty kg' value={cropForm.quantity_kg} onChange={e => setCropForm({ ...cropForm, quantity_kg: e.target.value })} required />
         <input className='input' placeholder='Unit price' value={cropForm.unit_price} onChange={e => setCropForm({ ...cropForm, unit_price: e.target.value })} required />
@@ -1711,7 +1711,7 @@ export default function App() {
       <p style={{fontSize:'.85rem',color:'#475569'}}>Tip: click Edit on a row, update fields above, then Save Edit or Quick Save Qty+Price.</p>
       </section>}
 
-      {active === 'livestock' && <section><h3>Livestock Listings</h3><form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.createLivestock({ ...livestockForm, farmer_id: Number(livestockForm.farmer_id), quantity: Number(livestockForm.quantity), unit_price: Number(livestockForm.unit_price) }); await load() }}>
+      {active === 'livestock' && <section><h3>{t('Livestock Listings','Annonces de bétail','牲畜列表')}</h3><form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.createLivestock({ ...livestockForm, farmer_id: Number(livestockForm.farmer_id), quantity: Number(livestockForm.quantity), unit_price: Number(livestockForm.unit_price) }); await load() }}>
         <input className='input' placeholder='Type' value={livestockForm.livestock_type} onChange={e => setLivestockForm({ ...livestockForm, livestock_type: e.target.value })} required />
         <input className='input' placeholder='Quantity' value={livestockForm.quantity} onChange={e => setLivestockForm({ ...livestockForm, quantity: e.target.value })} required />
         <input className='input' placeholder='Unit price' value={livestockForm.unit_price} onChange={e => setLivestockForm({ ...livestockForm, unit_price: e.target.value })} required />
@@ -1775,7 +1775,7 @@ export default function App() {
       <p style={{fontSize:'.85rem',color:'#475569'}}>Tip: click Edit on a row, change fields, then Save Edit or Quick Save Qty+Price.</p>
       </section>}
 
-      {active === 'services' && <section><h3>Services</h3>
+      {active === 'services' && <section><h3>{t('Services','Services','服务')}</h3>
         <div className='three-col'>
           <article className='panel'><h4>Logistics Requests</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.createLogistics({ ...logisticsForm, requester_id: Number(logisticsForm.requester_id), weight_kg: Number(logisticsForm.weight_kg) }); await load() }}>
             <input className='input' placeholder='Pickup' value={logisticsForm.pickup_location} onChange={e => setLogisticsForm({ ...logisticsForm, pickup_location: e.target.value })} />
@@ -1822,7 +1822,7 @@ export default function App() {
         </div>
       </section>}
 
-      {active === 'payments' && <section><h3>Payments + Escrow</h3><form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.createPayment({ ...paymentForm, payer_id: Number(paymentForm.payer_id), payee_id: Number(paymentForm.payee_id), amount: Number(paymentForm.amount) }); await load() }}>
+      {active === 'payments' && <section><h3>{t('Payments + Escrow','Paiements + séquestre','支付 + 托管')}</h3><form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.createPayment({ ...paymentForm, payer_id: Number(paymentForm.payer_id), payee_id: Number(paymentForm.payee_id), amount: Number(paymentForm.amount) }); await load() }}>
         <input className='input' placeholder='Payer ID' value={paymentForm.payer_id} onChange={e => setPaymentForm({ ...paymentForm, payer_id: e.target.value })} />
         <input className='input' placeholder='Payee ID' value={paymentForm.payee_id} onChange={e => setPaymentForm({ ...paymentForm, payee_id: e.target.value })} />
         <input className='input' placeholder='Amount' value={paymentForm.amount} onChange={e => setPaymentForm({ ...paymentForm, amount: e.target.value })} />
@@ -1840,7 +1840,7 @@ export default function App() {
       </form>
       <DataTable columns={['id', 'payer_id', 'payee_id', 'amount', 'country', 'provider', 'escrow_enabled', 'status']} rows={state.payments} filterKey='provider' /></section>}
 
-      {active === 'alerts' && <section><h3>Weather Alerts (GH • NG • BF)</h3>
+      {active === 'alerts' && <section><h3>{t('Weather Alerts (GH • NG • BF)','Alertes météo (GH • NG • BF)','天气预警（GH • NG • BF）')}</h3>
         <div className='inlineForm' style={{marginBottom: 10}}>
           <select className='input' value={alertCountryFilter} onChange={e => setAlertCountryFilter(e.target.value)}>
             <option value='ALL'>All Countries</option>
@@ -1876,7 +1876,7 @@ export default function App() {
         <DataTable columns={['id', 'country', 'region', 'severity', 'alert_type', 'message']} rows={state.alerts} filterKey='region' />
       </section>}
 
-      {active === 'maps' && <section><h3>Map System (Google Maps) + Farm GPS Mapping</h3>
+      {active === 'maps' && <section><h3>{t('Map System (Google Maps) + Farm GPS Mapping','Système de carte (Google Maps) + cartographie GPS des fermes','地图系统（Google 地图）+ 农场 GPS 标注')}</h3>
         <div className='inlineForm'>
           <select className='input' value={mapCountry} onChange={(e)=>{ setMapCountry(e.target.value); setMapPolygonPoints([]) }}>
             <option value='GH'>Ghana</option><option value='NG'>Nigeria</option><option value='BF'>Burkina Faso</option>
@@ -1924,7 +1924,7 @@ export default function App() {
         </form>
       </section>}
 
-      {active === 'messaging' && <section><h3>Messaging (Firebase Cloud Messaging)</h3>
+      {active === 'messaging' && <section><h3>{t('Messaging (Firebase Cloud Messaging)','Messagerie (Firebase Cloud Messaging)','消息（Firebase 云消息）')}</h3>
         <form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.registerDeviceToken({ user_id: 1, platform: 'web', token: fcmToken }); setFcmToken(''); await load(); }}>
           <input className='input' placeholder='FCM device token' value={fcmToken} onChange={(e)=>setFcmToken(e.target.value)} required />
           <button className='btn btn-dark'>Register Device Token</button>
@@ -1933,7 +1933,7 @@ export default function App() {
       </section>}
 
       {active === 'world-chat' && <section>
-        <h3>🌍 Global Farmers World Chat (AI Moderated)</h3>
+        <h3>{t('🌍 Global Farmers World Chat (AI Moderated)','🌍 Chat mondial des agriculteurs (modéré par IA)','🌍 全球农民世界聊天（AI 审核）')}</h3>
         <form className='inlineForm' onSubmit={async e => {
           e.preventDefault()
           try {
@@ -1965,7 +1965,7 @@ export default function App() {
         {worldChatMsg && <p style={{fontSize:'.85rem',color:'#475569'}}>{worldChatMsg}</p>}
 
         <article className='panel'>
-          <h4>Live Global Feed</h4>
+          <h4>{t('Live Global Feed','Flux mondial en direct','全球实时动态')}</h4>
           <div className='list' style={{maxHeight:420, overflow:'auto'}}>
             {worldChat.map((m) => (
               <div className='list-row' key={`wc-${m.id}`} style={{alignItems:'flex-start'}}>
@@ -1981,7 +1981,7 @@ export default function App() {
         </article>
 
         {(me?.role || '').toLowerCase() === 'admin' && <article className='panel' style={{marginTop:10}}>
-          <h4>Moderation Queue</h4>
+          <h4>{t('Moderation Queue','File de modération','审核队列')}</h4>
           <div className='list' style={{maxHeight:360, overflow:'auto'}}>
             {worldChatQueue.map((q) => (
               <div key={`wq-${q.id}`} className='panel' style={{padding:10, marginBottom:8}}>
@@ -2006,7 +2006,7 @@ export default function App() {
         <div className='panel' style={{background:'linear-gradient(120deg,#065f46,#0ea5e9)', color:'#fff', marginBottom:10, position:'relative', overflow:'hidden'}}>
           <div style={{position:'absolute', right:-20, top:-20, width:120, height:120, borderRadius:'50%', background:'rgba(255,255,255,.18)'}} />
           <div style={{position:'absolute', right:60, bottom:-36, width:100, height:100, borderRadius:'50%', background:'rgba(255,255,255,.12)'}} />
-          <h3 style={{marginTop:0, position:'relative'}}>📸 FarmSavior Community</h3>
+          <h3 style={{marginTop:0, position:'relative'}}>{t('📸 FarmSavior Community','📸 Communauté FarmSavior','📸 FarmSavior 社区')}</h3>
           <p style={{margin:0, opacity:.95, position:'relative'}}>Share farm life, innovations, products, and short videos with growers worldwide.</p>
           <div className='tabs' style={{marginTop:10, position:'relative'}}>
             <span className='tab active'>🔥 Trending</span>
@@ -2036,7 +2036,7 @@ export default function App() {
 
         <div className='two-col'>
           <article className='panel'>
-            <h4>My Community Profile</h4>
+            <h4>{t('My Community Profile','Mon profil communautaire','我的社区资料')}</h4>
             <div style={{position:'relative', marginBottom:12}}>
               <img
                 src={communityProfile.cover_image_url || 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200&q=80'}
@@ -2086,7 +2086,7 @@ export default function App() {
           </article>
 
           <article className='panel'>
-            <h4>Create Post</h4>
+            <h4>{t('Create Post','Créer une publication','创建帖子')}</h4>
             <form className='list' onSubmit={async(e)=>{e.preventDefault(); await api.createCommunityPost(communityPostForm); setCommunityPostForm({ text:'', media_url:'', media_type:'TEXT', tags:'' }); await loadCommunity(); }}>
               <textarea className='input' rows={4} placeholder='Share your farm update, innovation, or product...' value={communityPostForm.text} onChange={(e)=>setCommunityPostForm({...communityPostForm, text:e.target.value})} />
               <input className='input' type='file' accept='image/*,video/*' onChange={(e)=>{
@@ -2157,7 +2157,7 @@ export default function App() {
         </article>
       </section>}
 
-      {active === 'ai-disease' && <section><h3>AI Disease Analyzer</h3>
+      {active === 'ai-disease' && <section><h3>{t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析')}</h3>
         <form className='inlineForm' onSubmit={async e => {
           e.preventDefault();
           try {
@@ -2197,7 +2197,7 @@ export default function App() {
       </section>}
 
       {active === 'plant-id' && <section>
-        <h3>🌿 AI Plant Identifier (Feed & Nutrition)</h3>
+        <h3>{t('🌿 AI Plant Identifier (Feed & Nutrition)','🌿 Identificateur IA des plantes (alimentation et nutrition)','🌿 AI 植物识别（饲料与营养）')}</h3>
         <form className='panel list' onSubmit={async e => {
           e.preventDefault()
           try {
@@ -2257,7 +2257,7 @@ export default function App() {
       </section>}
 
       {active === 'pest-id' && <section>
-        <h3>🐛 AI Insect & Pest Identifier (Crop-Specific)</h3>
+        <h3>{t('🐛 AI Insect & Pest Identifier (Crop-Specific)','🐛 Identificateur IA insectes et ravageurs (spécifique culture)','🐛 AI 昆虫与害虫识别（作物专用）')}</h3>
         <form className='panel list' onSubmit={async e => {
           e.preventDefault()
           try {
@@ -2313,14 +2313,14 @@ export default function App() {
         </article>}
       </section>}
 
-      {active === 'government' && <section><h3>Government Programs</h3>
+      {active === 'government' && <section><h3>{t('Government Programs','Programmes gouvernementaux','政府项目')}</h3>
         <article className='panel' style={{marginBottom:10}}>
           <div style={{fontWeight:700, marginBottom:6}}>What this section does</div>
           <div style={{fontSize:'.9rem', color:'#475569'}}>This page helps farmers discover official agriculture programs, grants, and ministry updates by country. Use the source links to apply directly on official government portals.</div>
         </article>
 
         <article className='panel'>
-          <h4>Official Programs & Subsidies (auto-check)</h4>
+          <h4>{t('Official Programs & Subsidies (auto-check)','Programmes officiels & subventions (auto-vérification)','官方项目与补贴（自动检查）')}</h4>
           <div className='list'>
             {(state.govPrograms || []).map((g, i) => (
               <div className='list-row' key={`gov-int-${i}`}>
@@ -2364,7 +2364,7 @@ export default function App() {
         </article>}
       </section>}
 
-      {active === 'contracts' && <section><h3>Cross-Border Contracts (MVP)</h3><form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.createContract({ ...contractForm, quantity: Number(contractForm.quantity), price: Number(contractForm.price), delivery_date: new Date(contractForm.delivery_date).toISOString() }); await load() }}>
+      {active === 'contracts' && <section><h3>{t('Cross-Border Contracts (MVP)','Contrats transfrontaliers (MVP)','跨境合同（MVP）')}</h3><form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.createContract({ ...contractForm, quantity: Number(contractForm.quantity), price: Number(contractForm.price), delivery_date: new Date(contractForm.delivery_date).toISOString() }); await load() }}>
         <select className='input' value={contractForm.origin_country} onChange={e => setContractForm({ ...contractForm, origin_country: e.target.value })}>{countries.map(c => <option key={c}>{c}</option>)}</select>
         <select className='input' value={contractForm.destination_country} onChange={e => setContractForm({ ...contractForm, destination_country: e.target.value })}>{countries.map(c => <option key={c}>{c}</option>)}</select>
         <input className='input' placeholder='Commodity' value={contractForm.commodity} onChange={e => setContractForm({ ...contractForm, commodity: e.target.value })} />
@@ -2384,7 +2384,7 @@ export default function App() {
       <DataTable columns={['id', 'origin_country', 'destination_country', 'commodity', 'quantity', 'price', 'status']} rows={state.contracts} filterKey='commodity' /></section>}
 
       {active === 'admin' && ((me?.role || '').toLowerCase() === 'admin') && <section>
-        <h2>Admin Dashboard (Admin Only)</h2>
+        <h2>{t('Admin Dashboard (Admin Only)','Tableau de bord admin (admin uniquement)','管理员仪表盘（仅管理员）')}</h2>
         <div className='kpi-grid'>
           <article className='kpi-card'><p>User management</p><strong>{state.users.length}</strong></article>
           <article className='kpi-card'><p>Crop marketplace monitoring</p><strong>{state.listings.length}</strong></article>
