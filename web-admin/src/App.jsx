@@ -336,6 +336,7 @@ export default function App() {
   const [contractEdit, setContractEdit] = useState({ id: '', origin_country: 'GH', destination_country: 'NG', commodity: '', quantity: '', price: '', delivery_date: '', payment_terms: '', status: 'DRAFT' })
   const [mapCountry, setMapCountry] = useState('GH')
   const [mapPolygonPoints, setMapPolygonPoints] = useState([])
+  const [mapPointInput, setMapPointInput] = useState('')
   const [expandedWeatherCountry, setExpandedWeatherCountry] = useState('GH')
   const [showHighDemandProducts, setShowHighDemandProducts] = useState(false)
   const [showHighDemandServices, setShowHighDemandServices] = useState(false)
@@ -634,6 +635,13 @@ export default function App() {
     setShowAuthModal(true)
   }
 
+  const addBoundaryPoint = (lat, lng) => {
+    const point = { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) }
+    setMapPolygonPoints(prev => [...prev, point])
+    setFarmMapForm(prev => ({ ...prev, gps_lat: `${point.lat}`, gps_lng: `${point.lng}` }))
+    setMapPointInput(`${point.lat}, ${point.lng}`)
+  }
+
   const onMapOverlayClick = (e) => {
     const bounds = mapBoundsByCountry[mapCountry]
     if (!bounds) return
@@ -642,9 +650,17 @@ export default function App() {
     const yRatio = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height))
     const lng = bounds.minLng + xRatio * (bounds.maxLng - bounds.minLng)
     const lat = bounds.maxLat - yRatio * (bounds.maxLat - bounds.minLat)
-    const point = { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) }
-    setMapPolygonPoints(prev => [...prev, point])
-    setFarmMapForm(prev => ({ ...prev, gps_lat: `${point.lat}`, gps_lng: `${point.lng}` }))
+    addBoundaryPoint(lat, lng)
+  }
+
+  const addPointFromInput = () => {
+    const raw = String(mapPointInput || '').trim().replace(/[()]/g, '')
+    const parts = raw.split(',').map(x => x.trim())
+    if (parts.length !== 2) return alert('Use format: lat, lng (example: 5.6037, -0.1870)')
+    const lat = Number(parts[0])
+    const lng = Number(parts[1])
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return alert('Invalid coordinate values')
+    addBoundaryPoint(lat, lng)
   }
 
   const applyPolygonToFarmForm = () => {
@@ -2027,11 +2043,13 @@ export default function App() {
           <select className='input' value={mapCountry} onChange={(e)=>{ setMapCountry(e.target.value); setMapPolygonPoints([]) }}>
             <option value='GH'>Ghana</option><option value='NG'>Nigeria</option><option value='BF'>Burkina Faso</option>
           </select>
+          <input className='input' placeholder='Point (lat,lng) from Google Maps' value={mapPointInput} onChange={(e)=>setMapPointInput(e.target.value)} />
+          <button type='button' className='btn' onClick={addPointFromInput}>Add Point</button>
           <button className='btn btn-dark' onClick={() => window.open('https://maps.google.com', '_blank')}>Open Google Maps</button>
         </div>
         <div className='panel'>
           <div style={{position:'relative'}}>
-            <iframe title={`${mapCountry} map`} width='100%' height='320' style={{border:0, borderRadius:10}} loading='lazy' src={mapBoundsByCountry[mapCountry].iframe} />
+            <iframe title={`${mapCountry} map`} width='100%' height='320' style={{border:0, borderRadius:10}} loading='lazy' src={`https://maps.google.com/maps?q=${mapCountry === 'GH' ? 'Ghana' : mapCountry === 'NG' ? 'Nigeria' : 'Burkina Faso'}&z=6&output=embed`} />
             <div
               role='button'
               title='Tap to add boundary points'
@@ -2039,11 +2057,11 @@ export default function App() {
               style={{position:'absolute', inset:0, cursor:'crosshair', background:'rgba(2,132,199,0.06)', borderRadius:10}}
             />
           </div>
-          <p style={{fontSize:'.85rem', color:'#64748b', marginTop:8}}>Tap directly on the map to mark farm boundary points. Add at least 3 points, then click “Use Boundary”.</p>
+          <p style={{fontSize:'.85rem', color:'#64748b', marginTop:8}}>Tap map or paste one coordinate in a single field (lat,lng), then add next point. When done, click “Close Area & Use”.</p>
           <div className='inlineForm'>
             <button type='button' className='btn' onClick={()=>setMapPolygonPoints([])}>Clear Points</button>
             <button type='button' className='btn' onClick={()=>setMapPolygonPoints(prev => prev.slice(0, -1))}>Undo Last</button>
-            <button type='button' className='btn btn-dark' disabled={mapPolygonPoints.length < 3} onClick={applyPolygonToFarmForm}>Use Boundary</button>
+            <button type='button' className='btn btn-dark' disabled={mapPolygonPoints.length < 3} onClick={applyPolygonToFarmForm}>Close Area & Use</button>
           </div>
           <div style={{fontSize:'.82rem', color:'#475569'}}>Points: {mapPolygonPoints.length} {mapPolygonPoints.length > 0 ? `• Est. Area: ${polygonAreaHectares(mapPolygonPoints).toFixed(2)} ha` : ''}</div>
           {mapPolygonPoints.length > 0 && <div style={{fontSize:'.78rem', color:'#64748b', maxHeight:80, overflow:'auto', marginTop:4}}>{mapPolygonPoints.map((p, i)=>`#${i+1} (${p.lat}, ${p.lng})`).join('  |  ')}</div>}
@@ -2062,8 +2080,7 @@ export default function App() {
           alert('Farm GPS mapping saved to database.');
         }}>
           <input className='input' placeholder='User ID' value={farmMapForm.user_id} onChange={(e)=>setFarmMapForm({...farmMapForm,user_id:e.target.value})} required />
-          <input className='input' placeholder='GPS Lat' value={farmMapForm.gps_lat} onChange={(e)=>setFarmMapForm({...farmMapForm,gps_lat:e.target.value})} required />
-          <input className='input' placeholder='GPS Lng' value={farmMapForm.gps_lng} onChange={(e)=>setFarmMapForm({...farmMapForm,gps_lng:e.target.value})} required />
+          <input className='input' placeholder='Selected point (lat,lng)' value={farmMapForm.gps_lat && farmMapForm.gps_lng ? `${farmMapForm.gps_lat}, ${farmMapForm.gps_lng}` : ''} readOnly required />
           <input className='input' placeholder='Farm size (hectares)' value={farmMapForm.farm_size_hectares} onChange={(e)=>setFarmMapForm({...farmMapForm,farm_size_hectares:e.target.value})} required />
           <input className='input' placeholder='Farm photos URLs JSON array' value={farmMapForm.farm_photo_urls} onChange={(e)=>setFarmMapForm({...farmMapForm,farm_photo_urls:e.target.value})} />
           <button className='btn btn-dark'>Save Farm GPS</button>
