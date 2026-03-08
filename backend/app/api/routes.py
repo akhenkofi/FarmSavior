@@ -218,8 +218,8 @@ def _send_otp(destination: str, method: str, code: str):
                 smtp.login(settings.SMTP_USER, settings.SMTP_PASS)
                 smtp.send_message(msg)
             return {'sent': True, 'channel': 'email'}
-        except Exception:
-            return {'sent': False, 'channel': 'email'}
+        except Exception as e:
+            return {'sent': False, 'channel': 'email', 'error': str(e)}
 
     if method == 'phone' and settings.TWILIO_ACCOUNT_SID and settings.TWILIO_AUTH_TOKEN and settings.TWILIO_FROM_NUMBER:
         try:
@@ -233,8 +233,8 @@ def _send_otp(destination: str, method: str, code: str):
             with urlopen(req, timeout=12) as _:
                 pass
             return {'sent': True, 'channel': 'phone'}
-        except Exception:
-            return {'sent': False, 'channel': 'phone'}
+        except Exception as e:
+            return {'sent': False, 'channel': 'phone', 'error': str(e)}
 
     return {'sent': False, 'channel': method}
 
@@ -279,7 +279,15 @@ def register_user(payload: UserCreate, db: Session = Depends(get_db)):
     db.commit()
 
     delivery = _send_otp(dest, method, code)
-    return {'user_id': user.id, 'otp_sent': delivery.get('sent', False), 'otp_channel': method, 'otp_destination': dest, 'otp_mock_code': code, 'message': 'OTP sent'}
+    return {
+        'user_id': user.id,
+        'otp_sent': delivery.get('sent', False),
+        'otp_channel': method,
+        'otp_destination': dest,
+        'otp_mock_code': code,
+        'otp_error': delivery.get('error', ''),
+        'message': 'OTP sent'
+    }
 
 
 @router.post('/auth/login', response_model=TokenResponse)
