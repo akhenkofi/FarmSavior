@@ -1000,6 +1000,48 @@ def _is_admin_user(user: User) -> bool:
     return str(role).lower() == 'admin'
 
 
+def _world_chat_store_path() -> Path:
+    p = (Path(__file__).resolve().parents[3] / 'data' / 'runtime' / 'world-chat.json')
+    p.parent.mkdir(parents=True, exist_ok=True)
+    return p
+
+
+def _world_chat_read() -> list[dict]:
+    p = _world_chat_store_path()
+    if not p.exists():
+        return []
+    try:
+        return json.loads(p.read_text(encoding='utf-8')) or []
+    except Exception:
+        return []
+
+
+def _world_chat_write(rows: list[dict]):
+    p = _world_chat_store_path()
+    tmp = p.with_suffix('.json.tmp')
+    tmp.write_text(json.dumps(rows, ensure_ascii=False), encoding='utf-8')
+    tmp.replace(p)
+
+
+def _world_chat_bootstrap_from_db(db: Session):
+    rows = _world_chat_read()
+    if rows:
+        return
+    db_rows = db.query(WorldChatMessage).order_by(WorldChatMessage.id.asc()).limit(5000).all()
+    seed = [{
+        'id': r.id,
+        'user_id': r.user_id,
+        'user_name': r.user_name,
+        'user_country': r.user_country,
+        'text': r.text,
+        'status': r.status,
+        'moderation_label': r.moderation_label,
+        'moderation_reason': r.moderation_reason,
+        'created_at': r.created_at.isoformat() if getattr(r, 'created_at', None) else None,
+    } for r in db_rows]
+    _world_chat_write(seed)
+
+
 def _moderate_world_chat_text(text: str) -> dict:
     raw = (text or '').strip()
     lower = raw.lower()
@@ -1035,15 +1077,17 @@ def _moderate_world_chat_text(text: str) -> dict:
 @router.get('/chat/world/messages')
 def world_chat_messages(limit: int = 120, db: Session = Depends(get_db)):
     n = max(1, min(limit, 1000))
-    rows = db.query(WorldChatMessage).filter(WorldChatMessage.status == 'VISIBLE').order_by(WorldChatMessage.id.desc()).limit(n).all()
-    return list(reversed([{
-        'id': r.id,
-        'user_id': r.user_id,
-        'user_name': r.user_name,
-        'user_country': r.user_country,
-        'text': r.text,
-        'created_at': r.created_at,
-    } for r in rows]))
+    _world_chat_bootstrap_from_db(db)
+    rows = [r for r in _world_chat_read() if str(r.get('status', 'VISIBLE')).upper() == 'VISIBLE']
+    rows = rows[-n:]
+    return [{
+        'id': r.get('id'),
+        'user_id': r.get('user_id'),
+        'user_name': r.get('user_name'),
+        'user_country': r.get('user_country'),
+        'text': r.get('text'),
+        'created_at': r.get('created_at'),
+    } for r in rows]
 
 
 @router.post('/chat/world/messages')
@@ -1085,6 +1129,21 @@ def world_chat_post(payload: WorldChatMessageIn, authorization: Optional[str] = 
     db.commit()
     db.refresh(msg)
 
+    _world_chat_bootstrap_from_db(db)
+    persisted = _world_chat_read()
+    persisted.append({
+        'id': msg.id,
+        'user_id': msg.user_id,
+        'user_name': msg.user_name,
+        'user_country': msg.user_country,
+        'text': msg.text,
+        'status': msg.status,
+        'moderation_label': msg.moderation_label,
+        'moderation_reason': msg.moderation_reason,
+        'created_at': msg.created_at.isoformat() if msg.created_at else None,
+    })
+    _world_chat_write(persisted)
+
     return {
         'id': msg.id,
         'status': msg.status,
@@ -1124,6 +1183,17 @@ def world_chat_moderation_action(payload: WorldChatModerationActionIn, authoriza
         row.moderation_reason = payload.reason
     db.commit()
     db.refresh(row)
+
+    _world_chat_bootstrap_from_db(db)
+    persisted = _world_chat_read()
+    for r in persisted:
+        if int(r.get('id') or 0) == int(row.id):
+            r['status'] = row.status
+            if payload.reason:
+                r['moderation_reason'] = payload.reason
+            break
+    _world_chat_write(persisted)
+
     return {'message': 'moderation action applied', 'id': row.id, 'status': row.status}
 
 
