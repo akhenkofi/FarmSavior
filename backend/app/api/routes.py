@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Any
 from urllib.request import Request, urlopen
 from urllib.parse import urlencode
+from urllib.error import HTTPError
 import xml.etree.ElementTree as ET
 import re
 import ssl
@@ -1956,6 +1957,15 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
             payment_url = (((ps_resp or {}).get('data') or {}).get('authorization_url') or '')
             if not payment_url:
                 payment_init_error = str((ps_resp or {}).get('message') or 'Paystack did not return authorization_url')
+        except HTTPError as e:
+            payment_url = ''
+            try:
+                raw = e.read().decode('utf-8', errors='ignore')
+                parsed = json.loads(raw) if raw else {}
+                msg = parsed.get('message') or raw or str(e)
+                payment_init_error = f"HTTP {getattr(e, 'code', 'ERR')}: {msg}"
+            except Exception:
+                payment_init_error = str(e)
         except Exception as e:
             payment_url = ''
             payment_init_error = str(e)
