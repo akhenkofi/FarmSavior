@@ -182,9 +182,9 @@ const featuredWeatherSeed = [
 ]
 
 const featuredNewsSeed = [
-  { title: 'West Africa input prices ease as supply chains stabilize', url: 'https://www.farmsavior.com', source: 'FarmSavior Wire', published: 'Live', image_url: '', image_credit: 'FarmSavior' },
-  { title: 'Moisture outlook improves for rice and maize belts', url: 'https://www.farmsavior.com', source: 'FarmSavior Weather Desk', published: 'Live', image_url: '', image_credit: 'FarmSavior' },
-  { title: 'Regional livestock demand remains strong ahead of market week', url: 'https://www.farmsavior.com', source: 'FarmSavior Markets', published: 'Live', image_url: '', image_credit: 'FarmSavior' }
+  { title: 'West Africa input prices ease as supply chains stabilize', url: 'https://www.farmsavior.com', source: 'FarmSavior Wire', published: 'Live', image_url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80', image_credit: 'Unsplash / FarmSavior' },
+  { title: 'Moisture outlook improves for rice and maize belts', url: 'https://www.farmsavior.com', source: 'FarmSavior Weather Desk', published: 'Live', image_url: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200&q=80', image_credit: 'Unsplash / FarmSavior' },
+  { title: 'Regional livestock demand remains strong ahead of market week', url: 'https://www.farmsavior.com', source: 'FarmSavior Markets', published: 'Live', image_url: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1200&q=80', image_credit: 'Unsplash / FarmSavior' }
 ]
 
 const featuredGovSeed = [
@@ -1081,7 +1081,7 @@ export default function App() {
               >
                 {(String(n.image_url || '').startsWith('http://') || String(n.image_url || '').startsWith('https://') || isUserImage(n.image_url))
                   ? <img src={n.image_url} alt={n.title} className='news-img' />
-                  : <img src='/assets/farmsavior-logo.jpg' alt='FarmSavior' className='news-img' />}
+                  : <div className='news-img' style={{display:'grid',placeItems:'center',color:'#64748b',background:'#f1f5f9'}}>No image available</div>}
                 <div className='news-body'>
                   <a href={n.url} target='_blank' rel='noreferrer' className='news-title' onClick={(e)=>e.stopPropagation()}>{displayNewsTitle(n.title)}</a>
                   <div className='news-meta'>{uiLang === 'zh' ? ({
