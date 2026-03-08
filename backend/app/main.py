@@ -30,6 +30,10 @@ def ensure_runtime_columns():
                 ucols = {c['name'] for c in inspector.get_columns('users')}
                 if 'email' not in ucols:
                     conn.execute(text('ALTER TABLE users ADD COLUMN email VARCHAR(160)'))
+                if 'is_deleted' not in ucols:
+                    conn.execute(text('ALTER TABLE users ADD COLUMN is_deleted BOOLEAN DEFAULT 0'))
+                if 'deleted_at' not in ucols:
+                    conn.execute(text('ALTER TABLE users ADD COLUMN deleted_at DATETIME'))
 
             if 'otp_codes' in tables:
                 ocols = {c['name'] for c in inspector.get_columns('otp_codes')}

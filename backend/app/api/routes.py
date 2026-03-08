@@ -34,7 +34,7 @@ from app.schemas.schemas import (
     SheepGoatRecordIn, SheepGoatBreedingGroupIn, SheepGoatSubscriptionIn,
     WorldChatMessageIn, WorldChatModerationActionIn, WorldChatUserSanctionIn,
     CommunityProfileIn, CommunityPostIn, CommunityCommentIn,
-    PlantIdentifyIn, PestIdentifyIn, AccountUpdateIn, PasswordChangeIn
+    PlantIdentifyIn, PestIdentifyIn, AccountUpdateIn, PasswordChangeIn, DeleteAccountIn
 )
 from app.core.config import settings
 from app.core.security import create_access_token, hash_password, verify_password, decode_access_token
@@ -193,28 +193,34 @@ def _save_update_review(db: Session, module: str, record_id: int, action: str, p
 def _send_otp(destination: str, method: str, code: str):
     message = f"Your FarmSavior OTP is {code}. It expires soon."
     if method == 'email' and settings.SMTP_HOST and settings.SMTP_USER and settings.SMTP_PASS:
-        msg = EmailMessage()
-        msg['Subject'] = 'FarmSavior verification code'
-        msg['From'] = settings.SMTP_FROM
-        msg['To'] = destination
-        msg.set_content(message)
-        with smtplib.SMTP(settings.SMTP_HOST, int(settings.SMTP_PORT or 587), timeout=12) as smtp:
-            smtp.starttls()
-            smtp.login(settings.SMTP_USER, settings.SMTP_PASS)
-            smtp.send_message(msg)
-        return {'sent': True, 'channel': 'email'}
+        try:
+            msg = EmailMessage()
+            msg['Subject'] = 'FarmSavior verification code'
+            msg['From'] = settings.SMTP_FROM
+            msg['To'] = destination
+            msg.set_content(message)
+            with smtplib.SMTP(settings.SMTP_HOST, int(settings.SMTP_PORT or 587), timeout=12) as smtp:
+                smtp.starttls()
+                smtp.login(settings.SMTP_USER, settings.SMTP_PASS)
+                smtp.send_message(msg)
+            return {'sent': True, 'channel': 'email'}
+        except Exception:
+            return {'sent': False, 'channel': 'email'}
 
     if method == 'phone' and settings.TWILIO_ACCOUNT_SID and settings.TWILIO_AUTH_TOKEN and settings.TWILIO_FROM_NUMBER:
-        url = f"https://api.twilio.com/2010-04-01/Accounts/{settings.TWILIO_ACCOUNT_SID}/Messages.json"
-        body = urlencode({'To': destination, 'From': settings.TWILIO_FROM_NUMBER, 'Body': message}).encode('utf-8')
-        req = Request(url, data=body)
-        import base64
-        token = base64.b64encode(f"{settings.TWILIO_ACCOUNT_SID}:{settings.TWILIO_AUTH_TOKEN}".encode()).decode()
-        req.add_header('Authorization', f'Basic {token}')
-        req.add_header('Content-Type', 'application/x-www-form-urlencoded')
-        with urlopen(req, timeout=12) as _:
-            pass
-        return {'sent': True, 'channel': 'phone'}
+        try:
+            url = f"https://api.twilio.com/2010-04-01/Accounts/{settings.TWILIO_ACCOUNT_SID}/Messages.json"
+            body = urlencode({'To': destination, 'From': settings.TWILIO_FROM_NUMBER, 'Body': message}).encode('utf-8')
+            req = Request(url, data=body)
+            import base64
+            token = base64.b64encode(f"{settings.TWILIO_ACCOUNT_SID}:{settings.TWILIO_AUTH_TOKEN}".encode()).decode()
+            req.add_header('Authorization', f'Basic {token}')
+            req.add_header('Content-Type', 'application/x-www-form-urlencoded')
+            with urlopen(req, timeout=12) as _:
+                pass
+            return {'sent': True, 'channel': 'phone'}
+        except Exception:
+            return {'sent': False, 'channel': 'phone'}
 
     return {'sent': False, 'channel': method}
 
@@ -245,7 +251,7 @@ def register_user(payload: UserCreate, db: Session = Depends(get_db)):
         full_name=payload.full_name,
         phone=payload.phone,
         email=(payload.email.lower() if payload.email else None),
-        country=CountryCode(payload.country),
+        country=(str(payload.country or '').strip().upper() or 'GH'),
         region=payload.region,
         role=UserRole(payload.user_type),
         hashed_password=hash_password(payload.password or 'changeme')
@@ -272,7 +278,7 @@ def login_user(payload: UserLogin, db: Session = Depends(get_db)):
             full_name='FarmSavior Admin',
             phone=admin_phone,
             email='admin@farmsavior.local',
-            country=CountryCode.gh,
+            country='GH',
             region='HQ',
             role=UserRole.admin,
             hashed_password=hash_password('Admin@123'),
@@ -283,7 +289,7 @@ def login_user(payload: UserLogin, db: Session = Depends(get_db)):
 
     ident = (payload.identifier or '').strip().lower()
     user = db.query(User).filter((User.phone == ident) | (User.email == ident)).first()
-    if not user or not user.hashed_password or not verify_password(payload.password, user.hashed_password):
+    if not user or user.is_deleted or not user.hashed_password or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(status_code=401, detail='Invalid login credentials')
     return TokenResponse(access_token=create_access_token(subject=str(user.id)))
 
@@ -316,7 +322,7 @@ def _current_user_from_auth(authorization: Optional[str], db: Session):
         user = db.query(User).filter(User.id == int(sub)).first()
     if not user:
         user = db.query(User).filter((User.phone == sub) | (User.email == sub.lower())).first()
-    if not user:
+    if not user or user.is_deleted:
         raise HTTPException(status_code=401, detail='User not found')
     return user
 
@@ -368,9 +374,28 @@ def change_password(payload: PasswordChangeIn, authorization: Optional[str] = He
     return {'message': 'Password updated successfully'}
 
 
+@router.post('/auth/delete-account')
+def delete_account(payload: DeleteAccountIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    u = _current_user_from_auth(authorization, db)
+    if not verify_password(payload.current_password, u.hashed_password or ''):
+        raise HTTPException(status_code=400, detail='Current password is incorrect')
+
+    stamp = int(datetime.utcnow().timestamp())
+    u.is_deleted = True
+    u.deleted_at = datetime.utcnow()
+    u.full_name = 'Deleted User'
+    u.hashed_password = hash_password(f'deleted-{stamp}-{random.randint(1000,9999)}')
+    if u.phone:
+        u.phone = f"deleted-{u.id}-{stamp}"
+    if u.email:
+        u.email = f"deleted-{u.id}-{stamp}@deleted.local"
+    db.commit()
+    return {'message': 'Account deleted successfully'}
+
+
 @router.get('/users')
 def list_users(db: Session = Depends(get_db)):
-    return db.query(User).all()
+    return db.query(User).filter(User.is_deleted == False).all()
 
 
 @router.post('/analytics/events')

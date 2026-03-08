@@ -308,6 +308,7 @@ export default function App() {
   const [idForm, setIdForm] = useState({ user_id: 1, id_type: 'GhanaCard', id_number: '', id_photo_url: '', id_front_photo_url: '', id_back_photo_url: '', facial_verification_flag: false })
   const [accountForm, setAccountForm] = useState({ full_name: '', region: '' })
   const [passwordForm, setPasswordForm] = useState({ current_password: '', new_password: '' })
+  const [deleteAccountForm, setDeleteAccountForm] = useState({ current_password: '' })
   const [myIdVerification, setMyIdVerification] = useState({ application: null, review: null })
   const [myIdForm, setMyIdForm] = useState({ id_type: 'GhanaCard', id_number: '', id_photo_url: '', id_front_photo_url: '', id_back_photo_url: '', facial_verification_flag: false })
   const [passportForm, setPassportForm] = useState({ user_id: 1, gps_lat: '', gps_lng: '', farm_size_hectares: '', crop_types: '[]', livestock_numbers: '{}', farm_photo_urls: '[]', harvest_records_notes: '' })
@@ -1153,7 +1154,10 @@ export default function App() {
             <input className='input' placeholder='Full name' value={signup.full_name} onChange={e => setSignup({ ...signup, full_name: e.target.value })} required />
             <input className='input' placeholder='Phone' value={signup.phone} onChange={e => setSignup({ ...signup, signup_method: 'phone', phone: e.target.value })} required />
             <div style={{fontSize:'.76rem', color:'#64748b'}}>Phone OTP signup is active. Email OTP will be re-enabled after dedicated mail sender configuration.</div>
-            <div className='row2'><select className='input' value={signup.country} onChange={e => setSignup({ ...signup, country: e.target.value })}>{countries.map(c => <option key={c}>{c}</option>)}</select><input className='input' placeholder='Region' value={signup.region} onChange={e => setSignup({ ...signup, region: e.target.value })} required /></div>
+            <div className='row2'>
+              <input className='input' placeholder='Country (any code or name, e.g. US, KE, Brazil)' value={signup.country} onChange={e => setSignup({ ...signup, country: e.target.value })} required />
+              <input className='input' placeholder='Region' value={signup.region} onChange={e => setSignup({ ...signup, region: e.target.value })} required />
+            </div>
             <select className='input' value={signup.user_type} onChange={e => setSignup({ ...signup, user_type: e.target.value })}>{userTypes.map(u => <option key={u}>{u}</option>)}</select>
             <input className='input' type='password' placeholder={t('Password','Mot de passe','密码')} value={signup.password} onChange={e => setSignup({ ...signup, password: e.target.value })} required />
             <div className='panel' style={{padding:8, background:'#f8fafc'}}>
@@ -1707,6 +1711,23 @@ export default function App() {
               <input className='input' type='password' placeholder='Current password' value={passwordForm.current_password} onChange={e => setPasswordForm({ ...passwordForm, current_password: e.target.value })} />
               <input className='input' type='password' placeholder='New password (min 6 chars)' value={passwordForm.new_password} onChange={e => setPasswordForm({ ...passwordForm, new_password: e.target.value })} />
               <button className='btn'>Change Password</button>
+            </form>
+            <hr style={{border:'none',borderTop:'1px solid #e2e8f0', margin:'10px 0'}} />
+            <form className='list' onSubmit={async e => {
+              e.preventDefault()
+              const ok = window.confirm('Are you sure? This will permanently disable this account.')
+              if (!ok) return
+              try {
+                await api.deleteAccount(deleteAccountForm)
+                localStorage.removeItem('farmsavior_token')
+                setToken('')
+                setDeleteAccountForm({ current_password: '' })
+                alert('Your account has been deleted.')
+                window.location.href='/?public=1'
+              } catch (e) { alert(errMsg(e)) }
+            }}>
+              <input className='input' type='password' placeholder='Confirm current password to delete account' value={deleteAccountForm.current_password} onChange={e => setDeleteAccountForm({ current_password: e.target.value })} />
+              <button className='btn' style={{background:'#7f1d1d', color:'#fff', borderColor:'#7f1d1d'}}>Delete Account</button>
             </form>
           </article>
 

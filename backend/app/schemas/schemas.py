@@ -9,7 +9,7 @@ UserType = Literal['Farmer', 'Buyer', 'Transporter', 'EquipmentProvider', 'Stora
 
 class UserCreate(BaseModel):
     full_name: str
-    country: Country
+    country: str
     region: str
     user_type: UserType
     password: Optional[str] = None
@@ -31,6 +31,10 @@ class AccountUpdateIn(BaseModel):
 class PasswordChangeIn(BaseModel):
     current_password: str
     new_password: str
+
+
+class DeleteAccountIn(BaseModel):
+    current_password: str
 
 
 class OTPVerify(BaseModel):

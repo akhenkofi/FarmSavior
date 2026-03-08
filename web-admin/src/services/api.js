@@ -33,6 +33,7 @@ export const verifyOtp = async (payload) => (await api.post('/auth/verify-otp', 
 export const fetchMe = async () => (await api.get('/auth/me')).data
 export const updateMe = async (payload) => (await api.put('/auth/me', payload)).data
 export const changePassword = async (payload) => (await api.post('/auth/change-password', payload)).data
+export const deleteAccount = async (payload) => (await api.post('/auth/delete-account', payload)).data
 
 export const fetchMetrics = async () => (await api.get('/admin/metrics')).data
 export const fetchAdminDisputes = async () => (await api.get('/admin/disputes')).data

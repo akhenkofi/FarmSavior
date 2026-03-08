@@ -6,7 +6,7 @@ class Settings(BaseSettings):
 
     APP_NAME: str = 'FarmSavior API'
     SECRET_KEY: str = 'change-me'
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 5256000
     DATABASE_URL: str = 'sqlite:///./farmsavior.db'
     OTP_BYPASS_CODE: str = '123456'
 
