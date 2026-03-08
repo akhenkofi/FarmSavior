@@ -1070,12 +1070,20 @@ export default function App() {
           <h3 style={{marginTop:12}}>{t('📰 Ag News + Innovation','📰 Actualités agricoles + innovation','📰 农业新闻与创新')}</h3>
           <div className='news-grid'>
             {publicNewsRows.slice(0,8).map((n,i)=>(
-              <div className='news-card' key={`n-${i}`}>
-                {isUserImage(n.image_url)
+              <div
+                className='news-card'
+                key={`n-${i}`}
+                role='button'
+                tabIndex={0}
+                onClick={() => { if (n.url) window.open(n.url, '_blank', 'noopener,noreferrer') }}
+                onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && n.url) { e.preventDefault(); window.open(n.url, '_blank', 'noopener,noreferrer') } }}
+                style={{cursor: n.url ? 'pointer' : 'default'}}
+              >
+                {(String(n.image_url || '').startsWith('http://') || String(n.image_url || '').startsWith('https://') || isUserImage(n.image_url))
                   ? <img src={n.image_url} alt={n.title} className='news-img' />
-                  : <div className='news-img' style={{display:'grid',placeItems:'center',color:'#64748b',background:'#f1f5f9'}}>No user image</div>}
+                  : <div className='news-img' style={{display:'grid',placeItems:'center',color:'#64748b',background:'#f1f5f9'}}>No image available</div>}
                 <div className='news-body'>
-                  <a href={n.url} target='_blank' rel='noreferrer' className='news-title'>{displayNewsTitle(n.title)}</a>
+                  <a href={n.url} target='_blank' rel='noreferrer' className='news-title' onClick={(e)=>e.stopPropagation()}>{displayNewsTitle(n.title)}</a>
                   <div className='news-meta'>{uiLang === 'zh' ? ({
                     'FarmSavior News Desk': 'FarmSavior 新闻台',
                     'FarmSavior Wire': 'FarmSavior 快讯',
