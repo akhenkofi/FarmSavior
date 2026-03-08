@@ -100,6 +100,18 @@ def _valid_photo_url(v: Optional[str]):
     return bool(v and str(v).startswith('data:image/'))
 
 
+def _validate_uploaded_image_input(v: Optional[str], field_name: str, required: bool = False):
+    s = str(v or '').strip()
+    if not s:
+        if required:
+            raise HTTPException(status_code=400, detail=f'{field_name} is required. Upload from phone/camera.')
+        return
+    if s.startswith(('http://', 'https://')):
+        raise HTTPException(status_code=400, detail=f'{field_name} must be user-uploaded (no image URLs allowed)')
+    if not s.startswith('data:image/'):
+        raise HTTPException(status_code=400, detail=f'{field_name} must be an uploaded image payload')
+
+
 def _ai_review_id_verification(rec: IDVerification):
     score = 0.0
     reasons = []
@@ -461,6 +473,12 @@ def create_id_verification(payload: IDVerificationIn, db: Session = Depends(get_
     data = payload.model_dump()
     if not data.get('id_front_photo_url'):
         data['id_front_photo_url'] = data.get('id_photo_url')
+
+    is_ghana_card = str(data.get('id_type') or '') == 'GhanaCard'
+    _validate_uploaded_image_input(data.get('id_front_photo_url'), 'id_front_photo_url', required=is_ghana_card)
+    _validate_uploaded_image_input(data.get('id_back_photo_url'), 'id_back_photo_url', required=is_ghana_card)
+    _validate_uploaded_image_input(data.get('id_photo_url'), 'id_photo_url', required=not is_ghana_card)
+
     rec = IDVerification(**data)
     db.add(rec)
     db.commit()
@@ -519,6 +537,11 @@ def submit_my_id_verification(payload: IDVerificationSelfIn, authorization: Opti
         data['id_photo_url'] = data.get('id_front_photo_url') or ''
     if not data.get('id_front_photo_url'):
         data['id_front_photo_url'] = data.get('id_photo_url')
+
+    is_ghana_card = str(data.get('id_type') or '') == 'GhanaCard'
+    _validate_uploaded_image_input(data.get('id_front_photo_url'), 'id_front_photo_url', required=is_ghana_card)
+    _validate_uploaded_image_input(data.get('id_back_photo_url'), 'id_back_photo_url', required=is_ghana_card)
+    _validate_uploaded_image_input(data.get('id_photo_url'), 'id_photo_url', required=not is_ghana_card)
 
     rec = IDVerification(user_id=u.id, **data)
     db.add(rec)
