@@ -1081,7 +1081,7 @@ export default function App() {
               >
                 {(String(n.image_url || '').startsWith('http://') || String(n.image_url || '').startsWith('https://') || isUserImage(n.image_url))
                   ? <img src={n.image_url} alt={n.title} className='news-img' />
-                  : <div className='news-img' style={{display:'grid',placeItems:'center',color:'#64748b',background:'#f1f5f9'}}>No image available</div>}
+                  : <img src='/assets/farmsavior-logo.jpg' alt='FarmSavior' className='news-img' />}
                 <div className='news-body'>
                   <a href={n.url} target='_blank' rel='noreferrer' className='news-title' onClick={(e)=>e.stopPropagation()}>{displayNewsTitle(n.title)}</a>
                   <div className='news-meta'>{uiLang === 'zh' ? ({
