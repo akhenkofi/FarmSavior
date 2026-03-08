@@ -437,7 +437,7 @@ export default function App() {
   }, [uiCountry])
 
   const [fcmToken, setFcmToken] = useState('')
-  const [diseaseForm, setDiseaseForm] = useState({ user_id: 1, category: 'crop', target: '', image_url: '' })
+  const [diseaseForm, setDiseaseForm] = useState({ user_id: 1, category: 'crop', target: '', image_url: '', context_note: '' })
   const [diseaseImageFileName, setDiseaseImageFileName] = useState('')
   const [diseaseImagePreview, setDiseaseImagePreview] = useState('')
   const [plantIdForm, setPlantIdForm] = useState({ user_id: 1, image_url: '', file_name: '', context_hint: '', target_livestock: 'goats' })
@@ -2301,7 +2301,7 @@ export default function App() {
           try {
             if (!diseaseForm.target) { alert('Please select crop/animal type first.'); return }
             if (!diseaseForm.image_url) { alert('Please upload an image from your phone/camera.'); return }
-            const r = await api.analyzeDisease({ user_id: Number(diseaseForm.user_id), crop_type: diseaseForm.target, image_url: diseaseForm.image_url });
+            const r = await api.analyzeDisease({ user_id: Number(diseaseForm.user_id), crop_type: diseaseForm.target, image_url: diseaseForm.image_url, context_note: diseaseForm.context_note });
             alert(`Diagnosis: ${r.diagnosis} | Confidence: ${Math.round((r.confidence||0)*100)}%`);
             await load();
           } catch (err) {
@@ -2317,6 +2317,7 @@ export default function App() {
             <option value=''>Select</option>
             {(diseaseForm.category === 'crop' ? cropOptions : animalOptions).map(x => <option key={x} value={x}>{x}</option>)}
           </select>
+          <textarea className='input' placeholder='Describe symptoms (optional): e.g., yellow spots, leaf curl, wilting, discharge, fever...' value={diseaseForm.context_note || ''} onChange={(e)=>setDiseaseForm({...diseaseForm,context_note:e.target.value})} rows={3} style={{minWidth:'100%'}} />
           <input className='input' type='file' accept='image/*' capture='environment' onChange={(e)=>{
             const f = e.target.files?.[0]
             if (!f) return

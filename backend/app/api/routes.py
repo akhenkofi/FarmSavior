@@ -1637,28 +1637,29 @@ def ai_disease_analyze(payload: DiseaseAnalyzeIn, db: Session = Depends(get_db))
     # Rule-based MVP placeholder; can be replaced with TensorFlow/external AI API.
     crop = (payload.crop_type or '').lower()
     img = payload.image_url.lower()
+    note = (payload.context_note or '').lower()
 
     diagnosis = 'Unknown condition'
     confidence = 0.55
     recommendation = 'Collect more images and consult extension officer.'
 
-    if 'cassava' in crop or 'cassava' in img:
+    if 'cassava' in crop or 'cassava' in img or 'mosaic' in note:
         diagnosis = 'Possible Cassava Mosaic'
         confidence = 0.81
         recommendation = 'Remove severely affected plants and use resistant cuttings.'
-    elif 'maize' in crop or 'maize' in img:
+    elif 'maize' in crop or 'maize' in img or 'rust' in note or 'yellow spots' in note:
         diagnosis = 'Possible Maize Rust'
         confidence = 0.78
         recommendation = 'Apply appropriate fungicide and improve spacing.'
-    elif 'tomato' in crop or 'tomato' in img:
+    elif 'tomato' in crop or 'tomato' in img or 'blight' in note or 'leaf rot' in note:
         diagnosis = 'Possible Tomato Blight'
         confidence = 0.84
         recommendation = 'Prune affected leaves and use preventive fungicide schedule.'
-    elif any(x in crop for x in ['poultry','chicken']):
+    elif any(x in crop for x in ['poultry','chicken']) or 'newcastle' in note:
         diagnosis = 'Possible Newcastle Disease (Poultry)'
         confidence = 0.76
         recommendation = 'Isolate affected birds and review vaccination status immediately.'
-    elif 'goat' in crop:
+    elif 'goat' in crop or 'ppr' in note:
         diagnosis = 'Possible PPR (Goat)'
         confidence = 0.74
         recommendation = 'Isolate herd segment and contact vet for confirmation.'
@@ -1691,6 +1692,7 @@ def ai_disease_analyze(payload: DiseaseAnalyzeIn, db: Session = Depends(get_db))
         'diagnosis': diagnosis,
         'confidence': confidence,
         'recommendation': recommendation,
+        'context_note_used': payload.context_note or '',
         'engine': 'FarmSavior AI Analyzer (MVP)'
     }
 

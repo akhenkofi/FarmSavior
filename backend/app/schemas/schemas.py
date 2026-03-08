@@ -193,6 +193,7 @@ class DiseaseAnalyzeIn(BaseModel):
     user_id: Optional[int] = None
     image_url: str
     crop_type: Optional[str] = None
+    context_note: Optional[str] = None
 
 
 class SheepGoatRecordIn(BaseModel):
