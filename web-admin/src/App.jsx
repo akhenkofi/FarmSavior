@@ -241,6 +241,8 @@ const lockDemandCount = (arr, fillerFactory) => {
   return out.slice(0, DEMAND_LOCK_COUNT)
 }
 
+const isUserImage = (v) => String(v || '').startsWith('data:image/')
+
 function DataTable({ columns, rows, filterKey, onEdit }) {
   const [q, setQ] = useState('')
   const filtered = rows.filter((r) => !q || String(r[filterKey] ?? '').toLowerCase().includes(q.toLowerCase()))
@@ -1069,7 +1071,9 @@ export default function App() {
           <div className='news-grid'>
             {publicNewsRows.slice(0,8).map((n,i)=>(
               <div className='news-card' key={`n-${i}`}>
-                <img src={n.image_url || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80'} alt={n.title} className='news-img' />
+                {isUserImage(n.image_url)
+                  ? <img src={n.image_url} alt={n.title} className='news-img' />
+                  : <div className='news-img' style={{display:'grid',placeItems:'center',color:'#64748b',background:'#f1f5f9'}}>No user image</div>}
                 <div className='news-body'>
                   <a href={n.url} target='_blank' rel='noreferrer' className='news-title'>{displayNewsTitle(n.title)}</a>
                   <div className='news-meta'>{uiLang === 'zh' ? ({
@@ -1555,16 +1559,12 @@ export default function App() {
           </div>
 
           <div style={{position:'relative', marginBottom:10}}>
-            <img
-              src={communityProfile.cover_image_url || 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200&q=80'}
-              alt='Community cover'
-              style={{width:'100%',height:120,objectFit:'cover',borderRadius:10,border:'1px solid #e2e8f0'}}
-            />
-            <img
-              src={communityProfile.avatar_url || 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=300&q=80'}
-              alt='Community avatar'
-              style={{position:'absolute',left:10,bottom:-22,width:56,height:56,objectFit:'cover',borderRadius:'50%',border:'3px solid #fff',boxShadow:'0 6px 12px rgba(0,0,0,.2)'}}
-            />
+            {isUserImage(communityProfile.cover_image_url)
+              ? <img src={communityProfile.cover_image_url} alt='Community cover' style={{width:'100%',height:120,objectFit:'cover',borderRadius:10,border:'1px solid #e2e8f0'}} />
+              : <div style={{width:'100%',height:120,borderRadius:10,border:'1px solid #e2e8f0',background:'#f1f5f9',display:'grid',placeItems:'center',color:'#64748b'}}>Upload your cover photo</div>}
+            {isUserImage(communityProfile.avatar_url)
+              ? <img src={communityProfile.avatar_url} alt='Community avatar' style={{position:'absolute',left:10,bottom:-22,width:56,height:56,objectFit:'cover',borderRadius:'50%',border:'3px solid #fff',boxShadow:'0 6px 12px rgba(0,0,0,.2)'}} />
+              : <div style={{position:'absolute',left:10,bottom:-22,width:56,height:56,borderRadius:'50%',border:'3px solid #fff',background:'#e2e8f0',display:'grid',placeItems:'center',color:'#64748b',fontSize:11}}>No DP</div>}
             <div style={{position:'absolute',left:74,bottom:8,color:'#fff',fontWeight:700,textShadow:'0 1px 2px rgba(0,0,0,.6)'}}>{(me?.full_name || 'Your Community Profile') + (communityProfile.username ? ` • @${communityProfile.username}` : '')}</div>
           </div>
 
@@ -2165,14 +2165,10 @@ export default function App() {
         <article className='panel' style={{marginBottom:10}}>
           <h4 style={{marginTop:0}}>Stories</h4>
           <div style={{display:'flex', gap:10, overflowX:'auto', paddingBottom:4}}>
-            {(communityPosts.filter(p=>p.media_url).slice(0,8).map(p=>p.media_url).concat([
-              'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=300&q=80',
-              'https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=300&q=80',
-              'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=300&q=80'
-            ])).slice(0,8).map((src, i) => (
+            {communityPosts.filter(p => isUserImage(p.media_url)).slice(0,8).map((p, i) => (
               <div key={`story-${i}`} style={{minWidth:74,textAlign:'center'}}>
                 <div style={{width:64,height:64,padding:2,borderRadius:'50%',background:'linear-gradient(45deg,#16a34a,#0ea5e9,#f97316)',margin:'0 auto'}}>
-                  <img src={src} alt='story' style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%',border:'2px solid #fff'}} />
+                  <img src={p.media_url} alt='story' style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%',border:'2px solid #fff'}} />
                 </div>
                 <div style={{fontSize:11,color:'#475569',marginTop:4}}>Farmer {i+1}</div>
               </div>
@@ -2184,17 +2180,13 @@ export default function App() {
           <article className='panel'>
             <h4>{t('My Community Profile','Mon profil communautaire','我的社区资料')}</h4>
             <div style={{position:'relative', marginBottom:12}}>
-              <img
-                src={communityProfile.cover_image_url || 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200&q=80'}
-                alt='Cover'
-                style={{width:'100%',height:170,objectFit:'cover',borderRadius:12,border:'1px solid #e2e8f0'}}
-              />
+              {isUserImage(communityProfile.cover_image_url)
+                ? <img src={communityProfile.cover_image_url} alt='Cover' style={{width:'100%',height:170,objectFit:'cover',borderRadius:12,border:'1px solid #e2e8f0'}} />
+                : <div style={{width:'100%',height:170,borderRadius:12,border:'1px solid #e2e8f0',background:'#f1f5f9',display:'grid',placeItems:'center',color:'#64748b'}}>Upload your cover image</div>}
               <div style={{position:'absolute',inset:0,borderRadius:12,background:'linear-gradient(180deg,rgba(15,23,42,0) 30%, rgba(15,23,42,.35) 100%)'}} />
-              <img
-                src={communityProfile.avatar_url || 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=300&q=80'}
-                alt='Avatar'
-                style={{position:'absolute',left:14,bottom:-26,width:86,height:86,objectFit:'cover',borderRadius:'50%',border:'4px solid #fff',boxShadow:'0 8px 20px rgba(0,0,0,.22)'}}
-              />
+              {isUserImage(communityProfile.avatar_url)
+                ? <img src={communityProfile.avatar_url} alt='Avatar' style={{position:'absolute',left:14,bottom:-26,width:86,height:86,objectFit:'cover',borderRadius:'50%',border:'4px solid #fff',boxShadow:'0 8px 20px rgba(0,0,0,.22)'}} />
+                : <div style={{position:'absolute',left:14,bottom:-26,width:86,height:86,borderRadius:'50%',border:'4px solid #fff',background:'#e2e8f0',display:'grid',placeItems:'center',color:'#64748b'}}>No DP</div>}
             </div>
             <div style={{paddingLeft:4, marginTop:28, marginBottom:8}}>
               <div style={{fontSize:'1rem',fontWeight:700,color:'#0f172a'}}>{me?.full_name || 'Your profile'}</div>
