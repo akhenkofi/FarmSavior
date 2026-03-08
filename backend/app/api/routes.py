@@ -96,7 +96,8 @@ GOV_SOURCES = [
 
 
 def _valid_photo_url(v: Optional[str]):
-    return bool(v and str(v).startswith(('http://', 'https://', 'data:image/')))
+    # Only user-uploaded image payloads are accepted (base64 data URL), never remote URLs.
+    return bool(v and str(v).startswith('data:image/'))
 
 
 def _ai_review_id_verification(rec: IDVerification):

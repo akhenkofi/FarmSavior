@@ -1740,6 +1740,7 @@ export default function App() {
             </div>
             <form className='list' onSubmit={async e => {
               e.preventDefault()
+              if (!myIdForm.id_front_photo_url || !myIdForm.id_back_photo_url) { alert('Please upload front and back ID photos from your phone/camera.'); return }
               try {
                 await api.submitMyIdVerification(myIdForm)
                 alert('Verification update submitted. Status set to PENDING re-review.')
@@ -1748,8 +1749,18 @@ export default function App() {
             }}>
               <select className='input' value={myIdForm.id_type} onChange={e => setMyIdForm({ ...myIdForm, id_type: e.target.value })}><option>GhanaCard</option><option>NIN</option><option>BF National ID</option></select>
               <input className='input' placeholder='ID Number' value={myIdForm.id_number} onChange={e => setMyIdForm({ ...myIdForm, id_number: e.target.value })} />
-              <input className='input' placeholder='ID Front Photo URL' value={myIdForm.id_front_photo_url} onChange={e => setMyIdForm({ ...myIdForm, id_front_photo_url: e.target.value })} />
-              <input className='input' placeholder='ID Back Photo URL' value={myIdForm.id_back_photo_url} onChange={e => setMyIdForm({ ...myIdForm, id_back_photo_url: e.target.value })} />
+              <label style={{fontSize:'.84rem'}}>Upload ID Front (camera/gallery)
+                <input className='input' type='file' accept='image/*' capture='environment' onChange={(e) => {
+                  const f = e.target.files?.[0]; if (!f) return
+                  const r = new FileReader(); r.onload = () => setMyIdForm(prev => ({ ...prev, id_front_photo_url: String(r.result || ''), id_photo_url: String(r.result || '') })); r.readAsDataURL(f)
+                }} />
+              </label>
+              <label style={{fontSize:'.84rem'}}>Upload ID Back (camera/gallery)
+                <input className='input' type='file' accept='image/*' capture='environment' onChange={(e) => {
+                  const f = e.target.files?.[0]; if (!f) return
+                  const r = new FileReader(); r.onload = () => setMyIdForm(prev => ({ ...prev, id_back_photo_url: String(r.result || '') })); r.readAsDataURL(f)
+                }} />
+              </label>
               <label><input type='checkbox' checked={myIdForm.facial_verification_flag} onChange={e => setMyIdForm({ ...myIdForm, facial_verification_flag: e.target.checked })} /> Facial verification done</label>
               <button className='btn btn-dark'>Submit Verification Update</button>
             </form>
@@ -1758,13 +1769,22 @@ export default function App() {
         </div>
 
         <div className='two-col'>
-          <article className='panel'><h3>{t('ID Verification','Vérification d’identité','身份认证')}</h3><form className='list' onSubmit={async e => { e.preventDefault(); await api.createIdVerification({ ...idForm, user_id: Number(idForm.user_id) }); await load() }}>
+          <article className='panel'><h3>{t('ID Verification','Vérification d’identité','身份认证')}</h3><form className='list' onSubmit={async e => { e.preventDefault(); if (!idForm.id_front_photo_url || !idForm.id_back_photo_url) { alert('Please upload front and back ID photos from your phone/camera.'); return } await api.createIdVerification({ ...idForm, user_id: Number(idForm.user_id) }); await load() }}>
             <input className='input' type='number' placeholder='User ID' value={idForm.user_id} onChange={e => setIdForm({ ...idForm, user_id: e.target.value })} />
             <select className='input' value={idForm.id_type} onChange={e => setIdForm({ ...idForm, id_type: e.target.value })}><option>GhanaCard</option><option>NIN</option><option>BF National ID</option></select>
             <input className='input' placeholder='ID Number' value={idForm.id_number} onChange={e => setIdForm({ ...idForm, id_number: e.target.value })} />
-            <input className='input' placeholder='ID Photo URL (legacy/single)' value={idForm.id_photo_url} onChange={e => setIdForm({ ...idForm, id_photo_url: e.target.value })} />
-            <input className='input' placeholder='ID Front Photo URL' value={idForm.id_front_photo_url} onChange={e => setIdForm({ ...idForm, id_front_photo_url: e.target.value })} />
-            <input className='input' placeholder='ID Back Photo URL' value={idForm.id_back_photo_url} onChange={e => setIdForm({ ...idForm, id_back_photo_url: e.target.value })} />
+            <label style={{fontSize:'.84rem'}}>Upload ID Front (camera/gallery)
+              <input className='input' type='file' accept='image/*' capture='environment' onChange={(e) => {
+                const f = e.target.files?.[0]; if (!f) return
+                const r = new FileReader(); r.onload = () => setIdForm(prev => ({ ...prev, id_front_photo_url: String(r.result || ''), id_photo_url: String(r.result || '') })); r.readAsDataURL(f)
+              }} />
+            </label>
+            <label style={{fontSize:'.84rem'}}>Upload ID Back (camera/gallery)
+              <input className='input' type='file' accept='image/*' capture='environment' onChange={(e) => {
+                const f = e.target.files?.[0]; if (!f) return
+                const r = new FileReader(); r.onload = () => setIdForm(prev => ({ ...prev, id_back_photo_url: String(r.result || '') })); r.readAsDataURL(f)
+              }} />
+            </label>
             <label><input type='checkbox' checked={idForm.facial_verification_flag} onChange={e => setIdForm({ ...idForm, facial_verification_flag: e.target.checked })} /> Facial verification done</label>
             <button className='btn btn-dark'>Save ID Verification</button>
           </form></article>
@@ -2268,12 +2288,12 @@ export default function App() {
             {!(communityFeedMode === 'reels' ? communityPosts.filter(x => String(x.media_type || '').toUpperCase() === 'VIDEO').length : communityPosts.length) && (
               <div className='two-col'>
                 <div className='panel' style={{padding:8}}>
-                  <img src='https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=900&q=80' alt='showcase' style={{width:'100%',height:150,objectFit:'cover',borderRadius:8}} />
+                  <div style={{width:'100%',height:150,borderRadius:8,background:'#f1f5f9',display:'grid',placeItems:'center',color:'#64748b'}}>No user image yet</div>
                   <div style={{marginTop:6,fontWeight:700}}>Community highlights loading…</div>
                   <div style={{fontSize:'.86rem',color:'#64748b'}}>Be the first to share your farm story.</div>
                 </div>
                 <div className='panel' style={{padding:8}}>
-                  <img src='https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=900&q=80' alt='showcase' style={{width:'100%',height:150,objectFit:'cover',borderRadius:8}} />
+                  <div style={{width:'100%',height:150,borderRadius:8,background:'#f1f5f9',display:'grid',placeItems:'center',color:'#64748b'}}>No user image yet</div>
                   <div style={{marginTop:6,fontWeight:700}}>{communityFeedMode === 'reels' ? 'No FarmReels yet.' : 'No community posts yet.'}</div>
                   <div style={{fontSize:'.86rem',color:'#64748b'}}>Post updates, innovations, and products to light up this feed.</div>
                 </div>
@@ -2288,7 +2308,7 @@ export default function App() {
           e.preventDefault();
           try {
             if (!diseaseForm.target) { alert('Please select crop/animal type first.'); return }
-            if (!diseaseForm.image_url) { alert('Please upload an image or provide an image URL.'); return }
+            if (!diseaseForm.image_url) { alert('Please upload an image from your phone/camera.'); return }
             const r = await api.analyzeDisease({ user_id: Number(diseaseForm.user_id), crop_type: diseaseForm.target, image_url: diseaseForm.image_url });
             alert(`Diagnosis: ${r.diagnosis} | Confidence: ${Math.round((r.confidence||0)*100)}%`);
             await load();
@@ -2305,14 +2325,16 @@ export default function App() {
             <option value=''>Select</option>
             {(diseaseForm.category === 'crop' ? cropOptions : animalOptions).map(x => <option key={x} value={x}>{x}</option>)}
           </select>
-          <input className='input' placeholder='Image URL (optional)' value={diseaseForm.image_url.startsWith('uploaded://') ? '' : diseaseForm.image_url} onChange={(e)=>setDiseaseForm({...diseaseForm,image_url:e.target.value})} />
-          <input className='input' type='file' accept='image/*' onChange={(e)=>{
+          <input className='input' type='file' accept='image/*' capture='environment' onChange={(e)=>{
             const f = e.target.files?.[0]
             if (!f) return
             setDiseaseImageFileName(f.name)
-            setDiseaseForm(prev => ({ ...prev, image_url: `uploaded://${f.name}` }))
             const reader = new FileReader()
-            reader.onload = () => setDiseaseImagePreview(String(reader.result || ''))
+            reader.onload = () => {
+              const data = String(reader.result || '')
+              setDiseaseImagePreview(data)
+              setDiseaseForm(prev => ({ ...prev, image_url: data }))
+            }
             reader.readAsDataURL(f)
           }} />
           <button className='btn btn-dark'>Analyze</button>
