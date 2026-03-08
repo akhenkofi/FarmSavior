@@ -933,16 +933,19 @@ def public_main_weather():
 
 @router.get('/news/public')
 def public_news(limit: int = 12):
+    cache_path = (Path(__file__).resolve().parents[3] / 'data' / 'runtime' / 'public-news-cache.json')
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+
     items = []
     for source, url in PUBLIC_NEWS_FEEDS:
         try:
-            req = Request(url, headers={'User-Agent': 'FarmSaviorNewsBot/1.0'})
-            with urlopen(req, timeout=6) as resp:
+            req = Request(url, headers={'User-Agent': 'Mozilla/5.0 FarmSaviorNewsBot/1.0'})
+            with urlopen(req, timeout=10) as resp:
                 data = resp.read()
             root = ET.fromstring(data)
             channel = root.find('channel')
             rss_items = channel.findall('item') if channel is not None else root.findall('.//item')
-            for it in rss_items[:10]:
+            for it in rss_items[:12]:
                 title = (it.findtext('title') or '').strip()
                 link = (it.findtext('link') or '').strip()
                 pub = (it.findtext('pubDate') or '').strip()
@@ -959,15 +962,37 @@ def public_news(limit: int = 12):
                 if not img:
                     img = SOURCE_IMAGES.get(source, '')
                 if title and link:
-                    items.append({'title': title, 'url': link, 'source': source, 'published': pub, 'image_url': img, 'image_credit': 'Unsplash / source publisher'})
+                    items.append({'title': title, 'url': link, 'source': source, 'published': pub, 'image_url': img, 'image_credit': 'Source publisher'})
         except Exception:
             continue
 
+    if items:
+        dedup = []
+        seen = set()
+        for it in items:
+            key = (it.get('title','').strip().lower(), it.get('url','').strip().lower())
+            if key in seen:
+                continue
+            seen.add(key)
+            dedup.append(it)
+        items = dedup
+        try:
+            cache_path.write_text(json.dumps(items, ensure_ascii=False), encoding='utf-8')
+        except Exception:
+            pass
+    else:
+        try:
+            cached = json.loads(cache_path.read_text(encoding='utf-8')) if cache_path.exists() else []
+            if isinstance(cached, list) and cached:
+                items = cached
+        except Exception:
+            items = []
+
     if not items:
         items = [
-            {'title': 'Climate-smart farming adoption grows across West Africa', 'url': 'https://www.fao.org', 'source': 'FAO News', 'published': '', 'image_url': SOURCE_IMAGES['FAO News'], 'image_credit': 'Unsplash / FAO'},
-            {'title': 'Smallholder market access improves with digital logistics', 'url': 'https://www.cgiar.org', 'source': 'CGIAR', 'published': '', 'image_url': SOURCE_IMAGES['CGIAR'], 'image_credit': 'Unsplash / CGIAR'},
-            {'title': 'Agri-finance innovations helping rural producers scale', 'url': 'https://www.worldbank.org', 'source': 'World Bank Agriculture', 'published': '', 'image_url': SOURCE_IMAGES['World Bank Agriculture'], 'image_credit': 'Unsplash / World Bank'}
+            {'title': 'Climate-smart farming adoption grows across West Africa', 'url': 'https://www.fao.org', 'source': 'FAO News', 'published': '', 'image_url': SOURCE_IMAGES['FAO News'], 'image_credit': 'Source publisher'},
+            {'title': 'Smallholder market access improves with digital logistics', 'url': 'https://www.cgiar.org', 'source': 'CGIAR', 'published': '', 'image_url': SOURCE_IMAGES['CGIAR'], 'image_credit': 'Source publisher'},
+            {'title': 'Agri-finance innovations helping rural producers scale', 'url': 'https://www.worldbank.org', 'source': 'World Bank Agriculture', 'published': '', 'image_url': SOURCE_IMAGES['World Bank Agriculture'], 'image_credit': 'Source publisher'}
         ]
 
     return items[:max(1, min(limit, 30))]

@@ -182,9 +182,9 @@ const featuredWeatherSeed = [
 ]
 
 const featuredNewsSeed = [
-  { title: 'West Africa input prices ease as supply chains stabilize', url: 'https://www.farmsavior.com', source: 'FarmSavior Wire', published: 'Live', image_url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80', image_credit: 'Unsplash / FarmSavior' },
-  { title: 'Moisture outlook improves for rice and maize belts', url: 'https://www.farmsavior.com', source: 'FarmSavior Weather Desk', published: 'Live', image_url: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200&q=80', image_credit: 'Unsplash / FarmSavior' },
-  { title: 'Regional livestock demand remains strong ahead of market week', url: 'https://www.farmsavior.com', source: 'FarmSavior Markets', published: 'Live', image_url: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1200&q=80', image_credit: 'Unsplash / FarmSavior' }
+  { title: 'Climate-smart farming adoption grows across West Africa', url: 'https://www.fao.org', source: 'FAO News', published: '', image_url: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200&q=80', image_credit: 'Unsplash / FAO' },
+  { title: 'Smallholder market access improves with digital logistics', url: 'https://www.cgiar.org', source: 'CGIAR', published: '', image_url: 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1200&q=80', image_credit: 'Unsplash / CGIAR' },
+  { title: 'Agri-finance innovations helping rural producers scale', url: 'https://www.worldbank.org', source: 'World Bank Agriculture', published: '', image_url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80', image_credit: 'Unsplash / World Bank' }
 ]
 
 const featuredGovSeed = [
