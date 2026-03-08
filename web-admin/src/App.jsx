@@ -1104,7 +1104,7 @@ export default function App() {
             <button className='tab active' type='button'>Main App</button>
           </div>
 
-          <div className='tabs'>{['login', 'signup', 'otp'].map(m => <button key={m} className={`tab ${authMode === m ? 'active' : ''}`} onClick={() => setAuthMode(m)}>{m === 'login' ? t('LOGIN','LOGIN','登录') : (m === 'signup' ? t('SIGNUP','INSCRIPTION','注册') : t('OTP','OTP','验证码'))}</button>)}</div>
+          <div className='tabs'>{['login', 'signup'].map(m => <button key={m} className={`tab ${authMode === m ? 'active' : ''}`} onClick={() => setAuthMode(m)}>{m === 'login' ? t('LOGIN','LOGIN','登录') : t('SIGNUP','INSCRIPTION','注册')}</button>)}</div>
 
           {authMode === 'signup' && <form className='list' onSubmit={async (e) => {
             try {
@@ -1120,7 +1120,7 @@ export default function App() {
                 user_type: signup.user_type,
                 password: signup.password,
               }
-              const r = await api.register(payload)
+              await api.register(payload)
               await api.trackAnalyticsEvent({
                 event_name: 'consent_captured',
                 country: signup.country,
@@ -1148,11 +1148,10 @@ export default function App() {
                   captured_at_utc: new Date().toISOString()
                 }))
               } catch {}
-              const dest = r.otp_destination || signup.phone
-              setPhoneForOtp(dest)
-              setOtp({ ...otp, destination: dest })
-              setAuthMode('otp')
-              setAuthMsg(`OTP sent to ${dest}. If delivery is delayed, use code: ${r.otp_mock_code}`)
+              const identifier = signup.signup_method === 'email' ? signup.email : signup.phone
+              const loginRes = await api.login({ identifier, password: signup.password })
+              saveToken(loginRes.access_token)
+              setAuthMsg('Account created and signed in successfully.')
             } catch (e) { setAuthMsg(`Signup failed: ${errMsg(e)}`) }
           }}>
             <input className='input' placeholder='Full name' value={signup.full_name} onChange={e => setSignup({ ...signup, full_name: e.target.value })} required />
@@ -1184,13 +1183,6 @@ export default function App() {
             <button className='btn btn-dark'>{t('Login','Connexion','登录')}</button>
           </form>}
 
-          {authMode === 'otp' && <form className='list' onSubmit={async (e) => {
-            try { e.preventDefault(); const r = await api.verifyOtp(otp); saveToken(r.access_token) } catch (e) { setAuthMsg(`OTP verification failed: ${errMsg(e)}`) }
-          }}>
-            <input className='input' placeholder={t('Phone or Email','Téléphone ou e-mail','手机号或邮箱')} value={otp.destination || phoneForOtp} onChange={e => setOtp({ ...otp, destination: e.target.value })} required />
-            <input className='input' placeholder='OTP Code' value={otp.code} onChange={e => setOtp({ ...otp, code: e.target.value })} required />
-            <button className='btn btn-dark'>Verify OTP</button>
-          </form>}
           </>}
           <p>{authMsg}</p>
 
