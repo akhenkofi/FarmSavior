@@ -233,6 +233,15 @@ def _send_otp(destination: str, method: str, code: str):
             with urlopen(req, timeout=12) as _:
                 pass
             return {'sent': True, 'channel': 'phone'}
+        except HTTPError as e:
+            try:
+                raw = e.read().decode('utf-8', errors='ignore')
+                parsed = json.loads(raw) if raw else {}
+                msg = parsed.get('message') or raw or str(e)
+                code = parsed.get('code')
+                return {'sent': False, 'channel': 'phone', 'error': f"Twilio HTTP {getattr(e, 'code', 'ERR')}: {msg}" + (f" (code {code})" if code else '')}
+            except Exception:
+                return {'sent': False, 'channel': 'phone', 'error': str(e)}
         except Exception as e:
             return {'sent': False, 'channel': 'phone', 'error': str(e)}
 
