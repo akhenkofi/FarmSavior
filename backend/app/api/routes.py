@@ -2319,6 +2319,8 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
                 data=json.dumps(ps_payload).encode('utf-8'),
                 headers={
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'User-Agent': 'FarmSavior/1.0 (+https://www.farmsavior.com)',
                     'Authorization': f'Bearer {paystack_secret}'
                 },
                 method='POST'
