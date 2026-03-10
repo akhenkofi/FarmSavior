@@ -1908,6 +1908,20 @@ def ai_disease_analyze(payload: DiseaseAnalyzeIn, db: Session = Depends(get_db))
     for d in candidates:
         hit_count = sum(1 for k in d['keys'] if k in note)
         score = float(d['score']) + (0.03 * hit_count)
+
+        # symptom-weight tuning for better goat differential diagnosis
+        if d['name'] == 'Goat Pneumonia':
+            if any(k in note for k in ['cough', 'labored breathing', 'rapid breathing', 'wheezing', 'respiratory']):
+                score += 0.12
+            if 'nasal discharge' in note:
+                score += 0.04
+        if d['name'] == 'PPR (Goat)':
+            ppr_core = any(k in note for k in ['mouth sores', 'diarrhea', 'high fever', 'ppr'])
+            if ppr_core:
+                score += 0.08
+            if ('nasal discharge' in note) and not ppr_core:
+                score -= 0.08
+
         if target_group and d['group'] == target_group:
             score += 0.02
         ranked.append((score, hit_count, d))
