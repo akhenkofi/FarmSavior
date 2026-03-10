@@ -1866,71 +1866,66 @@ def ai_pest_identify(payload: PestIdentifyIn, authorization: Optional[str] = Hea
 
 @router.post('/ai/disease/analyze')
 def ai_disease_analyze(payload: DiseaseAnalyzeIn, db: Session = Depends(get_db)):
-    # Rule-based MVP placeholder; can be replaced with TensorFlow/external AI API.
-    crop = (payload.crop_type or '').lower()
-    img = payload.image_url.lower()
-    note = (payload.context_note or '').lower()
+    target = (payload.crop_type or '').lower().strip()
+    note = (payload.context_note or '').lower().strip()
 
-    diagnosis = 'Unknown condition'
-    confidence = 0.55
-    recommendation = 'Collect more images and consult extension officer.'
-    treatment = 'Provide supportive care, isolate affected animals/plants where possible, and avoid unverified medication use.'
+    # Broader disease coverage across crops + listed animal groups.
+    disease_db = [
+        # Crops
+        {'group':'cassava','name':'Cassava Mosaic Disease','score':0.84,'keys':['mosaic','leaf curl','chlorosis','distorted leaves'], 'recommendation':'Remove infected plants and replant with resistant clean cuttings.', 'treatment':'Rogue heavily infected plants, sanitize tools, and control whitefly vectors early.'},
+        {'group':'maize','name':'Maize Rust','score':0.8,'keys':['rust','orange pustule','yellow spots','powder on leaves'], 'recommendation':'Improve spacing and rotate with non-host crops.', 'treatment':'Use label-approved fungicide rotation and remove heavily infected leaves.'},
+        {'group':'tomato','name':'Tomato Blight','score':0.85,'keys':['blight','leaf rot','dark lesions','stem lesion'], 'recommendation':'Prune affected material and reduce leaf wetness.', 'treatment':'Apply approved fungicide program and remove infected leaves/fruits.'},
+        {'group':'rice','name':'Rice Blast','score':0.81,'keys':['blast','diamond lesions','neck rot','brown lesions'], 'recommendation':'Use resistant varieties and balanced fertilization.', 'treatment':'Apply approved blast management fungicide schedule and avoid excess nitrogen.'},
+        {'group':'pepper','name':'Pepper Anthracnose','score':0.79,'keys':['sunken lesions','fruit rot','anthracnose'], 'recommendation':'Improve sanitation and drainage.', 'treatment':'Remove infected fruits and apply approved fungicide program.'},
+        {'group':'onion','name':'Onion Downy Mildew','score':0.78,'keys':['downy','purple patches','leaf collapse'], 'recommendation':'Improve airflow and avoid prolonged leaf wetness.', 'treatment':'Apply approved anti-mildew fungicides and remove infected foliage.'},
 
-    if 'cassava' in crop or 'cassava' in img or 'mosaic' in note:
-        diagnosis = 'Possible Cassava Mosaic'
-        confidence = 0.81
-        recommendation = 'Remove severely affected plants and use resistant cuttings.'
-        treatment = 'Rogue heavily infected plants, sanitize tools, and apply locally approved mosaic-management protocols.'
-    elif 'maize' in crop or 'maize' in img or 'rust' in note or 'yellow spots' in note:
-        diagnosis = 'Possible Maize Rust'
-        confidence = 0.78
-        recommendation = 'Apply appropriate fungicide and improve spacing.'
-        treatment = 'Use label-approved fungicide rotation, improve airflow, and remove severely affected leaves.'
-    elif 'tomato' in crop or 'tomato' in img or 'blight' in note or 'leaf rot' in note:
-        diagnosis = 'Possible Tomato Blight'
-        confidence = 0.84
-        recommendation = 'Prune affected leaves and use preventive fungicide schedule.'
-        treatment = 'Prune and discard infected foliage, avoid overhead watering, and apply preventive fungicide per local guidance.'
-    elif any(x in crop for x in ['poultry','chicken']) or 'newcastle' in note:
-        diagnosis = 'Possible Newcastle Disease (Poultry)'
-        confidence = 0.76
-        recommendation = 'Isolate affected birds and review vaccination status immediately.'
-        treatment = 'Isolate symptomatic birds, disinfect housing, and start vet-approved treatment/support protocol immediately.'
-    elif 'goat' in crop or 'ppr' in note:
-        diagnosis = 'Possible PPR (Goat)'
-        confidence = 0.74
-        recommendation = 'Isolate herd segment and contact vet for confirmation.'
-        treatment = 'Immediate isolation, strict movement control, supportive fluids/nutrition, and urgent veterinary treatment plan.'
-    elif 'sheep' in crop:
-        diagnosis = 'Possible Sheep Pox'
-        confidence = 0.72
-        recommendation = 'Quarantine and initiate veterinary treatment protocol.'
-        treatment = 'Quarantine affected animals, manage lesions, and follow veterinarian-directed pox treatment/prevention protocol.'
-    elif 'cattle' in crop:
-        diagnosis = 'Possible Lumpy Skin Disease'
-        confidence = 0.73
-        recommendation = 'Restrict movement and consult livestock officer.'
-        treatment = 'Restrict movement immediately, control vectors, and initiate vet-guided treatment/support plan.'
-    elif 'rabbit' in crop:
-        diagnosis = 'Possible Coccidiosis (Rabbits)'
-        confidence = 0.71
-        recommendation = 'Improve hygiene, isolate, and provide vet-prescribed treatment.'
-        treatment = 'Improve sanitation, isolate affected rabbits, and follow veterinarian-prescribed anti-coccidial protocol.'
-    elif 'grasscutter' in crop:
-        diagnosis = 'Possible Respiratory Infection (Grasscutter)'
-        confidence = 0.68
-        recommendation = 'Improve ventilation and isolate symptomatic animals.'
-        treatment = 'Improve ventilation urgently, isolate symptomatic stock, and begin vet-directed respiratory treatment protocol.'
-    elif 'horse' in crop:
-        diagnosis = 'Possible Equine Influenza'
-        confidence = 0.69
-        recommendation = 'Isolate and monitor temperature, then consult equine vet.'
-        treatment = 'Isolate immediately, monitor vitals, provide supportive care, and start equine vet treatment guidance.'
-    elif 'dog' in crop:
-        diagnosis = 'Possible Canine Distemper'
-        confidence = 0.75
-        recommendation = 'Immediate isolation and urgent veterinary assessment recommended.'
-        treatment = 'Immediate isolation, disinfection of contact areas, and urgent vet-directed treatment plan.'
+        # Animals
+        {'group':'goat','name':'PPR (Goat)','score':0.82,'keys':['ppr','mouth sores','nasal discharge','diarrhea','high fever'], 'recommendation':'Immediate isolation and strict movement control.', 'treatment':'Supportive fluids, anti-secondary-infection cover, and vet-directed protocol urgently.'},
+        {'group':'goat','name':'Goat Pneumonia','score':0.74,'keys':['cough','labored breathing','nasal discharge','rapid breathing'], 'recommendation':'Separate sick goats and improve housing ventilation.', 'treatment':'Vet-directed antimicrobial/anti-inflammatory plan and supportive care.'},
+        {'group':'sheep','name':'Sheep Pox','score':0.8,'keys':['pox','skin nodules','scabs','fever'], 'recommendation':'Quarantine and strict biosecurity.', 'treatment':'Lesion care, supportive treatment, and vet-guided flock protocol.'},
+        {'group':'sheep','name':'Sheep Foot Rot','score':0.74,'keys':['limping','hoof smell','hoof rot','interdigital'], 'recommendation':'Keep pens dry and isolate lame animals.', 'treatment':'Hoof trimming/disinfection plus vet-prescribed treatment.'},
+        {'group':'cattle','name':'Lumpy Skin Disease','score':0.79,'keys':['lumpy skin','nodules','fever','enlarged lymph'], 'recommendation':'Restrict movement and control biting insects.', 'treatment':'Supportive care with veterinarian-directed treatment and vector control.'},
+        {'group':'cattle','name':'Mastitis','score':0.76,'keys':['udder swelling','clots in milk','hot udder','painful udder'], 'recommendation':'Maintain udder hygiene and milking hygiene.', 'treatment':'Prompt vet-guided mastitis therapy and supportive udder management.'},
+        {'group':'poultry','name':'Newcastle Disease','score':0.8,'keys':['newcastle','twisted neck','green diarrhea','respiratory distress'], 'recommendation':'Immediate flock isolation and emergency biosecurity.', 'treatment':'Supportive care + strict vet/extension response and vaccination review.'},
+        {'group':'poultry','name':'Coccidiosis (Poultry)','score':0.74,'keys':['bloody droppings','coccidia','depression','ruffled feathers'], 'recommendation':'Improve litter dryness and sanitation.', 'treatment':'Use vet-recommended anti-coccidial program and supportive hydration.'},
+        {'group':'rabbit','name':'Coccidiosis (Rabbit)','score':0.76,'keys':['bloat','diarrhea','weight loss','coccidiosis'], 'recommendation':'Improve hygiene and reduce pen moisture.', 'treatment':'Vet-prescribed anti-coccidial treatment and supportive care.'},
+        {'group':'grasscutter','name':'Grasscutter Respiratory Infection','score':0.71,'keys':['wheezing','nasal discharge','cough','off feed'], 'recommendation':'Improve ventilation and reduce stress.', 'treatment':'Immediate isolation and vet-directed respiratory treatment plan.'},
+        {'group':'horse','name':'Equine Influenza','score':0.73,'keys':['equine influenza','dry cough','fever','nasal discharge'], 'recommendation':'Isolate horses and stop movement.', 'treatment':'Supportive care and veterinarian-directed equine protocol.'},
+        {'group':'dog','name':'Canine Distemper','score':0.77,'keys':['distemper','eye discharge','nose discharge','neurologic signs'], 'recommendation':'Immediate isolation and urgent vet examination.', 'treatment':'Urgent supportive + veterinarian-directed treatment plan.'},
+    ]
+
+    aliases = {
+        'chicken':'poultry','turkey':'poultry','bird':'poultry',
+        'cow':'cattle','bull':'cattle',
+    }
+    target_group = aliases.get(target, target)
+
+    candidates = [d for d in disease_db if d['group'] == target_group]
+    if not candidates:
+        candidates = disease_db
+
+    ranked = []
+    for d in candidates:
+        hit_count = sum(1 for k in d['keys'] if k in note)
+        score = float(d['score']) + (0.03 * hit_count)
+        if target_group and d['group'] == target_group:
+            score += 0.02
+        ranked.append((score, hit_count, d))
+
+    ranked.sort(key=lambda x: x[0], reverse=True)
+    top_score, top_hits, top = ranked[0]
+
+    # If no symptom keywords hit, keep confidence conservative to avoid overclaiming.
+    confidence = min(0.96, round(top_score if top_hits > 0 else max(0.58, top_score - 0.12), 2))
+
+    diagnosis = f"Possible {top['name']}"
+    recommendation = top['recommendation']
+    treatment = top['treatment']
+
+    # show alternatives for transparency
+    top_matches = []
+    for s, hits, d in ranked[:3]:
+        top_matches.append({'diagnosis': d['name'], 'confidence': round(min(0.96, s if hits > 0 else s - 0.12), 2)})
 
     vet_notice = 'Important: Contact a licensed veterinarian/agronomist for confirmation before treatment.'
     result = {
@@ -1938,9 +1933,10 @@ def ai_disease_analyze(payload: DiseaseAnalyzeIn, db: Session = Depends(get_db))
         'confidence': confidence,
         'recommendation': recommendation,
         'treatment': treatment,
+        'top_matches': top_matches,
         'vet_notice': vet_notice,
         'context_note_used': payload.context_note or '',
-        'engine': 'FarmSavior AI Analyzer (MVP)'
+        'engine': 'FarmSavior AI Analyzer (expanded rule engine v2)'
     }
 
     rec = DiseaseScan(user_id=payload.user_id, image_url=payload.image_url, crop_type=payload.crop_type, result=json.dumps(result))
