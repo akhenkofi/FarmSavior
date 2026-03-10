@@ -1418,8 +1418,16 @@ export default function App() {
                       currency: selectedCurrency
                     })
                     if (r.payment_url) {
-                      window.open(r.payment_url, '_blank')
-                      alert(t(`Checkout started. Complete payment to activate. Ref: ${r.reference}`,`Paiement initié. Finalisez le paiement pour activer. Réf : ${r.reference}`))
+                      // Mobile Safari/Chrome often blocks popups; force same-tab redirect for reliability.
+                      try {
+                        const popup = window.open(r.payment_url, '_blank', 'noopener,noreferrer')
+                        if (!popup) {
+                          window.location.assign(r.payment_url)
+                        }
+                      } catch {
+                        window.location.assign(r.payment_url)
+                      }
+                      alert(t(`Redirecting to secure payment now. Ref: ${r.reference}`,`Redirection vers le paiement sécurisé. Réf : ${r.reference}`))
                     } else {
                       alert(t(`Checkout created (payment provider not configured). Ref: ${r.reference}`,`Paiement créé (prestataire non configuré). Réf : ${r.reference}`))
                     }
