@@ -213,6 +213,16 @@ def _normalize_phone(value: Optional[str]) -> str:
         keep = '+' + keep[2:]
     if '+' in keep and not keep.startswith('+'):
         keep = '+' + ''.join(ch for ch in keep if ch.isdigit())
+
+    # Ghana-friendly normalization to reduce login/signup mismatch:
+    # 053xxxxxxx -> +23353xxxxxxx
+    raw_digits = ''.join(ch for ch in keep if ch.isdigit())
+    if keep.startswith('0') and len(raw_digits) == 10:
+        keep = '+233' + raw_digits[1:]
+    elif keep.startswith('233') and len(raw_digits) >= 12:
+        keep = '+' + raw_digits
+    elif keep.startswith('+'):
+        keep = '+' + raw_digits
     return keep
 
 
@@ -221,6 +231,22 @@ def _normalize_identifier(value: Optional[str]) -> str:
     if '@' in v:
         return v.lower()
     return _normalize_phone(v)
+
+
+def _phone_variants(value: Optional[str]) -> list[str]:
+    p = _normalize_phone(value)
+    if not p:
+        return []
+    digits = ''.join(ch for ch in p if ch.isdigit())
+    variants = {p, digits, ('+' + digits)}
+    if digits.startswith('233') and len(digits) >= 12:
+        variants.add('0' + digits[3:])
+    if digits.startswith('0') and len(digits) == 10:
+        variants.add('+233' + digits[1:])
+    # relaxed suffix match token for recovery checks
+    if len(digits) >= 9:
+        variants.add(digits[-9:])
+    return [v for v in variants if v]
 
 
 def _account_store_path() -> Path:
@@ -280,7 +306,7 @@ def _account_store_recover_user(db: Session, identifier: str) -> Optional[User]:
     for r in rows:
         phone = _normalize_phone(r.get('phone'))
         email = str(r.get('email') or '').strip().lower()
-        if ident in [phone, email]:
+        if ('@' in ident and ident == email) or (ident in _phone_variants(phone)):
             hit = r
             break
     if not hit:
@@ -456,8 +482,13 @@ def register_user(payload: UserCreate, db: Session = Depends(get_db)):
     if method == 'phone':
         if not payload.phone:
             raise HTTPException(status_code=400, detail='Phone is required for phone signup')
-        alt_phone = payload.phone[1:] if payload.phone.startswith('+') else f'+{payload.phone}'
-        exists = db.query(User).filter((User.phone == payload.phone) | (User.phone == alt_phone)).first()
+        variants = _phone_variants(payload.phone)
+        exists = None
+        for v in variants:
+            row = db.query(User).filter(User.phone == v).first()
+            if row:
+                exists = row
+                break
         if not exists:
             exists = _account_store_recover_user(db, payload.phone)
         if exists:
@@ -532,8 +563,16 @@ def login_user(payload: UserLogin, db: Session = Depends(get_db)):
     if '@' in ident:
         user = db.query(User).filter(User.email == ident).first()
     else:
-        alt = ident[1:] if ident.startswith('+') else f'+{ident}'
-        user = db.query(User).filter((User.phone == ident) | (User.phone == alt)).first()
+        for v in _phone_variants(ident):
+            row = db.query(User).filter(User.phone == v).first()
+            if row:
+                user = row
+                break
+        if not user:
+            # final relaxed fallback: suffix match for migrated/legacy formats
+            digits = ''.join(ch for ch in ident if ch.isdigit())
+            if len(digits) >= 9:
+                user = db.query(User).filter(User.phone.like(f"%{digits[-9:]}%")).first()
     if not user:
         user = _account_store_recover_user(db, ident)
     if not user or user.is_deleted or not user.hashed_password or not verify_password(payload.password, user.hashed_password):
