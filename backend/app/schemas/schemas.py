@@ -245,6 +245,7 @@ class SheepGoatSubscriptionIn(BaseModel):
     country: str = 'GH'
     billing_cycle: Literal['monthly', 'yearly'] = 'monthly'
     currency: str
+    force_paid: bool = False
 
 
 class WorldChatMessageIn(BaseModel):

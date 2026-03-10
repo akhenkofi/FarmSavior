@@ -2368,7 +2368,7 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
     user = db.query(User).filter(User.id == (payload.user_id or 0)).first() if payload.user_id else None
 
     # One-time 7-day free trial (no charge now), unique per phone/email/user.
-    if not _trial_already_used(user, payload.user_id, db):
+    if (not payload.force_paid) and (not _trial_already_used(user, payload.user_id, db)):
         ref = f"SGTRIAL-{int(datetime.utcnow().timestamp())}-{random.randint(100,999)}"
         trial_end = datetime.utcnow() + timedelta(days=7)
         rec = SheepGoatSubscription(

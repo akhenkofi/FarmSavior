@@ -1387,6 +1387,7 @@ export default function App() {
         <h3>{t('🐑 Sheep & Goats Records & Intelligence Platform (Africa-Wide)','🐑 Plateforme de registres et d’intelligence ovins/caprins (Afrique entière)','🐑 羊与山羊记录与智能平台（非洲范围）')}</h3>
         <p style={{fontSize:'.85rem',color:'#475569'}}>{t('A production-grade livestock records system for sheep and goats, with traceability, breeding performance, health tracking, and subscription-based access for operators across Africa.','Un système professionnel de registres d’élevage pour ovins et caprins, avec traçabilité, performance de reproduction, suivi sanitaire et accès par abonnement pour les opérateurs en Afrique.','面向非洲运营者的生产级羊与山羊记录系统，包含溯源、繁育绩效、健康追踪和订阅访问。')}</p>
         <p style={{fontSize:'.82rem',color:'#64748b',marginTop:4}}>{t('Pricing auto-displays in your selected country currency. Settlement can route to Ghana Mobile Money or US bank account once payout details are configured.','Les prix s’affichent automatiquement dans la devise du pays sélectionné. Le règlement peut être acheminé vers Mobile Money Ghana ou un compte bancaire US une fois les détails de paiement configurés.','价格会按你选择的国家货币自动显示。配置收款后，可结算到加纳移动支付或美国银行账户。')}</p>
+        <p style={{fontSize:'.85rem',color:'#0f766e',marginTop:6,fontWeight:700}}>{t('🎁 7-day free trial available • No charge now • Free cancellation during trial • Trial is limited to 10 animals and available once per email/phone','🎁 Essai gratuit de 7 jours • Aucun débit maintenant • Annulation gratuite pendant l’essai • Essai limité à 10 animaux et une seule fois par email/téléphone','🎁 提供7天免费试用 • 现在不扣费 • 试用期可免费取消 • 试用仅限10只动物且每个邮箱/手机号仅一次')}</p>
         <h4 style={{margin:'8px 0'}}>{t('Select Your Subscription Plan','Sélectionnez votre plan d’abonnement','选择你的订阅方案')}</h4>
         <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
           {publicLivestockPlans.map((p, i) => {
@@ -1406,7 +1407,31 @@ export default function App() {
               <div className='list'>
                 {(p.features || []).map((f, j) => <div className='list-row' key={`pf-${i}-${j}`}><span>{displayFeature(f)}</span></div>)}
               </div>
-              <div className='list-row' style={{marginTop:8}}>
+              <div className='list-row' style={{marginTop:8, gap:8, flexWrap:'wrap'}}>
+                <button className='btn' onClick={async () => {
+                  if (!token) { handleProtectedAction('onboarding', 'Start free trial'); return }
+                  try {
+                    const r = await api.checkoutLivestockRecordsPlan({
+                      user_id: Number(me?.id || 1),
+                      plan_code: p.plan_code || 'starter',
+                      country: uiCountry,
+                      billing_cycle: 'monthly',
+                      currency: selectedCurrency,
+                      force_paid: false
+                    })
+                    if (r.trial_active) {
+                      alert(t(`7-day free trial started. No charge now. Free cancellation before: ${r.free_cancellation_before || r.trial_ends_at}. Ref: ${r.reference}`,`Essai gratuit de 7 jours activé. Aucun débit maintenant. Annulation gratuite avant : ${r.free_cancellation_before || r.trial_ends_at}. Réf : ${r.reference}`))
+                    } else if (r.payment_url) {
+                      try {
+                        const popup = window.open(r.payment_url, '_blank', 'noopener,noreferrer')
+                        if (!popup) window.location.assign(r.payment_url)
+                      } catch { window.location.assign(r.payment_url) }
+                    } else {
+                      alert(t(`Trial unavailable for this account.`, `Essai indisponible pour ce compte.`))
+                    }
+                  } catch (e) { alert(t(`Trial failed: ${errMsg(e)}`,`Échec de l’essai : ${errMsg(e)}`)) }
+                }}>{t('Start 7-Day Free Trial','Démarrer l’essai 7 jours','开始7天免费试用')}</button>
+
                 <button className='btn btn-dark' onClick={async () => {
                   if (!token) { handleProtectedAction('onboarding', 'Subscription checkout'); return }
                   try {
@@ -1415,26 +1440,20 @@ export default function App() {
                       plan_code: p.plan_code || 'starter',
                       country: uiCountry,
                       billing_cycle: 'monthly',
-                      currency: selectedCurrency
+                      currency: selectedCurrency,
+                      force_paid: true
                     })
-                    if (r.trial_active) {
-                      alert(t(`7-day free trial started. No charge now. Free cancellation before: ${r.free_cancellation_before || r.trial_ends_at}. Ref: ${r.reference}`,`Essai gratuit de 7 jours activé. Aucun débit maintenant. Annulation gratuite avant : ${r.free_cancellation_before || r.trial_ends_at}. Réf : ${r.reference}`))
-                    } else if (r.payment_url) {
-                      // Mobile Safari/Chrome often blocks popups; force same-tab redirect for reliability.
+                    if (r.payment_url) {
                       try {
                         const popup = window.open(r.payment_url, '_blank', 'noopener,noreferrer')
-                        if (!popup) {
-                          window.location.assign(r.payment_url)
-                        }
-                      } catch {
-                        window.location.assign(r.payment_url)
-                      }
+                        if (!popup) window.location.assign(r.payment_url)
+                      } catch { window.location.assign(r.payment_url) }
                       alert(t(`Redirecting to secure payment now. Ref: ${r.reference}`,`Redirection vers le paiement sécurisé. Réf : ${r.reference}`))
                     } else {
                       alert(t(`Checkout created. Ref: ${r.reference}`,`Paiement créé. Réf : ${r.reference}`))
                     }
                   } catch (e) { alert(t(`Checkout failed: ${errMsg(e)}`,`Échec du paiement : ${errMsg(e)}`)) }
-                }}>{t('Subscribe','S’abonner','订阅')}</button>
+                }}>{t('Buy Subscription Now','Acheter maintenant','立即购买订阅')}</button>
               </div>
             </div>
           ))}
