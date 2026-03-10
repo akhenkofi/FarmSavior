@@ -204,6 +204,98 @@ def _save_update_review(db: Session, module: str, record_id: int, action: str, p
     db.commit()
 
 
+def _account_store_path() -> Path:
+    p = (Path(__file__).resolve().parents[3] / 'data' / 'runtime' / 'accounts-store.json')
+    p.parent.mkdir(parents=True, exist_ok=True)
+    return p
+
+
+def _account_store_read() -> list[dict]:
+    p = _account_store_path()
+    if not p.exists():
+        return []
+    try:
+        data = json.loads(p.read_text(encoding='utf-8'))
+        return data if isinstance(data, list) else []
+    except Exception:
+        return []
+
+
+def _account_store_write(rows: list[dict]):
+    p = _account_store_path()
+    tmp = p.with_suffix('.json.tmp')
+    tmp.write_text(json.dumps(rows, ensure_ascii=False), encoding='utf-8')
+    tmp.replace(p)
+
+
+def _account_store_upsert_user(user: User):
+    rows = _account_store_read()
+    rec = {
+        'phone': user.phone,
+        'email': user.email,
+        'full_name': user.full_name,
+        'country': user.country.value if hasattr(user.country, 'value') else str(user.country),
+        'region': user.region,
+        'role': user.role.value if hasattr(user.role, 'value') else str(user.role),
+        'hashed_password': user.hashed_password,
+        'is_verified': bool(user.is_verified),
+        'is_deleted': bool(getattr(user, 'is_deleted', False)),
+    }
+    updated = False
+    for i, row in enumerate(rows):
+        if (row.get('phone') and row.get('phone') == rec['phone']) or (row.get('email') and rec.get('email') and row.get('email') == rec['email']):
+            rows[i] = {**row, **rec}
+            updated = True
+            break
+    if not updated:
+        rows.append(rec)
+    _account_store_write(rows[-20000:])
+
+
+def _account_store_recover_user(db: Session, identifier: str) -> Optional[User]:
+    ident = (identifier or '').strip().lower()
+    if not ident:
+        return None
+    rows = _account_store_read()
+    hit = None
+    for r in rows:
+        phone = str(r.get('phone') or '').strip().lower()
+        email = str(r.get('email') or '').strip().lower()
+        if ident in [phone, email]:
+            hit = r
+            break
+    if not hit:
+        return None
+
+    if hit.get('is_deleted'):
+        return None
+
+    # prevent duplicates if already present under different query path
+    existing = db.query(User).filter((User.phone == (hit.get('phone') or '')) | (User.email == (hit.get('email') or ''))).first()
+    if existing:
+        return existing
+
+    try:
+        role_val = str(hit.get('role') or 'Farmer')
+        user = User(
+            full_name=hit.get('full_name') or 'Recovered User',
+            phone=hit.get('phone') or f"TMP-{int(datetime.utcnow().timestamp())}-{random.randint(1000,9999)}",
+            email=hit.get('email') or None,
+            country=(str(hit.get('country') or 'GH').upper()),
+            region=hit.get('region') or 'Unknown',
+            role=UserRole(role_val),
+            hashed_password=hit.get('hashed_password') or '',
+            is_verified=bool(hit.get('is_verified', False)),
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return user
+    except Exception:
+        db.rollback()
+        return None
+
+
 def _send_otp(destination: str, method: str, code: str):
     message = f"Your FarmSavior OTP is {code}. It expires soon."
     if method == 'email' and settings.SMTP_HOST and settings.SMTP_USER and settings.SMTP_PASS:
@@ -255,6 +347,8 @@ def register_user(payload: UserCreate, db: Session = Depends(get_db)):
         if not payload.phone:
             raise HTTPException(status_code=400, detail='Phone is required for phone signup')
         exists = db.query(User).filter(User.phone == payload.phone).first()
+        if not exists:
+            exists = _account_store_recover_user(db, payload.phone)
         if exists:
             raise HTTPException(status_code=400, detail='Phone already registered')
         dest = payload.phone
@@ -262,6 +356,8 @@ def register_user(payload: UserCreate, db: Session = Depends(get_db)):
         if not payload.email:
             raise HTTPException(status_code=400, detail='Email is required for email signup')
         exists = db.query(User).filter(User.email == payload.email.lower()).first()
+        if not exists:
+            exists = _account_store_recover_user(db, payload.email.lower())
         if exists:
             raise HTTPException(status_code=400, detail='Email already registered')
         if not payload.phone:
@@ -282,6 +378,7 @@ def register_user(payload: UserCreate, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
+    _account_store_upsert_user(user)
 
     code = f"{random.randint(100000, 999999)}"
     db.add(OTPCode(phone=payload.phone, destination=dest, channel=method, code=code))
@@ -320,6 +417,8 @@ def login_user(payload: UserLogin, db: Session = Depends(get_db)):
 
     ident = (payload.identifier or '').strip().lower()
     user = db.query(User).filter((User.phone == ident) | (User.email == ident)).first()
+    if not user:
+        user = _account_store_recover_user(db, ident)
     if not user or user.is_deleted or not user.hashed_password or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(status_code=401, detail='Invalid login credentials')
     return TokenResponse(access_token=create_access_token(subject=str(user.id)))
@@ -402,6 +501,7 @@ def change_password(payload: PasswordChangeIn, authorization: Optional[str] = He
         raise HTTPException(status_code=400, detail='New password must be at least 6 characters')
     u.hashed_password = hash_password(payload.new_password)
     db.commit()
+    _account_store_upsert_user(u)
     return {'message': 'Password updated successfully'}
 
 
@@ -421,6 +521,7 @@ def delete_account(payload: DeleteAccountIn, authorization: Optional[str] = Head
     if u.email:
         u.email = f"deleted-{u.id}-{stamp}@deleted.local"
     db.commit()
+    _account_store_upsert_user(u)
     return {'message': 'Account deleted successfully'}
 
 
