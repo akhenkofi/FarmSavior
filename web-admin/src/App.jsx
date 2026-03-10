@@ -2319,7 +2319,7 @@ export default function App() {
             if (!diseaseForm.target) { alert('Please select crop/animal type first.'); return }
             if (!diseaseForm.image_url) { alert('Please upload an image from your phone/camera.'); return }
             const r = await api.analyzeDisease({ user_id: Number(diseaseForm.user_id), crop_type: diseaseForm.target, image_url: diseaseForm.image_url, context_note: diseaseForm.context_note });
-            alert(`Diagnosis: ${r.diagnosis} | Confidence: ${Math.round((r.confidence||0)*100)}%`);
+            alert(`Diagnosis: ${r.diagnosis}\nConfidence: ${Math.round((r.confidence||0)*100)}%\nRecommendation: ${r.recommendation || '-'}\nTreatment: ${r.treatment || '-'}\n${r.vet_notice || 'Important: Contact a licensed veterinarian/agronomist for confirmation before treatment.'}`);
             await load();
           } catch (err) {
             alert(`Analyze failed: ${errMsg(err)}`)

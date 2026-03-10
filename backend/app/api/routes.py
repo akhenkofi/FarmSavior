@@ -1830,56 +1830,71 @@ def ai_disease_analyze(payload: DiseaseAnalyzeIn, db: Session = Depends(get_db))
     diagnosis = 'Unknown condition'
     confidence = 0.55
     recommendation = 'Collect more images and consult extension officer.'
+    treatment = 'Provide supportive care, isolate affected animals/plants where possible, and avoid unverified medication use.'
 
     if 'cassava' in crop or 'cassava' in img or 'mosaic' in note:
         diagnosis = 'Possible Cassava Mosaic'
         confidence = 0.81
         recommendation = 'Remove severely affected plants and use resistant cuttings.'
+        treatment = 'Rogue heavily infected plants, sanitize tools, and apply locally approved mosaic-management protocols.'
     elif 'maize' in crop or 'maize' in img or 'rust' in note or 'yellow spots' in note:
         diagnosis = 'Possible Maize Rust'
         confidence = 0.78
         recommendation = 'Apply appropriate fungicide and improve spacing.'
+        treatment = 'Use label-approved fungicide rotation, improve airflow, and remove severely affected leaves.'
     elif 'tomato' in crop or 'tomato' in img or 'blight' in note or 'leaf rot' in note:
         diagnosis = 'Possible Tomato Blight'
         confidence = 0.84
         recommendation = 'Prune affected leaves and use preventive fungicide schedule.'
+        treatment = 'Prune and discard infected foliage, avoid overhead watering, and apply preventive fungicide per local guidance.'
     elif any(x in crop for x in ['poultry','chicken']) or 'newcastle' in note:
         diagnosis = 'Possible Newcastle Disease (Poultry)'
         confidence = 0.76
         recommendation = 'Isolate affected birds and review vaccination status immediately.'
+        treatment = 'Isolate symptomatic birds, disinfect housing, and start vet-approved treatment/support protocol immediately.'
     elif 'goat' in crop or 'ppr' in note:
         diagnosis = 'Possible PPR (Goat)'
         confidence = 0.74
         recommendation = 'Isolate herd segment and contact vet for confirmation.'
+        treatment = 'Immediate isolation, strict movement control, supportive fluids/nutrition, and urgent veterinary treatment plan.'
     elif 'sheep' in crop:
         diagnosis = 'Possible Sheep Pox'
         confidence = 0.72
         recommendation = 'Quarantine and initiate veterinary treatment protocol.'
+        treatment = 'Quarantine affected animals, manage lesions, and follow veterinarian-directed pox treatment/prevention protocol.'
     elif 'cattle' in crop:
         diagnosis = 'Possible Lumpy Skin Disease'
         confidence = 0.73
         recommendation = 'Restrict movement and consult livestock officer.'
+        treatment = 'Restrict movement immediately, control vectors, and initiate vet-guided treatment/support plan.'
     elif 'rabbit' in crop:
         diagnosis = 'Possible Coccidiosis (Rabbits)'
         confidence = 0.71
         recommendation = 'Improve hygiene, isolate, and provide vet-prescribed treatment.'
+        treatment = 'Improve sanitation, isolate affected rabbits, and follow veterinarian-prescribed anti-coccidial protocol.'
     elif 'grasscutter' in crop:
         diagnosis = 'Possible Respiratory Infection (Grasscutter)'
         confidence = 0.68
         recommendation = 'Improve ventilation and isolate symptomatic animals.'
+        treatment = 'Improve ventilation urgently, isolate symptomatic stock, and begin vet-directed respiratory treatment protocol.'
     elif 'horse' in crop:
         diagnosis = 'Possible Equine Influenza'
         confidence = 0.69
         recommendation = 'Isolate and monitor temperature, then consult equine vet.'
+        treatment = 'Isolate immediately, monitor vitals, provide supportive care, and start equine vet treatment guidance.'
     elif 'dog' in crop:
         diagnosis = 'Possible Canine Distemper'
         confidence = 0.75
         recommendation = 'Immediate isolation and urgent veterinary assessment recommended.'
+        treatment = 'Immediate isolation, disinfection of contact areas, and urgent vet-directed treatment plan.'
 
+    vet_notice = 'Important: Contact a licensed veterinarian/agronomist for confirmation before treatment.'
     result = {
         'diagnosis': diagnosis,
         'confidence': confidence,
         'recommendation': recommendation,
+        'treatment': treatment,
+        'vet_notice': vet_notice,
         'context_note_used': payload.context_note or '',
         'engine': 'FarmSavior AI Analyzer (MVP)'
     }
