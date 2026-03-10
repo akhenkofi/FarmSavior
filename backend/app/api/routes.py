@@ -1168,6 +1168,38 @@ def _world_chat_bootstrap_from_db(db: Session):
     _world_chat_write(seed)
 
 
+def _world_chat_recover_db_from_store(db: Session):
+    db_count = db.query(func.count(WorldChatMessage.id)).scalar() or 0
+    if db_count > 0:
+        return
+    rows = _world_chat_read()
+    if not rows:
+        return
+    for r in rows[-20000:]:
+        try:
+            created_at = None
+            try:
+                if r.get('created_at'):
+                    created_at = datetime.fromisoformat(str(r.get('created_at')).replace('Z', '+00:00')).replace(tzinfo=None)
+            except Exception:
+                created_at = datetime.utcnow()
+            msg = WorldChatMessage(
+                user_id=int(r.get('user_id') or 0),
+                user_name=str(r.get('user_name') or 'User'),
+                user_country=str(r.get('user_country') or ''),
+                text=str(r.get('text') or ''),
+                status=str(r.get('status') or 'VISIBLE'),
+                moderation_label=str(r.get('moderation_label') or 'SAFE'),
+                moderation_score=0.0,
+                moderation_reason=str(r.get('moderation_reason') or ''),
+                created_at=created_at or datetime.utcnow(),
+            )
+            db.add(msg)
+        except Exception:
+            continue
+    db.commit()
+
+
 def _moderate_world_chat_text(text: str) -> dict:
     raw = (text or '').strip()
     lower = raw.lower()
@@ -1203,6 +1235,36 @@ def _moderate_world_chat_text(text: str) -> dict:
 @router.get('/chat/world/messages')
 def world_chat_messages(limit: int = 120, db: Session = Depends(get_db)):
     n = max(1, min(limit, 1000))
+    _world_chat_recover_db_from_store(db)
+
+    db_rows = db.query(WorldChatMessage).filter(WorldChatMessage.status == 'VISIBLE').order_by(WorldChatMessage.id.desc()).limit(n).all()
+    if db_rows:
+        # keep file mirror fresh as secondary durability
+        try:
+            mirror = [{
+                'id': r.id,
+                'user_id': r.user_id,
+                'user_name': r.user_name,
+                'user_country': r.user_country,
+                'text': r.text,
+                'status': r.status,
+                'moderation_label': r.moderation_label,
+                'moderation_reason': r.moderation_reason,
+                'created_at': r.created_at.isoformat() if getattr(r, 'created_at', None) else None,
+            } for r in reversed(db_rows)]
+            _world_chat_write(mirror)
+        except Exception:
+            pass
+        rows = list(reversed(db_rows))
+        return [{
+            'id': r.id,
+            'user_id': r.user_id,
+            'user_name': r.user_name,
+            'user_country': r.user_country,
+            'text': r.text,
+            'created_at': r.created_at,
+        } for r in rows]
+
     _world_chat_bootstrap_from_db(db)
     rows = [r for r in _world_chat_read() if str(r.get('status', 'VISIBLE')).upper() == 'VISIBLE']
     rows = rows[-n:]
@@ -1321,6 +1383,31 @@ def world_chat_moderation_action(payload: WorldChatModerationActionIn, authoriza
     _world_chat_write(persisted)
 
     return {'message': 'moderation action applied', 'id': row.id, 'status': row.status}
+
+
+@router.delete('/chat/world/messages/{message_id}')
+def world_chat_delete_own(message_id: int, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    user = _current_user_from_auth(authorization, db)
+    row = db.query(WorldChatMessage).filter(WorldChatMessage.id == message_id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail='Message not found')
+
+    is_admin = _is_admin_user(user)
+    if not is_admin and int(row.user_id or 0) != int(user.id):
+        raise HTTPException(status_code=403, detail='You can only delete your own messages')
+
+    row.status = 'BLOCKED'
+    row.moderation_reason = 'Deleted by owner' if not is_admin else 'Deleted by admin'
+    db.commit()
+
+    persisted = _world_chat_read()
+    for r in persisted:
+        if int(r.get('id') or 0) == int(message_id):
+            r['status'] = 'BLOCKED'
+            r['moderation_reason'] = row.moderation_reason
+            break
+    _world_chat_write(persisted)
+    return {'message': 'deleted', 'id': message_id}
 
 
 @router.post('/chat/world/users/{user_id}/sanction')
