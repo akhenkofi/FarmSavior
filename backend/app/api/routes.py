@@ -325,6 +325,84 @@ def _paystack_secret_clean() -> str:
     return raw
 
 
+def _trial_ledger_path() -> Path:
+    p = (Path(__file__).resolve().parents[3] / 'data' / 'runtime' / 'subscription-trial-ledger.json')
+    p.parent.mkdir(parents=True, exist_ok=True)
+    return p
+
+
+def _trial_ledger_read() -> dict:
+    p = _trial_ledger_path()
+    if not p.exists():
+        return {'identities': [], 'user_ids': []}
+    try:
+        d = json.loads(p.read_text(encoding='utf-8'))
+        if not isinstance(d, dict):
+            return {'identities': [], 'user_ids': []}
+        d.setdefault('identities', [])
+        d.setdefault('user_ids', [])
+        return d
+    except Exception:
+        return {'identities': [], 'user_ids': []}
+
+
+def _trial_ledger_write(d: dict):
+    p = _trial_ledger_path()
+    tmp = p.with_suffix('.json.tmp')
+    tmp.write_text(json.dumps(d, ensure_ascii=False), encoding='utf-8')
+    tmp.replace(p)
+
+
+def _trial_identity_markers(user: Optional[User], user_id: Optional[int]):
+    markers = []
+    if user:
+        phone = _normalize_phone(getattr(user, 'phone', ''))
+        email = str(getattr(user, 'email', '') or '').strip().lower()
+        if phone:
+            markers.append(f'phone:{phone}')
+        if email:
+            markers.append(f'email:{email}')
+    if user_id:
+        markers.append(f'user:{int(user_id)}')
+    return markers
+
+
+def _trial_already_used(user: Optional[User], user_id: Optional[int], db: Session) -> bool:
+    # DB check
+    if user_id:
+        if db.query(SheepGoatSubscription).filter(
+            SheepGoatSubscription.user_id == int(user_id),
+            SheepGoatSubscription.status.in_(['TRIAL_ACTIVE', 'TRIAL_CANCELLED', 'ACTIVE', 'PENDING_PAYMENT'])
+        ).first():
+            return True
+
+    # Ledger check across identifiers
+    ledger = _trial_ledger_read()
+    used = set(ledger.get('identities', [])) | set(ledger.get('user_ids', []))
+    for m in _trial_identity_markers(user, user_id):
+        if m.startswith('user:'):
+            if m in used:
+                return True
+        else:
+            if m in used:
+                return True
+    return False
+
+
+def _mark_trial_used(user: Optional[User], user_id: Optional[int]):
+    ledger = _trial_ledger_read()
+    ids = set(ledger.get('identities', []))
+    users = set(ledger.get('user_ids', []))
+    for m in _trial_identity_markers(user, user_id):
+        if m.startswith('user:'):
+            users.add(m)
+        else:
+            ids.add(m)
+    ledger['identities'] = sorted(ids)
+    ledger['user_ids'] = sorted(users)
+    _trial_ledger_write(ledger)
+
+
 def _send_otp(destination: str, method: str, code: str):
     message = f"Your FarmSavior OTP is {code}. It expires soon."
     if method == 'email' and settings.SMTP_HOST and settings.SMTP_USER and settings.SMTP_PASS:
@@ -2205,7 +2283,7 @@ def livestock_subscription_plans():
     # Pricing positioned to undercut common international livestock record tools
     # and support all major currencies used across target African markets.
     return {
-        'note': 'Prices are monthly base rates and can be billed in supported currencies by FX conversion.',
+        'note': 'Prices are monthly base rates and can be billed in supported currencies by FX conversion. Includes one-time 7-day free trial per phone/email.',
         'supported_currencies': ['GHS', 'NGN', 'XOF', 'KES', 'TZS', 'UGX', 'ZAR', 'USD', 'EUR'],
         'plans': [
             {
@@ -2247,6 +2325,53 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
     cur = (payload.currency or 'USD').upper()
     country = (payload.country or '').upper()
     amount = round(amount_usd * fx.get(cur, 1.0), 2)
+
+    user = db.query(User).filter(User.id == (payload.user_id or 0)).first() if payload.user_id else None
+
+    # One-time 7-day free trial (no charge now), unique per phone/email/user.
+    if not _trial_already_used(user, payload.user_id, db):
+        ref = f"SGTRIAL-{int(datetime.utcnow().timestamp())}-{random.randint(100,999)}"
+        trial_end = datetime.utcnow() + timedelta(days=7)
+        rec = SheepGoatSubscription(
+            user_id=payload.user_id,
+            plan_code=payload.plan_code,
+            country=country or payload.country,
+            billing_cycle=payload.billing_cycle,
+            amount=0.0,
+            currency='USD',
+            status='TRIAL_ACTIVE',
+            reference=ref,
+            started_at=datetime.utcnow(),
+            ends_at=trial_end
+        )
+        db.add(rec)
+        db.commit()
+        db.refresh(rec)
+        _mark_trial_used(user, payload.user_id)
+
+        return {
+            'message': '7-day free trial started',
+            'reference': ref,
+            'trial_active': True,
+            'trial_ends_at': trial_end.isoformat(),
+            'free_cancellation_before': trial_end.isoformat(),
+            'subscription': {
+                'id': rec.id,
+                'user_id': rec.user_id,
+                'plan_code': rec.plan_code,
+                'billing_cycle': rec.billing_cycle,
+                'currency': rec.currency,
+                'amount': rec.amount,
+                'status': rec.status,
+                'reference': rec.reference,
+                'started_at': rec.started_at.isoformat() if rec.started_at else None,
+                'ends_at': rec.ends_at.isoformat() if rec.ends_at else None,
+                'country': rec.country,
+            },
+            'payment_url': '',
+            'payment_provider': 'paystack',
+            'payment_init_error': ''
+        }
 
     def mask_value(v: str, keep: int = 4) -> str:
         s = str(v or '')
@@ -2397,6 +2522,40 @@ def livestock_subscription_verify(reference: str, db: Session = Depends(get_db))
         return {'message': 'payment not verified yet', 'reference': reference, 'status': rec.status, 'provider_status': status}
     except Exception as e:
         return {'message': 'verification failed', 'reference': reference, 'status': rec.status, 'error': str(e)}
+
+
+@router.post('/livestock-records/subscription/cancel/{reference}')
+def livestock_subscription_cancel(reference: str, db: Session = Depends(get_db)):
+    rec = db.query(SheepGoatSubscription).filter(SheepGoatSubscription.reference == reference).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail='subscription reference not found')
+
+    if rec.status == 'TRIAL_ACTIVE':
+        now = datetime.utcnow()
+        trial_deadline = rec.ends_at or now
+        if now <= trial_deadline:
+            rec.status = 'TRIAL_CANCELLED'
+            db.commit()
+            db.refresh(rec)
+            return {
+                'message': 'trial cancelled successfully before charge window',
+                'reference': reference,
+                'status': rec.status,
+                'cancelled_at': now.isoformat()
+            }
+        return {
+            'message': 'trial window already ended; cancellation no longer free',
+            'reference': reference,
+            'status': rec.status
+        }
+
+    if rec.status in ['PENDING_PAYMENT', 'ACTIVE']:
+        rec.status = 'CANCELLED'
+        db.commit()
+        db.refresh(rec)
+        return {'message': 'subscription cancelled', 'reference': reference, 'status': rec.status}
+
+    return {'message': 'nothing to cancel', 'reference': reference, 'status': rec.status}
 
 
 @router.post('/marketplace/offers')

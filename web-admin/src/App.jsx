@@ -1417,7 +1417,9 @@ export default function App() {
                       billing_cycle: 'monthly',
                       currency: selectedCurrency
                     })
-                    if (r.payment_url) {
+                    if (r.trial_active) {
+                      alert(t(`7-day free trial started. No charge now. Free cancellation before: ${r.free_cancellation_before || r.trial_ends_at}. Ref: ${r.reference}`,`Essai gratuit de 7 jours activé. Aucun débit maintenant. Annulation gratuite avant : ${r.free_cancellation_before || r.trial_ends_at}. Réf : ${r.reference}`))
+                    } else if (r.payment_url) {
                       // Mobile Safari/Chrome often blocks popups; force same-tab redirect for reliability.
                       try {
                         const popup = window.open(r.payment_url, '_blank', 'noopener,noreferrer')
@@ -1429,7 +1431,7 @@ export default function App() {
                       }
                       alert(t(`Redirecting to secure payment now. Ref: ${r.reference}`,`Redirection vers le paiement sécurisé. Réf : ${r.reference}`))
                     } else {
-                      alert(t(`Checkout created (payment provider not configured). Ref: ${r.reference}`,`Paiement créé (prestataire non configuré). Réf : ${r.reference}`))
+                      alert(t(`Checkout created. Ref: ${r.reference}`,`Paiement créé. Réf : ${r.reference}`))
                     }
                   } catch (e) { alert(t(`Checkout failed: ${errMsg(e)}`,`Échec du paiement : ${errMsg(e)}`)) }
                 }}>{t('Subscribe','S’abonner','订阅')}</button>
