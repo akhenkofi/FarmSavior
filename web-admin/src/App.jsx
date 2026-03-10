@@ -368,6 +368,8 @@ export default function App() {
   const [unitTo, setUnitTo] = useState('ac')
   const [showCurrencyConverter, setShowCurrencyConverter] = useState(false)
   const [showUnitConverter, setShowUnitConverter] = useState(false)
+  const [showSplash, setShowSplash] = useState(true)
+  const [isOffline, setIsOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false)
 
   const urlLang = (() => {
     try { return new URLSearchParams(window.location.search).get('lang') || '' } catch { return '' }
@@ -445,6 +447,19 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('farmsavior_ui_lang', uiLang)
   }, [uiLang])
+
+  useEffect(() => {
+    const id = setTimeout(() => setShowSplash(false), 700)
+    const onOnline = () => setIsOffline(false)
+    const onOffline = () => setIsOffline(true)
+    window.addEventListener('online', onOnline)
+    window.addEventListener('offline', onOffline)
+    return () => {
+      clearTimeout(id)
+      window.removeEventListener('online', onOnline)
+      window.removeEventListener('offline', onOffline)
+    }
+  }, [])
 
   useEffect(() => {
     localStorage.setItem('farmsavior_ui_country', uiCountry)
@@ -1505,7 +1520,21 @@ export default function App() {
     </div>
   </div>
 
-  return <div className='layout'>
+  return <>
+    {showSplash && <div className='app-splash'>
+      <div className='app-splash-inner'>
+        <img src='/assets/farmsavior-logo.jpg' alt='FarmSavior' />
+        <p>FarmSavior is loading…</p>
+      </div>
+    </div>}
+    {isOffline && <div className='offline-overlay'>
+      <div className='offline-inner'>
+        <img src='/assets/farmsavior-logo.jpg' alt='FarmSavior' />
+        <h3>No internet connection</h3>
+        <p>Check your network and try again.</p>
+      </div>
+    </div>}
+    <div className='layout'>
     <aside className='sidebar'>
       <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
         <img src='/assets/farmsavior-logo.jpg' alt='FarmSavior' style={{width:36,height:36,borderRadius:8,objectFit:'cover'}} />
@@ -2584,4 +2613,5 @@ export default function App() {
 
     </main>
   </div>
+  </>
 }
