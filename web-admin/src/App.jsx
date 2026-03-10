@@ -2,6 +2,19 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import * as api from './services/api'
 
 const errMsg = (e) => e?.response?.data?.detail || e?.message || 'Request failed'
+const normalizePhone = (v='') => {
+  const raw = String(v || '').trim()
+  if (!raw) return ''
+  const digits = raw.replace(/[^\d+]/g, '')
+  if (digits.startsWith('+')) return digits
+  return `+${digits}`
+}
+const normalizeIdentifier = (v='') => {
+  const s = String(v || '').trim()
+  if (!s) return ''
+  if (s.includes('@')) return s.toLowerCase()
+  return normalizePhone(s)
+}
 
 const countries = ['GH', 'NG', 'BF']
 const countryLabels = { GH: 'Ghana (GH)', NG: 'Nigeria (NG)', BF: 'Burkina Faso (BF)' }
@@ -1137,7 +1150,7 @@ export default function App() {
               const payload = {
                 full_name: signup.full_name,
                 signup_method: signup.signup_method,
-                phone: signup.signup_method === 'phone' ? signup.phone : undefined,
+                phone: signup.signup_method === 'phone' ? normalizePhone(signup.phone) : undefined,
                 email: signup.signup_method === 'email' ? signup.email : undefined,
                 country: signup.country,
                 region: signup.region,
@@ -1172,8 +1185,8 @@ export default function App() {
                   captured_at_utc: new Date().toISOString()
                 }))
               } catch {}
-              const identifier = signup.signup_method === 'email' ? signup.email : signup.phone
-              const loginRes = await api.login({ identifier, password: signup.password })
+              const identifier = signup.signup_method === 'email' ? signup.email : normalizePhone(signup.phone)
+              const loginRes = await api.login({ identifier: normalizeIdentifier(identifier), password: signup.password })
               saveToken(loginRes.access_token)
               setAuthMsg('Account created and signed in successfully.')
             } catch (e) { setAuthMsg(`Signup failed: ${errMsg(e)}`) }
@@ -1200,7 +1213,7 @@ export default function App() {
           </form>}
 
           {authMode === 'login' && <form className='list' onSubmit={async (e) => {
-            try { e.preventDefault(); const r = await api.login(login); saveToken(r.access_token) } catch (e) { setAuthMsg(`Login failed: ${errMsg(e)}`) }
+            try { e.preventDefault(); const r = await api.login({ ...login, identifier: normalizeIdentifier(login.identifier) }); saveToken(r.access_token) } catch (e) { setAuthMsg(`Login failed: ${errMsg(e)}`) }
           }}>
             <input className='input' placeholder={t('Phone or Email','Téléphone ou e-mail','手机号或邮箱')} value={login.identifier} onChange={e => setLogin({ ...login, identifier: e.target.value })} required />
             <input className='input' type='password' placeholder={t('Password','Mot de passe','密码')} value={login.password} onChange={e => setLogin({ ...login, password: e.target.value })} required />
