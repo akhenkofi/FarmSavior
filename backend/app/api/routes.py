@@ -204,6 +204,25 @@ def _save_update_review(db: Session, module: str, record_id: int, action: str, p
     db.commit()
 
 
+def _normalize_phone(value: Optional[str]) -> str:
+    s = str(value or '').strip()
+    if not s:
+        return ''
+    keep = ''.join(ch for ch in s if ch.isdigit() or ch == '+')
+    if keep.startswith('00'):
+        keep = '+' + keep[2:]
+    if '+' in keep and not keep.startswith('+'):
+        keep = '+' + ''.join(ch for ch in keep if ch.isdigit())
+    return keep
+
+
+def _normalize_identifier(value: Optional[str]) -> str:
+    v = str(value or '').strip()
+    if '@' in v:
+        return v.lower()
+    return _normalize_phone(v)
+
+
 def _account_store_path() -> Path:
     p = (Path(__file__).resolve().parents[3] / 'data' / 'runtime' / 'accounts-store.json')
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -231,8 +250,8 @@ def _account_store_write(rows: list[dict]):
 def _account_store_upsert_user(user: User):
     rows = _account_store_read()
     rec = {
-        'phone': user.phone,
-        'email': user.email,
+        'phone': _normalize_phone(user.phone),
+        'email': (str(user.email or '').lower() or None),
         'full_name': user.full_name,
         'country': user.country.value if hasattr(user.country, 'value') else str(user.country),
         'region': user.region,
@@ -253,13 +272,13 @@ def _account_store_upsert_user(user: User):
 
 
 def _account_store_recover_user(db: Session, identifier: str) -> Optional[User]:
-    ident = (identifier or '').strip().lower()
+    ident = _normalize_identifier(identifier)
     if not ident:
         return None
     rows = _account_store_read()
     hit = None
     for r in rows:
-        phone = str(r.get('phone') or '').strip().lower()
+        phone = _normalize_phone(r.get('phone'))
         email = str(r.get('email') or '').strip().lower()
         if ident in [phone, email]:
             hit = r
@@ -271,7 +290,10 @@ def _account_store_recover_user(db: Session, identifier: str) -> Optional[User]:
         return None
 
     # prevent duplicates if already present under different query path
-    existing = db.query(User).filter((User.phone == (hit.get('phone') or '')) | (User.email == (hit.get('email') or ''))).first()
+    hit_phone = _normalize_phone(hit.get('phone'))
+    hit_email = str(hit.get('email') or '').strip().lower()
+    hit_alt = hit_phone[1:] if str(hit_phone).startswith('+') else f'+{hit_phone}'
+    existing = db.query(User).filter((User.phone == hit_phone) | (User.phone == hit_alt) | (User.email == hit_email)).first()
     if existing:
         return existing
 
@@ -279,8 +301,8 @@ def _account_store_recover_user(db: Session, identifier: str) -> Optional[User]:
         role_val = str(hit.get('role') or 'Farmer')
         user = User(
             full_name=hit.get('full_name') or 'Recovered User',
-            phone=hit.get('phone') or f"TMP-{int(datetime.utcnow().timestamp())}-{random.randint(1000,9999)}",
-            email=hit.get('email') or None,
+            phone=_normalize_phone(hit.get('phone')) or f"TMP-{int(datetime.utcnow().timestamp())}-{random.randint(1000,9999)}",
+            email=(str(hit.get('email') or '').lower() or None),
             country=(str(hit.get('country') or 'GH').upper()),
             region=hit.get('region') or 'Unknown',
             role=UserRole(role_val),
@@ -343,10 +365,14 @@ def _send_otp(destination: str, method: str, code: str):
 @router.post('/auth/register')
 def register_user(payload: UserCreate, db: Session = Depends(get_db)):
     method = (payload.signup_method or 'phone').lower()
+    payload.phone = _normalize_phone(payload.phone)
+    if payload.email:
+        payload.email = str(payload.email).strip().lower()
     if method == 'phone':
         if not payload.phone:
             raise HTTPException(status_code=400, detail='Phone is required for phone signup')
-        exists = db.query(User).filter(User.phone == payload.phone).first()
+        alt_phone = payload.phone[1:] if payload.phone.startswith('+') else f'+{payload.phone}'
+        exists = db.query(User).filter((User.phone == payload.phone) | (User.phone == alt_phone)).first()
         if not exists:
             exists = _account_store_recover_user(db, payload.phone)
         if exists:
@@ -415,8 +441,14 @@ def login_user(payload: UserLogin, db: Session = Depends(get_db)):
         db.add(admin)
         db.commit()
 
-    ident = (payload.identifier or '').strip().lower()
-    user = db.query(User).filter((User.phone == ident) | (User.email == ident)).first()
+    ident_raw = (payload.identifier or '').strip()
+    ident = _normalize_identifier(ident_raw)
+    user = None
+    if '@' in ident:
+        user = db.query(User).filter(User.email == ident).first()
+    else:
+        alt = ident[1:] if ident.startswith('+') else f'+{ident}'
+        user = db.query(User).filter((User.phone == ident) | (User.phone == alt)).first()
     if not user:
         user = _account_store_recover_user(db, ident)
     if not user or user.is_deleted or not user.hashed_password or not verify_password(payload.password, user.hashed_password):
@@ -451,7 +483,12 @@ def _current_user_from_auth(authorization: Optional[str], db: Session):
     if sub.isdigit():
         user = db.query(User).filter(User.id == int(sub)).first()
     if not user:
-        user = db.query(User).filter((User.phone == sub) | (User.email == sub.lower())).first()
+        norm = _normalize_identifier(sub)
+        if '@' in norm:
+            user = db.query(User).filter(User.email == norm).first()
+        else:
+            alt = norm[1:] if norm.startswith('+') else f'+{norm}'
+            user = db.query(User).filter((User.phone == norm) | (User.phone == alt)).first()
     if not user or user.is_deleted:
         raise HTTPException(status_code=401, detail='User not found')
     return user
