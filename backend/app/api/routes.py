@@ -318,6 +318,13 @@ def _account_store_recover_user(db: Session, identifier: str) -> Optional[User]:
         return None
 
 
+def _paystack_secret_clean() -> str:
+    raw = str(settings.PAYSTACK_SECRET_KEY or '').strip().strip('"').strip("'")
+    if raw.lower().startswith('bearer '):
+        raw = raw.split(' ', 1)[1].strip()
+    return raw
+
+
 def _send_otp(destination: str, method: str, code: str):
     message = f"Your FarmSavior OTP is {code}. It expires soon."
     if method == 'email' and settings.SMTP_HOST and settings.SMTP_USER and settings.SMTP_PASS:
@@ -2248,7 +2255,7 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
     # Charge currency/amount used by payment gateway
     charge_currency = cur
     charge_amount = amount
-    if settings.PAYSTACK_SECRET_KEY:
+    if _paystack_secret_clean():
         # Merchant currently supports GHS live charges; force GHS until additional currencies are enabled on Paystack account.
         charge_currency = 'GHS'
         charge_amount = round(amount_usd * fx.get(charge_currency, 1.0), 2)
@@ -2270,7 +2277,7 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
 
     payment_url = ''
     payment_init_error = ''
-    paystack_secret = (settings.PAYSTACK_SECRET_KEY or '').strip()
+    paystack_secret = _paystack_secret_clean()
     if paystack_secret:
         user = db.query(User).filter(User.id == (payload.user_id or 0)).first() if payload.user_id else None
         customer_name = user.full_name if user and user.full_name else 'FarmSavior User'
@@ -2349,7 +2356,7 @@ def livestock_subscription_verify(reference: str, db: Session = Depends(get_db))
     if rec.status == 'ACTIVE':
         return {'message': 'already active', 'reference': reference, 'status': rec.status}
 
-    paystack_secret = (settings.PAYSTACK_SECRET_KEY or '').strip()
+    paystack_secret = _paystack_secret_clean()
     if not paystack_secret:
         return {'message': 'payment provider not configured', 'reference': reference, 'status': rec.status}
 
