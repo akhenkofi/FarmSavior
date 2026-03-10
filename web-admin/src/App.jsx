@@ -2335,7 +2335,7 @@ export default function App() {
             {(diseaseForm.category === 'crop' ? cropOptions : animalOptions).map(x => <option key={x} value={x}>{x}</option>)}
           </select>
           <textarea className='input' placeholder='Describe symptoms (optional): e.g., yellow spots, leaf curl, wilting, discharge, fever...' value={diseaseForm.context_note || ''} onChange={(e)=>setDiseaseForm({...diseaseForm,context_note:e.target.value})} rows={3} style={{minWidth:'100%'}} />
-          <input className='input' type='file' accept='image/*' capture='environment' onChange={(e)=>{
+          <input className='input' type='file' accept='image/*' onChange={(e)=>{
             const f = e.target.files?.[0]
             if (!f) return
             setDiseaseImageFileName(f.name)
