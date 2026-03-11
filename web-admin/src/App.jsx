@@ -16,6 +16,20 @@ const normalizeIdentifier = (v='') => {
   return normalizePhone(s)
 }
 
+const openLivestockManagement = () => {
+  // Try route hints first
+  try { window.location.hash = '#livestock-records' } catch {}
+
+  // Then try clicking matching navigation buttons/tabs by label.
+  const labels = ['sheep', 'goat', 'livestock', 'records', 'management']
+  const btns = Array.from(document.querySelectorAll('button, a, [role="tab"]'))
+  const target = btns.find(el => {
+    const t = String(el.textContent || '').toLowerCase()
+    return labels.some(k => t.includes(k))
+  })
+  if (target && typeof target.click === 'function') target.click()
+}
+
 const countries = ['GH', 'NG', 'BF']
 const countryLabels = { GH: 'Ghana (GH)', NG: 'Nigeria (NG)', BF: 'Burkina Faso (BF)' }
 const countryLabelsZh = { GH: '加纳 (GH)', NG: '尼日利亚 (NG)', BF: '布基纳法索 (BF)' }
@@ -1420,7 +1434,10 @@ export default function App() {
                       force_paid: false
                     })
                     if (r.trial_active) {
-                      alert(t(`7-day free trial started. No charge now. Free cancellation before: ${r.free_cancellation_before || r.trial_ends_at}. Ref: ${r.reference}`,`Essai gratuit de 7 jours activé. Aucun débit maintenant. Annulation gratuite avant : ${r.free_cancellation_before || r.trial_ends_at}. Réf : ${r.reference}`))
+                      alert(t(`7-day free trial started. No charge now. Free cancellation before: ${r.free_cancellation_before || r.trial_ends_at}. Ref: ${r.reference}`,
+                        `Essai gratuit de 7 jours activé. Aucun débit maintenant. Annulation gratuite avant : ${r.free_cancellation_before || r.trial_ends_at}. Réf : ${r.reference}`))
+                      // Immediately open the livestock records management area after trial activation.
+                      setTimeout(() => openLivestockManagement(), 120)
                     } else if (r.payment_url) {
                       try {
                         const popup = window.open(r.payment_url, '_blank', 'noopener,noreferrer')
