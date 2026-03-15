@@ -1616,6 +1616,34 @@ export default function App() {
       </div>
       {active === 'home' && <section>
         <h2>{t('Main App Homepage','Page d’accueil de l’application')}</h2>
+
+        <div className='two-col' style={{marginBottom:10}}>
+          <article className='panel' style={{background:'linear-gradient(120deg,#022c22,#065f46)', color:'#fff', border:'1px solid rgba(255,255,255,.15)'}}>
+            <div className='list-row'>
+              <h3 style={{margin:0}}>{t('📚 Records System','📚 Système de registres','📚 记录系统')}</h3>
+              <button className='btn btn-dark' onClick={()=>setActive('livestock')}>{t('Open','Ouvrir','打开')}</button>
+            </div>
+            <p style={{opacity:.92, marginTop:6}}>{t('Core operational records for livestock, listings, and transactions.','Registres opérationnels pour élevage, annonces et transactions.','牲畜、上架与交易的核心运营记录。')}</p>
+            <div className='list' style={{marginTop:8}}>
+              <div className='list-row'><span>{t('Livestock records','Registres bétail','牲畜记录')}</span><strong>{state.livestock.length}</strong></div>
+              <div className='list-row'><span>{t('Product listings','Annonces produits','产品上架')}</span><strong>{state.listings.length}</strong></div>
+              <div className='list-row'><span>{t('Contracts','Contrats','合同')}</span><strong>{state.contracts.length}</strong></div>
+            </div>
+          </article>
+
+          <article className='panel' style={{background:'linear-gradient(120deg,#450a0a,#991b1b)', color:'#fff', border:'1px solid rgba(255,255,255,.15)'}}>
+            <div className='list-row'>
+              <h3 style={{margin:0}}>{t('🧪 Disease Analyzer','🧪 Analyseur de maladies','🧪 疾病分析器')}</h3>
+              <button className='btn btn-dark' onClick={()=>setActive('ai-disease')}>{t('Open','Ouvrir','打开')}</button>
+            </div>
+            <p style={{opacity:.92, marginTop:6}}>{t('Priority intelligence for disease detection and risk visibility.','Intelligence prioritaire pour détection des maladies et visibilité du risque.','疾病检测与风险可视化的优先情报模块。')}</p>
+            <div className='list' style={{marginTop:8}}>
+              <div className='list-row'><span>{t('Total disease scans','Scans maladie total','疾病扫描总数')}</span><strong>{state.diseaseScans.length}</strong></div>
+              <div className='list-row'><span>{t('Recent scans (last 10)','Scans récents (10)','近期扫描（10）')}</span><strong>{state.diseaseScans.slice(0,10).length}</strong></div>
+              <div className='list-row'><span>{t('AI module status','Statut module IA','AI 模块状态')}</span><strong>{t('Live','Actif','在线')}</strong></div>
+            </div>
+          </article>
+        </div>
         <form className='inlineForm' onSubmit={(e) => { e.preventDefault(); addRecentSearch(homeQuery) }}>
           <input className='input' placeholder={t('Search products, livestock, services…','Rechercher produits, élevage, services…')} value={homeQuery} onChange={(e)=>setHomeQuery(e.target.value)} />
           <button className='btn btn-dark' type='submit'>{t('Search','Rechercher','搜索')}</button>
