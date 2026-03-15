@@ -365,6 +365,7 @@ export default function App() {
   const [mapCountry, setMapCountry] = useState('GH')
   const [mapPolygonPoints, setMapPolygonPoints] = useState([])
   const [mapPointInput, setMapPointInput] = useState('')
+  const [mapBulkPointsInput, setMapBulkPointsInput] = useState('')
   const [expandedWeatherCountry, setExpandedWeatherCountry] = useState('GH')
   const [showHighDemandProducts, setShowHighDemandProducts] = useState(false)
   const [showHighDemandServices, setShowHighDemandServices] = useState(false)
@@ -704,6 +705,33 @@ export default function App() {
     const lng = Number(parts[1])
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) return alert('Invalid coordinate values')
     addBoundaryPoint(lat, lng)
+    setMapPointInput('')
+  }
+
+  const addBulkPoints = () => {
+    const raw = String(mapBulkPointsInput || '').trim()
+    if (!raw) return
+    const rows = raw
+      .split(/\n|;/)
+      .map(r => r.trim().replace(/[()]/g, ''))
+      .filter(Boolean)
+
+    const parsed = []
+    for (const row of rows) {
+      const parts = row.split(',').map(x => x.trim())
+      if (parts.length !== 2) continue
+      const lat = Number(parts[0])
+      const lng = Number(parts[1])
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue
+      parsed.push({ lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) })
+    }
+
+    if (!parsed.length) return alert('No valid points found. Use one point per line: lat,lng')
+
+    setMapPolygonPoints(prev => [...prev, ...parsed])
+    const last = parsed[parsed.length - 1]
+    setFarmMapForm(prev => ({ ...prev, gps_lat: `${last.lat}`, gps_lng: `${last.lng}` }))
+    setMapBulkPointsInput('')
   }
 
   const applyPolygonToFarmForm = () => {
@@ -1439,13 +1467,9 @@ export default function App() {
                         `Essai gratuit de 7 jours activé. Aucun débit maintenant. Annulation gratuite avant : ${r.free_cancellation_before || r.trial_ends_at}. Réf : ${r.reference}`))
                       // Immediately open the livestock records management area after trial activation.
                       setTimeout(() => openLivestockManagement(), 120)
-                    } else if (r.payment_url) {
-                      try {
-                        const popup = window.open(r.payment_url, '_blank', 'noopener,noreferrer')
-                        if (!popup) window.location.assign(r.payment_url)
-                      } catch { window.location.assign(r.payment_url) }
                     } else {
-                      alert(t(`Trial unavailable for this account.`, `Essai indisponible pour ce compte.`))
+                      alert(t(`Free trial already used for this account. No charge was made. Use Buy Subscription Now if you want paid access.`,
+                        `Essai gratuit déjà utilisé pour ce compte. Aucun débit n’a été effectué. Utilisez Acheter maintenant pour l’accès payant.`))
                     }
                   } catch (e) { alert(t(`Trial failed: ${errMsg(e)}`,`Échec de l’essai : ${errMsg(e)}`)) }
                 }}>{t('Start 7-Day Free Trial','Démarrer l’essai 7 jours','开始7天免费试用')}</button>
@@ -2174,8 +2198,16 @@ export default function App() {
               style={{position:'absolute', inset:0, cursor:'crosshair', background:'rgba(2,132,199,0.06)', borderRadius:10}}
             />
           </div>
-          <p style={{fontSize:'.85rem', color:'#64748b', marginTop:8}}>Tap map or paste one coordinate in a single field (lat,lng), then add next point. When done, click “Close Area & Use”.</p>
+          <p style={{fontSize:'.85rem', color:'#64748b', marginTop:8}}>Tap map to add many boundary points, or paste multiple points below (one per line: lat,lng). When done, click “Close Area & Use”.</p>
+          <textarea
+            className='input'
+            rows={4}
+            placeholder={'Bulk points (one per line)\n5.6037,-0.1870\n5.6045,-0.1884\n5.6028,-0.1892'}
+            value={mapBulkPointsInput}
+            onChange={(e)=>setMapBulkPointsInput(e.target.value)}
+          />
           <div className='inlineForm'>
+            <button type='button' className='btn' onClick={addBulkPoints}>Add Bulk Points</button>
             <button type='button' className='btn' onClick={()=>setMapPolygonPoints([])}>Clear Points</button>
             <button type='button' className='btn' onClick={()=>setMapPolygonPoints(prev => prev.slice(0, -1))}>Undo Last</button>
             <button type='button' className='btn btn-dark' disabled={mapPolygonPoints.length < 3} onClick={applyPolygonToFarmForm}>Close Area & Use</button>
@@ -2191,7 +2223,9 @@ export default function App() {
             user_id: Number(farmMapForm.user_id),
             gps_lat: Number(farmMapForm.gps_lat),
             gps_lng: Number(farmMapForm.gps_lng),
-            farm_size_hectares: Number(farmMapForm.farm_size_hectares)
+            farm_size_hectares: Number(farmMapForm.farm_size_hectares),
+            boundary_points: mapPolygonPoints,
+            boundary_point_count: mapPolygonPoints.length
           });
           await load();
           alert('Farm GPS mapping saved to database.');

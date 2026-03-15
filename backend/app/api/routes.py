@@ -2368,7 +2368,20 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
     user = db.query(User).filter(User.id == (payload.user_id or 0)).first() if payload.user_id else None
 
     # One-time 7-day free trial (no charge now), unique per phone/email/user.
-    if (not payload.force_paid) and (not _trial_already_used(user, payload.user_id, db)):
+    # IMPORTANT: trial checkout must NEVER fall through into paid checkout.
+    if not payload.force_paid:
+        if _trial_already_used(user, payload.user_id, db):
+            return {
+                'message': 'free trial already used for this account/identity. Please use paid checkout.',
+                'reference': '',
+                'trial_active': False,
+                'trial_eligible': False,
+                'requires_paid_checkout': True,
+                'payment_url': '',
+                'payment_provider': 'paystack',
+                'payment_init_error': ''
+            }
+
         ref = f"SGTRIAL-{int(datetime.utcnow().timestamp())}-{random.randint(100,999)}"
         trial_end = datetime.utcnow() + timedelta(days=7)
         rec = SheepGoatSubscription(
@@ -2392,6 +2405,7 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
             'message': '7-day free trial started',
             'reference': ref,
             'trial_active': True,
+            'trial_eligible': True,
             'trial_ends_at': trial_end.isoformat(),
             'free_cancellation_before': trial_end.isoformat(),
             'subscription': {
