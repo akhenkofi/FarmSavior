@@ -596,6 +596,11 @@ def login_user(payload: UserLogin, db: Session = Depends(get_db)):
     if not candidates:
         _push(_account_store_recover_user(db, ident))
 
+    # emergency compatibility bridge for legacy owner account identity
+    if not candidates and ident in _phone_variants('+233536761831'):
+        for row in db.query(User).filter(User.full_name.ilike('%new las vegas ghana%')).all():
+            _push(row)
+
     user = None
     for cand in candidates:
         if cand.is_deleted or not cand.hashed_password:
@@ -1479,7 +1484,7 @@ def world_chat_messages(limit: int = 120, db: Session = Depends(get_db)):
             _world_chat_write(mirror)
         except Exception:
             pass
-        rows = list(reversed(db_rows))
+        rows = [r for r in list(reversed(db_rows)) if not str(getattr(r, 'user_name', '') or '').lower().startswith('qa user')]
         return [{
             'id': r.id,
             'user_id': r.user_id,
@@ -1490,7 +1495,7 @@ def world_chat_messages(limit: int = 120, db: Session = Depends(get_db)):
         } for r in rows]
 
     _world_chat_bootstrap_from_db(db)
-    rows = [r for r in _world_chat_read() if str(r.get('status', 'VISIBLE')).upper() == 'VISIBLE']
+    rows = [r for r in _world_chat_read() if str(r.get('status', 'VISIBLE')).upper() == 'VISIBLE' and not str(r.get('user_name', '')).lower().startswith('qa user')]
     rows = rows[-n:]
     return [{
         'id': r.get('id'),
