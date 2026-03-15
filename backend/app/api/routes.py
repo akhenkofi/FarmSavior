@@ -621,16 +621,49 @@ def login_user(payload: UserLogin, db: Session = Depends(get_db)):
             except Exception:
                 db.rollback()
 
-    user = None
+    valid_candidates: list[User] = []
     for cand in candidates:
         if cand.is_deleted or not cand.hashed_password:
             continue
         if verify_password(payload.password, cand.hashed_password):
-            user = cand
-            break
+            valid_candidates.append(cand)
 
-    if not user:
+    if not valid_candidates:
         raise HTTPException(status_code=401, detail='Invalid login credentials')
+
+    def _activity_score(u: User) -> int:
+        score = 0
+        try:
+            score += int(db.query(func.count(WorldChatMessage.id)).filter(WorldChatMessage.user_id == u.id).scalar() or 0)
+        except Exception:
+            pass
+        try:
+            score += int(db.query(func.count(CommunityPost.id)).filter(CommunityPost.user_id == u.id).scalar() or 0) * 3
+        except Exception:
+            pass
+        try:
+            p = db.query(CommunityProfile).filter(CommunityProfile.user_id == u.id).first()
+            if p:
+                score += 5
+                if p.avatar_url:
+                    score += 5
+                if p.cover_image_url:
+                    score += 5
+                if (p.username or '').strip().lower() == 'akhen':
+                    score += 10
+        except Exception:
+            pass
+        return score
+
+    user = sorted(valid_candidates, key=_activity_score, reverse=True)[0]
+
+    # Canonicalize owner identity phone to prevent future alias drift.
+    if ident in _phone_variants('+233536761831') and user.phone != '+233536761831':
+        try:
+            user.phone = '+233536761831'
+            db.commit()
+        except Exception:
+            db.rollback()
 
     return TokenResponse(access_token=create_access_token(subject=str(user.id)))
 
