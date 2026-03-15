@@ -238,15 +238,25 @@ def _phone_variants(value: Optional[str]) -> list[str]:
     if not p:
         return []
     digits = ''.join(ch for ch in p if ch.isdigit())
-    variants = {p, digits, ('+' + digits)}
+
+    ordered: list[str] = []
+    def _add(v: str):
+        if v and v not in ordered:
+            ordered.append(v)
+
+    # deterministic priority order (most canonical first)
+    _add(p)
+    _add('+' + digits)
+    _add(digits)
+
     if digits.startswith('233') and len(digits) >= 12:
-        variants.add('0' + digits[3:])
+        _add('0' + digits[3:])
     if digits.startswith('0') and len(digits) == 10:
-        variants.add('+233' + digits[1:])
-    # relaxed suffix match token for recovery checks
+        _add('+233' + digits[1:])
     if len(digits) >= 9:
-        variants.add(digits[-9:])
-    return [v for v in variants if v]
+        _add(digits[-9:])
+
+    return ordered
 
 
 def _account_store_path() -> Path:
@@ -559,24 +569,44 @@ def login_user(payload: UserLogin, db: Session = Depends(get_db)):
 
     ident_raw = (payload.identifier or '').strip()
     ident = _normalize_identifier(ident_raw)
-    user = None
+
+    candidates: list[User] = []
+    seen_ids: set[int] = set()
+
+    def _push(u: Optional[User]):
+        if not u:
+            return
+        uid = int(getattr(u, 'id', 0) or 0)
+        if uid in seen_ids:
+            return
+        seen_ids.add(uid)
+        candidates.append(u)
+
     if '@' in ident:
-        user = db.query(User).filter(User.email == ident).first()
+        _push(db.query(User).filter(User.email == ident).first())
     else:
         for v in _phone_variants(ident):
-            row = db.query(User).filter(User.phone == v).first()
-            if row:
-                user = row
-                break
-        if not user:
-            # final relaxed fallback: suffix match for migrated/legacy formats
-            digits = ''.join(ch for ch in ident if ch.isdigit())
-            if len(digits) >= 9:
-                user = db.query(User).filter(User.phone.like(f"%{digits[-9:]}%")).first()
+            _push(db.query(User).filter(User.phone == v).first())
+
+        digits = ''.join(ch for ch in ident if ch.isdigit())
+        if len(digits) >= 9:
+            for row in db.query(User).filter(User.phone.like(f"%{digits[-9:]}%")).all():
+                _push(row)
+
+    if not candidates:
+        _push(_account_store_recover_user(db, ident))
+
+    user = None
+    for cand in candidates:
+        if cand.is_deleted or not cand.hashed_password:
+            continue
+        if verify_password(payload.password, cand.hashed_password):
+            user = cand
+            break
+
     if not user:
-        user = _account_store_recover_user(db, ident)
-    if not user or user.is_deleted or not user.hashed_password or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(status_code=401, detail='Invalid login credentials')
+
     return TokenResponse(access_token=create_access_token(subject=str(user.id)))
 
 
@@ -1288,19 +1318,52 @@ def _is_admin_user(user: User) -> bool:
 
 
 def _world_chat_store_path() -> Path:
-    p = (Path(__file__).resolve().parents[3] / 'data' / 'runtime' / 'world-chat.json')
+    candidates = [
+        Path(__file__).resolve().parents[3] / 'data' / 'runtime' / 'world-chat.json',
+        Path(__file__).resolve().parents[2] / 'data' / 'runtime' / 'world-chat.json',
+        Path(__file__).resolve().parents[2] / 'runtime' / 'world-chat.json',
+    ]
+    for p in candidates:
+        try:
+            p.parent.mkdir(parents=True, exist_ok=True)
+            return p
+        except Exception:
+            continue
+    p = candidates[0]
     p.parent.mkdir(parents=True, exist_ok=True)
     return p
 
 
 def _world_chat_read() -> list[dict]:
     p = _world_chat_store_path()
-    if not p.exists():
-        return []
-    try:
-        return json.loads(p.read_text(encoding='utf-8')) or []
-    except Exception:
-        return []
+
+    if p.exists():
+        try:
+            rows = json.loads(p.read_text(encoding='utf-8')) or []
+            if isinstance(rows, list):
+                return rows
+        except Exception:
+            pass
+
+    fallback_paths = [
+        Path(__file__).resolve().parents[3] / 'data' / 'runtime' / 'world-chat.json',
+        Path(__file__).resolve().parents[2] / 'data' / 'runtime' / 'world-chat.json',
+    ]
+    for fp in fallback_paths:
+        if not fp.exists():
+            continue
+        try:
+            rows = json.loads(fp.read_text(encoding='utf-8')) or []
+            if isinstance(rows, list) and rows:
+                try:
+                    _world_chat_write(rows)
+                except Exception:
+                    pass
+                return rows
+        except Exception:
+            continue
+
+    return []
 
 
 def _world_chat_write(rows: list[dict]):
