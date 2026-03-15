@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+// homepage-priority-refresh
 import * as api from './services/api'
 
 const errMsg = (e) => e?.response?.data?.detail || e?.message || 'Request failed'
