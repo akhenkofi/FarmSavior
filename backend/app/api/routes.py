@@ -2106,6 +2106,10 @@ def ai_pest_identify(payload: PestIdentifyIn, authorization: Optional[str] = Hea
 def ai_disease_analyze(payload: DiseaseAnalyzeIn, db: Session = Depends(get_db)):
     target = (payload.crop_type or '').lower().strip()
     note = (payload.context_note or '').lower().strip()
+    category = (payload.category or '').lower().strip()
+
+    crop_groups = {'cassava', 'maize', 'tomato', 'rice', 'pepper', 'onion'}
+    animal_groups = {'goat', 'sheep', 'cattle', 'poultry', 'rabbit', 'grasscutter', 'horse', 'dog'}
 
     # Broader disease coverage across crops + listed animal groups.
     disease_db = [
@@ -2135,12 +2139,27 @@ def ai_disease_analyze(payload: DiseaseAnalyzeIn, db: Session = Depends(get_db))
     aliases = {
         'chicken':'poultry','turkey':'poultry','bird':'poultry',
         'cow':'cattle','bull':'cattle',
+        'goats': 'goat', 'sheeps': 'sheep', 'cows': 'cattle', 'hens': 'poultry',
     }
     target_group = aliases.get(target, target)
 
-    candidates = [d for d in disease_db if d['group'] == target_group]
-    if not candidates:
-        candidates = disease_db
+    inferred_category = category
+    if target_group in animal_groups:
+        inferred_category = 'animal'
+    elif target_group in crop_groups:
+        inferred_category = 'crop'
+
+    if inferred_category == 'animal':
+        candidates = [d for d in disease_db if d['group'] in animal_groups]
+    elif inferred_category == 'crop':
+        candidates = [d for d in disease_db if d['group'] in crop_groups]
+    else:
+        candidates = disease_db[:]
+
+    if target_group:
+        exact_matches = [d for d in candidates if d['group'] == target_group]
+        if exact_matches:
+            candidates = exact_matches
 
     ranked = []
     for d in candidates:
@@ -2179,7 +2198,13 @@ def ai_disease_analyze(payload: DiseaseAnalyzeIn, db: Session = Depends(get_db))
     for s, hits, d in ranked[:3]:
         top_matches.append({'diagnosis': d['name'], 'confidence': round(min(0.96, s if hits > 0 else s - 0.12), 2)})
 
-    vet_notice = 'Important: Contact a licensed veterinarian/agronomist for confirmation before treatment.'
+    if inferred_category == 'animal' or top['group'] in animal_groups:
+        vet_notice = 'Important: Contact a licensed veterinarian for confirmation before treatment.'
+    elif inferred_category == 'crop' or top['group'] in crop_groups:
+        vet_notice = 'Important: Contact a licensed agronomist/extension officer for confirmation before treatment.'
+    else:
+        vet_notice = 'Important: Contact a licensed veterinarian or agronomist for confirmation before treatment.'
+
     result = {
         'diagnosis': diagnosis,
         'confidence': confidence,
@@ -2187,8 +2212,10 @@ def ai_disease_analyze(payload: DiseaseAnalyzeIn, db: Session = Depends(get_db))
         'treatment': treatment,
         'top_matches': top_matches,
         'vet_notice': vet_notice,
+        'category': inferred_category or top['group'],
+        'target_group': target_group or None,
         'context_note_used': payload.context_note or '',
-        'engine': 'FarmSavior AI Analyzer (expanded rule engine v2)'
+        'engine': 'FarmSavior AI Analyzer (category-locked rule engine v3)'
     }
 
     rec = DiseaseScan(user_id=payload.user_id, image_url=payload.image_url, crop_type=payload.crop_type, result=json.dumps(result))

@@ -192,6 +192,7 @@ class DeviceTokenIn(BaseModel):
 class DiseaseAnalyzeIn(BaseModel):
     user_id: Optional[int] = None
     image_url: str
+    category: Optional[Literal['crop', 'animal']] = None
     crop_type: Optional[str] = None
     context_note: Optional[str] = None
 
