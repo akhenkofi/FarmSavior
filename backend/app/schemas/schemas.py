@@ -248,6 +248,14 @@ class SheepGoatSubscriptionIn(BaseModel):
     force_paid: bool = False
 
 
+class PoultryUniversitySubscriptionIn(BaseModel):
+    user_id: Optional[int] = None
+    plan_code: Literal['basic', 'pro']
+    country: str = 'GH'
+    billing_cycle: Literal['monthly', 'yearly'] = 'monthly'
+    currency: str
+
+
 class WorldChatMessageIn(BaseModel):
     text: str
 

@@ -32,7 +32,7 @@ from app.schemas.schemas import (
     PaymentIn, WeatherAlertIn, IDVerificationIn, IDVerificationSelfIn, FarmPassportIn,
     LivestockListingIn, EquipmentRentalIn, StorageReservationIn, ContractIn,
     VerificationDecisionIn, DeviceTokenIn, DiseaseAnalyzeIn,
-    SheepGoatRecordIn, SheepGoatBreedingGroupIn, SheepGoatSubscriptionIn,
+    SheepGoatRecordIn, SheepGoatBreedingGroupIn, SheepGoatSubscriptionIn, PoultryUniversitySubscriptionIn,
     WorldChatMessageIn, WorldChatModerationActionIn, WorldChatUserSanctionIn,
     CommunityProfileIn, CommunityPostIn, CommunityCommentIn,
     PlantIdentifyIn, PestIdentifyIn, AccountUpdateIn, PasswordChangeIn, DeleteAccountIn
@@ -1228,6 +1228,197 @@ def trade_export_stats():
     write_snapshot('raw/trade/export_stats_latest.json', payload)
     write_jsonl('raw/trade/export_stats_history.jsonl', payload)
     return payload
+
+
+@router.get('/university/poultry/plans')
+def poultry_university_plans():
+    return {
+        'note': 'Poultry University unlocks only from server-side subscription status. No browser-local unlocks are trusted.',
+        'supported_currencies': ['GHS', 'NGN', 'XOF', 'KES', 'TZS', 'UGX', 'ZAR', 'USD', 'EUR'],
+        'plans': [
+            {
+                'plan_code': 'basic',
+                'name': 'Poultry University Basic',
+                'monthly_usd': 3.33,
+                'yearly_usd': 33.0,
+                'features': ['All 5 modules', 'All bird tracks', 'Both climate zones']
+            },
+            {
+                'plan_code': 'pro',
+                'name': 'Poultry University Professional',
+                'monthly_usd': 8.0,
+                'yearly_usd': 80.0,
+                'features': ['Everything in Basic', 'Professional extras', 'Downloads', 'Expert Q&A', 'Certificate']
+            }
+        ]
+    }
+
+
+@router.get('/university/poultry/subscription/me')
+def poultry_university_subscription_me(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    user = _current_user_from_auth(authorization, db)
+    rec = db.query(SheepGoatSubscription).filter(
+        SheepGoatSubscription.user_id == user.id,
+        SheepGoatSubscription.reference.like('PUSUB-%')
+    ).order_by(SheepGoatSubscription.id.desc()).first()
+
+    if not rec:
+        return {'tier': 'free', 'subscription': None}
+
+    active_statuses = {'ACTIVE', 'TRIAL_ACTIVE'}
+    tier = rec.plan_code if rec.status in active_statuses else 'free'
+    return {
+        'tier': tier,
+        'subscription': {
+            'id': rec.id,
+            'plan_code': rec.plan_code,
+            'billing_cycle': rec.billing_cycle,
+            'currency': rec.currency,
+            'amount': rec.amount,
+            'status': rec.status,
+            'reference': rec.reference,
+            'started_at': rec.started_at.isoformat() if rec.started_at else None,
+            'ends_at': rec.ends_at.isoformat() if rec.ends_at else None,
+            'country': rec.country,
+        }
+    }
+
+
+@router.post('/university/poultry/subscription/checkout')
+def poultry_university_subscription_checkout(payload: PoultryUniversitySubscriptionIn, db: Session = Depends(get_db)):
+    plans = {
+        'basic': {'monthly': 3.33, 'yearly': 33.0},
+        'pro': {'monthly': 8.0, 'yearly': 80.0}
+    }
+    fx = {'USD': 1.0, 'GHS': 15.0, 'NGN': 1600.0, 'XOF': 610.0}
+
+    amount_usd = plans[payload.plan_code][payload.billing_cycle]
+    cur = (payload.currency or 'USD').upper()
+    country = (payload.country or '').upper()
+    amount = round(amount_usd * fx.get(cur, 1.0), 2)
+
+    payout_channel = 'GH_MOMO' if (country == 'GH' or cur == 'GHS') else 'US_BANK'
+    ref = f"PUSUB-{int(datetime.utcnow().timestamp())}-{random.randint(100,999)}"
+    rec = SheepGoatSubscription(
+        user_id=payload.user_id,
+        plan_code=payload.plan_code,
+        country=country or payload.country,
+        billing_cycle=payload.billing_cycle,
+        amount=amount,
+        currency=cur,
+        status='PENDING_PAYMENT',
+        reference=ref
+    )
+    db.add(rec)
+    db.commit()
+    db.refresh(rec)
+
+    payment_url = ''
+    payment_init_error = ''
+    paystack_secret = _paystack_secret_clean()
+    if paystack_secret:
+        user = db.query(User).filter(User.id == (payload.user_id or 0)).first() if payload.user_id else None
+        customer_name = user.full_name if user and user.full_name else 'FarmSavior User'
+        customer_email = f"user{payload.user_id or 0}@farmsavior.com"
+        if user and getattr(user, 'phone', None):
+            customer_email = f"{str(user.phone).replace('+','').replace(' ','')}@farmsavior.com"
+
+        amount_minor = int(round(float(amount) * 100))
+        ps_payload = {
+            'email': customer_email,
+            'amount': amount_minor,
+            'reference': ref,
+            'currency': cur,
+            'callback_url': settings.PAYSTACK_CALLBACK_URL,
+            'metadata': {
+                'customer_name': customer_name,
+                'product': 'poultry_university',
+                'plan_code': payload.plan_code,
+                'billing_cycle': payload.billing_cycle,
+                'country': country,
+                'payout_channel': payout_channel
+            }
+        }
+        try:
+            req = Request(
+                'https://api.paystack.co/transaction/initialize',
+                data=json.dumps(ps_payload).encode('utf-8'),
+                headers={
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'User-Agent': 'FarmSavior/1.0 (+https://www.farmsavior.com)',
+                    'Authorization': f'Bearer {paystack_secret}'
+                },
+                method='POST'
+            )
+            with urlopen(req, timeout=15) as resp:
+                ps_resp = json.loads(resp.read().decode('utf-8', errors='ignore'))
+            payment_url = (((ps_resp or {}).get('data') or {}).get('authorization_url') or '')
+            if not payment_url:
+                payment_init_error = str((ps_resp or {}).get('message') or 'Paystack did not return authorization_url')
+        except Exception as e:
+            payment_url = ''
+            payment_init_error = str(e)
+
+    return {
+        'message': 'checkout created',
+        'reference': ref,
+        'subscription': {
+            'id': rec.id,
+            'plan_code': rec.plan_code,
+            'billing_cycle': rec.billing_cycle,
+            'currency': rec.currency,
+            'amount': rec.amount,
+            'status': rec.status,
+            'reference': rec.reference,
+        },
+        'amount_usd': amount_usd,
+        'payment_url': payment_url,
+        'payment_provider': 'paystack' if paystack_secret else 'not_configured',
+        'payment_init_error': payment_init_error,
+    }
+
+
+@router.get('/university/poultry/subscription/verify/{reference}')
+def poultry_university_subscription_verify(reference: str, db: Session = Depends(get_db)):
+    rec = db.query(SheepGoatSubscription).filter(SheepGoatSubscription.reference == reference).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail='subscription reference not found')
+
+    if rec.status == 'ACTIVE':
+        return {'message': 'already active', 'reference': reference, 'status': rec.status, 'tier': rec.plan_code}
+
+    paystack_secret = _paystack_secret_clean()
+    if not paystack_secret:
+        return {'message': 'payment provider not configured', 'reference': reference, 'status': rec.status, 'tier': 'free'}
+
+    try:
+        req = Request(
+            f'https://api.paystack.co/transaction/verify/{reference}',
+            headers={'Authorization': f'Bearer {paystack_secret}'},
+            method='GET'
+        )
+        with urlopen(req, timeout=15) as resp:
+            v = json.loads(resp.read().decode('utf-8', errors='ignore'))
+
+        data = (v or {}).get('data') or {}
+        status = str(data.get('status', '')).lower()
+        amount_minor = int(data.get('amount', 0) or 0)
+        amount = float(amount_minor) / 100.0
+        currency = str(data.get('currency', '') or '').upper()
+        tx_ref = str(data.get('reference', '') or '')
+
+        if status == 'success' and tx_ref == reference and currency == (rec.currency or '').upper() and amount >= float(rec.amount or 0):
+            rec.status = 'ACTIVE'
+            rec.started_at = datetime.utcnow()
+            rec.ends_at = datetime.utcnow() + timedelta(days=30 if rec.billing_cycle == 'monthly' else 365)
+            db.commit()
+            db.refresh(rec)
+            return {'message': 'payment verified and subscription activated', 'reference': reference, 'status': rec.status, 'tier': rec.plan_code}
+
+        return {'message': 'payment not verified yet', 'reference': reference, 'status': rec.status, 'tier': 'free', 'provider_status': status}
+    except Exception as e:
+        return {'message': 'verification failed', 'reference': reference, 'status': rec.status, 'tier': 'free', 'error': str(e)}
 
 
 @router.get('/weather/public-main')
