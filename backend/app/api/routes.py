@@ -1599,24 +1599,20 @@ def world_chat_post(payload: WorldChatMessageIn, authorization: Optional[str] = 
     db.commit()
     db.refresh(msg)
 
-    try:
-        _world_chat_bootstrap_from_db(db)
-        persisted = _world_chat_read()
-        persisted.append({
-            'id': msg.id,
-            'user_id': msg.user_id,
-            'user_name': msg.user_name,
-            'user_country': msg.user_country,
-            'text': msg.text,
-            'status': msg.status,
-            'moderation_label': msg.moderation_label,
-            'moderation_reason': msg.moderation_reason,
-            'created_at': msg.created_at.isoformat() if msg.created_at else None,
-        })
-        _world_chat_write(persisted)
-    except Exception:
-        # File mirror is secondary durability only. Never fail chat posting after DB commit.
-        pass
+    _world_chat_bootstrap_from_db(db)
+    persisted = _world_chat_read()
+    persisted.append({
+        'id': msg.id,
+        'user_id': msg.user_id,
+        'user_name': msg.user_name,
+        'user_country': msg.user_country,
+        'text': msg.text,
+        'status': msg.status,
+        'moderation_label': msg.moderation_label,
+        'moderation_reason': msg.moderation_reason,
+        'created_at': msg.created_at.isoformat() if msg.created_at else None,
+    })
+    _world_chat_write(persisted)
 
     return {
         'id': msg.id,
