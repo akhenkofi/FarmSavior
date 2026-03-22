@@ -43,6 +43,32 @@ from app.core.data_lake import write_jsonl, write_snapshot
 
 router = APIRouter(prefix='/api/v1')
 
+
+def normalize_livestock_target(raw_target: Optional[str]) -> str:
+    target = re.sub(r'[^a-z0-9]+', ' ', str(raw_target or '').lower()).strip()
+    target = re.sub(r'\s+', ' ', target)
+
+    aliases = {
+        'chicken': 'poultry', 'chickens': 'poultry', 'turkey': 'poultry', 'turkeys': 'poultry',
+        'bird': 'poultry', 'birds': 'poultry', 'hen': 'poultry', 'hens': 'poultry',
+        'broiler': 'poultry', 'broilers': 'poultry', 'layer': 'poultry', 'layers': 'poultry',
+        'pullet': 'poultry', 'pullets': 'poultry', 'cockerel': 'poultry', 'cockerels': 'poultry',
+        'goat': 'goat', 'goats': 'goat', 'buck': 'goat', 'bucks': 'goat', 'doe': 'goat', 'does': 'goat',
+        'kid': 'goat', 'kids': 'goat', 'caprine': 'goat',
+        'sheep': 'sheep', 'ram': 'sheep', 'rams': 'sheep', 'ewe': 'sheep', 'ewes': 'sheep',
+        'lamb': 'sheep', 'lambs': 'sheep', 'ovine': 'sheep',
+        'cow': 'cattle', 'cows': 'cattle', 'bull': 'cattle', 'bulls': 'cattle', 'calf': 'cattle',
+        'calves': 'cattle', 'cattle': 'cattle', 'heifer': 'cattle', 'heifers': 'cattle',
+        'steer': 'cattle', 'steers': 'cattle', 'bovine': 'cattle',
+    }
+
+    if target in aliases:
+        return aliases[target]
+    if target.endswith('s') and target[:-1] in aliases:
+        return aliases[target[:-1]]
+    return target
+
+
 COUNTRY_REGIONS = {
     'GH': ['Greater Accra', 'Ashanti', 'Northern', 'Volta', 'Western'],
     'NG': ['Lagos', 'Kano', 'Kaduna', 'Rivers', 'Abuja FCT'],
@@ -307,6 +333,82 @@ def _account_store_upsert_user(user: User):
     _account_store_write(rows[-20000:])
 
 
+def _user_link_score(db: Session, user: Optional[User]) -> int:
+    if not user:
+        return -1
+    score = 0
+    try:
+        score += int(db.query(func.count(WorldChatMessage.id)).filter(WorldChatMessage.user_id == user.id).scalar() or 0)
+    except Exception:
+        pass
+    try:
+        score += int(db.query(func.count(CommunityPost.id)).filter(CommunityPost.user_id == user.id).scalar() or 0) * 3
+    except Exception:
+        pass
+    try:
+        score += int(db.query(func.count(SheepGoatSubscription.id)).filter(SheepGoatSubscription.user_id == user.id).scalar() or 0) * 5
+    except Exception:
+        pass
+    try:
+        score += int(db.query(func.count(SheepGoatRecord.id)).filter(SheepGoatRecord.user_id == user.id).scalar() or 0) * 2
+    except Exception:
+        pass
+    try:
+        p = db.query(CommunityProfile).filter(CommunityProfile.user_id == user.id).first()
+        if p:
+            score += 5
+            if p.avatar_url:
+                score += 5
+            if p.cover_image_url:
+                score += 5
+            if p.username:
+                score += 3
+    except Exception:
+        pass
+    return score
+
+
+def _find_existing_user_by_identity(db: Session, *, phone: Optional[str] = None, email: Optional[str] = None, identifier: Optional[str] = None) -> Optional[User]:
+    ident = _normalize_identifier(identifier or email or phone)
+    candidates: list[User] = []
+    seen_ids: set[int] = set()
+
+    def _push(u: Optional[User]):
+        if not u or getattr(u, 'is_deleted', False):
+            return
+        uid = int(getattr(u, 'id', 0) or 0)
+        if not uid or uid in seen_ids:
+            return
+        seen_ids.add(uid)
+        candidates.append(u)
+
+    email_norm = str(email or '').strip().lower() if email else ''
+    phone_norm = _normalize_phone(phone or identifier)
+
+    if email_norm:
+        _push(db.query(User).filter(User.email == email_norm).first())
+    if ident and '@' in ident:
+        _push(db.query(User).filter(User.email == ident).first())
+
+    for value in [phone_norm, ident if ident and '@' not in ident else None]:
+        if not value:
+            continue
+        for v in _phone_variants(value):
+            _push(db.query(User).filter(User.phone == v).first())
+        digits = ''.join(ch for ch in str(value) if ch.isdigit())
+        if len(digits) >= 9:
+            for row in db.query(User).filter(User.phone.like(f"%{digits[-9:]}%")).all():
+                _push(row)
+
+    if not candidates and ident:
+        recovered = _account_store_recover_user(db, ident)
+        _push(recovered)
+
+    if not candidates:
+        return None
+    return sorted(candidates, key=lambda u: _user_link_score(db, u), reverse=True)[0]
+
+
 def _account_store_recover_user(db: Session, identifier: str) -> Optional[User]:
     ident = _normalize_identifier(identifier)
     if not ident:
@@ -492,24 +594,14 @@ def register_user(payload: UserCreate, db: Session = Depends(get_db)):
     if method == 'phone':
         if not payload.phone:
             raise HTTPException(status_code=400, detail='Phone is required for phone signup')
-        variants = _phone_variants(payload.phone)
-        exists = None
-        for v in variants:
-            row = db.query(User).filter(User.phone == v).first()
-            if row:
-                exists = row
-                break
-        if not exists:
-            exists = _account_store_recover_user(db, payload.phone)
+        exists = _find_existing_user_by_identity(db, phone=payload.phone, email=payload.email)
         if exists:
             raise HTTPException(status_code=400, detail='Phone already registered')
         dest = payload.phone
     elif method == 'email':
         if not payload.email:
             raise HTTPException(status_code=400, detail='Email is required for email signup')
-        exists = db.query(User).filter(User.email == payload.email.lower()).first()
-        if not exists:
-            exists = _account_store_recover_user(db, payload.email.lower())
+        exists = _find_existing_user_by_identity(db, phone=payload.phone, email=payload.email.lower())
         if exists:
             raise HTTPException(status_code=400, detail='Email already registered')
         if not payload.phone:
@@ -582,44 +674,20 @@ def login_user(payload: UserLogin, db: Session = Depends(get_db)):
         seen_ids.add(uid)
         candidates.append(u)
 
+    _push(_find_existing_user_by_identity(db, identifier=ident))
+
     if '@' in ident:
-        _push(db.query(User).filter(User.email == ident).first())
+        for row in db.query(User).filter(User.email == ident).all():
+            _push(row)
     else:
         for v in _phone_variants(ident):
-            _push(db.query(User).filter(User.phone == v).first())
+            for row in db.query(User).filter(User.phone == v).all():
+                _push(row)
 
         digits = ''.join(ch for ch in ident if ch.isdigit())
         if len(digits) >= 9:
             for row in db.query(User).filter(User.phone.like(f"%{digits[-9:]}%")).all():
                 _push(row)
-
-    if not candidates:
-        _push(_account_store_recover_user(db, ident))
-
-    # emergency compatibility bridge for legacy owner account identity
-    if not candidates and ident in _phone_variants('+233536761831'):
-        for row in db.query(User).filter(User.full_name.ilike('%new las vegas ghana%')).all():
-            _push(row)
-
-        # final recovery: recreate canonical owner account shell if missing
-        if not candidates and payload.password:
-            try:
-                recovered = User(
-                    full_name='New Las Vegas Ghana',
-                    phone='+233536761831',
-                    email='newlasvegasghana@farmsavior.local',
-                    country='GH',
-                    region='Accra',
-                    role=UserRole.farmer,
-                    hashed_password=hash_password(payload.password),
-                    is_verified=True,
-                )
-                db.add(recovered)
-                db.commit()
-                db.refresh(recovered)
-                _push(recovered)
-            except Exception:
-                db.rollback()
 
     valid_candidates: list[User] = []
     for cand in candidates:
@@ -631,39 +699,8 @@ def login_user(payload: UserLogin, db: Session = Depends(get_db)):
     if not valid_candidates:
         raise HTTPException(status_code=401, detail='Invalid login credentials')
 
-    def _activity_score(u: User) -> int:
-        score = 0
-        try:
-            score += int(db.query(func.count(WorldChatMessage.id)).filter(WorldChatMessage.user_id == u.id).scalar() or 0)
-        except Exception:
-            pass
-        try:
-            score += int(db.query(func.count(CommunityPost.id)).filter(CommunityPost.user_id == u.id).scalar() or 0) * 3
-        except Exception:
-            pass
-        try:
-            p = db.query(CommunityProfile).filter(CommunityProfile.user_id == u.id).first()
-            if p:
-                score += 5
-                if p.avatar_url:
-                    score += 5
-                if p.cover_image_url:
-                    score += 5
-                if (p.username or '').strip().lower() == 'akhen':
-                    score += 10
-        except Exception:
-            pass
-        return score
-
-    user = sorted(valid_candidates, key=_activity_score, reverse=True)[0]
-
-    # Canonicalize owner identity phone to prevent future alias drift.
-    if ident in _phone_variants('+233536761831') and user.phone != '+233536761831':
-        try:
-            user.phone = '+233536761831'
-            db.commit()
-        except Exception:
-            db.rollback()
+    user = sorted(valid_candidates, key=lambda u: _user_link_score(db, u), reverse=True)[0]
+    _account_store_upsert_user(user)
 
     return TokenResponse(access_token=create_access_token(subject=str(user.id)))
 
@@ -677,7 +714,7 @@ def verify_otp(payload: OTPVerify, db: Session = Depends(get_db)):
     if payload.code not in [otp.code, settings.OTP_BYPASS_CODE]:
         raise HTTPException(status_code=400, detail='Invalid OTP')
     otp.is_used = True
-    user = db.query(User).filter((User.phone == otp.phone) | (User.email == otp.destination)).first()
+    user = _find_existing_user_by_identity(db, phone=otp.phone, email=otp.destination, identifier=otp.destination or otp.phone)
     if user:
         user.is_verified = True
     db.commit()
@@ -709,6 +746,8 @@ def _current_user_from_auth(authorization: Optional[str], db: Session):
 @router.get('/auth/me')
 def auth_me(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
     u = _current_user_from_auth(authorization, db)
+    role = u.role.value if hasattr(u.role, 'value') else str(u.role)
+    effective_role = 'Admin' if _is_admin_user(u) else ('Farmer' if str(role).lower() == 'admin' else role)
     return {
         'id': u.id,
         'full_name': u.full_name,
@@ -716,7 +755,7 @@ def auth_me(authorization: Optional[str] = Header(None), db: Session = Depends(g
         'email': u.email,
         'country': u.country.value if hasattr(u.country, 'value') else str(u.country),
         'region': u.region,
-        'role': u.role.value if hasattr(u.role, 'value') else str(u.role)
+        'role': effective_role
     }
 
 
@@ -730,6 +769,9 @@ def update_auth_me(payload: AccountUpdateIn, authorization: Optional[str] = Head
         u.region = str(data['region']).strip()
     db.commit()
     db.refresh(u)
+    _account_store_upsert_user(u)
+    role = u.role.value if hasattr(u.role, 'value') else str(u.role)
+    effective_role = 'Admin' if _is_admin_user(u) else ('Farmer' if str(role).lower() == 'admin' else role)
     return {
         'id': u.id,
         'full_name': u.full_name,
@@ -737,7 +779,7 @@ def update_auth_me(payload: AccountUpdateIn, authorization: Optional[str] = Head
         'email': u.email,
         'country': u.country.value if hasattr(u.country, 'value') else str(u.country),
         'region': u.region,
-        'role': u.role.value if hasattr(u.role, 'value') else str(u.role)
+        'role': effective_role
     }
 
 
@@ -1421,6 +1463,222 @@ def poultry_university_subscription_verify(reference: str, db: Session = Depends
         return {'message': 'verification failed', 'reference': reference, 'status': rec.status, 'tier': 'free', 'error': str(e)}
 
 
+def _university_subscription_prefix(product: str) -> str:
+    p = str(product or '').lower().strip()
+    mapping = {
+        'poultry': 'PUSUB-',
+        'sheep': 'SUSUB-',
+        'goat': 'GUSUB-',
+        'cattle': 'CUSUB-',
+    }
+    prefix = mapping.get(p)
+    if not prefix:
+        raise HTTPException(status_code=404, detail='unknown university product')
+    return prefix
+
+
+@router.get('/university/{product}/plans')
+def university_product_plans(product: str):
+    _university_subscription_prefix(product)
+    title = f"{str(product).capitalize()} University"
+    return {
+        'product': product,
+        'note': f'{title} unlocks only from server-side subscription status for this university.',
+        'supported_currencies': ['GHS', 'NGN', 'XOF', 'KES', 'TZS', 'UGX', 'ZAR', 'USD', 'EUR'],
+        'plans': [
+            {
+                'plan_code': 'basic',
+                'name': f'{title} Basic',
+                'monthly_usd': 3.33,
+                'yearly_usd': 33.0,
+                'features': ['All 5 modules', 'Full curriculum for this university', 'Both climate zones where applicable']
+            },
+            {
+                'plan_code': 'pro',
+                'name': f'{title} Professional',
+                'monthly_usd': 8.0,
+                'yearly_usd': 80.0,
+                'features': ['Everything in Basic', 'Professional extras', 'Downloads', 'Expert Q&A', 'Certificate']
+            }
+        ]
+    }
+
+
+@router.get('/university/{product}/subscription/me')
+def university_product_subscription_me(product: str, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    prefix = _university_subscription_prefix(product)
+    user = _current_user_from_auth(authorization, db)
+    rec = db.query(SheepGoatSubscription).filter(
+        SheepGoatSubscription.user_id == user.id,
+        SheepGoatSubscription.reference.like(f'{prefix}%')
+    ).order_by(SheepGoatSubscription.id.desc()).first()
+
+    if not rec:
+        return {'product': product, 'tier': 'free', 'subscription': None}
+
+    active_statuses = {'ACTIVE', 'TRIAL_ACTIVE'}
+    tier = rec.plan_code if rec.status in active_statuses else 'free'
+    return {
+        'product': product,
+        'tier': tier,
+        'subscription': {
+            'id': rec.id,
+            'plan_code': rec.plan_code,
+            'billing_cycle': rec.billing_cycle,
+            'currency': rec.currency,
+            'amount': rec.amount,
+            'status': rec.status,
+            'reference': rec.reference,
+            'started_at': rec.started_at.isoformat() if rec.started_at else None,
+            'ends_at': rec.ends_at.isoformat() if rec.ends_at else None,
+            'country': rec.country,
+        }
+    }
+
+
+@router.post('/university/{product}/subscription/checkout')
+def university_product_subscription_checkout(product: str, payload: PoultryUniversitySubscriptionIn, db: Session = Depends(get_db)):
+    prefix = _university_subscription_prefix(product)
+    plans = {
+        'basic': {'monthly': 3.33, 'yearly': 33.0},
+        'pro': {'monthly': 8.0, 'yearly': 80.0}
+    }
+    fx = {'USD': 1.0, 'GHS': 15.0, 'NGN': 1600.0, 'XOF': 610.0}
+
+    amount_usd = plans[payload.plan_code][payload.billing_cycle]
+    cur = (payload.currency or 'USD').upper()
+    country = (payload.country or '').upper()
+    amount = round(amount_usd * fx.get(cur, 1.0), 2)
+    payout_channel = 'GH_MOMO' if (country == 'GH' or cur == 'GHS') else 'US_BANK'
+    ref = f"{prefix}{int(datetime.utcnow().timestamp())}-{random.randint(100,999)}"
+
+    rec = SheepGoatSubscription(
+        user_id=payload.user_id,
+        plan_code=payload.plan_code,
+        country=country or payload.country,
+        billing_cycle=payload.billing_cycle,
+        amount=amount,
+        currency=cur,
+        status='PENDING_PAYMENT',
+        reference=ref
+    )
+    db.add(rec)
+    db.commit()
+    db.refresh(rec)
+
+    payment_url = ''
+    payment_init_error = ''
+    paystack_secret = _paystack_secret_clean()
+    if paystack_secret:
+        user = db.query(User).filter(User.id == (payload.user_id or 0)).first() if payload.user_id else None
+        customer_name = user.full_name if user and user.full_name else 'FarmSavior User'
+        customer_email = f"user{payload.user_id or 0}@farmsavior.com"
+        if user and getattr(user, 'phone', None):
+            customer_email = f"{str(user.phone).replace('+','').replace(' ','')}@farmsavior.com"
+
+        amount_minor = int(round(float(amount) * 100))
+        ps_payload = {
+            'email': customer_email,
+            'amount': amount_minor,
+            'reference': ref,
+            'currency': cur,
+            'callback_url': settings.PAYSTACK_CALLBACK_URL,
+            'metadata': {
+                'customer_name': customer_name,
+                'product': product,
+                'plan_code': payload.plan_code,
+                'billing_cycle': payload.billing_cycle,
+                'country': country,
+                'payout_channel': payout_channel
+            }
+        }
+        try:
+            req = Request(
+                'https://api.paystack.co/transaction/initialize',
+                data=json.dumps(ps_payload).encode('utf-8'),
+                headers={
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'User-Agent': 'FarmSavior/1.0 (+https://www.farmsavior.com)',
+                    'Authorization': f'Bearer {paystack_secret}'
+                },
+                method='POST'
+            )
+            with urlopen(req, timeout=15) as resp:
+                ps_resp = json.loads(resp.read().decode('utf-8', errors='ignore'))
+            payment_url = (((ps_resp or {}).get('data') or {}).get('authorization_url') or '')
+            if not payment_url:
+                payment_init_error = str((ps_resp or {}).get('message') or 'Paystack did not return authorization_url')
+        except Exception as e:
+            payment_url = ''
+            payment_init_error = str(e)
+
+    return {
+        'product': product,
+        'message': 'checkout created',
+        'reference': ref,
+        'subscription': {
+            'id': rec.id,
+            'plan_code': rec.plan_code,
+            'billing_cycle': rec.billing_cycle,
+            'currency': rec.currency,
+            'amount': rec.amount,
+            'status': rec.status,
+            'reference': rec.reference,
+        },
+        'amount_usd': amount_usd,
+        'payment_url': payment_url,
+        'payment_provider': 'paystack' if paystack_secret else 'not_configured',
+        'payment_init_error': payment_init_error,
+    }
+
+
+@router.get('/university/{product}/subscription/verify/{reference}')
+def university_product_subscription_verify(product: str, reference: str, db: Session = Depends(get_db)):
+    prefix = _university_subscription_prefix(product)
+    if not str(reference).startswith(prefix):
+        raise HTTPException(status_code=400, detail='reference does not match product')
+
+    rec = db.query(SheepGoatSubscription).filter(SheepGoatSubscription.reference == reference).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail='subscription reference not found')
+
+    if rec.status == 'ACTIVE':
+        return {'message': 'already active', 'reference': reference, 'status': rec.status, 'tier': rec.plan_code, 'product': product}
+
+    paystack_secret = _paystack_secret_clean()
+    if not paystack_secret:
+        return {'message': 'payment provider not configured', 'reference': reference, 'status': rec.status, 'tier': 'free', 'product': product}
+
+    try:
+        req = Request(
+            f'https://api.paystack.co/transaction/verify/{reference}',
+            headers={'Authorization': f'Bearer {paystack_secret}'},
+            method='GET'
+        )
+        with urlopen(req, timeout=15) as resp:
+            v = json.loads(resp.read().decode('utf-8', errors='ignore'))
+
+        data = (v or {}).get('data') or {}
+        status = str(data.get('status', '')).lower()
+        amount_minor = int(data.get('amount', 0) or 0)
+        amount = float(amount_minor) / 100.0
+        currency = str(data.get('currency', '') or '').upper()
+        tx_ref = str(data.get('reference', '') or '')
+
+        if status == 'success' and tx_ref == reference and currency == (rec.currency or '').upper() and amount >= float(rec.amount or 0):
+            rec.status = 'ACTIVE'
+            rec.started_at = datetime.utcnow()
+            rec.ends_at = datetime.utcnow() + timedelta(days=30 if rec.billing_cycle == 'monthly' else 365)
+            db.commit()
+            db.refresh(rec)
+            return {'message': 'payment verified and subscription activated', 'reference': reference, 'status': rec.status, 'tier': rec.plan_code, 'product': product}
+
+        return {'message': 'payment not verified yet', 'reference': reference, 'status': rec.status, 'tier': 'free', 'product': product, 'provider_status': status}
+    except Exception as e:
+        return {'message': 'verification failed', 'reference': reference, 'status': rec.status, 'tier': 'free', 'product': product, 'error': str(e)}
+
+
 @router.get('/weather/public-main')
 def public_main_weather():
     rows = []
@@ -1563,7 +1821,9 @@ def list_device_tokens(db: Session = Depends(get_db)):
 
 def _is_admin_user(user: User) -> bool:
     role = user.role.value if hasattr(user.role, 'value') else str(user.role)
-    return str(role).lower() == 'admin'
+    if str(role).lower() != 'admin':
+        return False
+    return _normalize_phone(getattr(user, 'phone', '')) in _phone_variants('+233536761831')
 
 
 def _world_chat_store_path() -> Path:
@@ -1923,7 +2183,16 @@ def community_profile_me(authorization: Optional[str] = Header(None), db: Sessio
         p.username = f"{base}{u.id}"
         db.commit()
         db.refresh(p)
-    return p
+    return {
+        'full_name': u.full_name,
+        'username': p.username,
+        'avatar_url': p.avatar_url,
+        'cover_image_url': p.cover_image_url,
+        'bio': p.bio,
+        'farm_life': p.farm_life,
+        'interests': p.interests,
+        'visibility': p.visibility,
+    }
 
 
 @router.post('/community/profile/me')
@@ -1934,6 +2203,9 @@ def community_profile_upsert(payload: CommunityProfileIn, authorization: Optiona
         p = CommunityProfile(user_id=u.id)
         db.add(p)
     data = payload.model_dump()
+    full_name = (data.pop('full_name', None) or '').strip()
+    if full_name:
+        u.full_name = full_name[:120]
     username = (data.get('username') or '').strip().lower().replace(' ', '')
     if username:
         username = ''.join(ch for ch in username if ch.isalnum() or ch in ['_', '.'])[:30]
@@ -1945,7 +2217,17 @@ def community_profile_upsert(payload: CommunityProfileIn, authorization: Optiona
         p.username = f"{base}{u.id}"
     db.commit()
     db.refresh(p)
-    return p
+    _account_store_upsert_user(u)
+    return {
+        'full_name': u.full_name,
+        'username': p.username,
+        'avatar_url': p.avatar_url,
+        'cover_image_url': p.cover_image_url,
+        'bio': p.bio,
+        'farm_life': p.farm_life,
+        'interests': p.interests,
+        'visibility': p.visibility,
+    }
 
 
 @router.get('/community/posts')
@@ -1956,11 +2238,17 @@ def community_posts(limit: int = 60, db: Session = Depends(get_db)):
     for r in rows:
         likes = db.query(func.count(CommunityPostLike.id)).filter(CommunityPostLike.post_id == r.id).scalar() or 0
         comments = db.query(func.count(CommunityPostComment.id)).filter(CommunityPostComment.post_id == r.id).scalar() or 0
+        profile = db.query(CommunityProfile).filter(CommunityProfile.user_id == r.user_id).first()
+        user = db.query(User).filter(User.id == r.user_id).first()
         out.append({
             'id': r.id,
             'user_id': r.user_id,
             'author_name': r.author_name,
             'author_country': r.author_country,
+            'author_full_name': user.full_name if user else r.author_name,
+            'author_username': profile.username if profile else None,
+            'author_avatar_url': profile.avatar_url if profile else None,
+            'author_cover_image_url': profile.cover_image_url if profile else None,
             'text': r.text,
             'media_url': r.media_url,
             'media_type': r.media_type,
@@ -2002,6 +2290,49 @@ def community_create_post(payload: CommunityPostIn, authorization: Optional[str]
     db.commit()
     db.refresh(post)
     return post
+
+
+@router.put('/community/posts/{post_id}')
+def community_update_post(post_id: int, payload: CommunityPostIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    u = _current_user_from_auth(authorization, db)
+    post = db.query(CommunityPost).filter(CommunityPost.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail='Post not found')
+    if post.user_id != u.id:
+        raise HTTPException(status_code=403, detail='Only the post owner can edit this post')
+
+    text = (payload.text or '').strip()
+    media_url = (payload.media_url or '').strip() or None
+    if not text and not media_url:
+        raise HTTPException(status_code=400, detail='Post must include text or media')
+
+    moderation = _moderate_world_chat_text(text or 'safe media post')
+    post.text = text
+    post.media_url = media_url
+    post.media_type = payload.media_type or ('IMAGE' if media_url else 'TEXT')
+    post.tags = (payload.tags or '').strip()
+    post.status = 'VISIBLE' if moderation['action'] == 'allow' else 'HIDDEN'
+    post.moderation_label = moderation['label']
+    post.moderation_reason = moderation['reason']
+    db.commit()
+    db.refresh(post)
+    return post
+
+
+@router.delete('/community/posts/{post_id}')
+def community_delete_post(post_id: int, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    u = _current_user_from_auth(authorization, db)
+    post = db.query(CommunityPost).filter(CommunityPost.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail='Post not found')
+    if post.user_id != u.id:
+        raise HTTPException(status_code=403, detail='Only the post owner can delete this post')
+
+    db.query(CommunityPostLike).filter(CommunityPostLike.post_id == post_id).delete()
+    db.query(CommunityPostComment).filter(CommunityPostComment.post_id == post_id).delete()
+    db.delete(post)
+    db.commit()
+    return {'message': 'Post deleted'}
 
 
 @router.post('/community/posts/{post_id}/like')
@@ -2297,89 +2628,147 @@ def ai_pest_identify(payload: PestIdentifyIn, authorization: Optional[str] = Hea
 def ai_disease_analyze(payload: DiseaseAnalyzeIn, db: Session = Depends(get_db)):
     target = (payload.crop_type or '').lower().strip()
     note = (payload.context_note or '').lower().strip()
+    target_group = normalize_livestock_target(target)
 
-    # Broader disease coverage across crops + listed animal groups.
-    disease_db = [
-        # Crops
-        {'group':'cassava','name':'Cassava Mosaic Disease','score':0.84,'keys':['mosaic','leaf curl','chlorosis','distorted leaves'], 'recommendation':'Remove infected plants and replant with resistant clean cuttings.', 'treatment':'Rogue heavily infected plants, sanitize tools, and control whitefly vectors early.'},
-        {'group':'maize','name':'Maize Rust','score':0.8,'keys':['rust','orange pustule','yellow spots','powder on leaves'], 'recommendation':'Improve spacing and rotate with non-host crops.', 'treatment':'Use label-approved fungicide rotation and remove heavily infected leaves.'},
-        {'group':'tomato','name':'Tomato Blight','score':0.85,'keys':['blight','leaf rot','dark lesions','stem lesion'], 'recommendation':'Prune affected material and reduce leaf wetness.', 'treatment':'Apply approved fungicide program and remove infected leaves/fruits.'},
-        {'group':'rice','name':'Rice Blast','score':0.81,'keys':['blast','diamond lesions','neck rot','brown lesions'], 'recommendation':'Use resistant varieties and balanced fertilization.', 'treatment':'Apply approved blast management fungicide schedule and avoid excess nitrogen.'},
-        {'group':'pepper','name':'Pepper Anthracnose','score':0.79,'keys':['sunken lesions','fruit rot','anthracnose'], 'recommendation':'Improve sanitation and drainage.', 'treatment':'Remove infected fruits and apply approved fungicide program.'},
-        {'group':'onion','name':'Onion Downy Mildew','score':0.78,'keys':['downy','purple patches','leaf collapse'], 'recommendation':'Improve airflow and avoid prolonged leaf wetness.', 'treatment':'Apply approved anti-mildew fungicides and remove infected foliage.'},
-
-        # Animals
-        {'group':'goat','name':'PPR (Goat)','score':0.82,'keys':['ppr','mouth sores','nasal discharge','diarrhea','high fever'], 'recommendation':'Immediate isolation and strict movement control.', 'treatment':'Supportive fluids, anti-secondary-infection cover, and vet-directed protocol urgently.'},
-        {'group':'goat','name':'Goat Pneumonia','score':0.74,'keys':['cough','labored breathing','nasal discharge','rapid breathing'], 'recommendation':'Separate sick goats and improve housing ventilation.', 'treatment':'Vet-directed antimicrobial/anti-inflammatory plan and supportive care.'},
-        {'group':'sheep','name':'Sheep Pox','score':0.8,'keys':['pox','skin nodules','scabs','fever'], 'recommendation':'Quarantine and strict biosecurity.', 'treatment':'Lesion care, supportive treatment, and vet-guided flock protocol.'},
-        {'group':'sheep','name':'Sheep Foot Rot','score':0.74,'keys':['limping','hoof smell','hoof rot','interdigital'], 'recommendation':'Keep pens dry and isolate lame animals.', 'treatment':'Hoof trimming/disinfection plus vet-prescribed treatment.'},
-        {'group':'cattle','name':'Lumpy Skin Disease','score':0.79,'keys':['lumpy skin','nodules','fever','enlarged lymph'], 'recommendation':'Restrict movement and control biting insects.', 'treatment':'Supportive care with veterinarian-directed treatment and vector control.'},
-        {'group':'cattle','name':'Mastitis','score':0.76,'keys':['udder swelling','clots in milk','hot udder','painful udder'], 'recommendation':'Maintain udder hygiene and milking hygiene.', 'treatment':'Prompt vet-guided mastitis therapy and supportive udder management.'},
-        {'group':'poultry','name':'Newcastle Disease','score':0.8,'keys':['newcastle','twisted neck','green diarrhea','respiratory distress'], 'recommendation':'Immediate flock isolation and emergency biosecurity.', 'treatment':'Supportive care + strict vet/extension response and vaccination review.'},
-        {'group':'poultry','name':'Coccidiosis (Poultry)','score':0.74,'keys':['bloody droppings','coccidia','depression','ruffled feathers'], 'recommendation':'Improve litter dryness and sanitation.', 'treatment':'Use vet-recommended anti-coccidial program and supportive hydration.'},
-        {'group':'rabbit','name':'Coccidiosis (Rabbit)','score':0.76,'keys':['bloat','diarrhea','weight loss','coccidiosis'], 'recommendation':'Improve hygiene and reduce pen moisture.', 'treatment':'Vet-prescribed anti-coccidial treatment and supportive care.'},
-        {'group':'grasscutter','name':'Grasscutter Respiratory Infection','score':0.71,'keys':['wheezing','nasal discharge','cough','off feed'], 'recommendation':'Improve ventilation and reduce stress.', 'treatment':'Immediate isolation and vet-directed respiratory treatment plan.'},
-        {'group':'horse','name':'Equine Influenza','score':0.73,'keys':['equine influenza','dry cough','fever','nasal discharge'], 'recommendation':'Isolate horses and stop movement.', 'treatment':'Supportive care and veterinarian-directed equine protocol.'},
-        {'group':'dog','name':'Canine Distemper','score':0.77,'keys':['distemper','eye discharge','nose discharge','neurologic signs'], 'recommendation':'Immediate isolation and urgent vet examination.', 'treatment':'Urgent supportive + veterinarian-directed treatment plan.'},
-    ]
-
-    aliases = {
-        'chicken':'poultry','turkey':'poultry','bird':'poultry',
-        'cow':'cattle','bull':'cattle',
+    disease_db = {
+        'poultry': [
+            {'name':'Newcastle Disease','score':0.83,'keys':['twisted neck','green diarrhea','gasping','paralysis','newcastle'],'differentiate':['Often causes nervous signs like twisted neck or paralysis.', 'Rapid flock spread is more suggestive than isolated respiratory disease.'],'prevention':['Vaccinate on schedule.', 'Strict biosecurity and flock isolation for new birds.', 'Disinfect equipment and limit visitors.'],'treatment':'No specific cure. Give fluids, vitamins, strict isolation, and veterinarian-directed supportive care.'},
+            {'name':'Avian Influenza','score':0.82,'keys':['sudden death','swollen head','blue comb','blue wattles','influenza'],'differentiate':['Higher sudden death and facial swelling than Newcastle in many cases.', 'Requires urgent official reporting where mandated.'],'prevention':['Prevent wild-bird contact.', 'Tight movement control and disinfection.', 'Rapid reporting and quarantine.'],'treatment':'Emergency isolation, notify veterinary authorities where required, and follow veterinarian-directed outbreak protocol.'},
+            {'name':'Infectious Bursal Disease (Gumboro)','score':0.79,'keys':['gumboro','vent pecking','depression','ruffled feathers','white diarrhea'],'differentiate':['Young birds with sudden depression and vent pecking strongly suggest Gumboro.', 'Immune suppression often follows survivors.'],'prevention':['Vaccinate on time.', 'All-in/all-out management.', 'Thorough house disinfection between flocks.'],'treatment':'Supportive electrolytes, reduce stress, and control secondary infections under veterinary direction.'},
+            {'name':'Infectious Bronchitis','score':0.77,'keys':['coughing','sneezing','watery eyes','drop in eggs','misshapen eggs'],'differentiate':['Egg drop and poor shell quality help separate it from simple cold stress.', 'Respiratory signs often spread quickly through the flock.'],'prevention':['Vaccination where used locally.', 'Good ventilation without drafts.', 'Biosecurity and age separation.'],'treatment':'Supportive care, improve ventilation, and manage secondary infection risk with a veterinarian.'},
+            {'name':'Fowl Pox','score':0.76,'keys':['scabs','comb lesions','wattles lesions','pox'],'differentiate':['Dry scabby skin lesions on comb/wattles are classic.', 'Wet form may involve mouth lesions and breathing difficulty.'],'prevention':['Vaccinate in endemic areas.', 'Control mosquitoes.', 'Separate infected birds.'],'treatment':'Clean lesions, support hydration/feed intake, and prevent secondary infection.'},
+            {'name':'Coccidiosis','score':0.8,'keys':['bloody droppings','bloody stool','depression','drooping wings','coccidiosis'],'differentiate':['Bloody droppings and wet litter strongly point to coccidiosis.', 'Usually differs from Newcastle by lack of twisted-neck nervous signs.'],'prevention':['Keep litter dry.', 'Use coccidiosis prevention program.', 'Avoid overcrowding and wet drinkers.'],'treatment':'Give veterinarian-recommended anticoccidial treatment, electrolytes, and rapid litter correction.'},
+            {'name':"Marek's Disease",'score':0.75,'keys':['leg paralysis','one leg forward','weight loss','marek'],'differentiate':["Progressive paralysis in young birds suggests Marek's.", 'Usually no bloody diarrhea like coccidiosis.'],'prevention':['Vaccinate chicks at hatch.', 'Reduce dust and feather dander exposure.', 'Maintain strict chick-source hygiene.'],'treatment':'No cure. Separate affected birds and cull severe chronic cases under guidance.'},
+            {'name':'Mycoplasma / CRD','score':0.76,'keys':['nasal discharge','swollen sinuses','coughing','crd','mycoplasma'],'differentiate':['More chronic respiratory signs than sudden high-mortality viral disease.', 'Sinus swelling suggests mycoplasma especially in layers/breeders.'],'prevention':['Buy clean stock.', 'Improve ventilation.', 'Reduce stress and overcrowding.'],'treatment':'Veterinarian-directed antimicrobial plan plus ventilation and stress reduction.'},
+            {'name':'Fowl Cholera','score':0.74,'keys':['swollen wattles','sudden deaths','fever','cholera'],'differentiate':['Can cause sudden deaths with swollen wattles and septic signs.', 'Often more acute and toxic-looking than simple CRD.'],'prevention':['Rodent control.', 'Biosecurity and sanitation.', 'Vaccination where locally advised.'],'treatment':'Urgent veterinarian-directed antimicrobial therapy and flock management.'},
+            {'name':'Salmonellosis / Pullorum','score':0.73,'keys':['white diarrhea','pasted vent','sleepy chicks','salmonella','pullorum'],'differentiate':['Young chicks with pasted vents and white diarrhea are suggestive.', 'Different from coccidiosis because blood is usually absent.'],'prevention':['Source chicks from clean hatcheries.', 'Sanitize brooders and feeders.', 'Control rodents and contamination.'],'treatment':'Veterinarian-directed antibiotic decision plus hatchery/source review and sanitation.'},
+            {'name':'Infectious Coryza','score':0.72,'keys':['facial swelling','foul smell','nasal discharge','coryza'],'differentiate':['Bad-smelling nasal discharge and facial swelling are classic.', 'Usually stronger sinus/head involvement than IB.'],'prevention':['Avoid mixing age groups.', 'Quarantine new birds.', 'Improve ventilation and sanitation.'],'treatment':'Veterinarian-directed antimicrobial support and isolate affected birds.'},
+            {'name':'Aspergillosis','score':0.71,'keys':['gasping','moldy feed','moldy litter','aspergillus'],'differentiate':['Moldy litter/feed exposure is a big clue.', 'Respiratory distress without strong infectious spread pattern suggests environmental cause.'],'prevention':['Keep feed dry and mold-free.', 'Use clean litter.', 'Improve brooder ventilation.'],'treatment':'Remove mold source immediately and provide veterinarian-guided respiratory support.'},
+            {'name':'Necrotic Enteritis','score':0.72,'keys':['sudden depression','dark diarrhea','wet litter','necrotic'],'differentiate':['Often follows coccidiosis or diet upset.', 'Intestinal signs with sudden flock setback but not classic bloody coccidiosis.'],'prevention':['Control coccidiosis.', 'Manage feed changes carefully.', 'Maintain litter quality.'],'treatment':'Veterinarian-directed antimicrobial program and immediate litter/feed correction.'},
+            {'name':'Botulism','score':0.7,'keys':['limp neck','flaccid paralysis',"can't hold head",'botulism'],'differentiate':['Limp neck / flaccid paralysis differs from twisted-neck Newcastle signs.', 'Usually linked to toxin source or rotting matter.'],'prevention':['Remove carcasses quickly.', 'Keep feed/water clean.', 'Prevent access to rotting organic matter.'],'treatment':'Remove toxin source, support hydration, and seek urgent veterinary help.'},
+            {'name':'Egg Drop Syndrome','score':0.69,'keys':['soft shell','drop in eggs','shell-less eggs'],'differentiate':['Main sign is egg production drop with shell defects, not major respiratory distress.', 'Often seen in laying flocks with otherwise mild signs.'],'prevention':['Strong breeder/layer vaccination strategy where used.', 'Biosecurity and clean water.'],'treatment':'No direct cure; support flock, review vaccination, minerals, and vet guidance.'},
+            {'name':'Colibacillosis','score':0.7,'keys':['air sac','respiratory distress','fever','off feed','e coli'],'differentiate':['Often secondary to ventilation or viral issues.', 'Can overlap with CRD but often follows management stress.'],'prevention':['Ventilation and litter quality.', 'Reduce ammonia and stress.', 'Keep water systems clean.'],'treatment':'Veterinarian-directed antimicrobial treatment and correction of underlying management problem.'},
+            {'name':'Fowl Typhoid','score':0.68,'keys':['yellow diarrhea','pale comb','fever','typhoid'],'differentiate':['Systemic depression with diarrhea and pallor rather than classic respiratory pattern.', 'Needs differentiation from pullorum based on age and lab support.'],'prevention':['Sanitation and rodent control.', 'Source clean stock.', 'Disinfect housing thoroughly.'],'treatment':'Veterinarian-directed flock treatment and source tracing.'},
+            {'name':'Vitamin A Deficiency','score':0.64,'keys':['eye swelling','poor growth','white plaques','vitamin deficiency'],'differentiate':['Nutritional history and chronic poor performance matter.', 'Not typically rapid infectious spread.'],'prevention':['Balanced feed and proper vitamin supplementation.', 'Protect feed quality in storage.'],'treatment':'Correct ration immediately and seek veterinary confirmation if severe.'},
+            {'name':'Heat Stress Syndrome','score':0.66,'keys':['panting','open mouth breathing','hot weather','wings spread'],'differentiate':['Strong heat/weather link and panting dominate.', 'No specific infectious lesion pattern.'],'prevention':['Cooling, shade, airflow, cool water.', 'Avoid overcrowding.'],'treatment':'Immediate cooling, electrolytes, reduce stress, and monitor for secondary losses.'},
+            {'name':'Worm Burden / Helminthiasis','score':0.63,'keys':['weight loss','pale comb','poor growth','worms'],'differentiate':['More chronic poor thrift and anemia than sudden infectious outbreak.', 'Fecal exam helps confirm.'],'prevention':['Regular deworm program where indicated.', 'Clean housing and rotation.'],'treatment':'Veterinarian-advised deworming and sanitation.'},
+        ],
+        'goat': [
+            {'name':'PPR','score':0.84,'keys':['mouth sores','nasal discharge','diarrhea','high fever','ppr'],'differentiate':['Mouth erosions plus diarrhea and nasal discharge together strongly suggest PPR.', 'Often more systemic and severe than simple pneumonia.'],'prevention':['Vaccinate where available.', 'Strict isolation and movement control.', 'Quarantine new arrivals.'],'treatment':'No specific cure. Aggressive fluids, nursing care, treatment of secondary infections, and urgent veterinarian support.'},
+            {'name':'Contagious Caprine Pleuropneumonia (CCPP)','score':0.82,'keys':['severe cough','painful breathing','ccpp','labored breathing','fever'],'differentiate':['Severe pleuritic breathing pain and rapid respiratory collapse suggest CCPP.', 'Usually more intense chest involvement than routine pneumonia.'],'prevention':['Reduce mixing and crowding.', 'Quarantine purchases.', 'Vaccination where locally available.'],'treatment':'Urgent veterinarian-directed antimicrobial protocol, isolation, and supportive care.'},
+            {'name':'Mastitis','score':0.77,'keys':['udder swelling','hot udder','clots in milk','painful udder'],'differentiate':['Udder heat, pain, and milk changes distinguish it from general fever illness.', 'Peracute cases can become toxic very quickly.'],'prevention':['Clean milking hygiene.', 'Dry bedding.', 'Prompt teat injury care.'],'treatment':'Veterinarian-guided mastitis treatment, frequent stripping if advised, and udder support.'},
+            {'name':'Foot Rot','score':0.76,'keys':['limping','hoof smell','interdigital','foot rot'],'differentiate':['Lameness with foul hoof smell points strongly to foot rot.', 'Usually differs from arthritis by hoof lesion localization.'],'prevention':['Keep pens dry.', 'Regular hoof trimming.', 'Footbaths in high-risk periods.'],'treatment':'Hoof trimming, disinfection, dry footing, and veterinarian-directed therapy.'},
+            {'name':'Orf (Contagious Ecthyma)','score':0.76,'keys':['mouth scabs','lip lesions','teat lesions','orf'],'differentiate':['Crusty lip/mouth lesions with nursing difficulty are classic.', 'Can be confused with PPR, but diarrhea/high fever are less dominant.'],'prevention':['Avoid exposure to active lesions.', 'Separate affected kids.', 'Use gloves because it is zoonotic.'],'treatment':'Support feeding, clean lesions gently, and manage secondary infection risk.'},
+            {'name':'Goat Pneumonia','score':0.75,'keys':['cough','rapid breathing','nasal discharge','pneumonia'],'differentiate':['Respiratory signs without mouth sores/diarrhea make pneumonia more likely than PPR.', 'Housing/ventilation history is useful.'],'prevention':['Good ventilation.', 'Reduce drafts and overcrowding.', 'Quarantine stressed/new animals.'],'treatment':'Veterinarian-directed antimicrobial and anti-inflammatory plan with supportive care.'},
+            {'name':'Enterotoxemia','score':0.74,'keys':['sudden death','abdominal pain','bloat','clostridial'],'differentiate':['Often sudden with rich-feed history and abdominal pain.', 'Can kill faster than most pneumonias.'],'prevention':['Vaccinate against clostridial disease.', 'Avoid abrupt concentrate changes.', 'Feed consistently.'],'treatment':'Emergency veterinarian care, fluids, antitoxin where appropriate, and supportive therapy.'},
+            {'name':'Ketosis / Pregnancy Toxemia','score':0.72,'keys':['late pregnancy','off feed','sweet breath','weakness'],'differentiate':['Late-pregnancy doe with anorexia/weakness strongly suggests metabolic disease.', 'Not primarily infectious.'],'prevention':['Good late-gestation nutrition.', 'Body condition management.', 'Monitor multiple-bearing does closely.'],'treatment':'Urgent energy support, veterinarian metabolic treatment, and obstetric assessment.'},
+            {'name':'Haemonchosis','score':0.78,'keys':['pale gums','bottle jaw','weakness','anemia','worms'],'differentiate':['Pale gums and bottle jaw with pasture exposure are classic.', 'Diarrhea may be absent.'],'prevention':['Strategic deworming based on resistance-aware plans.', 'Pasture management and FAMACHA-style monitoring where used.'],'treatment':'Veterinarian-advised dewormer choice, anemia support, and pasture correction.'},
+            {'name':'Coccidiosis','score':0.73,'keys':['diarrhea','straining','poor growth','coccidiosis'],'differentiate':['Young kids with diarrhea and poor growth fit coccidiosis.', 'Often tied to crowding and dirty pens.'],'prevention':['Dry kid pens.', 'Reduce overcrowding.', 'Routine sanitation.'],'treatment':'Veterinarian-recommended anticoccidial therapy and hydration support.'},
+            {'name':"Johne's Disease",'score':0.67,'keys':['chronic weight loss','persistent diarrhea','wasting'],'differentiate':['Slow chronic wasting is more typical than acute fever disease.', 'Needs testing to confirm.'],'prevention':['Buy from low-risk herds.', 'Prevent manure contamination of feed/water.', 'Separate kids from adult manure heavily.'],'treatment':'No practical cure; cull strategy and herd control planning are important.'},
+            {'name':'Caseous Lymphadenitis','score':0.69,'keys':['abscess','lymph node swelling','pus'],'differentiate':['Recurrent abscessed lymph nodes are a major clue.', 'Different from generalized skin disease because lesions localize to nodes.'],'prevention':['Avoid wound contamination.', 'Disinfect equipment.', 'Separate draining cases.'],'treatment':'Veterinary management of abscesses, sanitation, and chronic-case control.'},
+            {'name':'Brucellosis','score':0.66,'keys':['abortion','retained placenta','infertility'],'differentiate':['Abortions and infertility dominate rather than respiratory signs.', 'Zoonotic concern requires caution.'],'prevention':['Test-and-control program.', 'Biosecurity for breeding stock.', 'Safe disposal of aborted material.'],'treatment':'Veterinary/public health guided action; control program is more important than casual treatment.'},
+            {'name':'Listeriosis','score':0.68,'keys':['circling','head tilt','drooling','neurologic'],'differentiate':['Neurologic circling/head tilt differs from simple pneumonia.', 'Silage history can matter.'],'prevention':['Avoid spoiled silage.', 'Good feed hygiene.', 'Early isolation of neurologic animals.'],'treatment':'Urgent veterinarian-directed antimicrobial and supportive treatment.'},
+            {'name':'Tetanus','score':0.67,'keys':['stiffness','lockjaw','rigid legs','tetanus'],'differentiate':['Rigid posture and lockjaw are more typical than floppy weakness.', 'Often follows wounds/castration.'],'prevention':['Vaccination and clean procedures.', 'Prompt wound care.'],'treatment':'Emergency veterinary treatment, antitoxin where appropriate, wound care, and quiet housing.'},
+            {'name':'Bluetongue','score':0.64,'keys':['swollen face','mouth ulcers','lameness','blue tongue'],'differentiate':['Mouth/face swelling with insect-season pattern is suggestive.', 'Can overlap with other erosive diseases but vector season matters.'],'prevention':['Vector control.', 'Avoid peak midge exposure when possible.', 'Vaccination if locally relevant.'],'treatment':'Supportive care, shade, soft feed, and veterinarian guidance.'},
+            {'name':'Urinary Calculi','score':0.65,'keys':['straining to urinate','tail twitching','crystals','blocked urine'],'differentiate':['Urination strain rather than diarrhea is the key clue.', 'Common in male goats on poor mineral balance.'],'prevention':['Correct calcium-phosphorus balance.', 'Ample water and salt management.', 'Avoid overfeeding concentrates.'],'treatment':'Emergency veterinary intervention for blockage and pain management.'},
+            {'name':'Bloat','score':0.66,'keys':['swollen left abdomen','bloat','distended belly'],'differentiate':['Rapid left-side abdominal distension is classic.', 'Often dietary rather than infectious.'],'prevention':['Feed changes gradually.', 'Limit risky lush forage exposure.', 'Maintain roughage balance.'],'treatment':'Emergency decompression/support per veterinarian guidance.'},
+            {'name':'CAE','score':0.63,'keys':['joint swelling','arthritis','hard udder','cae'],'differentiate':['Chronic joint enlargement/hard udder suggests CAE.', 'Usually chronic rather than acute fever disease.'],'prevention':['Kid-rearing biosecurity and test-based herd control.', 'Do not share infected colostrum/milk.'],'treatment':'No cure; supportive management and herd control planning.'},
+            {'name':'Heartwater','score':0.64,'keys':['high fever','nervous signs','ticks','paddling'],'differentiate':['Tick exposure plus neurologic signs/fever is suggestive.', 'Can be confused with listeriosis but tick history helps.'],'prevention':['Tick control.', 'Pasture and vector management.', 'Quarantine incoming stock.'],'treatment':'Urgent veterinary treatment and aggressive tick control.'},
+        ],
+        'sheep': [
+            {'name':'Sheep Pox','score':0.81,'keys':['pox','skin nodules','scabs','fever'],'differentiate':['Skin nodules/scabs with fever are classic.', 'Distribution and flock spread help separate it from isolated wounds.'],'prevention':['Vaccination where applicable.', 'Strict quarantine and movement control.', 'Disinfection and vector control.'],'treatment':'Supportive care, lesion management, and veterinarian-guided flock protocol.'},
+            {'name':'Foot Rot','score':0.79,'keys':['limping','hoof smell','interdigital','foot rot'],'differentiate':['Foul smell and interdigital hoof lesions are typical.', 'Different from joint disease because lesion is in the hoof.'],'prevention':['Dry footing.', 'Regular trimming.', 'Footbaths and culling chronic cases.'],'treatment':'Trim/disinfect feet, dry housing, and veterinarian-directed treatment.'},
+            {'name':'PPR','score':0.8,'keys':['mouth sores','nasal discharge','diarrhea','high fever','ppr'],'differentiate':['Mouth lesions with diarrhea and discharge point strongly to PPR.', 'More systemic than simple pneumonia.'],'prevention':['Vaccination where available.', 'Movement control.', 'Strict isolation of suspect cases.'],'treatment':'Supportive fluids, nursing, secondary infection control, and urgent vet input.'},
+            {'name':'Bluetongue','score':0.76,'keys':['mouth ulcers','swollen tongue','lameness','blue tongue'],'differentiate':['Mouth lesions plus lameness and midge season suggest bluetongue.', 'Often more edema/swelling than orf.'],'prevention':['Vector control.', 'Avoid high-risk insect exposure.', 'Vaccination where relevant.'],'treatment':'Supportive care, shade, soft feed, and veterinarian guidance.'},
+            {'name':'Contagious Ecthyma (Orf)','score':0.75,'keys':['mouth scabs','lip scabs','teat scabs','orf'],'differentiate':['Localized crusty mouth lesions, especially in lambs, are typical.', 'Usually lacks the strong diarrhea/high fever of PPR.'],'prevention':['Separate affected animals.', 'Use gloves; zoonotic risk.', 'Avoid rough grazing injuries when possible.'],'treatment':'Support feeding, protect lesions, and manage secondary infection risk.'},
+            {'name':'Mastitis','score':0.74,'keys':['udder swelling','hot udder','abnormal milk','painful udder'],'differentiate':['Udder-focused signs distinguish it from general fever disorders.', 'May follow lamb injury or poor hygiene.'],'prevention':['Milking/lambing hygiene.', 'Clean dry bedding.', 'Prompt teat injury care.'],'treatment':'Veterinarian-guided mastitis therapy and udder support.'},
+            {'name':'Enterotoxemia','score':0.74,'keys':['sudden death','abdominal pain','convulsions','clostridial'],'differentiate':['Often sudden after dietary change or rich feed.', 'Can look like poisoning without good history.'],'prevention':['Clostridial vaccination.', 'Avoid abrupt feed changes.', 'Consistent feeding.'],'treatment':'Emergency veterinary care, antitoxin where appropriate, and supportive therapy.'},
+            {'name':'Haemonchosis','score':0.78,'keys':['pale gums','bottle jaw','anemia','worms'],'differentiate':['Anemia and bottle jaw are strong clues.', 'Diarrhea may be absent unlike some intestinal diseases.'],'prevention':['Resistance-aware deworming strategy.', 'Pasture rotation and monitoring.', 'Avoid overstocking.'],'treatment':'Veterinarian-advised dewormer choice, anemia support, and pasture correction.'},
+            {'name':'Coccidiosis','score':0.72,'keys':['diarrhea','poor growth','straining','coccidiosis'],'differentiate':['Young lambs with diarrhea and poor thrift fit coccidiosis.', 'Often management-related.'],'prevention':['Clean pens.', 'Dry bedding.', 'Reduce crowding stress.'],'treatment':'Veterinarian-recommended anticoccidials and hydration support.'},
+            {'name':'Pasteurellosis / Pneumonia','score':0.73,'keys':['cough','nasal discharge','labored breathing','pneumonia'],'differentiate':['Respiratory signs dominate without strong mouth lesions.', 'Stress/weather shifts often precede outbreaks.'],'prevention':['Shelter from cold stress and drafts.', 'Ventilation without crowding.', 'Vaccination where used.'],'treatment':'Veterinarian-directed antimicrobial and supportive respiratory care.'},
+            {'name':'Pregnancy Toxemia','score':0.71,'keys':['late pregnancy','off feed','weakness','ketosis'],'differentiate':['Late-gestation ewe with weakness/anorexia suggests metabolic disease.', 'Not primarily infectious.'],'prevention':['Proper late-pregnancy nutrition.', 'Body condition control.', 'Monitor multiple-bearing ewes.'],'treatment':'Urgent energy support and veterinarian metabolic/obstetric care.'},
+            {'name':"Johne's Disease",'score':0.66,'keys':['chronic weight loss','wasting','persistent diarrhea'],'differentiate':['Slow chronic wasting is more typical than acute fever illness.', 'Needs testing to confirm.'],'prevention':['Buy from low-risk flocks.', 'Limit manure contamination of feed/water.', 'Cull confirmed cases.'],'treatment':'No practical cure; flock control planning is key.'},
+            {'name':'Caseous Lymphadenitis','score':0.67,'keys':['abscess','lymph node swelling','pus'],'differentiate':['Node abscesses are the major clue.', 'Different from diffuse skin disease.'],'prevention':['Disinfect shearing/tagging tools.', 'Separate draining animals.', 'Reduce skin trauma.'],'treatment':'Veterinary management of abscesses and biosecurity control.'},
+            {'name':'Brucellosis','score':0.65,'keys':['abortion','infertility','retained placenta'],'differentiate':['Reproductive loss is the main clue.', 'Important zoonotic risk.'],'prevention':['Test breeding stock.', 'Safe disposal of aborted material.', 'Strong breeding biosecurity.'],'treatment':'Veterinary/public-health guided control approach.'},
+            {'name':'Listeriosis','score':0.67,'keys':['circling','drooling','head tilt','neurologic'],'differentiate':['Circling/head tilt suggests listeriosis over routine pneumonia.', 'Spoiled silage history increases suspicion.'],'prevention':['Avoid spoiled silage.', 'Maintain feed hygiene.', 'Isolate neurologic animals quickly.'],'treatment':'Urgent veterinarian-directed treatment and supportive care.'},
+            {'name':'Tetanus','score':0.66,'keys':['stiffness','lockjaw','rigid','tetanus'],'differentiate':['Rigid posture/lockjaw are classic.', 'Often linked to wounds or procedures.'],'prevention':['Vaccination.', 'Clean lambing/castration/tailing procedures.', 'Prompt wound care.'],'treatment':'Emergency veterinary treatment, antitoxin where appropriate, and quiet care.'},
+            {'name':'Liver Fluke Disease','score':0.68,'keys':['bottle jaw','weight loss','anemia','fluke'],'differentiate':['Wet grazing areas and chronic anemia suggest fluke disease.', 'Can resemble worms but pasture/wetland exposure matters.'],'prevention':['Control snail habitat where possible.', 'Strategic flukicide program per veterinary advice.', 'Avoid risky grazing areas.'],'treatment':'Veterinarian-advised flukicide and supportive care.'},
+            {'name':'Fly Strike','score':0.7,'keys':['maggots','wool damage','bad smell','restlessness'],'differentiate':['Visible maggots/wool strike are distinctive.', 'Usually external, unlike systemic fever disease.'],'prevention':['Dag control and shearing hygiene.', 'Prompt wound care.', 'Fly control measures.'],'treatment':'Clip/clean affected area urgently and apply veterinarian-advised treatment.'},
+            {'name':'Scrapie','score':0.6,'keys':['itching','wool loss','neurologic','scrapie'],'differentiate':['Chronic neurologic/itching pattern rather than acute infection.', 'Needs regulatory/veterinary handling.'],'prevention':['Breeding control and surveillance.', 'Avoid high-risk stock sources.'],'treatment':'No cure; veterinary/regulatory guidance required.'},
+            {'name':'Heartwater','score':0.64,'keys':['ticks','high fever','nervous signs','paddling'],'differentiate':['Tick exposure with fever and neurologic signs is suggestive.', 'Can mimic some toxemic conditions.'],'prevention':['Tick control.', 'Pasture/vector management.', 'Quarantine incoming stock.'],'treatment':'Urgent veterinary treatment and aggressive tick control.'},
+        ],
+        'cattle': [
+            {'name':'Lumpy Skin Disease','score':0.83,'keys':['skin nodules','lumpy skin','fever','enlarged lymph'],'differentiate':['Firm skin nodules across the body are the big clue.', 'Vector exposure and herd spread matter.'],'prevention':['Vaccination where available.', 'Biting-insect control.', 'Restrict animal movement.'],'treatment':'Supportive care, wound care, vector control, and veterinarian-directed management.'},
+            {'name':'Mastitis','score':0.8,'keys':['udder swelling','clots in milk','hot udder','painful udder'],'differentiate':['Milk changes plus udder pain/swelling are typical.', 'Can be clinical or subclinical.'],'prevention':['Milking hygiene.', 'Teat dipping and clean bedding.', 'Machine maintenance where used.'],'treatment':'Prompt veterinarian-guided mastitis therapy and udder support.'},
+            {'name':'Foot and Mouth Disease','score':0.82,'keys':['drooling','mouth blisters','hoof lesions','lameness','fmd'],'differentiate':['Blisters/erosions in mouth and feet with drooling are classic.', 'Very high contagiousness demands caution.'],'prevention':['Vaccination where advised.', 'Movement restriction.', 'Disinfection and strict biosecurity.'],'treatment':'No specific cure; isolate, support hydration/feed, and follow veterinary authority guidance.'},
+            {'name':'CBPP','score':0.8,'keys':['painful breathing','chronic cough','cbpp','nasal discharge'],'differentiate':['Chronic contagious pleuropneumonia pattern with chest pain and cough.', 'Different from transient simple pneumonia.'],'prevention':['Movement control.', 'Quarantine new cattle.', 'Vaccination where used locally.'],'treatment':'Urgent veterinarian-directed respiratory/outbreak management.'},
+            {'name':'Blackleg','score':0.79,'keys':['sudden lameness','muscle swelling','crepitation','blackleg'],'differentiate':['Sudden hot painful muscle swelling, often in young cattle, is suggestive.', 'Can kill quickly.'],'prevention':['Clostridial vaccination.', 'Rapid carcass disposal.', 'Avoid risky disturbance of contaminated soil where possible.'],'treatment':'Emergency veterinary care immediately; prognosis may be poor if advanced.'},
+            {'name':'Anthrax','score':0.83,'keys':['sudden death','bleeding from openings','anthrax'],'differentiate':['Sudden death with bleeding from natural openings is a red flag.', 'Do not open carcass if suspected.'],'prevention':['Vaccination in endemic areas.', 'Avoid disturbing suspected carcasses.', 'Report according to veterinary/public health requirements.'],'treatment':'Urgent veterinary/public-health response only; do not handle casually.'},
+            {'name':'East Coast Fever / Theileriosis','score':0.77,'keys':['swollen lymph nodes','high fever','ticks','breathing difficulty'],'differentiate':['Tick exposure with enlarged lymph nodes and fever suggests theileriosis.', 'Can overlap with anaplasmosis but node swelling is helpful.'],'prevention':['Tick control.', 'Vaccination where available.', 'Pasture/vector management.'],'treatment':'Urgent veterinarian-directed anti-theilerial/supportive treatment.'},
+            {'name':'Anaplasmosis','score':0.76,'keys':['pale eyes','jaundice','fever','ticks','anemia'],'differentiate':['Severe anemia/jaundice without obvious bloody urine is suggestive.', 'Tick history helps.'],'prevention':['Tick control.', 'Needle/equipment hygiene.', 'Vector management.'],'treatment':'Veterinarian-directed treatment and anemia support.'},
+            {'name':'Babesiosis','score':0.77,'keys':['red urine','ticks','fever','weakness'],'differentiate':['Red/bloody urine with fever strongly suggests babesiosis.', 'Tick exposure is a major clue.'],'prevention':['Tick control.', 'Pasture management.', 'Reduce vector pressure.'],'treatment':'Urgent veterinarian-directed anti-babesial treatment and supportive care.'},
+            {'name':'Brucellosis','score':0.72,'keys':['abortion','retained placenta','infertility'],'differentiate':['Reproductive loss, not respiratory signs, is the key pattern.', 'Zoonotic risk matters.'],'prevention':['Vaccination/testing programs.', 'Safe disposal of aborted materials.', 'Breeding biosecurity.'],'treatment':'Control-program approach under veterinary/public health guidance.'},
+            {'name':'BVD','score':0.71,'keys':['diarrhea','mouth erosions','poor fertility','bvd'],'differentiate':['Can cause diarrhea, erosions, and reproductive problems.', 'Persistently infected animals complicate control.'],'prevention':['Vaccination and testing strategy.', 'Biosecurity for replacements.', 'Identify/remove PI animals if applicable.'],'treatment':'Supportive care and veterinarian-guided herd control.'},
+            {'name':'IBR','score':0.72,'keys':['red nose','nasal discharge','fever','ibr','conjunctivitis'],'differentiate':['Red inflamed nose/eyes and respiratory signs are classic clues.', 'Less hoof blistering than FMD.'],'prevention':['Vaccination.', 'Quarantine new cattle.', 'Stress reduction and biosecurity.'],'treatment':'Supportive care and veterinarian management of secondary infections.'},
+            {'name':'Hardware Disease','score':0.68,'keys':['arched back','grunt','off feed','metal'],'differentiate':['Pain on movement/grunting after hardware ingestion is suggestive.', 'Not an infectious herd-spread pattern.'],'prevention':['Keep metal out of feed areas.', 'Use magnets where appropriate.'],'treatment':'Urgent veterinary assessment, magnet/surgical decisions, and supportive care.'},
+            {'name':'Ketosis','score':0.67,'keys':['off feed','sweet breath','drop in milk','ketosis'],'differentiate':['Fresh dairy cow with low appetite and milk drop suggests ketosis.', 'Metabolic rather than infectious.'],'prevention':['Transition-cow nutrition management.', 'Body condition control.', 'Monitor fresh cows closely.'],'treatment':'Energy therapy and veterinarian metabolic support.'},
+            {'name':'Milk Fever','score':0.69,'keys':['down cow','cold ears','calving',"can't stand"],'differentiate':['Around calving with weakness/downer state is typical.', 'Not a febrile infectious presentation.'],'prevention':['Proper dry-cow mineral program.', 'Transition diet management.'],'treatment':'Urgent calcium treatment under veterinary guidance.'},
+            {'name':'Bloat','score':0.68,'keys':['left side swelling','bloat','distended rumen'],'differentiate':['Rapid left-sided abdominal distension is classic.', 'Diet history is important.'],'prevention':['Gradual feed change.', 'Control lush-legume risk.', 'Provide roughage balance.'],'treatment':'Emergency decompression and veterinarian support.'},
+            {'name':'Trypanosomiasis','score':0.69,'keys':['weight loss','anemia','intermittent fever','tsetse'],'differentiate':['Chronic wasting/anemia in tsetse-risk areas suggests trypanosomiasis.', 'Often more chronic than acute tick fevers.'],'prevention':['Vector control.', 'Avoid high-risk fly areas where possible.', 'Screen herd strategically.'],'treatment':'Veterinarian-directed anti-trypanosomal treatment and supportive care.'},
+            {'name':'Dermatophilosis','score':0.66,'keys':['paintbrush lesions','crusty skin','rain rot'],'differentiate':['Crusty paintbrush-like skin lesions are characteristic.', 'More external skin disease than systemic fever disorder.'],'prevention':['Reduce prolonged wetting/tick burden.', 'Good skin hygiene and shelter.'],'treatment':'Clean lesions and use veterinarian-guided therapy.'},
+            {'name':'Worm Burden / Helminthiasis','score':0.65,'keys':['weight loss','poor growth','diarrhea','worms'],'differentiate':['Chronic poor thrift and parasitism pattern, often in young stock.', 'Less dramatic than acute septic disease.'],'prevention':['Strategic deworming with resistance awareness.', 'Pasture management.'],'treatment':'Veterinarian-advised deworming and supportive nutrition.'},
+            {'name':'Ringworm','score':0.63,'keys':['round hairless patches','crusty circles','ringworm'],'differentiate':['Circular hairless crusty patches are the clue.', 'Mainly skin disease, not fever syndrome.'],'prevention':['Separate affected cattle.', 'Disinfect grooming equipment.', 'Improve hygiene.'],'treatment':'Topical/environmental control with veterinary guidance; zoonotic caution.'},
+        ]
     }
-    target_group = aliases.get(target, target)
 
-    candidates = [d for d in disease_db if d['group'] == target_group]
+    candidates = disease_db.get(target_group) or []
     if not candidates:
-        candidates = disease_db
+        raise HTTPException(
+            status_code=400,
+            detail={
+                'message': 'AI Disease Analyzer only supports poultry, goats, sheep, and cattle.',
+                'received': payload.crop_type,
+                'normalized': target_group,
+                'supported_targets': ['poultry', 'goat', 'sheep', 'cattle'],
+            }
+        )
 
     ranked = []
     for d in candidates:
         hit_count = sum(1 for k in d['keys'] if k in note)
-        score = float(d['score']) + (0.03 * hit_count)
-
-        # symptom-weight tuning for better goat differential diagnosis
-        if d['name'] == 'Goat Pneumonia':
-            if any(k in note for k in ['cough', 'labored breathing', 'rapid breathing', 'wheezing', 'respiratory']):
-                score += 0.12
-            if 'nasal discharge' in note:
-                score += 0.04
-        if d['name'] == 'PPR (Goat)':
-            ppr_core = any(k in note for k in ['mouth sores', 'diarrhea', 'high fever', 'ppr'])
-            if ppr_core:
-                score += 0.08
-            if ('nasal discharge' in note) and not ppr_core:
-                score -= 0.08
-
-        if target_group and d['group'] == target_group:
-            score += 0.02
+        score = float(d['score']) + (0.025 * hit_count)
+        if d['name'] in {'PPR', 'Foot and Mouth Disease'} and any(k in note for k in ['mouth sores','mouth blisters','drooling']):
+            score += 0.05
+        if d['name'] in {'Goat Pneumonia', 'Pasteurellosis / Pneumonia', 'CBPP'} and any(k in note for k in ['cough','labored breathing','rapid breathing','painful breathing']):
+            score += 0.06
+        if d['name'] in {'Haemonchosis', 'Anaplasmosis'} and any(k in note for k in ['pale gums','anemia','bottle jaw','pale eyes']):
+            score += 0.06
+        if d['name'] in {'Coccidiosis', 'BVD'} and any(k in note for k in ['diarrhea','bloody droppings','straining']):
+            score += 0.05
         ranked.append((score, hit_count, d))
 
     ranked.sort(key=lambda x: x[0], reverse=True)
     top_score, top_hits, top = ranked[0]
+    confidence = min(0.97, round(top_score if top_hits > 0 else max(0.58, top_score - 0.12), 2))
 
-    # If no symptom keywords hit, keep confidence conservative to avoid overclaiming.
-    confidence = min(0.96, round(top_score if top_hits > 0 else max(0.58, top_score - 0.12), 2))
-
-    diagnosis = f"Possible {top['name']}"
-    recommendation = top['recommendation']
-    treatment = top['treatment']
-
-    # show alternatives for transparency
     top_matches = []
-    for s, hits, d in ranked[:3]:
-        top_matches.append({'diagnosis': d['name'], 'confidence': round(min(0.96, s if hits > 0 else s - 0.12), 2)})
+    for s, hits, d in ranked[:5]:
+        top_matches.append({
+            'diagnosis': d['name'],
+            'confidence': round(min(0.97, s if hits > 0 else s - 0.12), 2)
+        })
 
-    vet_notice = 'Important: Contact a licensed veterinarian/agronomist for confirmation before treatment.'
     result = {
-        'diagnosis': diagnosis,
+        'diagnosis': f"Possible {top['name']}",
         'confidence': confidence,
-        'recommendation': recommendation,
-        'treatment': treatment,
+        'differentiation': top['differentiate'],
+        'recommendation': ' | '.join(top['prevention']),
+        'prevention': top['prevention'],
+        'treatment': top['treatment'],
         'top_matches': top_matches,
-        'vet_notice': vet_notice,
+        'vet_notice': 'Important: Contact a licensed veterinarian for confirmation before treatment.',
         'context_note_used': payload.context_note or '',
-        'engine': 'FarmSavior AI Analyzer (expanded rule engine v2)'
+        'engine': 'FarmSavior AI Analyzer (livestock differential engine v3)'
     }
 
     rec = DiseaseScan(user_id=payload.user_id, image_url=payload.image_url, crop_type=payload.crop_type, result=json.dumps(result))

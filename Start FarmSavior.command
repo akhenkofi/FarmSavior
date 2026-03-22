@@ -1,6 +1,6 @@
 #!/bin/zsh
 set -e
-ROOT="/Users/akhen/Desktop/Openclaw/FarmSavior"
+ROOT="/Users/akhen/Desktop/Openclaw/FarmSavior-live"
 RUN="$ROOT/.run"
 mkdir -p "$RUN"
 
@@ -15,10 +15,10 @@ if [ ! -d .venv ]; then
   python3 -m venv .venv
 fi
 source .venv/bin/activate
-pip install -q -r requirements.txt
+python3 -m pip install -q -r requirements.txt
 [ -f .env ] || cp .env.example .env
 python seeds/seed_data.py >/dev/null 2>&1 || true
-nohup uvicorn app.main:app --reload --port 8000 > "$RUN/backend.log" 2>&1 &
+nohup .venv/bin/python -m uvicorn app.main:app --reload --port 8000 > "$RUN/backend.log" 2>&1 &
 echo $! > "$RUN/backend.pid"
 
 # Web admin

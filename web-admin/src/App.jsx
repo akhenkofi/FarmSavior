@@ -42,7 +42,12 @@ const mapBoundsByCountry = {
 
 const userTypes = ['Farmer', 'Buyer', 'Transporter', 'EquipmentProvider', 'StorageProvider']
 const cropOptions = ['Cassava','Maize','Tomato','Rice','Yam','Plantain','Onion','Pepper','Cocoa','Sorghum','Millet','Groundnut']
-const animalOptions = ['Poultry','Goats','Sheep','Cattle','Rabbits','Grasscutters','Horses','Dogs']
+const animalOptions = [
+  { label: 'Poultry', value: 'poultry' },
+  { label: 'Goats', value: 'goats' },
+  { label: 'Sheep', value: 'sheep' },
+  { label: 'Cattle', value: 'cattle' },
+]
 
 const featuredProductsSeed = [
   { name: 'Goats' },
@@ -248,10 +253,413 @@ const featuredTradeExportSeed = [
 ]
 
 const featuredLivestockPlansSeed = [
-  { name: 'Sheep & Goats Starter', monthly_usd: 4.99, yearly_usd: 49.99, features: ['Basic records', 'Health logs'] },
-  { name: 'Sheep & Goats Pro', monthly_usd: 9.99, yearly_usd: 99.99, features: ['Breeding groups', 'Performance insights'] },
-  { name: 'Sheep & Goats Enterprise', monthly_usd: 24.99, yearly_usd: 249.99, features: ['Multi-farm', 'Advanced analytics'] }
+  { name: 'Livestock Starter', monthly_usd: 4.99, yearly_usd: 49.99, features: ['Basic records', 'Health logs'] },
+  { name: 'Livestock Pro', monthly_usd: 9.99, yearly_usd: 99.99, features: ['Breeding groups', 'Performance insights'] },
+  { name: 'Livestock Enterprise', monthly_usd: 24.99, yearly_usd: 249.99, features: ['Multi-farm', 'Advanced analytics'] }
 ]
+
+const poultryTracks = {
+  layers: {
+    title: 'Layers (Egg Production)',
+    objective: 'Build a uniform, low-mortality flock that reaches strong peak lay and steady weekly tray cashflow.',
+    kpis: ['Brooding mortality < 3%', 'Uniformity at 16 weeks > 85%', 'Peak hen-day production target: 90%+'],
+    breeds: [
+      'Lohmann Brown (imported hybrid): high lay persistency; requires strict feeding/light program',
+      'ISA Brown (imported hybrid): strong peak output; needs tight biosecurity',
+      'Hy-Line Brown (imported hybrid): reliable commercial performance; sensitive to heat/humidity stress',
+      'Improved local ecotypes: stronger field resilience; lower top-end egg volume'
+    ],
+    modules: [
+      {
+        name: 'Module 1: Farm Setup, Budget, and Biosecurity',
+        summary: 'Set up the farm right before birds arrive.',
+        details: [
+          'Target house orientation east-west to reduce direct heat load.',
+          'Separate clean zone (feed, chicks) and dirty zone (waste, dead birds).',
+          'Essential equipment: brooder heat source, drinkers, feeders, thermometer, weighing scale.',
+          'Simple budget split: housing 35%, birds 20%, feed 35%, health 10%.',
+          'Before arrival: disinfect house, rest 7-14 days, and set footbath at entry.'
+        ]
+      },
+      {
+        name: 'Module 2: Buying Chicks and First 14 Days',
+        summary: 'Start strong to avoid early losses.',
+        details: [
+          'Buy from trusted hatchery with vaccination record and hatch date proof.',
+          'On arrival check: bright eyes, active movement, dry navels, uniform size.',
+          'First 24h: warm brooder, clean water + glucose/electrolyte, starter feed available immediately.',
+          'Daily checks: crop fill, temperature behavior (crowding = cold, panting = hot), and droppings.',
+          'Remove weak or sick chicks quickly into isolation pen.'
+        ]
+      },
+      {
+        name: 'Module 3: Grower Management (Week 3-16)',
+        summary: 'Build frame, immunity, and flock uniformity before lay.',
+        details: [
+          'Move feed phases correctly: starter -> grower -> developer.',
+          'Weekly random body-weight sampling (at least 10% birds).',
+          'Keep lighting controlled to prevent premature laying.',
+          'Maintain dry litter; replace wet spots daily to reduce disease pressure.',
+          'Deworm and vaccination schedule must be followed without skipping.'
+        ]
+      },
+      {
+        name: 'Module 4: Start of Lay and Egg Quality Control',
+        summary: 'Maximize peak production and reduce tray losses.',
+        details: [
+          'Transition to layer feed gradually to avoid production shock.',
+          'Provide adequate calcium (shell quality) and fresh clean water 24/7.',
+          'Collect eggs multiple times daily to reduce cracks and dirty eggs.',
+          'Track key numbers every day: eggs produced, mortality, feed intake, cracked eggs.',
+          'If production drops suddenly, check feed, water, heat stress, disease signs immediately.'
+        ]
+      },
+      {
+        name: 'Module 5: Sales, Records, and Scale Plan',
+        summary: 'Turn production into consistent profit.',
+        details: [
+          'Grade eggs by size and shell quality for better pricing.',
+          'Use customer mix: wholesalers + retailers + institutions (schools/hotels).',
+          'Keep weekly profit sheet: feed cost, medicine cost, labor, mortality, revenue.',
+          'Reinvest cycle profits into better feed storage and backup water system.',
+          'Scale only after 2-3 stable cycles with acceptable mortality and margin.'
+        ]
+      }
+    ]
+  },
+  broilers: {
+    title: 'Broilers (Meat Production)',
+    objective: 'Run repeatable high-margin meat cycles with strong growth, low mortality, and predictable market weights.',
+    kpis: ['Cycle mortality < 5%', 'FCR target band: 1.5 - 1.9', 'Harvest uniformity > 80%'],
+    breeds: [
+      'Cobb 500: rapid growth and strong carcass output; sensitive to heat and poor ventilation',
+      'Ross 308: competitive FCR; requires disciplined brooding and litter management',
+      'Arbor Acres/Hubbard: market-proven lines; strong management dependence',
+      'Local dual-purpose lines: better resilience; slower growth and less uniform carcass sizes'
+    ],
+    modules: [
+      {
+        name: 'Module 1: Cycle Planning and Buyer Mapping',
+        summary: 'Plan sales before chick placement.',
+        details: [
+          'Set target market weight with buyers in advance (live market vs processing).',
+          'Book chicks and feed supply before cycle start.',
+          'Prepare downtime calendar for full cleaning between cycles.',
+          'Set mortality and FCR targets for team accountability.'
+        ]
+      },
+      {
+        name: 'Module 2: Brooding Precision (Day 1-14)',
+        summary: 'Early growth determines final profit.',
+        details: [
+          'Pre-heat house before chicks arrive.',
+          'Check crop fill 4h, 8h, 24h after placement.',
+          'Ensure uniform chick spread; adjust heat and airflow by behavior.',
+          'Give only clean water and quality starter feed during first phase.'
+        ]
+      },
+      {
+        name: 'Module 3: Grow-Out Performance Control',
+        summary: 'Control feed conversion and body weight.',
+        details: [
+          'Keep litter dry and ammonia low; poor litter kills margin fast.',
+          'Measure sample weights twice weekly and compare with target chart.',
+          'Adjust feed phase timing by actual growth, not guesswork.',
+          'Reduce heat stress using airflow, shade, and cool-water timing.'
+        ]
+      },
+      {
+        name: 'Module 4: Disease Prevention and Emergency SOP',
+        summary: 'Catch problems early and contain quickly.',
+        details: [
+          'Daily mortality log with reason notes.',
+          'No cross-house movement without disinfection.',
+          'At first unusual spike: isolate, call vet, collect sample, suspend bird movement.',
+          'Respect withdrawal periods before sale.'
+        ]
+      },
+      {
+        name: 'Module 5: Harvest, Settlement, and Next-Cycle Upgrade',
+        summary: 'Close each cycle with numbers and improvements.',
+        details: [
+          'Harvest in cooler hours to reduce transport stress.',
+          'Sort birds by weight to match buyer classes.',
+          'Close-cycle report: mortality, FCR, average weight, net margin per bird.',
+          'Apply one improvement every cycle (ventilation, brooding, waterline, feed bin control).'
+        ]
+      }
+    ]
+  },
+  guinea: {
+    title: 'Guinea Fowl (Resilient + Premium Niche)',
+    objective: 'Develop hardy guinea systems for meat/breeder markets with strong survival and premium seasonal pricing.',
+    kpis: ['Keet survival to 8 weeks > 90%', 'Predation loss near zero', 'Consistent market-age batch quality'],
+    breeds: [
+      'Pearl guinea: dominant local market type; hardy and familiar to buyers',
+      'Lavender/White strains: niche premium potential; variable source consistency',
+      'Improved local breeder lines: climate-adapted; requires disciplined records for selection'
+    ],
+    modules: [
+      {
+        name: 'Module 1: Business Model and Sourcing',
+        summary: 'Choose meat, breeder, or mixed strategy and source quality keets.',
+        details: [
+          'Map seasonal demand peaks and festival sales windows.',
+          'Select reliable breeder source with hatch records.',
+          'Start with manageable flock size to learn behavior and handling.'
+        ]
+      },
+      {
+        name: 'Module 2: Keet Brooding and Survival',
+        summary: 'First weeks are the highest-risk period.',
+        details: [
+          'Stable brooder heat and draft control are critical.',
+          'Use shallow drinkers to reduce drowning risk.',
+          'Early protein-quality feed improves growth and immunity.',
+          'Strict anti-predator netting from day one.'
+        ]
+      },
+      {
+        name: 'Module 3: Grow-Out and Behavior Management',
+        summary: 'Control stress, movement, and losses.',
+        details: [
+          'Train birds to return to house with fixed feeding times.',
+          'Provide shade and water points in hot dry zones.',
+          'Split aggressive or overcrowded groups early.'
+        ]
+      },
+      {
+        name: 'Module 4: Health and Biosecurity',
+        summary: 'Use preventive medicine and strict hygiene.',
+        details: [
+          'Adapt poultry vaccination principles with local veterinary guidance.',
+          'Monitor parasite pressure and deworm by schedule + symptoms.',
+          'Keep perimeter clean to reduce vectors and wild-bird contact.'
+        ]
+      },
+      {
+        name: 'Module 5: Sales and Scaling',
+        summary: 'Capture premium value and expand safely.',
+        details: [
+          'Grade birds by weight and body condition before sale.',
+          'Build repeat buyers in restaurants, events, and festive markets.',
+          'Scale using small controlled expansions with record-based decisions.'
+        ]
+      }
+    ]
+  }
+}
+
+const poultryClimate = {
+  humid: ['Ventilation and litter-dryness priority', 'Mycotoxin-safe feed storage', 'Vector + drainage control'],
+  dry: ['Heat-stress mitigation + cool-water timing', 'Dust and respiratory risk control', 'Water reliability + electrolyte planning']
+}
+
+const poultryVaxProgram = [
+  'Pre-placement: full wash/disinfection, downtime, rodent and vector control',
+  'Day 0-1: confirm hatchery vaccination declaration and lot records',
+  'Day 5-7: Newcastle prime (cold-chain compliant)',
+  'Day 10-14: IBD/Gumboro first dose in high-pressure zones',
+  'Day 18-24: ND/IBD booster per veterinary directive',
+  'Week 6-8: Fowl pox / region-specific vaccines where indicated',
+  'Ongoing: deworming/coccidiosis prevention by housing and risk profile'
+]
+
+
+const sheepTracks = {
+  balamiCross: {
+    title: 'Boboji (WAD) × Balami/Sudanese Cross',
+    objective: 'Build larger, hardy commercial lines by blending local adaptation with improved frame and carcass traits.',
+    breeds: [
+      'Boboji (WAD): heat tolerance, hardiness, low-input survival',
+      'Balami/Sudanese cross ram: size/frame growth uplift',
+      'F1 outcome: improved growth while retaining adaptation',
+      'Selection focus: fertility, mothering, feed efficiency'
+    ],
+    kpis: ['Conception rate > 85%', 'Lamb survival to weaning > 90%', 'Average daily gain target by 6 months'],
+    modules: [
+      { name:'Module 1: Breed Selection + Ghana Sheep Program', summary:'Understand all 3 phases and choose correct foundation pairings.', details:['Phase 1 foundation cross logic and risk control.','Choose healthy Boboji ewes with strong maternal records.','Use only proven Balami/Sudanese cross rams with performance notes.','Define panel-specific KPI targets before mating.']},
+      { name:'Module 2: Foundation Flock Setup + Ram Selection', summary:'Set mating groups, ratios, and pre-breeding prep.', details:['Ram:ewe ratio planning and mating calendar.','Body condition scoring and flushing protocol.','Biosecurity before breeding season.','Record pedigree start points to avoid inbreeding drift.']},
+      { name:'Module 3: Breeding Management + Pregnancy Care', summary:'Run controlled mating and gestation routines.', details:['Heat detection and controlled exposure windows.','Pregnancy nutrition by trimester.','Pre-lambing housing and stress reduction.','Cull criteria for poor fertility lines.']},
+      { name:'Module 4: Lamb Survival, Growth + Flock Health', summary:'Protect lambs and accelerate uniform growth.', details:['Colostrum, neonatal checks, and early growth SOP.','Parasite control and vaccination timing discipline.','Weaning strategy by weight and health status.','Growth tracking and weak-line intervention.']},
+      { name:'Module 5: Sales, Records + Scale Program', summary:'Convert performance into market outcomes.', details:['Grade animals by structure, growth, and health index.','Use data-backed retention vs sale decisions.','Maintain breeding ledger for line consistency.','Scale only after 2 stable generations.']}
+    ]
+  },
+  udaCross: {
+    title: 'Boboji (WAD) × Uda/Sudanese Cross',
+    objective: 'Develop resilient high-performance meat lines with stronger frame and market weight consistency.',
+    breeds: [
+      'Boboji (WAD): climate resilience and disease tolerance',
+      'Uda/Sudanese cross ram: growth, size, and carcass potential',
+      'F1 outcome: stronger market size with retained hardiness',
+      'Selection focus: growth, hoof quality, lambing ease'
+    ],
+    kpis: ['Lambing interval optimization', 'Weaning weights up vs baseline', 'Mortality reduction across seasons'],
+    modules: []
+  },
+  ghanaElite: {
+    title: 'Ghana Sheep Breed (Elite Finish)',
+    objective: 'Consolidate hardiness + meat quality by crossing top hybrids with Ladoum/Dorper cross sires.',
+    breeds: [
+      'Top selected hybrid ewes from phase 1+2',
+      'Ladoum/Dorper cross ram: terminal growth and meat traits',
+      'Elite outcome: Ghana Sheep Breed candidate line',
+      'Selection focus: uniformity, carcass, adaptability'
+    ],
+    kpis: ['Uniform market batch quality', 'Reproducible growth curves', 'Breed standard consistency'],
+    modules: []
+  }
+}
+
+// reuse core module structure across sheep panels
+sheepTracks.udaCross.modules = sheepTracks.balamiCross.modules
+sheepTracks.ghanaElite.modules = sheepTracks.balamiCross.modules
+
+const sheepClimate = {
+  humid: ['Parasite load control + rotational grazing discipline', 'Drainage and hoof-rot prevention', 'Mold-free feed storage and mineral balance'],
+  dry: ['Heat-stress water strategy + shade design', 'Browse + concentrate balancing', 'Dust/respiratory management and electrolyte support']
+}
+
+const sheepHealthProgram = [
+  'Pre-breeding: deworm + mineral correction + body condition alignment',
+  'Breeding window: strict ram rotation and mating record capture',
+  'Gestation: trimester nutrition plan + vaccination by local protocol',
+  'Pre-lambing: pen disinfection + lambing kit readiness',
+  'Post-lambing: colostrum assurance, naval care, early growth checks',
+  'Ongoing: parasite surveillance, hoof care, respiratory monitoring'
+]
+
+const sheepPhaseLabels = ['Phase 1: Foundation Cross', 'Phase 2: Hybrid Development', 'Phase 3: Elite Finish']
+
+
+const goatTracks = {
+  sahelianCross: {
+    title: 'WAD (Boboji) × Sahelian Cross',
+    objective: 'Increase height/frame while preserving resilience and climate adaptation for commercial meat lines.',
+    breeds: [
+      'WAD (Boboji): hardiness, parasite tolerance, low-input survival',
+      'Sahel buck lines (Sahel/Red Sokoto/Maradi): frame and growth uplift',
+      'F1 outcome: taller, stronger market frame with retained adaptation',
+      'Selection rule: never dilute WAD genetics below 25%'
+    ],
+    kpis: ['Conception rate > 85%', 'Kid survival to weaning > 88%', 'Average daily gain target by 6 months'],
+    modules: [
+      { name:'Module 1: Ghana Goat Breed Program + Breed Selection', summary:'Understand 3-phase crossing and pick correct foundation lines.', details:['Phase 1: WAD ewes × Sahelian-type bucks.','Phase 2: F1 consolidation for uniformity/adaptation.','Phase 3: elite terminal sires for size + carcass.','WAD minimum genetics warning: keep ≥25% for resilience.']},
+      { name:'Module 2: Foundation Flock Setup + Buck Selection', summary:'Prepare mating groups and pick high-quality sires.', details:['Buck:ewe ratio and controlled breeding windows.','Pre-breeding mineral/body-condition correction.','Select Sahel/Red Sokoto/Maradi based on availability + records.','Start lineage records from day one.']},
+      { name:'Module 3: Breeding Management + Pregnancy/Kidding Care', summary:'Run disciplined breeding and kidding management.', details:['Heat detection and mating logs by line.','Trimester feeding and kidding pen prep.','Twin-kid risk management and doe recovery SOP.','Cull low-fertility/poor-mothering lines.']},
+      { name:'Module 4: Kid Survival, Growth + Health Control', summary:'Protect kids and drive stable growth.', details:['Colostrum assurance and neonatal check protocol.','Haemonchus risk monitoring and deworm strategy.','CCPP watch and fast respiratory response SOP.','Weaning by weight/health, not age alone.']},
+      { name:'Module 5: Sales, Records + Scale Program', summary:'Convert genetic gains into stable profit.', details:['Grade by frame, growth, health, and carcass traits.','Retain top replacement does by KPI scores.','Build buyer classes by market weight targets.','Scale after consistent 2-cycle performance.']}
+    ]
+  },
+  redSokotoMaradiCross: {
+    title: 'WAD (Boboji) × Red Sokoto/Maradi',
+    objective: 'Leverage twinning potential and growth while preserving local hardiness.',
+    breeds: [
+      'WAD (Boboji): resilience and disease tolerance',
+      'Red Sokoto: meat market acceptance + frame',
+      'Maradi: prolificacy and maternal productivity',
+      'F1 outcome: improved size with higher twinning potential'
+    ],
+    kpis: ['Twin kid survival uplift', 'Uniform market weights', 'Lower mortality in humid/dry swings'],
+    modules: []
+  },
+  ghanaElite: {
+    title: 'Ghana Goat Breed (Boer/Kalahari Red/Savannah Elite Finish)',
+    objective: 'Finish the line with elite terminal sires while retaining adaptation and resilience.',
+    breeds: [
+      'Top selected hybrids from phase 1+2',
+      'Boer cross sires: strong meat frame',
+      'Kalahari Red/Savannah crosses: savanna robustness + growth',
+      'Elite outcome: Ghana Goat Breed candidate line'
+    ],
+    kpis: ['Uniformity of elite batches', 'Reproducible growth and carcass quality', 'Climate resilience retention'],
+    modules: []
+  }
+}
+
+goatTracks.redSokotoMaradiCross.modules = goatTracks.sahelianCross.modules
+goatTracks.ghanaElite.modules = goatTracks.sahelianCross.modules
+
+const goatClimate = {
+  humid: ['Aggressive Haemonchus control + rotational browse strategy', 'Drainage + hoof/skin infection prevention', 'Mold-free feed and shelter ventilation'],
+  dry: ['Heat mitigation + water reliability', 'Browse resource mapping + drought feed buffers', 'Dust/respiratory risk control (CCPP watch)']
+}
+
+const goatHealthProgram = [
+  'Pre-breeding: deworm strategy + mineral balancing',
+  'Breeding window: sire rotation and mating logs',
+  'Pregnancy: trimester nutrition and stress control',
+  'Kidding: hygiene, colostrum, and twin-kid support protocol',
+  'CCPP surveillance and immediate respiratory response SOP',
+  'Ongoing Haemonchus monitoring and targeted parasite control'
+]
+
+const goatPhaseLabels = ['Phase 1: WAD × Sahelian-type Foundation', 'Phase 2: Hybrid Consolidation', 'Phase 3: Elite Terminal Finish']
+
+
+const cattleTracks = {
+  wadSanga: {
+    title: 'WAD/Sanga Cows × Sahelian/Zebu Cross Bulls',
+    objective: 'Lift frame and growth while retaining local adaptation and mothering performance.',
+    breeds: [
+      'WAD/Sanga cow base: hardiness and local disease resilience',
+      'Sahelian/Zebu cross bulls: frame and growth potential',
+      'F1 outcome: bigger structure with retained climate adaptation',
+      'Selection focus: fertility, calf survival, growth consistency'
+    ],
+    kpis: ['Conception rate > 80%', 'Calf survival to weaning > 90%', 'Weight gain target by 12 months'],
+    modules: [
+      { name:'Module 1: Ghana Cattle Breed Program + Breed Selection', summary:'Understand 3-phase crossing and select foundation herds.', details:['Phase 1: local adapted cows × Sahel/Zebu type bulls.','Phase 2: hybrid consolidation for uniformity.','Phase 3: elite terminal finish using Brahman or Gudali sires for carcass quality.','Preserve local adaptation traits while scaling size.']},
+      { name:'Module 2: Foundation Herd Setup + Bull Selection', summary:'Organize breeding groups and choose performance sires.', details:['Bull:cow ratio and mating season design.','Body condition, mineral and water planning.','Bull health screening and libido checks.','Pedigree + growth log setup.']},
+      { name:'Module 3: Breeding Management + Pregnancy/Calving Care', summary:'Run controlled breeding and safe calving workflows.', details:['Heat detection and service records.','Pregnancy nutrition by stage.','Pre-calving housing and emergency plan.','Postpartum recovery and rebreeding timing.']},
+      { name:'Module 4: Calf Survival, Growth + Herd Health', summary:'Protect calves and accelerate healthy growth.', details:['Colostrum protocol and neonatal checks.','Tick/blood-parasite control schedule.','Respiratory + digestive disease monitoring.','Growth tracking and weak-line correction.']},
+      { name:'Module 5: Sales, Records + Scale Program', summary:'Turn herd performance into repeatable business growth.', details:['Grade by frame, health, and weight class.','Retention strategy for replacement heifers.','Performance-led culling decisions.','Scale after multi-cycle KPI stability.']}
+    ]
+  },
+  wadFulani: {
+    title: 'WAD/Sanga Cows × White Fulani/Sudanese Cross Bulls',
+    objective: 'Build larger dual-purpose lines with stronger market weights and adaptation.',
+    breeds: [
+      'WAD/Sanga cow base',
+      'White Fulani/Sudanese cross bulls',
+      'F1 outcome: growth and frame lift',
+      'Selection focus: calf vigor + feed efficiency'
+    ],
+    kpis: ['Calving interval control', 'Calf mortality reduction', 'Uniform sale weights'],
+    modules: []
+  },
+  ghanaElite: {
+    title: 'Ghana Cattle Breed (Elite Finish)',
+    objective: 'Consolidate hardy local genetics with premium carcass traits for West African commercial beef systems.',
+    breeds: [
+      'Top selected hybrid cows',
+      'Elite terminal sires: Brahman or Gudali (by region availability)',
+      'Outcome: Ghana Cattle Breed candidate line',
+      'Selection focus: carcass quality + resilience'
+    ],
+    kpis: ['Batch uniformity', 'Carcass quality consistency', 'Resilience under humid/dry conditions'],
+    modules: []
+  }
+}
+
+cattleTracks.wadFulani.modules = cattleTracks.wadSanga.modules
+cattleTracks.ghanaElite.modules = cattleTracks.wadSanga.modules
+
+const cattleClimate = {
+  humid: ['Tick and vector pressure control', 'Drainage and hoof/skin hygiene', 'Fodder conservation and mold prevention'],
+  dry: ['Heat mitigation and water security', 'Dry-season feed budgeting', 'Dust/respiratory stress management']
+}
+
+const cattleHealthProgram = [
+  'Pre-breeding health checks and deworming protocol',
+  'Breeding season bull health and service tracking',
+  'Pregnancy vaccination schedule per local veterinary guidance',
+  'Calving prep, neonatal care, and colostrum assurance',
+  'Tick-borne disease surveillance and rapid treatment SOP',
+  'Ongoing herd health records and mortality audits'
+]
+
+const cattlePhaseLabels = ['Phase 1: Foundation Cross', 'Phase 2: Hybrid Consolidation', 'Phase 3: Elite Finish']
 
 const paymentProviders = {
   GH: ['MTN MoMo', 'Vodafone Cash', 'AirtelTigo Money'],
@@ -260,6 +668,22 @@ const paymentProviders = {
 }
 const currencyByCountry = { GH: 'GHS', NG: 'NGN', BF: 'XOF' }
 const fxByCurrency = { USD: 1, GHS: 15, NGN: 1600, XOF: 610 }
+const universityProducts = ['poultry', 'sheep', 'goat', 'cattle']
+const emptyUniversitySubscription = { tier: 'free', subscription: null, plans: [] }
+const universityPlanPreview = {
+  free: {
+    title: 'Free',
+    features: ['Module 1 access', 'Breed cards / KPI preview', 'Free tier overview before paying']
+  },
+  basic: {
+    title: 'Basic',
+    features: ['All 5 modules unlocked', 'Climate/zone guidance', 'Health schedule access', 'Structured paid learning path']
+  },
+  pro: {
+    title: 'Professional',
+    features: ['Everything in Basic', 'Professional extras/resources', 'Progress tracking', 'Certificate path where supported']
+  }
+}
 
 // Locked by user request: High Demand Products/Services must always display 10 rows unless explicitly changed.
 const DEMAND_LOCK_COUNT = 10
@@ -271,7 +695,7 @@ const lockDemandCount = (arr, fillerFactory) => {
 
 const isUserImage = (v) => String(v || '').startsWith('data:image/')
 
-function DataTable({ columns, rows, filterKey, onEdit }) {
+function DataTable({ columns, rows, filterKey, onEdit, onRowClick }) {
   const [q, setQ] = useState('')
   const filtered = rows.filter((r) => !q || String(r[filterKey] ?? '').toLowerCase().includes(q.toLowerCase()))
   return <div>
@@ -285,9 +709,9 @@ function DataTable({ columns, rows, filterKey, onEdit }) {
       </thead>
       <tbody>
         {filtered.map((r, i) => (
-          <tr key={r.id || i}>
+          <tr key={r.id || i} onClick={() => onRowClick && onRowClick(r)} style={onRowClick ? { cursor: 'pointer' } : undefined}>
             {columns.map(c => <td key={c}>{String(r[c] ?? '')}</td>)}
-            {onEdit && <td><button className='btn btn-dark' onClick={() => onEdit(r)}>Edit</button></td>}
+            {onEdit && <td><button className='btn btn-dark' onClick={(e) => { e.stopPropagation(); onEdit(r) }}>Edit</button></td>}
           </tr>
         ))}
         {!filtered.length && <tr><td colSpan={columns.length + (onEdit ? 1 : 0)}>No records</td></tr>}
@@ -300,7 +724,7 @@ export default function App() {
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams('')
   const forcePublicView = searchParams.get('public') === '1'
   const authPrompt = searchParams.get('auth') || ''
-  const initialSection = searchParams.get('go') || 'home'
+  const initialSection = (searchParams.get('go') === 'poultry-academy' ? 'poultry-university' : (searchParams.get('go') === 'sheep-academy' ? 'sheep-university' : (searchParams.get('go') === 'goat-academy' ? 'goat-university' : (searchParams.get('go') === 'cattle-academy' ? 'cattle-university' : (searchParams.get('go') || 'home')))))
   const [token, setToken] = useState(localStorage.getItem('farmsavior_token'))
   const [authMode, setAuthMode] = useState('login')
   const [portalType, setPortalType] = useState('main')
@@ -310,6 +734,7 @@ export default function App() {
   const [authMsg, setAuthMsg] = useState('')
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [pendingFeatureLabel, setPendingFeatureLabel] = useState('')
+  const [pendingFeatureSection, setPendingFeatureSection] = useState('')
   const [active, setActive] = useState(initialSection)
   const [homeQuery, setHomeQuery] = useState('')
   const [publicQuery, setPublicQuery] = useState('')
@@ -320,14 +745,16 @@ export default function App() {
   const [worldChatMsg, setWorldChatMsg] = useState('')
   const [worldChatQueue, setWorldChatQueue] = useState([])
 
-  const [communityProfile, setCommunityProfile] = useState({ username: '', avatar_url: '', cover_image_url: '', bio: '', farm_life: '', interests: 'farming,gardening', visibility: 'PUBLIC' })
+  const [communityProfile, setCommunityProfile] = useState({ full_name: '', username: '', avatar_url: '', cover_image_url: '', bio: '', farm_life: '', interests: 'farming,gardening', visibility: 'PUBLIC' })
+  const [communityProfileDirty, setCommunityProfileDirty] = useState(false)
   const [communityPosts, setCommunityPosts] = useState([])
   const [communityFeedMode, setCommunityFeedMode] = useState('for-you')
   const [communityPostForm, setCommunityPostForm] = useState({ text: '', media_url: '', media_type: 'TEXT', tags: '' })
+  const [editingCommunityPostId, setEditingCommunityPostId] = useState(null)
   const [communityCommentText, setCommunityCommentText] = useState({})
   const [communityComments, setCommunityComments] = useState({})
 
-  const [state, setState] = useState({ metrics: {}, users: [], listings: [], livestock: [], logistics: [], equipment: [], storage: [], payments: [], alerts: [], contracts: [], idv: [], passports: [], verificationApps: [], approvedAccounts: [], deviceTokens: [], diseaseScans: [], disputes: [], fraudFlags: [], news: [], publicWeather: [], govPrograms: [], spotTrading: [], spotHistory: [], tradeExportStats: [], livestockPlans: [] })
+  const [state, setState] = useState({ metrics: {}, users: [], listings: [], livestock: [], livestockRecords: [], logistics: [], equipment: [], storage: [], payments: [], alerts: [], contracts: [], idv: [], passports: [], verificationApps: [], approvedAccounts: [], deviceTokens: [], diseaseScans: [], disputes: [], fraudFlags: [], news: [], publicWeather: [], govPrograms: [], spotTrading: [], spotHistory: [], tradeExportStats: [], livestockPlans: [] })
   const [me, setMe] = useState(null)
   const lastTrackRef = useRef('')
 
@@ -348,6 +775,11 @@ export default function App() {
   const [livestockForm, setLivestockForm] = useState({ farmer_id: 1, livestock_type: '', quantity: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
   const [livestockEdit, setLivestockEdit] = useState({ id: '', farmer_id: 1, livestock_type: '', quantity: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
   const [livestockQuickEdit, setLivestockQuickEdit] = useState({ id: '', quantity: '', unit_price: '' })
+  const [livestockRecordForm, setLivestockRecordForm] = useState({ user_id: 1, ownership: 'Owned by Me', species: 'SHEEP', animal_type: 'EWE', name: '', ear_tag: '', farm_id: '', registration_number: '', stars: 0, date_of_birth: '', acquisition_date: '', purchase_price: '', currency: 'GHS', sire_id: '', dam_id: '', litter_size: 1, initial_weight_kg: '', breeding_type: 'Natural', castrated: false, sale_date: '', sale_price: '', sold_to: '', died_date: '', cull_keep_status: 'KEEP', cull_reason: '', health_status: '', pen_location: '', notes: '', treatment_entry: '' })
+  const [livestockRecordEdit, setLivestockRecordEdit] = useState({ id: '', user_id: 1, ownership: 'Owned by Me', species: 'SHEEP', animal_type: 'EWE', name: '', ear_tag: '', farm_id: '', registration_number: '', stars: 0, date_of_birth: '', acquisition_date: '', purchase_price: '', currency: 'GHS', sire_id: '', dam_id: '', litter_size: 1, initial_weight_kg: '', breeding_type: 'Natural', castrated: false, sale_date: '', sale_price: '', sold_to: '', died_date: '', cull_keep_status: 'KEEP', cull_reason: '', health_status: '', pen_location: '', notes: '', treatment_entry: '' })
+  const [selectedLivestockRecord, setSelectedLivestockRecord] = useState(null)
+  const [livestockRecordsFilter, setLivestockRecordsFilter] = useState('ALL')
+  const [batchMedicationForm, setBatchMedicationForm] = useState({ species:'ALL', animal_type:'ALL', health_status:'ALL', cull_keep_status:'ALL', minStars:'', pen_location:'', medication:'', dose:'', days:'' })
   const [logisticsForm, setLogisticsForm] = useState({ requester_id: 1, pickup_location: '', dropoff_location: '', cargo_type: '', weight_kg: '', status: 'PENDING' })
   const [logisticsEdit, setLogisticsEdit] = useState({ id: '', requester_id: 1, pickup_location: '', dropoff_location: '', cargo_type: '', weight_kg: '', status: 'PENDING' })
   const [equipmentForm, setEquipmentForm] = useState({ requester_id: 1, equipment_type: '', duration_days: '', location: '', budget: '', status: 'PENDING' })
@@ -373,6 +805,97 @@ export default function App() {
   const [expandedTradeCommodity, setExpandedTradeCommodity] = useState('')
   const [expandedTradeSections, setExpandedTradeSections] = useState({})
   const [expandedLivestockPlan, setExpandedLivestockPlan] = useState('')
+  const [poultryTrack, setPoultryTrack] = useState('layers')
+  const [poultryZone, setPoultryZone] = useState('humid')
+  const [openPoultryModule, setOpenPoultryModule] = useState(0)
+  const [poultryTier, setPoultryTier] = useState('free')
+  const [poultryProgress, setPoultryProgress] = useState({ completed: [] })
+  const [poultryQuestion, setPoultryQuestion] = useState('')
+  const [poultryAnswer, setPoultryAnswer] = useState('')
+  const [poultryBillingMsg, setPoultryBillingMsg] = useState('')
+  const [poultrySubscription, setPoultrySubscription] = useState({ tier: 'free', subscription: null, plans: [] })
+  const [universityBillingMsg, setUniversityBillingMsg] = useState({ poultry: '', sheep: '', goat: '', cattle: '' })
+  const [universitySubscriptions, setUniversitySubscriptions] = useState({ poultry: { tier: 'free', subscription: null, plans: [] }, sheep: { tier: 'free', subscription: null, plans: [] }, goat: { tier: 'free', subscription: null, plans: [] }, cattle: { tier: 'free', subscription: null, plans: [] } })
+  const [poultryPlanPreview, setPoultryPlanPreview] = useState('basic')
+  const [sheepPlanPreview, setSheepPlanPreview] = useState('basic')
+  const [sheepTrack, setSheepTrack] = useState('balamiCross')
+  const [sheepZone, setSheepZone] = useState('humid')
+  const [openSheepModule, setOpenSheepModule] = useState(0)
+  const [sheepTier, setSheepTier] = useState('free')
+  const [sheepProgress, setSheepProgress] = useState({ completed: [] })
+  const [goatPlanPreview, setGoatPlanPreview] = useState('basic')
+  const [goatTrack, setGoatTrack] = useState('sahelianCross')
+  const [goatZone, setGoatZone] = useState('humid')
+  const [openGoatModule, setOpenGoatModule] = useState(0)
+  const [goatTier, setGoatTier] = useState('free')
+  const [goatProgress, setGoatProgress] = useState({ completed: [] })
+  const [cattlePlanPreview, setCattlePlanPreview] = useState('basic')
+  const [cattleTrack, setCattleTrack] = useState('wadSanga')
+  const [cattleZone, setCattleZone] = useState('humid')
+  const [openCattleModule, setOpenCattleModule] = useState(0)
+  const [cattleTier, setCattleTier] = useState('free')
+  const [cattleProgress, setCattleProgress] = useState({ completed: [] })
+
+  const universityTierSetter = {
+    poultry: setPoultryTier,
+    sheep: setSheepTier,
+    goat: setGoatTier,
+    cattle: setCattleTier,
+  }
+
+  const setUniversityTier = (product, tier) => {
+    ;(universityTierSetter[product] || (() => {}))(tier)
+  }
+
+  const setUniversityProductState = (product, next) => {
+    setUniversitySubscriptions(prev => ({ ...prev, [product]: { ...(prev[product] || emptyUniversitySubscription), ...next } }))
+    if (product === 'poultry') setPoultrySubscription(prev => ({ ...prev, ...next }))
+  }
+
+  const setUniversityProductMessage = (product, message) => {
+    setUniversityBillingMsg(prev => ({ ...prev, [product]: message || '' }))
+    if (product === 'poultry') setPoultryBillingMsg(message || '')
+  }
+
+  const startUniversityCheckout = async (product, planCode, label) => {
+    try {
+      if (!token || !me?.id) { handleProtectedAction('onboarding', label); return }
+      const r = await api.checkoutUniversityPlan(product, { user_id: me.id, plan_code: planCode, billing_cycle: 'monthly', currency: 'GHS', country: me?.country || uiCountry })
+      setUniversityProductMessage(product, r.payment_url ? `${label} created. Redirecting to payment. Ref: ${r.reference}` : (r.payment_init_error || 'Unable to initialize payment right now.'))
+      setUniversityProductState(product, { subscription: r.subscription || universitySubscriptions[product]?.subscription || null })
+      if (r.payment_url) window.location.href = r.payment_url
+    } catch (e) {
+      setUniversityProductMessage(product, errMsg(e))
+    }
+  }
+
+  const verifyUniversityCheckout = async (product) => {
+    const current = universitySubscriptions[product]?.subscription
+    if (!current?.reference) return
+    const v = await api.verifyUniversitySubscription(product, current.reference)
+    const tier = v.tier || 'free'
+    setUniversityTier(product, tier)
+    const meSub = await api.fetchUniversitySubscriptionMe(product).catch(() => ({ tier, subscription: current }))
+    setUniversityProductState(product, { tier: meSub.tier || tier, subscription: meSub.subscription || current })
+    setUniversityProductMessage(product, v.message || 'Verification checked.')
+  }
+
+  useEffect(() => {
+    const loadUniversitySubscriptions = async () => {
+      const products = await Promise.all(universityProducts.map(async (product) => {
+        const plans = await api.fetchUniversityPlans(product).catch(() => ({ plans: [] }))
+        if (!token) return { product, tier: 'free', subscription: null, plans: plans.plans || [] }
+        const sub = await api.fetchUniversitySubscriptionMe(product).catch(() => ({ tier: 'free', subscription: null }))
+        return { product, tier: sub?.tier || 'free', subscription: sub?.subscription || null, plans: plans.plans || [] }
+      }))
+
+      for (const row of products) {
+        setUniversityTier(row.product, row.tier)
+        setUniversityProductState(row.product, { tier: row.tier, subscription: row.subscription, plans: row.plans })
+      }
+    }
+    loadUniversitySubscriptions().catch(() => {})
+  }, [me?.id, token])
   const [fxBase, setFxBase] = useState('USD')
   const [fxAmount, setFxAmount] = useState('1')
   const [fxRates, setFxRates] = useState({})
@@ -481,8 +1004,12 @@ export default function App() {
     localStorage.setItem('farmsavior_ui_country', uiCountry)
   }, [uiCountry])
 
+  useEffect(() => {
+    setOpenPoultryModule(0)
+  }, [poultryTrack])
+
   const [fcmToken, setFcmToken] = useState('')
-  const [diseaseForm, setDiseaseForm] = useState({ user_id: 1, category: 'crop', target: '', image_url: '', context_note: '' })
+  const [diseaseForm, setDiseaseForm] = useState({ user_id: 1, category: 'animal', target: '', image_url: '', context_note: '' })
   const [diseaseImageFileName, setDiseaseImageFileName] = useState('')
   const [diseaseImagePreview, setDiseaseImagePreview] = useState('')
   const [plantIdForm, setPlantIdForm] = useState({ user_id: 1, image_url: '', file_name: '', context_hint: '', target_livestock: 'goats' })
@@ -502,6 +1029,8 @@ export default function App() {
     if (meRes) {
       setAccountForm({ full_name: meRes.full_name || '', region: meRes.region || '' })
       setIdForm(prev => ({ ...prev, user_id: meRes.id || prev.user_id }))
+      setLivestockRecordForm(prev => ({ ...prev, user_id: meRes.id || prev.user_id }))
+      setLivestockRecordEdit(prev => ({ ...prev, user_id: meRes.id || prev.user_id }))
       const mine = await api.fetchMyIdVerification().catch(() => ({ application: null, review: null }))
       setMyIdVerification(mine || { application: null, review: null })
       if (mine?.application) {
@@ -517,8 +1046,8 @@ export default function App() {
     }
     const isAdmin = (meRes?.role || '').toLowerCase() === 'admin'
 
-    const [metrics, users, listings, livestock, logistics, equipment, storage, payments, alerts, contracts, idv, passports, regions, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, publicWeather, govPrograms, spotTrading, spotHistory, tradeExportStats, livestockPlans] = await Promise.all([
-      api.fetchMetrics(), api.fetchUsers(), api.fetchListings(), api.fetchLivestock(), api.fetchLogistics(), api.fetchEquipment(), api.fetchStorage(), api.fetchPayments(), api.fetchAlerts(alertCountryFilter === 'ALL' ? undefined : alertCountryFilter), api.fetchContracts(), api.fetchIdVerifications(), api.fetchPassports(), api.fetchWeatherRegions(), api.fetchVerificationApps(), api.fetchApprovedAccounts(), api.fetchDeviceTokens(), api.fetchDiseaseScans(),
+    const [metrics, users, listings, livestock, livestockRecords, logistics, equipment, storage, payments, alerts, contracts, idv, passports, regions, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, publicWeather, govPrograms, spotTrading, spotHistory, tradeExportStats, livestockPlans] = await Promise.all([
+      api.fetchMetrics(), api.fetchUsers(), api.fetchListings(), api.fetchLivestock(), api.fetchLivestockRecordsAnimals().catch(() => []), api.fetchLogistics(), api.fetchEquipment(), api.fetchStorage(), api.fetchPayments(), api.fetchAlerts(alertCountryFilter === 'ALL' ? undefined : alertCountryFilter), api.fetchContracts(), api.fetchIdVerifications(), api.fetchPassports(), api.fetchWeatherRegions(), api.fetchVerificationApps(), api.fetchApprovedAccounts(), api.fetchDeviceTokens(), api.fetchDiseaseScans(),
       isAdmin ? api.fetchAdminDisputes() : Promise.resolve([]),
       isAdmin ? api.fetchAdminFraudFlags() : Promise.resolve([]),
       api.fetchPublicNews().catch(() => []),
@@ -530,7 +1059,12 @@ export default function App() {
       api.fetchLivestockRecordsPlans().catch(() => ({ plans: [] }))
     ])
     setRegionMap(regions || { GH: [], NG: [], BF: [] })
-    setState({ metrics, users, listings, livestock, logistics, equipment, storage, payments, alerts, contracts, idv, passports, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, publicWeather, govPrograms: govPrograms.items || [], spotTrading: spotTrading.items || [], spotHistory: spotHistory.items || [], tradeExportStats: tradeExportStats.items || [], livestockPlans: livestockPlans.plans || [] })
+    setState({ metrics, users, listings, livestock, livestockRecords, logistics, equipment, storage, payments, alerts, contracts, idv, passports, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, publicWeather, govPrograms: govPrograms.items || [], spotTrading: spotTrading.items || [], spotHistory: spotHistory.items || [], tradeExportStats: tradeExportStats.items || [], livestockPlans: livestockPlans.plans || [] })
+  }
+
+  const loadLivestockRecords = async () => {
+    const rows = await api.fetchLivestockRecordsAnimals().catch(() => [])
+    setState(prev => ({ ...prev, livestockRecords: rows || [] }))
   }
 
   const loadWorldChat = async () => {
@@ -549,11 +1083,12 @@ export default function App() {
       api.fetchCommunityProfileMe().catch(() => null),
       api.fetchCommunityPosts(80).catch(() => [])
     ])
-    if (p) setCommunityProfile(p)
+    if (p && !communityProfileDirty) setCommunityProfile(p)
     setCommunityPosts(posts || [])
   }
 
   useEffect(() => { if (token) load().catch(console.error) }, [token, alertCountryFilter])
+  useEffect(() => { if (token) loadLivestockRecords().catch(console.error) }, [token])
 
   useEffect(() => {
     if (authPrompt === 'login' && !token) {
@@ -583,7 +1118,7 @@ export default function App() {
     loadCommunity().catch(() => {})
     const id = setInterval(() => { loadCommunity().catch(() => {}) }, 7000)
     return () => clearInterval(id)
-  }, [token])
+  }, [token, communityProfileDirty])
 
   useEffect(() => {
     const key = `${token ? 'auth' : 'guest'}|${active}|${uiCountry}|${uiLang}`
@@ -659,6 +1194,11 @@ export default function App() {
     localStorage.setItem('farmsavior_token', jwt)
     setToken(jwt)
     setAuthMsg('Authenticated successfully')
+
+    const target = pendingFeatureSection || 'home'
+    setPendingFeatureSection('')
+    setPendingFeatureLabel('')
+    goToAppSection(target)
   }
 
   const goToPublicHomepage = () => {
@@ -675,6 +1215,7 @@ export default function App() {
       return
     }
     setPendingFeatureLabel(label || section)
+    setPendingFeatureSection(section || 'home')
     setAuthMode('login')
     setShowAuthModal(true)
   }
@@ -786,7 +1327,7 @@ export default function App() {
     persistRecents(recentSearches, next)
   }
 
-  const baseMenu = ['home', 'dashboard', 'onboarding', 'products', 'livestock', 'services', 'payments', 'alerts', 'maps', 'messaging', 'world-chat', 'community', 'ai-disease', 'plant-id', 'pest-id', 'government', 'contracts']
+  const baseMenu = ['home', 'dashboard', 'ai-disease', 'poultry-university', 'sheep-university', 'goat-university', 'cattle-university', 'livestock-records', 'onboarding', 'products', 'livestock', 'services', 'payments', 'alerts', 'maps', 'messaging', 'world-chat', 'community', 'government', 'contracts']
   const menu = ((me?.role || '').toLowerCase() === 'admin') ? [...baseMenu, 'admin'] : baseMenu
   const menuLabel = (m) => ({
     'home':t('home','home','首页'),
@@ -802,12 +1343,25 @@ export default function App() {
     'world-chat':t('World Chat','World Chat','世界聊天'),
     'community':t('FarmSavior Community','FarmSavior Community','FarmSavior 社区'),
     'ai-disease':t('AI Disease Analyzer','AI Disease Analyzer','AI 病害分析'),
+    'poultry-university':'Poultry University',
+    'sheep-university':'Sheep University',
+    'goat-university':'Goat University',
+    'cattle-university':'Cattle University',
     'plant-id':t('AI Plant Identifier','AI Plant Identifier','AI 植物识别'),
     'pest-id':t('AI Insect & Pest Identifier','AI Insect & Pest Identifier','AI 昆虫与害虫识别'),
     'government':t('Government Programs','Government Programs','政府项目'),
     'contracts':t('contracts','contracts','合同'),
     'admin':t('admin','admin','管理员')
   }[m] || m)
+
+  const livestockRecordsFiltered = useMemo(() => {
+    if (livestockRecordsFilter === 'ALL') return state.livestockRecords
+    if (livestockRecordsFilter === 'GOAT') return state.livestockRecords.filter(r => r.species === 'GOAT')
+    if (livestockRecordsFilter === 'SHEEP') return state.livestockRecords.filter(r => r.species === 'SHEEP')
+    if (livestockRecordsFilter === 'CATTLE') return state.livestockRecords.filter(r => r.species === 'CATTLE')
+    if (livestockRecordsFilter === 'POULTRY') return state.livestockRecords.filter(r => r.species === 'POULTRY')
+    return state.livestockRecords
+  }, [state.livestockRecords, livestockRecordsFilter])
 
   const kpis = useMemo(() => [
     ['Users', state.metrics.users_total || 0],
@@ -1112,15 +1666,18 @@ export default function App() {
         <article className='panel'>
           <h3>{t('🧠 Popular Actions','🧠 Actions populaires','🧠 热门操作')}</h3>
           <div className='list'>
+            <div className='list-row'><span>{t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('ai-disease', 'AI Disease Analyzer')}>{t('Open','Ouvrir')}</button></div>
+            <div className='list-row'><span>{t('Livestock Records Management','Gestion des registres du bétail','牲畜档案管理')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('livestock-records', 'Livestock Records Management')}>{t('Open','Ouvrir')}</button></div>
+            <div className='list-row'><span>Poultry University (Layers • Broilers • Guinea Fowl)</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('poultry-university', 'Poultry University')}>{t('Open','Ouvrir')}</button></div>
+            <div className='list-row'><span>Sheep University (Ghana Sheep Breed Program)</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('sheep-university', 'Sheep University')}>{t('Open','Ouvrir')}</button></div>
+            <div className='list-row'><span>Goat University (Ghana Goat Breed Program)</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('goat-university', 'Goat University')}>{t('Open','Ouvrir')}</button></div>
+            <div className='list-row'><span>Cattle University (Ghana Cattle Breed Program)</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('cattle-university', 'Cattle University')}>{t('Open','Ouvrir')}</button></div>
             <div className='list-row'><span>{t('List Product','Publier un produit','发布产品')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('products', 'List Product')}>{t('Start','Démarrer')}</button></div>
             <div className='list-row'><span>{t('List Services','Publier des services','发布服务')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'List Services')}>{t('Start','Démarrer')}</button></div>
             <div className='list-row'><span>{t('List Machinery for Rent','Publier des machines à louer','发布机械租赁')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'List Machinery for Rent')}>{t('Start','Démarrer')}</button></div>
             <div className='list-row'><span>{t('Rent Machinery','Louer des machines','租用机械')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'Rent Machinery')}>{t('Start','Démarrer')}</button></div>
             <div className='list-row'><span>{t('Request Logistics / Transport','Demander logistique / transport','请求物流/运输')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'Request Logistics / Transport')}>{t('Start','Démarrer')}</button></div>
             <div className='list-row'><span>{t('Find Storage / Cold Room','Trouver stockage / chambre froide','寻找仓储/冷库')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'Find Storage / Cold Room')}>{t('Start','Démarrer')}</button></div>
-            <div className='list-row'><span>{t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('ai-disease', 'AI Disease Analyzer')}>{t('Open','Ouvrir')}</button></div>
-            <div className='list-row'><span>{t('AI Plant Identifier','Identificateur IA des plantes','AI 植物识别')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('plant-id', 'AI Plant Identifier')}>{t('Open','Ouvrir')}</button></div>
-            <div className='list-row'><span>{t('AI Insect & Pest Identifier','Identificateur IA insectes et ravageurs','AI 昆虫与害虫识别')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('pest-id', 'AI Insect & Pest Identifier')}>{t('Open','Ouvrir')}</button></div>
             <div className='list-row'><span>{t('Farm GPS Mapping','Cartographie GPS des fermes','农场GPS标注')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('maps', 'Farm GPS Mapping')}>{t('Open','Ouvrir')}</button></div>
             <div className='list-row'><span>{t('Global World Chat','Chat mondial','全球聊天')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('world-chat', 'Global World Chat')}>{t('Open','Ouvrir','打开')}</button></div>
           </div>
@@ -1199,7 +1756,7 @@ export default function App() {
             <button className='tab active' type='button'>Main App</button>
           </div>
 
-          <div className='tabs'>{['login', 'signup'].map(m => <button key={m} className={`tab ${authMode === m ? 'active' : ''}`} onClick={() => setAuthMode(m)}>{m === 'login' ? t('LOGIN','LOGIN','登录') : t('SIGNUP','INSCRIPTION','注册')}</button>)}</div>
+          <div className='tabs'>{['login', 'signup', ...(authMode === 'verify-otp' ? ['verify-otp'] : [])].map(m => <button key={m} className={`tab ${authMode === m ? 'active' : ''}`} onClick={() => setAuthMode(m)}>{m === 'login' ? t('LOGIN','LOGIN','登录') : m === 'signup' ? t('SIGNUP','INSCRIPTION','注册') : t('Verify OTP','Vérifier OTP','验证 OTP')}</button>)}</div>
 
           {authMode === 'signup' && <form className='list' onSubmit={async (e) => {
             try {
@@ -1215,7 +1772,7 @@ export default function App() {
                 user_type: signup.user_type,
                 password: signup.password,
               }
-              await api.register(payload)
+              const registerRes = await api.register(payload)
               await api.trackAnalyticsEvent({
                 event_name: 'consent_captured',
                 country: signup.country,
@@ -1243,10 +1800,10 @@ export default function App() {
                   captured_at_utc: new Date().toISOString()
                 }))
               } catch {}
-              const identifier = signup.signup_method === 'email' ? signup.email : normalizePhone(signup.phone)
-              const loginRes = await api.login({ identifier: normalizeIdentifier(identifier), password: signup.password })
-              saveToken(loginRes.access_token)
-              setAuthMsg('Account created and signed in successfully.')
+              const destination = registerRes?.otp_destination || (signup.signup_method === 'email' ? signup.email : normalizePhone(signup.phone))
+              setOtp({ destination, code: '' })
+              setAuthMode('verify-otp')
+              setAuthMsg(`Account created. Enter the OTP sent to ${destination}.`)
             } catch (e) { setAuthMsg(`Signup failed: ${errMsg(e)}`) }
           }}>
             <input className='input' placeholder='Full name' value={signup.full_name} onChange={e => setSignup({ ...signup, full_name: e.target.value })} required />
@@ -1276,6 +1833,19 @@ export default function App() {
             <input className='input' placeholder={t('Phone or Email','Téléphone ou e-mail','手机号或邮箱')} value={login.identifier} onChange={e => setLogin({ ...login, identifier: e.target.value })} required />
             <input className='input' type='password' placeholder={t('Password','Mot de passe','密码')} value={login.password} onChange={e => setLogin({ ...login, password: e.target.value })} required />
             <button className='btn btn-dark'>{t('Login','Connexion','登录')}</button>
+          </form>}
+
+          {authMode === 'verify-otp' && <form className='list' onSubmit={async (e) => {
+            try {
+              e.preventDefault()
+              const r = await api.verifyOtp({ destination: otp.destination, code: otp.code })
+              saveToken(r.access_token)
+              setAuthMsg('Phone verified and account signed in successfully.')
+            } catch (e) { setAuthMsg(`OTP verification failed: ${errMsg(e)}`) }
+          }}>
+            <input className='input' placeholder='OTP destination' value={otp.destination} onChange={e => setOtp({ ...otp, destination: e.target.value })} required />
+            <input className='input' placeholder={t('OTP Code','Code OTP','验证码')} value={otp.code} onChange={e => setOtp({ ...otp, code: e.target.value })} required />
+            <button className='btn btn-dark'>{t('Verify OTP','Vérifier OTP','验证 OTP')}</button>
           </form>}
 
           </>}
@@ -1427,8 +1997,8 @@ export default function App() {
       </article>
 
       <article className='panel' style={{marginTop:10}}>
-        <h3>{t('🐑 Sheep & Goats Records & Intelligence Platform (Africa-Wide)','🐑 Plateforme de registres et d’intelligence ovins/caprins (Afrique entière)','🐑 羊与山羊记录与智能平台（非洲范围）')}</h3>
-        <p style={{fontSize:'.85rem',color:'#475569'}}>{t('A production-grade livestock records system for sheep and goats, with traceability, breeding performance, health tracking, and subscription-based access for operators across Africa.','Un système professionnel de registres d’élevage pour ovins et caprins, avec traçabilité, performance de reproduction, suivi sanitaire et accès par abonnement pour les opérateurs en Afrique.','面向非洲运营者的生产级羊与山羊记录系统，包含溯源、繁育绩效、健康追踪和订阅访问。')}</p>
+        <h3>{t('🐄 Livestock Records & Intelligence Platform (Africa-Wide)','🐄 Plateforme de registres et d’intelligence du bétail (Afrique entière)','🐄 畜牧记录与智能平台（非洲范围）')}</h3>
+        <p style={{fontSize:'.85rem',color:'#475569'}}>{t('A production-grade livestock records system for poultry, sheep, goats, and cattle, with traceability, breeding performance, health tracking, and subscription-based access for operators across Africa.','Un système professionnel de registres d’élevage pour la volaille, les ovins, les caprins et les bovins, avec traçabilité, performance de reproduction, suivi sanitaire et accès par abonnement pour les opérateurs en Afrique.','面向非洲运营者的生产级畜牧记录系统，覆盖家禽、绵羊、山羊和牛，包含溯源、繁育绩效、健康追踪和订阅访问。')}</p>
         <p style={{fontSize:'.82rem',color:'#64748b',marginTop:4}}>{t('Pricing auto-displays in your selected country currency. Settlement can route to Ghana Mobile Money or US bank account once payout details are configured.','Les prix s’affichent automatiquement dans la devise du pays sélectionné. Le règlement peut être acheminé vers Mobile Money Ghana ou un compte bancaire US une fois les détails de paiement configurés.','价格会按你选择的国家货币自动显示。配置收款后，可结算到加纳移动支付或美国银行账户。')}</p>
         <p style={{fontSize:'.85rem',color:'#0f766e',marginTop:6,fontWeight:700}}>{t('🎁 7-day free trial available • No charge now • Free cancellation during trial • Trial is limited to 10 animals and available once per email/phone','🎁 Essai gratuit de 7 jours • Aucun débit maintenant • Annulation gratuite pendant l’essai • Essai limité à 10 animaux et une seule fois par email/téléphone','🎁 提供7天免费试用 • 现在不扣费 • 试用期可免费取消 • 试用仅限10只动物且每个邮箱/手机号仅一次')}</p>
         <h4 style={{margin:'8px 0'}}>{t('Select Your Subscription Plan','Sélectionnez votre plan d’abonnement','选择你的订阅方案')}</h4>
@@ -1628,8 +2198,11 @@ export default function App() {
           <button className='btn' onClick={() => setActive('livestock')}>{t('Livestock','Élevage')}</button>
           <button className='btn' onClick={() => setActive('services')}>{t('Services','Services')}</button>
           <button className='btn' onClick={() => setActive('ai-disease')}>{t('AI Disease','IA maladies')}</button>
-          <button className='btn' onClick={() => setActive('plant-id')}>{t('Plant ID','ID plante')}</button>
-          <button className='btn' onClick={() => setActive('pest-id')}>{t('Pest ID','ID ravageurs')}</button>
+          <button className='btn' onClick={() => setActive('poultry-university')}>Poultry University</button>
+          <button className='btn' onClick={() => setActive('sheep-university')}>Sheep University</button>
+          <button className='btn' onClick={() => setActive('goat-university')}>Goat University</button>
+          <button className='btn' onClick={() => setActive('cattle-university')}>Cattle University</button>
+          <button className='btn' onClick={() => setActive('livestock-records')}>{t('Records','Registres','档案')}</button>
         </div>
         <div style={{display:'flex', gap:8}}>
           <button className='btn btn-dark' onClick={() => setActive('onboarding')}>{t('My Account','Mon compte')}</button>
@@ -1642,33 +2215,6 @@ export default function App() {
       {active === 'home' && <section>
         <h2>{t('Main App Homepage','Page d’accueil de l’application')}</h2>
 
-        <div className='two-col' style={{marginBottom:10}}>
-          <article className='panel' style={{background:'linear-gradient(120deg,#022c22,#065f46)', color:'#fff', border:'1px solid rgba(255,255,255,.15)'}}>
-            <div className='list-row'>
-              <h3 style={{margin:0}}>{t('📚 Records System','📚 Système de registres','📚 记录系统')}</h3>
-              <button className='btn btn-dark' onClick={()=>setActive('livestock')}>{t('Open','Ouvrir','打开')}</button>
-            </div>
-            <p style={{opacity:.92, marginTop:6}}>{t('Core operational records for livestock, listings, and transactions.','Registres opérationnels pour élevage, annonces et transactions.','牲畜、上架与交易的核心运营记录。')}</p>
-            <div className='list' style={{marginTop:8}}>
-              <div className='list-row'><span>{t('Livestock records','Registres bétail','牲畜记录')}</span><strong>{state.livestock.length}</strong></div>
-              <div className='list-row'><span>{t('Product listings','Annonces produits','产品上架')}</span><strong>{state.listings.length}</strong></div>
-              <div className='list-row'><span>{t('Contracts','Contrats','合同')}</span><strong>{state.contracts.length}</strong></div>
-            </div>
-          </article>
-
-          <article className='panel' style={{background:'linear-gradient(120deg,#450a0a,#991b1b)', color:'#fff', border:'1px solid rgba(255,255,255,.15)'}}>
-            <div className='list-row'>
-              <h3 style={{margin:0}}>{t('🧪 Disease Analyzer','🧪 Analyseur de maladies','🧪 疾病分析器')}</h3>
-              <button className='btn btn-dark' onClick={()=>setActive('ai-disease')}>{t('Open','Ouvrir','打开')}</button>
-            </div>
-            <p style={{opacity:.92, marginTop:6}}>{t('Priority intelligence for disease detection and risk visibility.','Intelligence prioritaire pour détection des maladies et visibilité du risque.','疾病检测与风险可视化的优先情报模块。')}</p>
-            <div className='list' style={{marginTop:8}}>
-              <div className='list-row'><span>{t('Total disease scans','Scans maladie total','疾病扫描总数')}</span><strong>{state.diseaseScans.length}</strong></div>
-              <div className='list-row'><span>{t('Recent scans (last 10)','Scans récents (10)','近期扫描（10）')}</span><strong>{state.diseaseScans.slice(0,10).length}</strong></div>
-              <div className='list-row'><span>{t('AI module status','Statut module IA','AI 模块状态')}</span><strong>{t('Live','Actif','在线')}</strong></div>
-            </div>
-          </article>
-        </div>
         <form className='inlineForm' onSubmit={(e) => { e.preventDefault(); addRecentSearch(homeQuery) }}>
           <input className='input' placeholder={t('Search products, livestock, services…','Rechercher produits, élevage, services…')} value={homeQuery} onChange={(e)=>setHomeQuery(e.target.value)} />
           <button className='btn btn-dark' type='submit'>{t('Search','Rechercher','搜索')}</button>
@@ -2078,6 +2624,880 @@ export default function App() {
       <p style={{fontSize:'.85rem',color:'#475569'}}>Tip: click Edit on a row, change fields, then Save Edit or Quick Save Qty+Price.</p>
       </section>}
 
+      {active === 'poultry-university' && <section>
+        <h3>🐔 Poultry University</h3>
+        <article className='panel' style={{marginBottom:10}}>
+          <h4 style={{marginTop:0}}>Choose Your Plan</h4>
+          <p style={{fontSize:'.85rem',color:'#475569'}}>Standalone professional purchase also available (₵200–₵1,000 depending on package depth).</p>
+          <div className='three-col'>
+            <div className='panel' style={{padding:10, border:poultryTier==='free' || poultryPlanPreview==='free'?'2px solid #64748b':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setPoultryPlanPreview('free')}>
+              <strong>🆓 Free</strong>
+              <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Breeds + KPIs + Module 1 brief content.</div>
+              <button className='btn' onClick={(e)=>{ e.stopPropagation(); setPoultryTier('free'); setOpenPoultryModule(0); setPoultryPlanPreview('free'); api.trackAnalyticsEvent({ event_name:'poultry_tier_select', country: uiCountry, role_hint: me?.role || 'user', properties:{tier:'free'} }).catch(()=>{})}}>{poultryTier==='free' ? 'Free Active ✓' : 'Use Free'}</button>
+            </div>
+            <div className='panel' style={{padding:10, border:poultryTier==='basic' || poultryPlanPreview==='basic'?'2px solid #16a34a':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setPoultryPlanPreview('basic')}>
+              <strong>🌿 Basic — ₵50/mo</strong>
+              <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>All 5 modules across all bird types + both zones.</div>
+              <button className='btn btn-dark' onClick={async(e)=>{ e.stopPropagation();
+                try {
+                  if (!token || !me?.id) { handleProtectedAction('onboarding', 'Poultry University Basic checkout'); return }
+                  const r = await api.checkoutPoultryUniversityPlan({ user_id: me.id, plan_code: 'basic', billing_cycle: 'monthly', currency: 'GHS', country: me?.country || uiCountry })
+                  setPoultryBillingMsg(r.payment_url ? `Basic checkout created. Redirecting to payment. Ref: ${r.reference}` : (r.payment_init_error || 'Unable to initialize payment right now.'))
+                  setPoultrySubscription(prev => ({ ...prev, subscription: r.subscription || prev.subscription }))
+                  if (r.payment_url) window.location.href = r.payment_url
+                } catch (e) {
+                  setPoultryBillingMsg(errMsg(e))
+                }
+              }}>Buy Basic</button>
+            </div>
+            <div className='panel' style={{padding:10, border:poultryTier==='pro' || poultryPlanPreview==='pro'?'2px solid #f59e0b':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setPoultryPlanPreview('pro')}>
+              <strong>🏆 Professional — ₵120/mo</strong>
+              <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Basic + pro tools + certificate.</div>
+              <button className='btn btn-dark' onClick={async(e)=>{ e.stopPropagation();
+                try {
+                  if (!token || !me?.id) { handleProtectedAction('onboarding', 'Poultry University Professional checkout'); return }
+                  const r = await api.checkoutPoultryUniversityPlan({ user_id: me.id, plan_code: 'pro', billing_cycle: 'monthly', currency: 'GHS', country: me?.country || uiCountry })
+                  setPoultryBillingMsg(r.payment_url ? `Professional checkout created. Redirecting to payment. Ref: ${r.reference}` : (r.payment_init_error || 'Unable to initialize payment right now.'))
+                  setPoultrySubscription(prev => ({ ...prev, subscription: r.subscription || prev.subscription }))
+                  if (r.payment_url) window.location.href = r.payment_url
+                } catch (e) {
+                  setPoultryBillingMsg(errMsg(e))
+                }
+              }}>Buy Professional</button>
+            </div>
+          </div>
+          <div className='panel' style={{marginTop:8,padding:8,background:'#fff7ed',border:'1px solid #fed7aa'}}>
+            <strong>{universityPlanPreview[poultryPlanPreview].title} includes:</strong>
+            <div className='list' style={{marginTop:6}}>
+              {universityPlanPreview[poultryPlanPreview].features.map((feature)=><div className='list-row' key={feature}><span>{feature}</span></div>)}
+            </div>
+            {poultryPlanPreview !== 'free' && <div style={{marginTop:8}}><button className='btn btn-dark' onClick={()=>startUniversityCheckout('poultry', poultryPlanPreview, `Poultry University ${poultryPlanPreview === 'pro' ? 'Professional' : 'Basic'} checkout`)}>{poultryPlanPreview === 'pro' ? 'Upgrade to Professional' : 'Upgrade to Basic'}</button></div>}
+          </div>
+          {poultryTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#fff7ed',border:'1px solid #fed7aa'}}><strong>Free tier active.</strong> Module 1 is open now. Paid plans unlock only after server-side payment verification.</div>}
+          {poultrySubscription?.subscription?.status === 'PENDING_PAYMENT' && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}><strong>Payment pending.</strong> Reference: {poultrySubscription.subscription.reference}. <button className='btn btn-dark' style={{marginLeft:8}} onClick={async()=>{ const v = await api.verifyPoultryUniversitySubscription(poultrySubscription.subscription.reference); const tier = v.tier || 'free'; setPoultryTier(tier); const meSub = await api.fetchPoultryUniversitySubscriptionMe().catch(()=>({ tier, subscription: poultrySubscription.subscription })); setPoultrySubscription(prev => ({ ...prev, tier: meSub.tier || tier, subscription: meSub.subscription || prev.subscription })); setPoultryBillingMsg(v.message || 'Verification checked.'); }}>Verify Payment</button></div>}
+          {poultrySubscription?.subscription?.status === 'ACTIVE' && <div className='panel' style={{marginTop:8,padding:8,background:'#ecfeff',border:'1px solid #99f6e4'}}><strong>{String(poultrySubscription.subscription.plan_code || '').toUpperCase()} active.</strong> Server-side subscription verified.</div>}
+          {poultryBillingMsg && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}>{poultryBillingMsg}</div>}
+        </article>
+        {poultryTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#f5f3ff',border:'1px solid #ddd6fe'}}><strong>Free tier active.</strong> Module 1 is open now; Modules 2–5 stay locked until Basic/Pro.</div>}
+
+        <div className='panel'>
+          <div className='inlineForm'>
+            <select className='input' value={poultryTrack} onChange={(e)=>setPoultryTrack(e.target.value)}>
+              <option value='layers'>Layers</option>
+              <option value='broilers'>Broilers</option>
+              <option value='guinea'>Guinea Fowl</option>
+            </select>
+            <select className='input' value={poultryZone} onChange={(e)=>setPoultryZone(e.target.value)}>
+              <option value='humid'>Humid / Forest Zone</option>
+              <option value='dry'>Dry / Savanna Zone</option>
+            </select>
+          </div>
+          <h4 style={{marginBottom:4}}>{poultryTracks[poultryTrack].title}</h4>
+          <p style={{marginTop:0,color:'#334155'}}>{poultryTracks[poultryTrack].objective}</p>
+        </div>
+
+        <div className='two-col'>
+          <article className='panel'>
+            <h4>Breed Intelligence (Free)</h4>
+            <div className='list'>
+              {poultryTracks[poultryTrack].breeds.map((b)=><div className='list-row' key={b}><span>{b}</span></div>)}
+            </div>
+            <h4 style={{marginTop:10}}>Target KPIs (Free)</h4>
+            <div className='list'>
+              {poultryTracks[poultryTrack].kpis.map((k)=><div className='list-row' key={k}><strong>{k}</strong></div>)}
+            </div>
+          </article>
+
+          <article className='panel'>
+            <h4>Course Modules</h4>
+            <div className='list'>
+              {poultryTracks[poultryTrack].modules.map((m,i)=>{
+                const locked = poultryTier === 'free' && i > 0
+                return <div key={m.name} className='panel' style={{padding:8,border:locked?'1px solid #e2e8f0':'1px solid #dbe6df',opacity:locked?0.6:1,background:locked?'#f8fafc':'#fff'}}>
+                  <div className='list-row'>
+                    <span><strong>{m.name}{i===0?' (Free)':''}</strong><br/><span style={{fontSize:'.85rem',color:'#475569'}}>{m.summary}</span></span>
+                    {locked ? <button className='btn' onClick={()=>{setPoultryBillingMsg('Modules 2–5 stay locked until real payment verification is live. Your account is still on Free.'); api.trackAnalyticsEvent({ event_name:'poultry_unlock_click_blocked', country: uiCountry, role_hint: me?.role || 'user', properties:{from:'free', target:'basic'} }).catch(()=>{})}}>🔒 Locked — not live yet</button> : <button className='btn' onClick={()=>setOpenPoultryModule(openPoultryModule===i ? -1 : i)}>{openPoultryModule===i ? 'Hide' : 'Open'}</button>}
+                  </div>
+                  {!locked && openPoultryModule===i && <div className='list' style={{marginTop:6}}>
+                    {m.details.map((d)=><div className='list-row' key={d}><span>{d}</span></div>)}
+                    {poultryTier === 'pro' && <div className='panel' style={{marginTop:8,padding:8,background:'#fffbeb',border:'1px solid #fde68a'}}>
+                      <strong>Professional Deep-Dive:</strong>
+                      <div className='list-row'><span>Execution checklist by day/week</span></div>
+                      <div className='list-row'><span>Margin-risk triggers and corrective actions</span></div>
+                      <div className='list-row'><span>Scale-up criteria before adding next cycle</span></div>
+                    </div>}
+                  </div>}
+                </div>
+              })}
+            </div>
+          </article>
+        </div>
+
+        {poultryTier !== 'free' && <article className='panel' style={{marginTop:10}}>
+          <h4>Climate Priorities + Vaccination Schedules</h4>
+          <div className='list'>
+            {(poultryZone === 'humid' ? poultryClimate.humid : poultryClimate.dry).map((p)=><div className='list-row' key={p}><span>{p}</span></div>)}
+            {poultryVaxProgram.map((v)=><div className='list-row' key={v}><span>{v}</span></div>)}
+          </div>
+          <p style={{fontSize:'.82rem',color:'#64748b',marginTop:8}}>Final vaccine brands/timing must be validated with licensed local veterinary authorities before execution.</p>
+        </article>}
+
+        {poultryTier === 'pro' && <article className='panel' style={{marginTop:10, border:'1.5px solid #f59e0b', background:'#fffbeb'}}>
+          <h4 style={{marginTop:0}}>🏆 Professional Extras</h4>
+          <div className='list'>
+            <div className='list-row'><span>Expanded detailed module content</span></div>
+            <div className='list-row'><span>AI Disease Analyzer integration (unlimited)</span></div>
+            <div className='list-row'><span>Downloadable farm plans</span></div>
+            <div className='list-row'><span>Weekly farm management templates</span></div>
+            <div className='list-row'><span>Printable vaccination schedules</span></div>
+            <div className='list-row'><span>Expert Q&A access</span></div>
+            <div className='list-row'><span>Progress tracking dashboard</span></div>
+          </div>
+
+          <div className='inlineForm' style={{marginTop:8,flexWrap:'wrap'}}>
+            <button className='btn btn-dark' onClick={()=>{setActive('ai-disease'); api.trackAnalyticsEvent({ event_name:'poultry_pro_action', country: uiCountry, role_hint: me?.role || 'user', properties:{action:'open_ai_disease'} }).catch(()=>{})}}>Open AI Disease Analyzer</button>
+            <a className='btn' download='Poultry-Expanded-Professional-Guide.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Poultry University Professional\nExpanded Detailed Module Guide\n\nLayers\n- Target uniformity before lay and treat weekly weight checks as non-negotiable.\n- Do not push birds into lay before frame and body condition are ready.\n\nBroilers\n- Monitor FCR, floor condition, mortality spikes, and thermal stress daily.\n- Correct waterline height, feeder space, and airflow before blaming feed quality.\n\nGuinea Fowl\n- Prioritize keet survival, predator prevention, and disciplined return-to-house routines.\n\nProfessional Decision Rules\n1. Only scale after two stable cycles.\n2. Fix one bottleneck at a time and re-measure.\n3. Track margin per tray or per bird, not just total sales.\n4. Separate disease pressure, feed waste, and management error before changing strategy.`)}>
+              Download Expanded Pro Guide
+            </a>
+            <a className='btn' download='Poultry-Weekly-Checklist.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent('Poultry Weekly Checklist\n- Feed intake check\n- Water quality check\n- Mortality review\n- Biosecurity walk\n- Weight sampling\n- Market prep')}>
+              Download Weekly Checklist
+            </a>
+            <a className='btn' download='Poultry-Farm-Plan.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent('Poultry Farm Plan Template\n1) House setup\n2) Input budget\n3) Health calendar\n4) Sales channel map\n5) Scale trigger metrics')}>
+              Download Farm Plan
+            </a>
+            <a className='btn' download='Poultry-Vaccination-Schedule.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Poultry Professional Vaccination Schedule\n\nPre-placement\n- Wash/disinfect house\n- Rodent control\n- Verify hatchery records\n\nDay 0-1\n- Arrival checks\n- Confirm hatchery vaccination declaration\n\nDay 5-7\n- Newcastle prime\n\nDay 10-14\n- IBD/Gumboro first dose in high-pressure zones\n\nDay 18-24\n- ND/IBD booster per veterinary directive\n\nWeek 6-8\n- Fowl pox or region-specific vaccines where indicated\n\nOngoing\n- Parasite/coccidiosis prevention\n- Cold-chain compliance\n- Maintain lot/time records\n\nFinal vaccine timing and brands must be confirmed with licensed local veterinary authorities.`)}>
+              Download Vaccination Schedule
+            </a>
+            <a className='btn' download='Poultry-Margin-Risk-Guide.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Poultry Professional Margin Risk Guide\n\nTop warning signs\n- Mortality spike above target band\n- Feed wastage above expected range\n- Sudden drop in egg quality or daily collection\n- Heat stress patterns at same time each day\n- Litter moisture and ammonia complaints\n\nCorrective sequence\n1. Verify water and feed access\n2. Inspect airflow and temperature behavior\n3. Check disease signs and isolate weak birds\n4. Review 7-day records before changing feed formula\n5. Re-measure within 72 hours`)}>
+              Download Margin-Risk Guide
+            </a>
+          </div>
+
+          <div className='panel' style={{marginTop:8,padding:8,background:'#fff'}}>
+            <strong>Expert Q&A</strong>
+            <div className='inlineForm' style={{marginTop:6}}>
+              <input className='input' placeholder='Ask your poultry operations question...' value={poultryQuestion} onChange={(e)=>setPoultryQuestion(e.target.value)} />
+              <button className='btn' onClick={()=>{
+                const q = String(poultryQuestion||'').toLowerCase()
+                if (!q) return
+                if (q.includes('mortality')) setPoultryAnswer('Focus first on brooding temperature, water hygiene, and immediate isolation of weak birds. Audit first 14-day logs before changing feed plan.')
+                else if (q.includes('feed') || q.includes('fcr')) setPoultryAnswer('Track daily feed intake + weight gain by batch. Correct feeder height, reduce wastage, and align phase feed timing with actual bird weights.')
+                else if (q.includes('vaccine')) setPoultryAnswer('Use cold-chain compliant vaccines and maintain lot/time records. Confirm final timing with licensed local veterinary guidance before field execution.')
+                else setPoultryAnswer('Use the module SOPs: diagnose root cause from daily records, apply one corrective action at a time, and re-measure within 72 hours.')
+              }}>Get Expert Guidance</button>
+            </div>
+            {!!poultryAnswer && <p style={{marginTop:8}}>{poultryAnswer}</p>}
+          </div>
+
+          <div className='panel' style={{marginTop:8,padding:8,background:'#fff'}}>
+            <strong>Progress tracking dashboard</strong>
+            <div className='inlineForm' style={{marginTop:6}}>
+              <button className='btn' disabled={openPoultryModule < 0} onClick={()=>{
+                if (openPoultryModule < 0) return
+                const checkpoint = `${poultryTrack}:${openPoultryModule}`
+                setPoultryProgress((s)=>({ ...s, completed: Array.from(new Set([...(s.completed||[]), checkpoint])) }))
+                api.trackAnalyticsEvent({ event_name:'poultry_checkpoint_complete', country: uiCountry, role_hint: me?.role || 'user', properties:{checkpoint} }).catch(()=>{})
+              }}>Mark Current Module Complete</button>
+              <div className='list-row' style={{padding:'6px 10px', background:'#fff'}}><span>Completed checkpoints</span><strong>{(poultryProgress.completed||[]).length}</strong></div>
+            </div>
+            <div className='list'>
+              {(poultryProgress.completed||[]).slice(-8).map((c)=> <div className='list-row' key={c}><span>{c}</span></div>)}
+              {!(poultryProgress.completed||[]).length && <div className='list-row'><span>No completed checkpoints yet.</span></div>}
+            </div>
+          </div>
+        </article>}
+
+        {poultryTier === 'pro' && (poultryProgress.completed||[]).length >= 3 && <article className='panel' style={{marginTop:10, border:'2px solid #eab308', background:'#fefce8'}}>
+          <h4 style={{marginTop:0}}>🎓 Certificate of Completion</h4>
+          <p>You have completed required professional checkpoints. Your Poultry University certificate is now available.</p>
+          <button className='btn btn-dark' onClick={()=>{window.print(); api.trackAnalyticsEvent({ event_name:'poultry_certificate_print', country: uiCountry, role_hint: me?.role || 'user', properties:{completed:(poultryProgress.completed||[]).length} }).catch(()=>{})}}>Print Certificate</button>
+        </article>}
+      </section>}
+
+
+
+      {active === 'sheep-university' && <section>
+        <h3>🐑 Sheep University</h3>
+        <article className='panel' style={{marginBottom:10,border:'1px solid #ddd6fe',background:'#faf5ff'}}>
+          <h4 style={{marginTop:0,color:'#6d28d9'}}>Ghana Sheep Breed Program (3 Phases)</h4>
+          <div className='list'>
+            {sheepPhaseLabels.map((p,idx)=><div className='list-row' key={p}><span>{idx===0?'🧬':idx===1?'🔁':'🏆'} {p}</span></div>)}
+          </div>
+          <p style={{fontSize:'.85rem',color:'#6b21a8'}}>Boboji hardiness + Balami/Uda growth + Ladoum/Dorper finish = Ghana Sheep Breed target line.</p>
+        </article>
+
+        <article className='panel' style={{marginBottom:10}}>
+          <h4 style={{marginTop:0}}>Choose Your Plan</h4>
+          <div className='three-col'>
+            <div className='panel' style={{padding:10, border:sheepTier==='free' || sheepPlanPreview==='free'?'2px solid #7c3aed':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setSheepPlanPreview('free')}>
+              <strong>🆓 Free</strong>
+              <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Module 1 + breed cards + KPI preview.</div>
+              <button className='btn' onClick={(e)=>{e.stopPropagation(); setSheepTier('free'); setOpenSheepModule(0); setSheepPlanPreview('free')}}>{sheepTier==='free' ? 'Free Active ✓' : 'Use Free'}</button>
+            </div>
+            <div className='panel' style={{padding:10, border:sheepTier==='basic' || sheepPlanPreview==='basic'?'2px solid #16a34a':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setSheepPlanPreview('basic')}>
+              <strong>🌿 Basic — ₵50/mo</strong>
+              <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>All modules + both zones + health schedule.</div>
+              <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('sheep', 'basic', 'Sheep University Basic checkout')}}>Unlock Basic</button>
+            </div>
+            <div className='panel' style={{padding:10, border:sheepTier==='pro' || sheepPlanPreview==='pro'?'2px solid #7c3aed':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setSheepPlanPreview('pro')}>
+              <strong>🏆 Professional — ₵120/mo</strong>
+              <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Basic + pro extras + certificate.</div>
+              <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('sheep', 'pro', 'Sheep University Professional checkout')}}>Go Professional</button>
+            </div>
+          </div>
+          <div className='panel' style={{marginTop:8,padding:8,background:'#faf5ff',border:'1px solid #ddd6fe'}}>
+            <strong>{universityPlanPreview[sheepPlanPreview].title} includes:</strong>
+            <div className='list' style={{marginTop:6}}>
+              {universityPlanPreview[sheepPlanPreview].features.map((feature)=><div className='list-row' key={feature}><span>{feature}</span></div>)}
+            </div>
+            {sheepPlanPreview !== 'free' && <div style={{marginTop:8}}><button className='btn btn-dark' onClick={()=>startUniversityCheckout('sheep', sheepPlanPreview, `Sheep University ${sheepPlanPreview === 'pro' ? 'Professional' : 'Basic'} checkout`)}>{sheepPlanPreview === 'pro' ? 'Upgrade to Professional' : 'Upgrade to Basic'}</button></div>}
+          </div>
+        </article>
+        {universitySubscriptions.sheep?.subscription?.status === 'PENDING_PAYMENT' && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}><strong>Payment pending.</strong> Reference: {universitySubscriptions.sheep.subscription.reference}. <button className='btn btn-dark' style={{marginLeft:8}} onClick={()=>verifyUniversityCheckout('sheep')}>Verify Payment</button></div>}
+        {universitySubscriptions.sheep?.subscription?.status === 'ACTIVE' && <div className='panel' style={{marginTop:8,padding:8,background:'#ecfeff',border:'1px solid #99f6e4'}}><strong>{String(universitySubscriptions.sheep.subscription.plan_code || '').toUpperCase()} active.</strong> Server-side subscription verified.</div>}
+        {!!universityBillingMsg.sheep && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}>{universityBillingMsg.sheep}</div>}
+        {sheepTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#f5f3ff',border:'1px solid #ddd6fe'}}><strong>Free tier active.</strong> Module 1 is open now; Modules 2–5 stay locked until Basic/Pro.</div>}
+
+        <div className='panel'>
+          <div className='inlineForm'>
+            <select className='input' value={sheepTrack} onChange={(e)=>setSheepTrack(e.target.value)}>
+              <option value='balamiCross'>Boboji × Balami/Sudanese</option>
+              <option value='udaCross'>Boboji × Uda/Sudanese</option>
+              <option value='ghanaElite'>Ghana Sheep Breed (Elite Finish)</option>
+            </select>
+            <select className='input' value={sheepZone} onChange={(e)=>setSheepZone(e.target.value)}>
+              <option value='humid'>Humid / Forest Zone</option>
+              <option value='dry'>Dry / Savanna Zone</option>
+            </select>
+          </div>
+          <h4 style={{marginBottom:4}}>{sheepTracks[sheepTrack].title}</h4>
+          <p style={{marginTop:0,color:'#334155'}}>{sheepTracks[sheepTrack].objective}</p>
+        </div>
+
+        <div className='two-col'>
+          <article className='panel'>
+            <h4>Breed Intelligence Cards</h4>
+            <div className='list'>
+              {sheepTracks[sheepTrack].breeds.map((b)=><div className='list-row' key={b}><span>{b}</span></div>)}
+            </div>
+            <h4 style={{marginTop:10}}>Target KPIs</h4>
+            <div className='list'>
+              {sheepTracks[sheepTrack].kpis.map((k)=><div className='list-row' key={k}><strong>{k}</strong></div>)}
+            </div>
+          </article>
+
+          <article className='panel'>
+            <h4>Modules</h4>
+            <div className='list'>
+              {sheepTracks[sheepTrack].modules.map((m,i)=>{
+                const locked = sheepTier === 'free' && i > 0
+                return <div key={m.name} className='panel' style={{padding:8,border:locked?'1px solid #e2e8f0':'1px solid #dbe6df',opacity:locked?0.6:1,background:locked?'#f8fafc':'#fff'}}>
+                  <div className='list-row'>
+                    <span><strong>{m.name}{i===0?' (Free)':''}</strong><br/><span style={{fontSize:'.85rem',color:'#475569'}}>{m.summary}</span></span>
+                    {locked ? <button className='btn' onClick={()=>startUniversityCheckout('sheep', 'basic', 'Sheep University Basic checkout')}>🔒 Unlock — ₵50/mo</button> : <button className='btn' onClick={()=>setOpenSheepModule(openSheepModule===i ? -1 : i)}>{openSheepModule===i ? 'Hide' : 'Open'}</button>}
+                  </div>
+                  {!locked && openSheepModule===i && <div className='list' style={{marginTop:6}}>{m.details.map((d)=><div className='list-row' key={d}><span>{d}</span></div>)}</div>}
+                </div>
+              })}
+            </div>
+          </article>
+        </div>
+
+        {sheepTier !== 'free' && <article className='panel' style={{marginTop:10}}>
+          <h4>Climate Priorities + Vaccination/Health Schedule</h4>
+          <div className='list'>
+            {(sheepZone === 'humid' ? sheepClimate.humid : sheepClimate.dry).map((p)=><div className='list-row' key={p}><span>{p}</span></div>)}
+            {sheepHealthProgram.map((v)=><div className='list-row' key={v}><span>{v}</span></div>)}
+          </div>
+        </article>}
+
+        {sheepTier === 'pro' && <article className='panel' style={{marginTop:10,border:'1.5px solid #7c3aed',background:'#faf5ff'}}>
+          <h4 style={{marginTop:0}}>🏆 Professional Extras</h4>
+          <div className='list'>
+            <div className='list-row'><span>Expanded breeding decision frameworks</span></div>
+            <div className='list-row'><span>Printable mating + lambing calendars</span></div>
+            <div className='list-row'><span>Weekly flock management templates</span></div>
+            <div className='list-row'><span>Progress tracking dashboard</span></div>
+          </div>
+          <div className='inlineForm' style={{marginTop:8, flexWrap:'wrap'}}>
+            <a className='btn' download='Sheep-Breeding-Decision-Framework.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Sheep University Professional\nExpanded Breeding Decision Frameworks\n\n1. Breeding Objective\n- Define whether flock goal is meat, breeding stock, hardiness, or cross improvement.\n- Select rams and ewes only after ranking fertility, growth, mothering, and survival history.\n\n2. Ewe Selection Gate\n- Keep only ewes with strong conception history, good mothering, healthy udder/teat structure, and acceptable body condition.\n- Cull low-fertility, repeated-abortion, chronic-foot, or poor-mothering lines.\n\n3. Ram Selection Gate\n- Prioritize structural soundness, growth rate, fertility signs, feet/legs, and line consistency.\n- Use only one improvement target per season: size, hardiness, carcass, or maternal performance.\n\n4. Mating Group Logic\n- Match rams to ewe groups by breeding objective and avoid random mixing.\n- Track sire-to-group allocation and target lambing windows.\n\n5. Replacement Logic\n- Retain replacement females from top-performing dams only.\n- Remove weak-line animals early to avoid hidden cost buildup.\n\n6. Performance Review\n- Review conception rate, lamb survival, weaning weights, and margin before next mating cycle.\n- Expand only after two stable cycles with acceptable mortality and fertility.`)}>Download Decision Frameworks</a>
+            <a className='btn' download='Sheep-Mating-Lambing-Calendar.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Sheep University Professional\nPrintable Mating + Lambing Calendar\n\nMonth 1\n- Body condition scoring\n- Flush ewes\n- Health check and parasite control\n- Confirm ram readiness\n\nMonth 2\n- Controlled mating window opens\n- Record mating groups and dates\n- Remove weak or non-performing breeders\n\nMonth 3\n- Pregnancy observation and nutrition adjustment\n- Track returns to heat\n\nMonth 4\n- Mid-pregnancy health review\n- Mineral and water consistency\n\nMonth 5\n- Pre-lambing housing prep\n- Birth kit and isolation pen ready\n\nMonth 6\n- Lambing supervision\n- Colostrum checks\n- Neonatal survival log\n\nMonth 7\n- Lamb growth review\n- Dam recovery assessment\n\nMonth 8\n- Weaning and replacement selection\n- Sale/retention decisions\n\nUse this calendar as a printable cycle tracker and adapt months to your actual breeding season.`)}>Download Mating + Lambing Calendar</a>
+            <a className='btn' download='Sheep-Weekly-Flock-Management-Template.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Sheep University Professional\nWeekly Flock Management Template\n\nWeek Of: __________\nFarm/Unit: __________\nManager: __________\n\n1. Stock Summary\n- Total ewes: _____\n- Total rams: _____\n- Lambs/kids: _____\n- Sick animals: _____\n- Deaths this week: _____\n\n2. Breeding Notes\n- Heat observed: _____\n- Matings recorded: _____\n- Suspected returns: _____\n\n3. Health Checks\n- Parasite signs: Yes / No\n- Lameness cases: _____\n- Treatments given: __________\n\n4. Nutrition & Water\n- Feed quality acceptable: Yes / No\n- Water reliability acceptable: Yes / No\n- Mineral supplementation: Yes / No\n\n5. Housing & Biosecurity\n- Pens cleaned: Yes / No\n- Isolation pen used: Yes / No\n- Fence/perimeter checked: Yes / No\n\n6. Growth & Performance\n- Sample weights taken: Yes / No\n- Weak animals flagged: Yes / No\n\n7. Action Items Next Week\n- __________________________________\n- __________________________________\n- __________________________________`)}>Download Weekly Flock Template</a>
+            <button className='btn' onClick={()=>setSheepProgress((s)=>({ ...s, completed: Array.from(new Set([...(s.completed||[]), `${sheepTrack}:${openSheepModule}`])) }))}>Mark Current Module Complete</button>
+            <div className='list-row' style={{padding:'6px 10px', background:'#fff'}}><span>Completed checkpoints</span><strong>{(sheepProgress.completed||[]).length}</strong></div>
+          </div>
+        </article>}
+
+        {sheepTier === 'pro' && (sheepProgress.completed||[]).length >= 3 && <article className='panel' style={{marginTop:10, border:'2px solid #7c3aed', background:'#f5f3ff'}}>
+          <h4 style={{marginTop:0}}>🎓 Certificate of Completion</h4>
+          <p>You have completed required sheep-program checkpoints. Certificate is ready.</p>
+          <button className='btn btn-dark' onClick={()=>window.print()}>Print Certificate</button>
+        </article>}
+      </section>}
+
+
+
+      {active === 'goat-university' && <section>
+        <h3>🐐 Goat University</h3>
+        <article className='panel' style={{marginBottom:10,border:'1px solid #99f6e4',background:'#f0fdfa'}}>
+          <h4 style={{marginTop:0,color:'#0f766e'}}>Ghana Goat Breed Program (3 Phases)</h4>
+          <div className='list'>
+            {goatPhaseLabels.map((p,idx)=><div className='list-row' key={p}><span>{idx===0?'🧬':idx===1?'🔁':'🏆'} {p}</span></div>)}
+          </div>
+          <p style={{fontSize:'.85rem',color:'#0f766e'}}>WAD hardiness + Sahelian height/frame + Boer/Kalahari/Savannah finish.</p>
+        </article>
+
+        <article className='panel' style={{marginBottom:10}}>
+          <h4 style={{marginTop:0}}>Choose Your Plan</h4>
+          <div className='three-col'>
+            <div className='panel' style={{padding:10, border:goatTier==='free' || goatPlanPreview==='free'?'2px solid #0d9488':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setGoatPlanPreview('free')}>
+              <strong>🆓 Free</strong>
+              <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Module 1 + breed cards + KPI preview.</div>
+              <button className='btn' onClick={(e)=>{e.stopPropagation(); setGoatTier('free'); setOpenGoatModule(0); setGoatPlanPreview('free')}}>{goatTier==='free' ? 'Free Active ✓' : 'Use Free'}</button>
+            </div>
+            <div className='panel' style={{padding:10, border:goatTier==='basic' || goatPlanPreview==='basic'?'2px solid #16a34a':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setGoatPlanPreview('basic')}>
+              <strong>🌿 Basic — ₵50/mo</strong>
+              <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>All modules + both zones + health schedule.</div>
+              <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('goat', 'basic', 'Goat University Basic checkout')}}>Unlock Basic</button>
+            </div>
+            <div className='panel' style={{padding:10, border:goatTier==='pro' || goatPlanPreview==='pro'?'2px solid #0d9488':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setGoatPlanPreview('pro')}>
+              <strong>🏆 Professional — ₵120/mo</strong>
+              <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Basic + pro extras + certificate.</div>
+              <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('goat', 'pro', 'Goat University Professional checkout')}}>Go Professional</button>
+            </div>
+          </div>
+          <div className='panel' style={{marginTop:8,padding:8,background:'#f0fdfa',border:'1px solid #99f6e4'}}>
+            <strong>{universityPlanPreview[goatPlanPreview].title} includes:</strong>
+            <div className='list' style={{marginTop:6}}>
+              {universityPlanPreview[goatPlanPreview].features.map((feature)=><div className='list-row' key={feature}><span>{feature}</span></div>)}
+            </div>
+            {goatPlanPreview !== 'free' && <div style={{marginTop:8}}><button className='btn btn-dark' onClick={()=>startUniversityCheckout('goat', goatPlanPreview, `Goat University ${goatPlanPreview === 'pro' ? 'Professional' : 'Basic'} checkout`)}>{goatPlanPreview === 'pro' ? 'Upgrade to Professional' : 'Upgrade to Basic'}</button></div>}
+          </div>
+        </article>
+        {universitySubscriptions.goat?.subscription?.status === 'PENDING_PAYMENT' && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}><strong>Payment pending.</strong> Reference: {universitySubscriptions.goat.subscription.reference}. <button className='btn btn-dark' style={{marginLeft:8}} onClick={()=>verifyUniversityCheckout('goat')}>Verify Payment</button></div>}
+        {universitySubscriptions.goat?.subscription?.status === 'ACTIVE' && <div className='panel' style={{marginTop:8,padding:8,background:'#ecfeff',border:'1px solid #99f6e4'}}><strong>{String(universitySubscriptions.goat.subscription.plan_code || '').toUpperCase()} active.</strong> Server-side subscription verified.</div>}
+        {!!universityBillingMsg.goat && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}>{universityBillingMsg.goat}</div>}
+        {goatTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#f0fdfa',border:'1px solid #99f6e4'}}><strong>Free tier active.</strong> Module 1 is open now; Modules 2–5 are locked.</div>}
+
+        <div className='panel'>
+          <div className='inlineForm'>
+            <select className='input' value={goatTrack} onChange={(e)=>setGoatTrack(e.target.value)}>
+              <option value='sahelianCross'>WAD × Sahelian</option>
+              <option value='redSokotoMaradiCross'>WAD × Red Sokoto/Maradi</option>
+              <option value='ghanaElite'>Ghana Goat Breed (Elite)</option>
+            </select>
+            <select className='input' value={goatZone} onChange={(e)=>setGoatZone(e.target.value)}>
+              <option value='humid'>Humid / Forest Zone</option>
+              <option value='dry'>Dry / Savanna Zone</option>
+            </select>
+          </div>
+          <h4 style={{marginBottom:4}}>{goatTracks[goatTrack].title}</h4>
+          <p style={{marginTop:0,color:'#334155'}}>{goatTracks[goatTrack].objective}</p>
+        </div>
+
+        <div className='two-col'>
+          <article className='panel'>
+            <h4>Breed Intelligence Cards</h4>
+            <div className='list'>
+              {goatTracks[goatTrack].breeds.map((b)=><div className='list-row' key={b}><span>{b}</span></div>)}
+            </div>
+            <h4 style={{marginTop:10}}>Target KPIs</h4>
+            <div className='list'>
+              {goatTracks[goatTrack].kpis.map((k)=><div className='list-row' key={k}><strong>{k}</strong></div>)}
+            </div>
+          </article>
+
+          <article className='panel'>
+            <h4>Modules</h4>
+            <div className='list'>
+              {goatTracks[goatTrack].modules.map((m,i)=>{
+                const locked = goatTier === 'free' && i > 0
+                return <div key={m.name} className='panel' style={{padding:8,border:locked?'1px solid #e2e8f0':'1px solid #dbe6df',opacity:locked?0.6:1,background:locked?'#f8fafc':'#fff'}}>
+                  <div className='list-row'>
+                    <span><strong>{m.name}{i===0?' (Free)':''}</strong><br/><span style={{fontSize:'.85rem',color:'#475569'}}>{m.summary}</span></span>
+                    {locked ? <button className='btn' onClick={()=>startUniversityCheckout('goat', 'basic', 'Goat University Basic checkout')}>🔒 Unlock — ₵50/mo</button> : <button className='btn' onClick={()=>setOpenGoatModule(openGoatModule===i ? -1 : i)}>{openGoatModule===i ? 'Hide' : 'Open'}</button>}
+                  </div>
+                  {!locked && openGoatModule===i && <div className='list' style={{marginTop:6}}>{m.details.map((d)=><div className='list-row' key={d}><span>{d}</span></div>)}</div>}
+                </div>
+              })}
+            </div>
+          </article>
+        </div>
+
+        {goatTier !== 'free' && <article className='panel' style={{marginTop:10}}>
+          <h4>Climate Priorities + Health Schedule</h4>
+          <div className='list'>
+            {(goatZone === 'humid' ? goatClimate.humid : goatClimate.dry).map((p)=><div className='list-row' key={p}><span>{p}</span></div>)}
+            {goatHealthProgram.map((v)=><div className='list-row' key={v}><span>{v}</span></div>)}
+          </div>
+          <p style={{fontSize:'.82rem',color:'#64748b',marginTop:8}}>Goat-specific warning: CCPP and Haemonchus risks require strict routine monitoring.</p>
+        </article>}
+
+        {goatTier === 'pro' && <article className='panel' style={{marginTop:10,border:'1.5px solid #0d9488',background:'#ecfeff'}}>
+          <h4 style={{marginTop:0}}>🏆 Professional Extras</h4>
+          <div className='list'>
+            <div className='list-row'><span>Browse resource mapping toolkit</span></div>
+            <div className='list-row'><span>Printable breeding + health templates</span></div>
+            <div className='list-row'><span>Advanced terminal-sire selection framework</span></div>
+            <div className='list-row'><span>Progress tracking dashboard</span></div>
+          </div>
+          <div className='inlineForm' style={{marginTop:8}}>
+            <button className='btn' onClick={()=>setGoatProgress((s)=>({ ...s, completed: Array.from(new Set([...(s.completed||[]), `${goatTrack}:${openGoatModule}`])) }))}>Mark Current Module Complete</button>
+            <div className='list-row' style={{padding:'6px 10px', background:'#fff'}}><span>Completed checkpoints</span><strong>{(goatProgress.completed||[]).length}</strong></div>
+          </div>
+        </article>}
+
+        {goatTier === 'pro' && (goatProgress.completed||[]).length >= 3 && <article className='panel' style={{marginTop:10, border:'2px solid #0d9488', background:'#f0fdfa'}}>
+          <h4 style={{marginTop:0}}>🎓 Certificate of Completion</h4>
+          <p>You have completed required goat-program checkpoints. Certificate is ready.</p>
+          <button className='btn btn-dark' onClick={()=>window.print()}>Print Certificate</button>
+        </article>}
+      </section>}
+
+
+
+      {active === 'cattle-university' && <section>
+        <h3>🐄 Cattle University</h3>
+        <article className='panel' style={{marginBottom:10,border:'1px solid #fde68a',background:'#fffbeb'}}>
+          <h4 style={{marginTop:0,color:'#92400e'}}>Ghana Cattle Breed Program (3 Phases)</h4>
+          <p style={{fontSize:'.85rem',color:'#92400e'}}>Final breeding sires: <strong>Brahman or Gudali</strong>.</p>
+          <div className='list'>
+            {cattlePhaseLabels.map((p,idx)=><div className='list-row' key={p}><span>{idx===0?'🧬':idx===1?'🔁':'🏆'} {p}</span></div>)}
+          </div>
+        </article>
+
+        <article className='panel' style={{marginBottom:10}}>
+          <h4 style={{marginTop:0}}>Choose Your Plan</h4>
+          <div className='three-col'>
+            <div className='panel' style={{padding:10, border:cattleTier==='free' || cattlePlanPreview==='free'?'2px solid #d97706':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setCattlePlanPreview('free')}>
+              <strong>🆓 Free</strong>
+              <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Module 1 + breed cards + KPI preview.</div>
+              <button className='btn' onClick={(e)=>{e.stopPropagation(); setCattleTier('free'); setOpenCattleModule(0); setCattlePlanPreview('free')}}>{cattleTier==='free' ? 'Free Active ✓' : 'Use Free'}</button>
+            </div>
+            <div className='panel' style={{padding:10, border:cattleTier==='basic' || cattlePlanPreview==='basic'?'2px solid #16a34a':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setCattlePlanPreview('basic')}>
+              <strong>🌿 Basic — ₵50/mo</strong>
+              <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>All modules + both zones + health schedule.</div>
+              <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('cattle', 'basic', 'Cattle University Basic checkout')}}>Unlock Basic</button>
+            </div>
+            <div className='panel' style={{padding:10, border:cattleTier==='pro' || cattlePlanPreview==='pro'?'2px solid #d97706':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setCattlePlanPreview('pro')}>
+              <strong>🏆 Professional — ₵120/mo</strong>
+              <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Basic + pro extras + certificate.</div>
+              <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('cattle', 'pro', 'Cattle University Professional checkout')}}>Go Professional</button>
+            </div>
+          </div>
+          <div className='panel' style={{marginTop:8,padding:8,background:'#fffbeb',border:'1px solid #fde68a'}}>
+            <strong>{universityPlanPreview[cattlePlanPreview].title} includes:</strong>
+            <div className='list' style={{marginTop:6}}>
+              {universityPlanPreview[cattlePlanPreview].features.map((feature)=><div className='list-row' key={feature}><span>{feature}</span></div>)}
+            </div>
+            {cattlePlanPreview !== 'free' && <div style={{marginTop:8}}><button className='btn btn-dark' onClick={()=>startUniversityCheckout('cattle', cattlePlanPreview, `Cattle University ${cattlePlanPreview === 'pro' ? 'Professional' : 'Basic'} checkout`)}>{cattlePlanPreview === 'pro' ? 'Upgrade to Professional' : 'Upgrade to Basic'}</button></div>}
+          </div>
+        </article>
+        {universitySubscriptions.cattle?.subscription?.status === 'PENDING_PAYMENT' && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}><strong>Payment pending.</strong> Reference: {universitySubscriptions.cattle.subscription.reference}. <button className='btn btn-dark' style={{marginLeft:8}} onClick={()=>verifyUniversityCheckout('cattle')}>Verify Payment</button></div>}
+        {universitySubscriptions.cattle?.subscription?.status === 'ACTIVE' && <div className='panel' style={{marginTop:8,padding:8,background:'#ecfeff',border:'1px solid #99f6e4'}}><strong>{String(universitySubscriptions.cattle.subscription.plan_code || '').toUpperCase()} active.</strong> Server-side subscription verified.</div>}
+        {!!universityBillingMsg.cattle && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}>{universityBillingMsg.cattle}</div>}
+
+        <div className='panel'>
+          <div className='inlineForm'>
+            <select className='input' value={cattleTrack} onChange={(e)=>setCattleTrack(e.target.value)}>
+              <option value='wadSanga'>WAD/Sanga × Sahelian/Zebu</option>
+              <option value='wadFulani'>WAD/Sanga × White Fulani/Sudanese</option>
+              <option value='ghanaElite'>Ghana Cattle Breed (Elite)</option>
+            </select>
+            <select className='input' value={cattleZone} onChange={(e)=>setCattleZone(e.target.value)}>
+              <option value='humid'>Humid / Forest Zone</option>
+              <option value='dry'>Dry / Savanna Zone</option>
+            </select>
+          </div>
+          <h4 style={{marginBottom:4}}>{cattleTracks[cattleTrack].title}</h4>
+          <p style={{marginTop:0,color:'#334155'}}>{cattleTracks[cattleTrack].objective}</p>
+        </div>
+
+        <div className='two-col'>
+          <article className='panel'>
+            <h4>Breed Intelligence Cards</h4>
+            <div className='list'>
+              {cattleTracks[cattleTrack].breeds.map((b)=><div className='list-row' key={b}><span>{b}</span></div>)}
+            </div>
+            <h4 style={{marginTop:10}}>Target KPIs</h4>
+            <div className='list'>
+              {cattleTracks[cattleTrack].kpis.map((k)=><div className='list-row' key={k}><strong>{k}</strong></div>)}
+            </div>
+          </article>
+
+          <article className='panel'>
+            <h4>Modules</h4>
+            <div className='list'>
+              {cattleTracks[cattleTrack].modules.map((m,i)=>{
+                const locked = cattleTier === 'free' && i > 0
+                return <div key={m.name} className='panel' style={{padding:8,border:locked?'1px solid #e2e8f0':'1px solid #dbe6df',opacity:locked?0.6:1,background:locked?'#f8fafc':'#fff'}}>
+                  <div className='list-row'>
+                    <span><strong>{m.name}{i===0?' (Free)':''}</strong><br/><span style={{fontSize:'.85rem',color:'#475569'}}>{m.summary}</span></span>
+                    {locked ? <button className='btn' onClick={()=>startUniversityCheckout('cattle', 'basic', 'Cattle University Basic checkout')}>🔒 Unlock — ₵50/mo</button> : <button className='btn' onClick={()=>setOpenCattleModule(openCattleModule===i ? -1 : i)}>{openCattleModule===i ? 'Hide' : 'Open'}</button>}
+                  </div>
+                  {!locked && openCattleModule===i && <div className='list' style={{marginTop:6}}>{m.details.map((d)=><div className='list-row' key={d}><span>{d}</span></div>)}</div>}
+                </div>
+              })}
+            </div>
+          </article>
+        </div>
+
+        {cattleTier !== 'free' && <article className='panel' style={{marginTop:10}}>
+          <h4>Climate Priorities + Health Schedule</h4>
+          <div className='list'>
+            {(cattleZone === 'humid' ? cattleClimate.humid : cattleClimate.dry).map((p)=><div className='list-row' key={p}><span>{p}</span></div>)}
+            {cattleHealthProgram.map((v)=><div className='list-row' key={v}><span>{v}</span></div>)}
+          </div>
+        </article>}
+
+        {cattleTier === 'pro' && <article className='panel' style={{marginTop:10,border:'1.5px solid #d97706',background:'#fff7ed'}}>
+          <h4 style={{marginTop:0}}>🏆 Professional Extras</h4>
+          <div className='list'>
+            <div className='list-row'><span>Advanced herd selection matrix</span></div>
+            <div className='list-row'><span>Printable breeding and calving templates</span></div>
+            <div className='list-row'><span>Progress tracking dashboard</span></div>
+          </div>
+          <div className='inlineForm' style={{marginTop:8}}>
+            <button className='btn' onClick={()=>setCattleProgress((s)=>({ ...s, completed: Array.from(new Set([...(s.completed||[]), `${cattleTrack}:${openCattleModule}`])) }))}>Mark Current Module Complete</button>
+            <div className='list-row' style={{padding:'6px 10px', background:'#fff'}}><span>Completed checkpoints</span><strong>{(cattleProgress.completed||[]).length}</strong></div>
+          </div>
+        </article>}
+
+        {cattleTier === 'pro' && (cattleProgress.completed||[]).length >= 3 && <article className='panel' style={{marginTop:10, border:'2px solid #d97706', background:'#fff7ed'}}>
+          <h4 style={{marginTop:0}}>🎓 Certificate of Completion</h4>
+          <p>You have completed required cattle-program checkpoints. Certificate is ready.</p>
+          <button className='btn btn-dark' onClick={()=>window.print()}>Print Certificate</button>
+        </article>}
+      </section>}
+
+      {active === 'livestock-records' && <section>
+        <h3>{t('Livestock Records Management (Sheep • Goats • Cattle • Poultry)','Gestion des registres élevage (ovins • caprins • bovins • volailles)','牲畜档案管理（羊•山羊•牛•家禽）')}</h3>
+        <div className='panel'>
+          <div className='inlineForm' style={{flexWrap:'wrap'}}>
+            <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('ALL')} style={{border:livestockRecordsFilter==='ALL'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Total records','Total registres','记录总数')}: {state.livestockRecords.length}</button>
+            <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('GOAT')} style={{border:livestockRecordsFilter==='GOAT'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Goats','Chèvres','山羊')}: {state.livestockRecords.filter(r => r.species === 'GOAT').length}</button>
+            <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('SHEEP')} style={{border:livestockRecordsFilter==='SHEEP'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Sheep','Moutons','绵羊')}: {state.livestockRecords.filter(r => r.species === 'SHEEP').length}</button>
+            <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('CATTLE')} style={{border:livestockRecordsFilter==='CATTLE'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Cattle','Bovins','牛')}: {state.livestockRecords.filter(r => r.species === 'CATTLE').length}</button>
+            <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('POULTRY')} style={{border:livestockRecordsFilter==='POULTRY'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Poultry','Volailles','家禽')}: {state.livestockRecords.filter(r => r.species === 'POULTRY').length}</button>
+          </div>
+          <p style={{margin:'8px 0 0',fontSize:'.82rem',color:'#475569'}}>Showing: <strong>{livestockRecordsFilter}</strong> ({livestockRecordsFiltered.length} records)</p>
+        </div>
+
+        <article className='panel'>
+          <h4>Create Record</h4>
+          <form className='list' onSubmit={async e => {
+            e.preventDefault()
+            try {
+              const { treatment_entry, ...createPayload } = livestockRecordForm
+              await api.createLivestockRecord({
+                ...createPayload,
+                user_id: Number(livestockRecordForm.user_id || me?.id || 1),
+                stars: Number(livestockRecordForm.stars || 0),
+                purchase_price: livestockRecordForm.purchase_price === '' ? null : Number(livestockRecordForm.purchase_price),
+                litter_size: livestockRecordForm.litter_size === '' ? null : Number(livestockRecordForm.litter_size),
+                initial_weight_kg: livestockRecordForm.initial_weight_kg === '' ? null : Number(livestockRecordForm.initial_weight_kg),
+                sale_price: livestockRecordForm.sale_price === '' ? null : Number(livestockRecordForm.sale_price),
+                date_of_birth: livestockRecordForm.date_of_birth || null,
+                acquisition_date: livestockRecordForm.acquisition_date || null,
+                sale_date: livestockRecordForm.sale_date || null,
+                died_date: livestockRecordForm.died_date || null,
+              })
+              await load()
+              setLivestockRecordForm({ ...livestockRecordForm, name: '', ear_tag: '', registration_number: '', purchase_price: '', health_status: '', notes: '', treatment_entry: '' })
+              alert('Record created successfully')
+            } catch (err) {
+              alert(`Create failed: ${errMsg(err)}`)
+            }
+          }}>
+            <div className='row2'>
+              <select className='input' value={livestockRecordForm.species} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, species: e.target.value, animal_type: e.target.value === 'GOAT' ? 'DOE' : (e.target.value === 'CATTLE' ? 'COW' : (e.target.value === 'POULTRY' ? 'LAYER_HEN' : 'EWE')) })}><option value='SHEEP'>SHEEP</option><option value='GOAT'>GOAT</option><option value='CATTLE'>CATTLE</option><option value='POULTRY'>POULTRY</option></select>
+              <select className='input' value={livestockRecordForm.animal_type} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, animal_type: e.target.value })}>{livestockRecordForm.species === 'GOAT' ? <><option value='DOE'>DOE</option><option value='BUCK'>BUCK</option></> : (livestockRecordForm.species === 'CATTLE' ? <><option value='COW'>COW</option><option value='BULL'>BULL</option><option value='HEIFER'>HEIFER</option><option value='STEER'>STEER</option></> : (livestockRecordForm.species === 'POULTRY' ? <><option value='LAYER_HEN'>LAYER_HEN</option><option value='BROILER'>BROILER</option><option value='PULLET'>PULLET</option><option value='COCKEREL'>COCKEREL</option><option value='CHICK'>CHICK</option><option value='BREEDER'>BREEDER</option></> : <><option value='EWE'>EWE</option><option value='RAM'>RAM</option></>))}</select>
+            </div>
+            <div className='row2'>
+              <input className='input' placeholder='Name' value={livestockRecordForm.name} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, name: e.target.value })} />
+              <input className='input' placeholder='Ear tag' value={livestockRecordForm.ear_tag} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, ear_tag: e.target.value })} />
+            </div>
+            <div className='row2'>
+              <input className='input' placeholder='Farm ID' value={livestockRecordForm.farm_id} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, farm_id: e.target.value })} />
+              <input className='input' placeholder='Registration number' value={livestockRecordForm.registration_number} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, registration_number: e.target.value })} />
+            </div>
+            <div className='row2'>
+              <input className='input' type='date' placeholder='Date of birth' value={livestockRecordForm.date_of_birth} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, date_of_birth: e.target.value })} />
+              <input className='input' type='date' placeholder='Acquisition date' value={livestockRecordForm.acquisition_date} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, acquisition_date: e.target.value })} />
+            </div>
+            <div className='row2'>
+              <input className='input' type='number' step='0.01' placeholder='Purchase price' value={livestockRecordForm.purchase_price} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, purchase_price: e.target.value })} />
+              <select className='input' value={livestockRecordForm.currency} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, currency: e.target.value })}><option>GHS</option><option>NGN</option><option>XOF</option><option>USD</option></select>
+            </div>
+            <div className='row2'>
+              <input className='input' type='number' min='0' max='5' placeholder='Stars (0-5)' value={livestockRecordForm.stars} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, stars: e.target.value })} />
+              <input className='input' type='number' step='0.01' placeholder='Initial weight (kg)' value={livestockRecordForm.initial_weight_kg} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, initial_weight_kg: e.target.value })} />
+            </div>
+            <div className='row2'>
+              <input className='input' placeholder={livestockRecordForm.species === 'POULTRY' ? 'Breeder line / rooster ID' : 'Sire ID'} value={livestockRecordForm.sire_id} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, sire_id: e.target.value })} />
+              <input className='input' placeholder={livestockRecordForm.species === 'POULTRY' ? 'Hatchery batch / hen line' : 'Dam ID'} value={livestockRecordForm.dam_id} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, dam_id: e.target.value })} />
+            </div>
+            <div className='row2'>
+              <input className='input' type='number' min='0' placeholder={livestockRecordForm.species === 'POULTRY' ? 'Flock/batch size' : 'Litter size'} value={livestockRecordForm.litter_size} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, litter_size: e.target.value })} />
+              <input className='input' placeholder={livestockRecordForm.species === 'POULTRY' ? 'Production type (layer/broiler/breeder)' : 'Breeding type'} value={livestockRecordForm.breeding_type} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, breeding_type: e.target.value })} />
+            </div>
+            <div className='row2'>
+              <input className='input' placeholder='Health status' value={livestockRecordForm.health_status} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, health_status: e.target.value })} />
+              <input className='input' placeholder='Pen location' value={livestockRecordForm.pen_location} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, pen_location: e.target.value })} />
+            </div>
+            {livestockRecordForm.species !== 'POULTRY' && <label><input type='checkbox' checked={livestockRecordForm.castrated} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, castrated: e.target.checked })} /> Castrated</label>}
+            <div className='row2'>
+              <input className='input' placeholder='Cull/keep status' value={livestockRecordForm.cull_keep_status} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, cull_keep_status: e.target.value })} />
+              <input className='input' placeholder='Cull reason' value={livestockRecordForm.cull_reason} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, cull_reason: e.target.value })} />
+            </div>
+            <div className='row2'>
+              <input className='input' type='date' placeholder='Sale date' value={livestockRecordForm.sale_date} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, sale_date: e.target.value })} />
+              <input className='input' type='number' step='0.01' placeholder='Sale price' value={livestockRecordForm.sale_price} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, sale_price: e.target.value })} />
+            </div>
+            <div className='row2'>
+              <input className='input' placeholder='Sold to' value={livestockRecordForm.sold_to} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, sold_to: e.target.value })} />
+              <input className='input' type='date' placeholder='Died date' value={livestockRecordForm.died_date} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, died_date: e.target.value })} />
+            </div>
+            <div className='inlineForm'>
+              <input className='input' placeholder='Medication / treatment record (single entry)' value={livestockRecordForm.treatment_entry} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, treatment_entry: e.target.value })} />
+              <button type='button' className='btn' onClick={() => {
+                if (!livestockRecordForm.treatment_entry?.trim()) return
+                const stamp = new Date().toISOString().slice(0,10)
+                const line = `[Treatment ${stamp}] ${livestockRecordForm.treatment_entry.trim()}`
+                setLivestockRecordForm({ ...livestockRecordForm, notes: [livestockRecordForm.notes, line].filter(Boolean).join('\n'), treatment_entry: '' })
+              }}>Add Treatment</button>
+            </div>
+            <input className='input' placeholder='Notes (includes treatment history)' value={livestockRecordForm.notes} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, notes: e.target.value })} />
+            <button className='btn btn-dark'>Create Record</button>
+          </form>
+        </article>
+
+        <article className='panel'>
+          <h4>Edit Record</h4>
+          <form className='list' onSubmit={async e => {
+            e.preventDefault()
+            if (!livestockRecordEdit.id) return
+            try {
+              const { treatment_entry, ...editPayload } = livestockRecordEdit
+              await api.updateLivestockRecord(Number(livestockRecordEdit.id), {
+                ...editPayload,
+                user_id: Number(livestockRecordEdit.user_id || me?.id || 1),
+                stars: Number(livestockRecordEdit.stars || 0),
+                purchase_price: livestockRecordEdit.purchase_price === '' ? null : Number(livestockRecordEdit.purchase_price),
+                litter_size: livestockRecordEdit.litter_size === '' ? null : Number(livestockRecordEdit.litter_size),
+                initial_weight_kg: livestockRecordEdit.initial_weight_kg === '' ? null : Number(livestockRecordEdit.initial_weight_kg),
+                sale_price: livestockRecordEdit.sale_price === '' ? null : Number(livestockRecordEdit.sale_price),
+                date_of_birth: livestockRecordEdit.date_of_birth || null,
+                acquisition_date: livestockRecordEdit.acquisition_date || null,
+                sale_date: livestockRecordEdit.sale_date || null,
+                died_date: livestockRecordEdit.died_date || null,
+              })
+              await load()
+              alert('Record updated successfully')
+            } catch (err) {
+              alert(`Update failed: ${errMsg(err)}`)
+            }
+          }}>
+            <input className='input' placeholder='Record ID' value={livestockRecordEdit.id} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, id: e.target.value })} required />
+            <div className='row2'>
+              <select className='input' value={livestockRecordEdit.species} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, species: e.target.value, animal_type: e.target.value === 'GOAT' ? 'DOE' : (e.target.value === 'CATTLE' ? 'COW' : (e.target.value === 'POULTRY' ? 'LAYER_HEN' : 'EWE')) })}><option value='SHEEP'>SHEEP</option><option value='GOAT'>GOAT</option><option value='CATTLE'>CATTLE</option><option value='POULTRY'>POULTRY</option></select>
+              <select className='input' value={livestockRecordEdit.animal_type} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, animal_type: e.target.value })}>{livestockRecordEdit.species === 'GOAT' ? <><option value='DOE'>DOE</option><option value='BUCK'>BUCK</option></> : (livestockRecordEdit.species === 'CATTLE' ? <><option value='COW'>COW</option><option value='BULL'>BULL</option><option value='HEIFER'>HEIFER</option><option value='STEER'>STEER</option></> : (livestockRecordEdit.species === 'POULTRY' ? <><option value='LAYER_HEN'>LAYER_HEN</option><option value='BROILER'>BROILER</option><option value='PULLET'>PULLET</option><option value='COCKEREL'>COCKEREL</option><option value='CHICK'>CHICK</option><option value='BREEDER'>BREEDER</option></> : <><option value='EWE'>EWE</option><option value='RAM'>RAM</option></>))}</select>
+            </div>
+            <div className='row2'>
+              <input className='input' placeholder='Name' value={livestockRecordEdit.name} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, name: e.target.value })} />
+              <input className='input' placeholder='Ear tag' value={livestockRecordEdit.ear_tag} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, ear_tag: e.target.value })} />
+            </div>
+            <div className='row2'>
+              <input className='input' placeholder='Farm ID' value={livestockRecordEdit.farm_id} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, farm_id: e.target.value })} />
+              <input className='input' placeholder='Registration number' value={livestockRecordEdit.registration_number} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, registration_number: e.target.value })} />
+            </div>
+            <div className='row2'>
+              <input className='input' type='date' value={livestockRecordEdit.date_of_birth ? String(livestockRecordEdit.date_of_birth).slice(0,10) : ''} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, date_of_birth: e.target.value })} />
+              <input className='input' type='date' value={livestockRecordEdit.acquisition_date ? String(livestockRecordEdit.acquisition_date).slice(0,10) : ''} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, acquisition_date: e.target.value })} />
+            </div>
+            <div className='row2'>
+              <input className='input' type='number' step='0.01' placeholder='Purchase price' value={livestockRecordEdit.purchase_price} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, purchase_price: e.target.value })} />
+              <select className='input' value={livestockRecordEdit.currency} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, currency: e.target.value })}><option>GHS</option><option>NGN</option><option>XOF</option><option>USD</option></select>
+            </div>
+            <div className='row2'>
+              <input className='input' type='number' min='0' max='5' placeholder='Stars (0-5)' value={livestockRecordEdit.stars} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, stars: e.target.value })} />
+              <input className='input' type='number' step='0.01' placeholder='Initial weight (kg)' value={livestockRecordEdit.initial_weight_kg} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, initial_weight_kg: e.target.value })} />
+            </div>
+            <div className='row2'>
+              <input className='input' placeholder={livestockRecordEdit.species === 'POULTRY' ? 'Breeder line / rooster ID' : 'Sire ID'} value={livestockRecordEdit.sire_id} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, sire_id: e.target.value })} />
+              <input className='input' placeholder={livestockRecordEdit.species === 'POULTRY' ? 'Hatchery batch / hen line' : 'Dam ID'} value={livestockRecordEdit.dam_id} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, dam_id: e.target.value })} />
+            </div>
+            <div className='row2'>
+              <input className='input' type='number' min='0' placeholder={livestockRecordEdit.species === 'POULTRY' ? 'Flock/batch size' : 'Litter size'} value={livestockRecordEdit.litter_size} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, litter_size: e.target.value })} />
+              <input className='input' placeholder={livestockRecordEdit.species === 'POULTRY' ? 'Production type (layer/broiler/breeder)' : 'Breeding type'} value={livestockRecordEdit.breeding_type} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, breeding_type: e.target.value })} />
+            </div>
+            <div className='row2'>
+              <input className='input' placeholder='Health status' value={livestockRecordEdit.health_status} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, health_status: e.target.value })} />
+              <input className='input' placeholder='Pen location' value={livestockRecordEdit.pen_location} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, pen_location: e.target.value })} />
+            </div>
+            {livestockRecordEdit.species !== 'POULTRY' && <label><input type='checkbox' checked={livestockRecordEdit.castrated} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, castrated: e.target.checked })} /> Castrated</label>}
+            <div className='row2'>
+              <input className='input' placeholder='Cull/keep status' value={livestockRecordEdit.cull_keep_status} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, cull_keep_status: e.target.value })} />
+              <input className='input' placeholder='Cull reason' value={livestockRecordEdit.cull_reason} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, cull_reason: e.target.value })} />
+            </div>
+            <div className='row2'>
+              <input className='input' type='date' placeholder='Sale date' value={livestockRecordEdit.sale_date ? String(livestockRecordEdit.sale_date).slice(0,10) : ''} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, sale_date: e.target.value })} />
+              <input className='input' type='number' step='0.01' placeholder='Sale price' value={livestockRecordEdit.sale_price} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, sale_price: e.target.value })} />
+            </div>
+            <div className='row2'>
+              <input className='input' placeholder='Sold to' value={livestockRecordEdit.sold_to} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, sold_to: e.target.value })} />
+              <input className='input' type='date' placeholder='Died date' value={livestockRecordEdit.died_date ? String(livestockRecordEdit.died_date).slice(0,10) : ''} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, died_date: e.target.value })} />
+            </div>
+            <div className='inlineForm'>
+              <input className='input' placeholder='Medication / treatment record (single entry)' value={livestockRecordEdit.treatment_entry} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, treatment_entry: e.target.value })} />
+              <button type='button' className='btn' onClick={() => {
+                if (!livestockRecordEdit.treatment_entry?.trim()) return
+                const stamp = new Date().toISOString().slice(0,10)
+                const line = `[Treatment ${stamp}] ${livestockRecordEdit.treatment_entry.trim()}`
+                setLivestockRecordEdit({ ...livestockRecordEdit, notes: [livestockRecordEdit.notes, line].filter(Boolean).join('\n'), treatment_entry: '' })
+              }}>Add Treatment</button>
+            </div>
+            <input className='input' placeholder='Notes (includes treatment history)' value={livestockRecordEdit.notes} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, notes: e.target.value })} />
+            <div className='inlineForm'>
+              <button className='btn btn-dark'>Save Edit</button>
+              <button type='button' className='btn' onClick={async () => { try { if (!livestockRecordEdit.id) return; await api.deleteLivestockRecord(Number(livestockRecordEdit.id)); await load(); setLivestockRecordEdit({ ...livestockRecordEdit, id: '' }); alert('Record deleted successfully') } catch (err) { alert(`Delete failed: ${errMsg(err)}`) } }}>Delete Record</button>
+            </div>
+          </form>
+        </article>
+
+        <article className='panel'>
+          <h4>Batch Medication / Treatment</h4>
+          <div className='inlineForm'>
+            <select className='input' value={batchMedicationForm.species} onChange={e=>setBatchMedicationForm({ ...batchMedicationForm, species:e.target.value, animal_type:'ALL' })}>
+              <option value='ALL'>All species</option>
+              <option value='SHEEP'>SHEEP</option>
+              <option value='GOAT'>GOAT</option>
+              <option value='CATTLE'>CATTLE</option>
+            </select>
+            <select className='input' value={batchMedicationForm.animal_type} onChange={e=>setBatchMedicationForm({ ...batchMedicationForm, animal_type:e.target.value })}>
+              <option value='ALL'>All animal types</option>
+              {(batchMedicationForm.species === 'ALL' || batchMedicationForm.species === 'SHEEP') && <><option value='EWE'>EWE</option><option value='RAM'>RAM</option></>}
+              {(batchMedicationForm.species === 'ALL' || batchMedicationForm.species === 'GOAT') && <><option value='DOE'>DOE</option><option value='BUCK'>BUCK</option></>}
+              {(batchMedicationForm.species === 'ALL' || batchMedicationForm.species === 'CATTLE') && <><option value='COW'>COW</option><option value='BULL'>BULL</option><option value='HEIFER'>HEIFER</option><option value='STEER'>STEER</option></>}
+              {(batchMedicationForm.species === 'ALL' || batchMedicationForm.species === 'POULTRY') && <><option value='LAYER_HEN'>LAYER_HEN</option><option value='BROILER'>BROILER</option><option value='PULLET'>PULLET</option><option value='COCKEREL'>COCKEREL</option><option value='CHICK'>CHICK</option><option value='BREEDER'>BREEDER</option></>}
+            </select>
+            <select className='input' value={batchMedicationForm.health_status} onChange={e=>setBatchMedicationForm({ ...batchMedicationForm, health_status:e.target.value })}>
+              <option value='ALL'>All health statuses</option>
+              <option value='Healthy'>Healthy</option>
+              <option value='Monitor'>Monitor</option>
+              <option value='Sick'>Sick</option>
+            </select>
+            <select className='input' value={batchMedicationForm.cull_keep_status} onChange={e=>setBatchMedicationForm({ ...batchMedicationForm, cull_keep_status:e.target.value })}>
+              <option value='ALL'>All cull/keep statuses</option>
+              <option value='KEEP'>KEEP</option>
+              <option value='CULL'>CULL</option>
+            </select>
+          </div>
+          <div className='inlineForm'>
+            <input className='input' type='number' min='0' max='5' placeholder='Min stars (optional)' value={batchMedicationForm.minStars} onChange={e=>setBatchMedicationForm({ ...batchMedicationForm, minStars:e.target.value })} />
+            <input className='input' placeholder='Pen/location contains (optional)' value={batchMedicationForm.pen_location} onChange={e=>setBatchMedicationForm({ ...batchMedicationForm, pen_location:e.target.value })} />
+            <input className='input' placeholder='Medication name' value={batchMedicationForm.medication} onChange={e=>setBatchMedicationForm({ ...batchMedicationForm, medication:e.target.value })} />
+            <input className='input' placeholder='Dose (optional)' value={batchMedicationForm.dose} onChange={e=>setBatchMedicationForm({ ...batchMedicationForm, dose:e.target.value })} />
+            <input className='input' placeholder='Duration days (optional)' value={batchMedicationForm.days} onChange={e=>setBatchMedicationForm({ ...batchMedicationForm, days:e.target.value })} />
+          </div>
+          <div className='inlineForm'>
+            <button type='button' className='btn btn-dark' onClick={async () => {
+              try {
+                if (!batchMedicationForm.medication?.trim()) return alert('Medication name is required')
+                const minStars = batchMedicationForm.minStars === '' ? null : Number(batchMedicationForm.minStars)
+                const matches = state.livestockRecords.filter(r => {
+                  if (batchMedicationForm.species !== 'ALL' && r.species !== batchMedicationForm.species) return false
+                  if (batchMedicationForm.animal_type !== 'ALL' && r.animal_type !== batchMedicationForm.animal_type) return false
+                  if (batchMedicationForm.health_status !== 'ALL' && String(r.health_status || '') !== batchMedicationForm.health_status) return false
+                  if (batchMedicationForm.cull_keep_status !== 'ALL' && String(r.cull_keep_status || '') !== batchMedicationForm.cull_keep_status) return false
+                  if (minStars != null && Number(r.stars || 0) < minStars) return false
+                  if (batchMedicationForm.pen_location?.trim() && !String(r.pen_location || '').toLowerCase().includes(batchMedicationForm.pen_location.trim().toLowerCase())) return false
+                  return true
+                })
+                if (!matches.length) return alert('No matching records for current filters')
+                const stamp = new Date().toISOString().slice(0,10)
+                const line = `[Batch Treatment ${stamp}] ${batchMedicationForm.medication}${batchMedicationForm.dose ? ` | Dose: ${batchMedicationForm.dose}` : ''}${batchMedicationForm.days ? ` | Days: ${batchMedicationForm.days}` : ''}`
+                let ok = 0, fail = 0
+                for (const r of matches) {
+                  try {
+                    await api.updateLivestockRecord(Number(r.id), { ...r, notes: [r.notes, line].filter(Boolean).join('\\n') })
+                    ok += 1
+                  } catch {
+                    fail += 1
+                  }
+                }
+                await load()
+                alert(`Batch treatment applied. Success: ${ok}, Failed: ${fail}`)
+              } catch (err) {
+                alert(`Batch update failed: ${errMsg(err)}`)
+              }
+            }}>Apply Batch Treatment</button>
+            <div className='list-row' style={{padding:'6px 10px'}}>
+              <span>Matching records (preview)</span>
+              <strong>{state.livestockRecords.filter(r => {
+                const minStars = batchMedicationForm.minStars === '' ? null : Number(batchMedicationForm.minStars)
+                if (batchMedicationForm.species !== 'ALL' && r.species !== batchMedicationForm.species) return false
+                if (batchMedicationForm.animal_type !== 'ALL' && r.animal_type !== batchMedicationForm.animal_type) return false
+                if (batchMedicationForm.health_status !== 'ALL' && String(r.health_status || '') !== batchMedicationForm.health_status) return false
+                if (batchMedicationForm.cull_keep_status !== 'ALL' && String(r.cull_keep_status || '') !== batchMedicationForm.cull_keep_status) return false
+                if (minStars != null && Number(r.stars || 0) < minStars) return false
+                if (batchMedicationForm.pen_location?.trim() && !String(r.pen_location || '').toLowerCase().includes(batchMedicationForm.pen_location.trim().toLowerCase())) return false
+                return true
+              }).length}</strong>
+            </div>
+          </div>
+        </article>
+
+
+        {selectedLivestockRecord && <article className='panel'>
+          <h4>Animal Details</h4>
+          <div className='list'>
+            {Object.entries(selectedLivestockRecord).map(([k,v]) => (
+              <div className='list-row' key={`detail-${k}`}><span>{k}</span><strong>{v == null || v === '' ? '—' : String(v)}</strong></div>
+            ))}
+          </div>
+        </article>}
+
+        <DataTable
+          columns={['id','species','animal_type','name','acquisition_date','purchase_price','health_status','notes']}
+          rows={livestockRecordsFiltered}
+          filterKey='name'
+          onRowClick={(r) => setSelectedLivestockRecord(r)}
+          onEdit={(r) => setLivestockRecordEdit({
+            id: r.id,
+            user_id: r.user_id || me?.id || 1,
+            ownership: r.ownership || 'Owned by Me',
+            species: r.species || 'SHEEP',
+            animal_type: r.animal_type || (r.species === 'GOAT' ? 'DOE' : (r.species === 'CATTLE' ? 'COW' : (r.species === 'POULTRY' ? 'LAYER_HEN' : 'EWE'))),
+            name: r.name || '',
+            ear_tag: r.ear_tag || '',
+            farm_id: r.farm_id || '',
+            registration_number: r.registration_number || '',
+            stars: r.stars || 0,
+            date_of_birth: r.date_of_birth || '',
+            acquisition_date: r.acquisition_date || '',
+            purchase_price: r.purchase_price ?? '',
+            currency: r.currency || 'GHS',
+            sire_id: r.sire_id || '',
+            dam_id: r.dam_id || '',
+            litter_size: r.litter_size ?? 1,
+            initial_weight_kg: r.initial_weight_kg ?? '',
+            breeding_type: r.breeding_type || 'Natural',
+            castrated: !!r.castrated,
+            sale_date: r.sale_date || '',
+            sale_price: r.sale_price ?? '',
+            sold_to: r.sold_to || '',
+            died_date: r.died_date || '',
+            cull_keep_status: r.cull_keep_status || 'KEEP',
+            cull_reason: r.cull_reason || '',
+            health_status: r.health_status || '',
+            pen_location: r.pen_location || '',
+            notes: r.notes || '',
+            treatment_entry: ''
+          })}
+        />
+      </section>}
+
       {active === 'services' && <section><h3>{t('Services','Services','服务')}</h3>
         <div className='three-col'>
           <article className='panel'><h4>Logistics Requests</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.createLogistics({ ...logisticsForm, requester_id: Number(logisticsForm.requester_id), weight_kg: Number(logisticsForm.weight_kg) }); await load() }}>
@@ -2357,17 +3777,17 @@ export default function App() {
                 : <div style={{position:'absolute',left:14,bottom:-26,width:86,height:86,borderRadius:'50%',border:'4px solid #fff',background:'#e2e8f0',display:'grid',placeItems:'center',color:'#64748b'}}>No DP</div>}
             </div>
             <div style={{paddingLeft:4, marginTop:28, marginBottom:8}}>
-              <div style={{fontSize:'1rem',fontWeight:700,color:'#0f172a'}}>{me?.full_name || 'Your profile'}</div>
+              <div style={{fontSize:'1rem',fontWeight:700,color:'#0f172a'}}>{communityProfile.full_name || me?.full_name || 'Your profile'}</div>
               <div style={{fontSize:'.82rem',color:'#0284c7',fontWeight:600}}>@{communityProfile.username || 'set_username'}</div>
               <div style={{fontSize:'.85rem',color:'#475569'}}>{communityProfile.bio || 'Add a short bio to attract followers.'}</div>
             </div>
-            <form className='list' onSubmit={async(e)=>{e.preventDefault(); await api.saveCommunityProfileMe(communityProfile); await loadCommunity(); alert('Profile updated')}}>
+            <form className='list' onSubmit={async(e)=>{e.preventDefault(); const saved = await api.saveCommunityProfileMe(communityProfile); setCommunityProfile(prev => ({ ...prev, ...(saved || {}) })); setCommunityProfileDirty(false); const meRes = await api.fetchMe().catch(()=>null); if (meRes) { setMe(meRes); setAccountForm({ full_name: meRes.full_name || '', region: meRes.region || '' }) } await loadCommunity(); alert('Profile updated')}}>
               <label style={{fontSize:'.85rem',color:'#475569'}}>Display picture</label>
               <input className='input' type='file' accept='image/*' onChange={(e)=>{
                 const f = e.target.files?.[0]
                 if (!f) return
                 const reader = new FileReader()
-                reader.onload = () => setCommunityProfile(prev => ({ ...prev, avatar_url: String(reader.result || '') }))
+                reader.onload = () => { setCommunityProfileDirty(true); setCommunityProfile(prev => ({ ...prev, avatar_url: String(reader.result || '') })) }
                 reader.readAsDataURL(f)
               }} />
 
@@ -2376,14 +3796,15 @@ export default function App() {
                 const f = e.target.files?.[0]
                 if (!f) return
                 const reader = new FileReader()
-                reader.onload = () => setCommunityProfile(prev => ({ ...prev, cover_image_url: String(reader.result || '') }))
+                reader.onload = () => { setCommunityProfileDirty(true); setCommunityProfile(prev => ({ ...prev, cover_image_url: String(reader.result || '') })) }
                 reader.readAsDataURL(f)
               }} />
-              <input className='input' placeholder='Username (e.g. akhen_farmer)' value={communityProfile.username || ''} onChange={(e)=>setCommunityProfile({...communityProfile, username:e.target.value.toLowerCase().replace(/\s+/g,'')})} />
-              <input className='input' placeholder='Bio' value={communityProfile.bio || ''} onChange={(e)=>setCommunityProfile({...communityProfile, bio:e.target.value})} />
-              <input className='input' placeholder='Farm life details' value={communityProfile.farm_life || ''} onChange={(e)=>setCommunityProfile({...communityProfile, farm_life:e.target.value})} />
-              <input className='input' placeholder='Interests/tags (comma separated)' value={communityProfile.interests || ''} onChange={(e)=>setCommunityProfile({...communityProfile, interests:e.target.value})} />
-              <select className='input' value={communityProfile.visibility || 'PUBLIC'} onChange={(e)=>setCommunityProfile({...communityProfile, visibility:e.target.value})}>
+              <input className='input' placeholder='Main name / display name' value={communityProfile.full_name || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, full_name:e.target.value}) }} />
+              <input className='input' placeholder='Username (e.g. akhen_farmer)' value={communityProfile.username || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, username:e.target.value.toLowerCase().replace(/\s+/g,'')}) }} />
+              <input className='input' placeholder='Bio' value={communityProfile.bio || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, bio:e.target.value}) }} />
+              <input className='input' placeholder='Farm life details' value={communityProfile.farm_life || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, farm_life:e.target.value}) }} />
+              <input className='input' placeholder='Interests/tags (comma separated)' value={communityProfile.interests || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, interests:e.target.value}) }} />
+              <select className='input' value={communityProfile.visibility || 'PUBLIC'} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, visibility:e.target.value}) }}>
                 <option value='PUBLIC'>Public</option>
                 <option value='FOLLOWERS'>Followers only</option>
               </select>
@@ -2393,7 +3814,7 @@ export default function App() {
 
           <article className='panel'>
             <h4>{t('Create Post','Créer une publication','创建帖子')}</h4>
-            <form className='list' onSubmit={async(e)=>{e.preventDefault(); await api.createCommunityPost(communityPostForm); setCommunityPostForm({ text:'', media_url:'', media_type:'TEXT', tags:'' }); await loadCommunity(); }}>
+            <form className='list' onSubmit={async(e)=>{e.preventDefault(); if (editingCommunityPostId) { await api.updateCommunityPost(editingCommunityPostId, communityPostForm) } else { await api.createCommunityPost(communityPostForm) } setCommunityPostForm({ text:'', media_url:'', media_type:'TEXT', tags:'' }); setEditingCommunityPostId(null); await loadCommunity(); }}>
               <textarea className='input' rows={4} placeholder='Share your farm update, innovation, or product...' value={communityPostForm.text} onChange={(e)=>setCommunityPostForm({...communityPostForm, text:e.target.value})} />
               <input className='input' type='file' accept='image/*,video/*' onChange={(e)=>{
                 const f = e.target.files?.[0]
@@ -2409,7 +3830,10 @@ export default function App() {
                 <option value='VIDEO'>Video</option>
               </select>
               <input className='input' placeholder='Tags (e.g. goats, irrigation, organic)' value={communityPostForm.tags} onChange={(e)=>setCommunityPostForm({...communityPostForm, tags:e.target.value})} />
-              <button className='btn btn-dark'>Post to Community</button>
+              <div className='inlineForm'>
+                <button className='btn btn-dark'>{editingCommunityPostId ? 'Save Post Changes' : 'Post to Community'}</button>
+                {editingCommunityPostId && <button type='button' className='btn' onClick={()=>{ setEditingCommunityPostId(null); setCommunityPostForm({ text:'', media_url:'', media_type:'TEXT', tags:'' }) }}>Cancel Edit</button>}
+              </div>
             </form>
           </article>
         </div>
@@ -2422,8 +3846,16 @@ export default function App() {
           </div>
           <div className='list'>
             {(communityFeedMode === 'reels' ? communityPosts.filter(x => String(x.media_type || '').toUpperCase() === 'VIDEO') : communityPosts).map((p)=><div key={`cp-${p.id}`} className='panel' style={{padding:10,border:'1px solid #dbe6df',boxShadow:'0 1px 6px rgba(0,0,0,.05)'}}>
-              <div className='list-row'>
-                <strong>{p.author_name || `User ${p.user_id}`} {p.author_country ? `(${p.author_country})` : ''}</strong>
+              <div className='list-row' style={{alignItems:'center', gap:10}}>
+                <div style={{display:'flex',alignItems:'center',gap:10}}>
+                  {isUserImage(p.author_avatar_url)
+                    ? <img src={p.author_avatar_url} alt='Author avatar' style={{width:42,height:42,objectFit:'cover',borderRadius:'50%',border:'1px solid #e2e8f0'}} />
+                    : <div style={{width:42,height:42,borderRadius:'50%',background:'#e2e8f0',display:'grid',placeItems:'center',color:'#64748b',fontSize:'.75rem'}}>No DP</div>}
+                  <div>
+                    <strong>{p.author_full_name || p.author_name || `User ${p.user_id}`} {p.author_country ? `(${p.author_country})` : ''}</strong>
+                    <div style={{fontSize:'.78rem', color:'#0284c7'}}>{p.author_username ? `@${p.author_username}` : ''}</div>
+                  </div>
+                </div>
                 <span style={{fontSize:'.78rem', color:'#64748b'}}>{String(p.created_at || '').replace('T',' ').slice(0,16)}</span>
               </div>
               {p.text && <div style={{margin:'6px 0', whiteSpace:'pre-wrap'}}>{p.text}</div>}
@@ -2433,9 +3865,11 @@ export default function App() {
                   : <img src={p.media_url} alt='community post' style={{width:'100%', maxHeight:360, objectFit:'cover', borderRadius:10}} />
               )}
               {!!p.tags && <div style={{fontSize:'.82rem', color:'#0284c7', marginTop:6}}>#{String(p.tags).split(',').map(s=>s.trim()).filter(Boolean).join(' #')}</div>}
-              <div className='list-row' style={{marginTop:8}}>
+              <div className='list-row' style={{marginTop:8, flexWrap:'wrap', gap:8}}>
                 <button className='btn' onClick={async()=>{ await api.toggleCommunityPostLike(p.id); await loadCommunity(); }}>👍 Like ({p.likes_count || 0})</button>
                 <button className='btn' onClick={async()=>{ const rows=await api.fetchCommunityPostComments(p.id).catch(()=>[]); setCommunityComments(prev=>({...prev,[p.id]:rows||[]})) }}>💬 Comments ({p.comments_count || 0})</button>
+                {me?.id === p.user_id && <button className='btn' onClick={()=>{ setEditingCommunityPostId(p.id); setCommunityPostForm({ text: p.text || '', media_url: p.media_url || '', media_type: p.media_type || 'TEXT', tags: p.tags || '' }); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>✏️ Edit</button>}
+                {me?.id === p.user_id && <button className='btn' onClick={async()=>{ if (!confirm('Delete this post?')) return; await api.deleteCommunityPost(p.id); if (editingCommunityPostId === p.id) { setEditingCommunityPostId(null); setCommunityPostForm({ text:'', media_url:'', media_type:'TEXT', tags:'' }) } await loadCommunity(); }}>🗑️ Delete</button>}
               </div>
               <div className='inlineForm' style={{marginTop:6}}>
                 <input className='input' placeholder='Write comment...' value={communityCommentText[p.id] || ''} onChange={(e)=>setCommunityCommentText(prev=>({...prev,[p.id]:e.target.value}))} />
@@ -2467,25 +3901,23 @@ export default function App() {
         <form className='inlineForm' onSubmit={async e => {
           e.preventDefault();
           try {
-            if (!diseaseForm.target) { alert('Please select crop/animal type first.'); return }
-            if (!diseaseForm.image_url) { alert('Please upload an image from your phone/camera.'); return }
-            const r = await api.analyzeDisease({ user_id: Number(diseaseForm.user_id), crop_type: diseaseForm.target, image_url: diseaseForm.image_url, context_note: diseaseForm.context_note });
-            alert(`Diagnosis: ${r.diagnosis}\nConfidence: ${Math.round((r.confidence||0)*100)}%\nRecommendation: ${r.recommendation || '-'}\nTreatment: ${r.treatment || '-'}\n${r.vet_notice || 'Important: Contact a licensed veterinarian/agronomist for confirmation before treatment.'}`);
+            if (!diseaseForm.target) { alert('Please select animal type first.'); return }
+            if (!diseaseForm.image_url) { alert('Please upload an animal image from your phone/camera.'); return }
+            const r = await api.analyzeDisease({ user_id: Number(diseaseForm.user_id), category: 'animal', crop_type: diseaseForm.target, image_url: diseaseForm.image_url, context_note: diseaseForm.context_note });
+            const differentiation = Array.isArray(r.differentiation) ? r.differentiation.join('; ') : (r.differentiation || '-')
+            const prevention = Array.isArray(r.prevention) ? r.prevention.join('; ') : (r.prevention || r.recommendation || '-')
+            alert(`Diagnosis: ${r.diagnosis}\nConfidence: ${Math.round((r.confidence||0)*100)}%\nHow to differentiate: ${differentiation}\nPrevention: ${prevention}\nTreatment: ${r.treatment || '-'}\n${r.vet_notice || 'Important: Contact a licensed veterinarian for confirmation before treatment.'}`);
             await load();
           } catch (err) {
             alert(`Analyze failed: ${errMsg(err)}`)
           }
         }}>
-          <input className='input' placeholder='User ID' value={diseaseForm.user_id} onChange={(e)=>setDiseaseForm({...diseaseForm,user_id:e.target.value})} />
-          <select className='input' value={diseaseForm.category} onChange={(e)=>setDiseaseForm({...diseaseForm,category:e.target.value,target:''})}>
-            <option value='crop'>Crop Disease</option>
-            <option value='animal'>Animal Disease</option>
+          <input className='input' placeholder='User ID' value={diseaseForm.user_id} onChange={(e)=>setDiseaseForm({...diseaseForm,user_id:e.target.value,category:'animal'})} />
+          <select className='input' value={diseaseForm.target} onChange={(e)=>setDiseaseForm({...diseaseForm,category:'animal',target:e.target.value})} required>
+            <option value=''>Select animal</option>
+            {animalOptions.map(x => <option key={x.value} value={x.value}>{x.label}</option>)}
           </select>
-          <select className='input' value={diseaseForm.target} onChange={(e)=>setDiseaseForm({...diseaseForm,target:e.target.value})} required>
-            <option value=''>Select</option>
-            {(diseaseForm.category === 'crop' ? cropOptions : animalOptions).map(x => <option key={x} value={x}>{x}</option>)}
-          </select>
-          <textarea className='input' placeholder='Describe symptoms (optional): e.g., yellow spots, leaf curl, wilting, discharge, fever...' value={diseaseForm.context_note || ''} onChange={(e)=>setDiseaseForm({...diseaseForm,context_note:e.target.value})} rows={3} style={{minWidth:'100%'}} />
+          <textarea className='input' placeholder='Describe animal symptoms (optional): e.g., coughing, discharge, lesions, diarrhea, fever...' value={diseaseForm.context_note || ''} onChange={(e)=>setDiseaseForm({...diseaseForm,context_note:e.target.value,category:'animal'})} rows={3} style={{minWidth:'100%'}} />
           <input className='input' type='file' accept='image/*' onChange={(e)=>{
             const f = e.target.files?.[0]
             if (!f) return
@@ -2494,7 +3926,7 @@ export default function App() {
             reader.onload = () => {
               const data = String(reader.result || '')
               setDiseaseImagePreview(data)
-              setDiseaseForm(prev => ({ ...prev, image_url: data }))
+              setDiseaseForm(prev => ({ ...prev, category:'animal', image_url: data }))
             }
             reader.readAsDataURL(f)
           }} />
@@ -2502,7 +3934,7 @@ export default function App() {
         </form>
         {diseaseImageFileName && <p style={{fontSize:'.82rem',color:'#475569'}}>Uploaded: {diseaseImageFileName}</p>}
         {diseaseImagePreview && <img src={diseaseImagePreview} alt='Disease scan preview' style={{maxWidth:260,borderRadius:8,border:'1px solid #e2e8f0',marginBottom:8}} />}
-        <DataTable columns={['id','user_id','crop_type','image_url','result','created_at']} rows={state.diseaseScans} filterKey='crop_type' />
+        <DataTable columns={['id','user_id','image_url','result','created_at']} rows={state.diseaseScans.filter(r => !r.category || String(r.category).toLowerCase() === 'animal')} filterKey='result' />
       </section>}
 
       {active === 'plant-id' && <section>
