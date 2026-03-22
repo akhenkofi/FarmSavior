@@ -17,23 +17,35 @@ const normalizeIdentifier = (v='') => {
   return normalizePhone(s)
 }
 
-const compressImageFileToDataUrl = (file, { maxDim = 1600, quality = 0.82 } = {}) => new Promise((resolve, reject) => {
+const compressImageFileToDataUrl = (file, { maxDim = 1600, quality = 0.82, maxChars = 900000 } = {}) => new Promise((resolve, reject) => {
   const reader = new FileReader()
   reader.onerror = () => reject(new Error('Could not read image file'))
   reader.onload = () => {
     const img = new Image()
     img.onerror = () => reject(new Error('Could not load selected image'))
     img.onload = () => {
-      const scale = Math.min(1, maxDim / Math.max(img.width || 1, img.height || 1))
-      const width = Math.max(1, Math.round((img.width || 1) * scale))
-      const height = Math.max(1, Math.round((img.height || 1) * scale))
+      let scale = Math.min(1, maxDim / Math.max(img.width || 1, img.height || 1))
       const canvas = document.createElement('canvas')
-      canvas.width = width
-      canvas.height = height
       const ctx = canvas.getContext('2d')
       if (!ctx) return reject(new Error('Could not prepare image for upload'))
-      ctx.drawImage(img, 0, 0, width, height)
-      resolve(canvas.toDataURL('image/jpeg', quality))
+
+      let attempts = 0
+      let output = ''
+      let currentQuality = quality
+      while (attempts < 6) {
+        const width = Math.max(1, Math.round((img.width || 1) * scale))
+        const height = Math.max(1, Math.round((img.height || 1) * scale))
+        canvas.width = width
+        canvas.height = height
+        ctx.clearRect(0, 0, width, height)
+        ctx.drawImage(img, 0, 0, width, height)
+        output = canvas.toDataURL('image/jpeg', currentQuality)
+        if (output.length <= maxChars) break
+        currentQuality = Math.max(0.45, currentQuality - 0.12)
+        scale *= 0.82
+        attempts += 1
+      }
+      resolve(output)
     }
     img.src = String(reader.result || '')
   }
@@ -3983,7 +3995,7 @@ export default function App() {
             if (!f) return
             setDiseaseImageFileName(f.name)
             try {
-              const data = await compressImageFileToDataUrl(f)
+              const data = await compressImageFileToDataUrl(f, { maxDim: 960, quality: 0.7, maxChars: 450000 })
               setDiseaseImagePreview(data)
               setDiseaseForm(prev => ({ ...prev, category:'animal', image_url: data }))
             } catch (err) {
