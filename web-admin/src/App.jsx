@@ -1012,6 +1012,7 @@ export default function App() {
   const [diseaseForm, setDiseaseForm] = useState({ user_id: 1, category: 'animal', target: '', image_url: '', context_note: '' })
   const [diseaseImageFileName, setDiseaseImageFileName] = useState('')
   const [diseaseImagePreview, setDiseaseImagePreview] = useState('')
+  const [diseaseResult, setDiseaseResult] = useState(null)
   const [plantIdForm, setPlantIdForm] = useState({ user_id: 1, image_url: '', file_name: '', context_hint: '', target_livestock: 'goats' })
   const [plantIdPreview, setPlantIdPreview] = useState('')
   const [plantIdResult, setPlantIdResult] = useState(null)
@@ -3904,9 +3905,7 @@ export default function App() {
             if (!diseaseForm.target) { alert('Please select animal type first.'); return }
             if (!diseaseForm.image_url) { alert('Please upload an animal image from your phone/camera.'); return }
             const r = await api.analyzeDisease({ user_id: Number(diseaseForm.user_id), category: 'animal', crop_type: diseaseForm.target, image_url: diseaseForm.image_url, context_note: diseaseForm.context_note });
-            const differentiation = Array.isArray(r.differentiation) ? r.differentiation.join('; ') : (r.differentiation || '-')
-            const prevention = Array.isArray(r.prevention) ? r.prevention.join('; ') : (r.prevention || r.recommendation || '-')
-            alert(`Diagnosis: ${r.diagnosis}\nConfidence: ${Math.round((r.confidence||0)*100)}%\nHow to differentiate: ${differentiation}\nPrevention: ${prevention}\nTreatment: ${r.treatment || '-'}\n${r.vet_notice || 'Important: Contact a licensed veterinarian for confirmation before treatment.'}`);
+            setDiseaseResult(r)
             await load();
           } catch (err) {
             alert(`Analyze failed: ${errMsg(err)}`)
@@ -3934,6 +3933,25 @@ export default function App() {
         </form>
         {diseaseImageFileName && <p style={{fontSize:'.82rem',color:'#475569'}}>Uploaded: {diseaseImageFileName}</p>}
         {diseaseImagePreview && <img src={diseaseImagePreview} alt='Disease scan preview' style={{maxWidth:260,borderRadius:8,border:'1px solid #e2e8f0',marginBottom:8}} />}
+        {diseaseResult && <div className='panel list' style={{marginBottom:12}}>
+          <div className='list-row'><strong>Primary assessment</strong><span>{diseaseResult.diagnosis} ({Math.round((diseaseResult.confidence || 0) * 100)}%)</span></div>
+          <div className='list-row'><strong>Evidence strength</strong><span>{diseaseResult.analysis_signal || 'unknown'}{diseaseResult.insufficient_evidence ? ' · low evidence' : ''}</span></div>
+          <div><strong>How to differentiate</strong><div style={{marginTop:6}}>{Array.isArray(diseaseResult.differentiation) ? diseaseResult.differentiation.join(' • ') : (diseaseResult.differentiation || '-')}</div></div>
+          <div><strong>Prevention</strong><div style={{marginTop:6}}>{Array.isArray(diseaseResult.prevention) ? diseaseResult.prevention.join(' • ') : (diseaseResult.prevention || diseaseResult.recommendation || '-')}</div></div>
+          <div><strong>Treatment</strong><div style={{marginTop:6}}>{diseaseResult.treatment || '-'}</div></div>
+          <div><strong>Top 3 possible conditions</strong>
+            <div style={{display:'grid',gap:10,marginTop:8}}>
+              {(diseaseResult.top_matches || []).map((m, idx) => <div key={`${m.diagnosis}-${idx}`} className='panel' style={{padding:12}}>
+                <div className='list-row'><strong>{idx + 1}. {m.diagnosis}</strong><span>{Math.round((m.confidence || 0) * 100)}%</span></div>
+                <div style={{fontSize:'.92rem',marginTop:6}}><strong>Why it matches:</strong> {Array.isArray(m.why_it_matches) && m.why_it_matches.length ? m.why_it_matches.join(' • ') : '-'}</div>
+                <div style={{fontSize:'.92rem',marginTop:6}}><strong>How to tell apart:</strong> {Array.isArray(m.how_to_tell_apart) ? m.how_to_tell_apart.join(' • ') : (m.how_to_tell_apart || '-')}</div>
+                <div style={{fontSize:'.92rem',marginTop:6}}><strong>Prevention:</strong> {Array.isArray(m.prevention) ? m.prevention.join(' • ') : (m.prevention || '-')}</div>
+                <div style={{fontSize:'.92rem',marginTop:6}}><strong>Treatment:</strong> {m.treatment || '-'}</div>
+              </div>)}
+            </div>
+          </div>
+          <div style={{fontSize:'.9rem',color:'#7f1d1d'}}>{diseaseResult.vet_notice || 'Important: Contact a licensed veterinarian for confirmation before treatment.'}</div>
+        </div>}
         <DataTable columns={['id','user_id','image_url','result','created_at']} rows={state.diseaseScans.filter(r => !r.category || String(r.category).toLowerCase() === 'animal')} filterKey='result' />
       </section>}
 
