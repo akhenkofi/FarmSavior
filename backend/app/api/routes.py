@@ -2870,12 +2870,17 @@ def ai_disease_analyze(payload: DiseaseAnalyzeIn, db: Session = Depends(get_db))
         'engine': 'FarmSavior AI Analyzer (livestock differential engine v5)'
     }
 
-    rec = DiseaseScan(user_id=payload.user_id, image_url=payload.image_url, crop_type=payload.crop_type, result=json.dumps(result))
-    db.add(rec)
-    db.commit()
-    db.refresh(rec)
+    scan_id = None
+    try:
+        rec = DiseaseScan(user_id=payload.user_id, image_url=payload.image_url, crop_type=payload.crop_type, result=json.dumps(result))
+        db.add(rec)
+        db.commit()
+        db.refresh(rec)
+        scan_id = rec.id
+    except Exception:
+        db.rollback()
 
-    return {'scan_id': rec.id, **result}
+    return {'scan_id': scan_id, **result}
 
 
 @router.get('/ai/disease/scans')
