@@ -1801,15 +1801,23 @@ export default function App() {
                   captured_at_utc: new Date().toISOString()
                 }))
               } catch {}
-              const destination = registerRes?.otp_destination || (signup.signup_method === 'email' ? signup.email : normalizePhone(signup.phone))
+              const destination = registerRes?.otp_destination || (signup.signup_method === 'email' ? signup.email.trim().toLowerCase() : normalizePhone(signup.phone))
               setOtp({ destination, code: '' })
               setAuthMode('verify-otp')
-              setAuthMsg(`Account created. Enter the OTP sent to ${destination}.`)
+              setAuthMsg(registerRes?.otp_sent
+                ? `Account created. Enter the OTP sent to ${destination}.`
+                : `Account created, but OTP delivery was not confirmed for ${destination}. Check backend mail/SMS sender settings or use the returned fallback code if shown.`)
             } catch (e) { setAuthMsg(`Signup failed: ${errMsg(e)}`) }
           }}>
             <input className='input' placeholder='Full name' value={signup.full_name} onChange={e => setSignup({ ...signup, full_name: e.target.value })} required />
-            <input className='input' placeholder='Phone' value={signup.phone} onChange={e => setSignup({ ...signup, signup_method: 'phone', phone: e.target.value })} required />
-            <div style={{fontSize:'.76rem', color:'#64748b'}}>Phone OTP signup is active. Email OTP will be re-enabled after dedicated mail sender configuration.</div>
+            <div className='row2'>
+              <button type='button' className={`btn ${signup.signup_method === 'phone' ? 'btn-dark' : ''}`} onClick={() => setSignup({ ...signup, signup_method: 'phone' })}>Phone OTP</button>
+              <button type='button' className={`btn ${signup.signup_method === 'email' ? 'btn-dark' : ''}`} onClick={() => setSignup({ ...signup, signup_method: 'email' })}>Email OTP</button>
+            </div>
+            {signup.signup_method === 'phone'
+              ? <input className='input' placeholder='Phone' value={signup.phone} onChange={e => setSignup({ ...signup, phone: e.target.value })} required />
+              : <input className='input' type='email' placeholder='Email' value={signup.email} onChange={e => setSignup({ ...signup, email: e.target.value })} required />}
+            <div style={{fontSize:'.76rem', color:'#64748b'}}>{signup.signup_method === 'email' ? 'OTP will be sent to the email address you enter.' : 'OTP will be sent to the phone number you enter.'}</div>
             <div className='row2'>
               <input className='input' placeholder='Country (any code or name, e.g. US, KE, Brazil)' value={signup.country} onChange={e => setSignup({ ...signup, country: e.target.value })} required />
               <input className='input' placeholder='Region' value={signup.region} onChange={e => setSignup({ ...signup, region: e.target.value })} required />
