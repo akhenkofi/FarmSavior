@@ -3977,7 +3977,7 @@ export default function App() {
             if (!diseaseForm.image_url) { alert('Please upload an animal image from your phone/camera.'); return }
             const r = await api.analyzeDisease({ user_id: Number(diseaseForm.user_id), category: 'animal', crop_type: diseaseForm.target, image_url: diseaseForm.image_url, context_note: diseaseForm.context_note });
             setDiseaseResult(r)
-            await load();
+            api.fetchDiseaseScans().then(rows => setState(prev => ({ ...prev, diseaseScans: rows }))).catch(() => {})
           } catch (err) {
             alert(`Analyze failed: ${errMsg(err)}`)
           } finally {
