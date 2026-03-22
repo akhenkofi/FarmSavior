@@ -1818,21 +1818,21 @@ export default function App() {
                 : `Account created, but OTP delivery was not confirmed for ${destination}. Check backend mail/SMS sender settings or use the returned fallback code if shown.`)
             } catch (e) { setAuthMsg(`Signup failed: ${errMsg(e)}`) }
           }}>
-            <input className='input' placeholder='Full name' value={signup.full_name} onChange={e => setSignup({ ...signup, full_name: e.target.value })} required />
+            <input className='input' name='full_name' autoComplete='name' placeholder='Full name' value={signup.full_name} onChange={e => setSignup({ ...signup, full_name: e.target.value })} onInput={e => setSignup({ ...signup, full_name: e.target.value })} required />
             <div className='row2'>
               <button type='button' className={`btn ${signup.signup_method === 'phone' ? 'btn-dark' : ''}`} onClick={() => setSignup({ ...signup, signup_method: 'phone' })}>Phone OTP</button>
               <button type='button' className={`btn ${signup.signup_method === 'email' ? 'btn-dark' : ''}`} onClick={() => setSignup({ ...signup, signup_method: 'email' })}>Email OTP</button>
             </div>
             {signup.signup_method === 'phone'
-              ? <input className='input' placeholder='Phone' value={signup.phone} onChange={e => setSignup({ ...signup, phone: e.target.value })} required />
-              : <input className='input' type='email' placeholder='Email' value={signup.email} onChange={e => setSignup({ ...signup, email: e.target.value })} required />}
+              ? <input className='input' name='phone' autoComplete='tel' placeholder='Phone' value={signup.phone} onChange={e => setSignup({ ...signup, phone: e.target.value })} onInput={e => setSignup({ ...signup, phone: e.target.value })} required />
+              : <input className='input' name='email' autoComplete='email' type='email' placeholder='Email' value={signup.email} onChange={e => setSignup({ ...signup, email: e.target.value })} onInput={e => setSignup({ ...signup, email: e.target.value })} required />}
             <div style={{fontSize:'.76rem', color:'#64748b'}}>{signup.signup_method === 'email' ? 'OTP will be sent to the email address you enter.' : 'OTP will be sent to the phone number you enter.'}</div>
             <div className='row2'>
-              <input className='input' placeholder='Country (any code or name, e.g. US, KE, Brazil)' value={signup.country} onChange={e => setSignup({ ...signup, country: e.target.value })} required />
-              <input className='input' placeholder='Region' value={signup.region} onChange={e => setSignup({ ...signup, region: e.target.value })} required />
+              <input className='input' name='country' autoComplete='country-name' placeholder='Country (any code or name, e.g. US, KE, Brazil)' value={signup.country} onChange={e => setSignup({ ...signup, country: e.target.value })} onInput={e => setSignup({ ...signup, country: e.target.value })} required />
+              <input className='input' name='region' autoComplete='address-level1' placeholder='Region' value={signup.region} onChange={e => setSignup({ ...signup, region: e.target.value })} onInput={e => setSignup({ ...signup, region: e.target.value })} required />
             </div>
             <select className='input' value={signup.user_type} onChange={e => setSignup({ ...signup, user_type: e.target.value })}>{userTypes.map(u => <option key={u}>{u}</option>)}</select>
-            <input className='input' type='password' placeholder={t('Password','Mot de passe','密码')} value={signup.password} onChange={e => setSignup({ ...signup, password: e.target.value })} required />
+            <input className='input' name='password' autoComplete='new-password' type='password' placeholder={t('Password','Mot de passe','密码')} value={signup.password} onChange={e => setSignup({ ...signup, password: e.target.value })} onInput={e => setSignup({ ...signup, password: e.target.value })} required />
             <div className='panel' style={{padding:8, background:'#f8fafc'}}>
               <label style={{display:'block',fontSize:'.84rem'}}><input type='checkbox' checked={signup.accept_terms} onChange={e => setSignup({ ...signup, accept_terms: e.target.checked })} /> I agree to Terms of Service.</label>
               <label style={{display:'block',fontSize:'.84rem'}}><input type='checkbox' checked={signup.accept_privacy} onChange={e => setSignup({ ...signup, accept_privacy: e.target.checked })} /> I agree to Privacy Policy.</label>
