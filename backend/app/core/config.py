@@ -1,8 +1,9 @@
+from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8')
+    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', extra='ignore')
 
     APP_NAME: str = 'FarmSavior API'
     SECRET_KEY: str = 'change-me'
@@ -36,3 +37,21 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+def resolved_database_url() -> str:
+    raw = str(settings.DATABASE_URL or '').strip()
+    if not raw.startswith('sqlite:///'):
+        return raw
+
+    sqlite_path = raw[len('sqlite:///'):]
+    if sqlite_path.startswith('/'):
+        return raw
+
+    base_dir = Path(__file__).resolve().parents[3]
+    stable_dir = base_dir / 'data' / 'persistent'
+    stable_dir.mkdir(parents=True, exist_ok=True)
+
+    name = Path(sqlite_path).name or 'farmsavior.db'
+    stable_path = (stable_dir / name).resolve()
+    return f"sqlite:///{stable_path}"

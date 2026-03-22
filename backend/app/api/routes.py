@@ -702,7 +702,7 @@ def login_user(payload: UserLogin, db: Session = Depends(get_db)):
     user = sorted(valid_candidates, key=lambda u: _user_link_score(db, u), reverse=True)[0]
     _account_store_upsert_user(user)
 
-    return TokenResponse(access_token=create_access_token(subject=str(user.id)))
+    return TokenResponse(access_token=create_access_token(subject=str(user.id), phone=user.phone, email=user.email or ''))
 
 
 @router.post('/auth/verify-otp', response_model=TokenResponse)
@@ -717,9 +717,10 @@ def verify_otp(payload: OTPVerify, db: Session = Depends(get_db)):
     user = _find_existing_user_by_identity(db, phone=otp.phone, email=otp.destination, identifier=otp.destination or otp.phone)
     if user:
         user.is_verified = True
+        _account_store_upsert_user(user)
     db.commit()
 
-    return TokenResponse(access_token=create_access_token(subject=str(user.id)))
+    return TokenResponse(access_token=create_access_token(subject=str(user.id), phone=user.phone, email=user.email or ''))
 
 
 def _current_user_from_auth(authorization: Optional[str], db: Session):
@@ -727,17 +728,21 @@ def _current_user_from_auth(authorization: Optional[str], db: Session):
         raise HTTPException(status_code=401, detail='Missing bearer token')
     token = authorization.split(' ', 1)[1]
     payload = decode_access_token(token)
-    sub = str(payload.get('sub') or '').strip()
+    sub = str(payload.get('sub') or payload.get('uid') or '').strip()
+    token_phone = str(payload.get('phone') or '').strip()
+    token_email = str(payload.get('email') or '').strip().lower()
     user = None
     if sub.isdigit():
         user = db.query(User).filter(User.id == int(sub)).first()
-    if not user:
+    if not user and sub:
         norm = _normalize_identifier(sub)
         if '@' in norm:
             user = db.query(User).filter(User.email == norm).first()
         else:
             alt = norm[1:] if norm.startswith('+') else f'+{norm}'
             user = db.query(User).filter((User.phone == norm) | (User.phone == alt)).first()
+    if (not user or user.is_deleted) and (token_phone or token_email):
+        user = _find_existing_user_by_identity(db, phone=token_phone, email=token_email, identifier=token_email or token_phone)
     if not user or user.is_deleted:
         raise HTTPException(status_code=401, detail='User not found')
     return user
