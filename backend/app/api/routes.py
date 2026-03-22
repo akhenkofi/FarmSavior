@@ -591,41 +591,57 @@ def register_user(payload: UserCreate, db: Session = Depends(get_db)):
     payload.phone = _normalize_phone(payload.phone)
     if payload.email:
         payload.email = str(payload.email).strip().lower()
+
+    existing_user = None
     if method == 'phone':
         if not payload.phone:
             raise HTTPException(status_code=400, detail='Phone is required for phone signup')
-        exists = _find_existing_user_by_identity(db, phone=payload.phone, email=payload.email)
-        if exists:
+        existing_user = _find_existing_user_by_identity(db, phone=payload.phone, email=payload.email)
+        if existing_user and existing_user.is_verified:
             raise HTTPException(status_code=400, detail='Phone already registered')
         dest = payload.phone
     elif method == 'email':
         if not payload.email:
             raise HTTPException(status_code=400, detail='Email is required for email signup')
-        exists = _find_existing_user_by_identity(db, phone=payload.phone, email=payload.email.lower())
-        if exists:
+        existing_user = _find_existing_user_by_identity(db, phone=payload.phone, email=payload.email.lower())
+        if existing_user and existing_user.is_verified:
             raise HTTPException(status_code=400, detail='Email already registered')
         if not payload.phone:
-            payload.phone = f"TMP-{int(datetime.utcnow().timestamp())}-{random.randint(1000,9999)}"
+            payload.phone = existing_user.phone if existing_user and existing_user.phone else f"TMP-{int(datetime.utcnow().timestamp())}-{random.randint(1000,9999)}"
         dest = payload.email.lower()
     else:
         raise HTTPException(status_code=400, detail='Unsupported signup method')
 
-    user = User(
-        full_name=payload.full_name,
-        phone=payload.phone,
-        email=(payload.email.lower() if payload.email else None),
-        country=(str(payload.country or '').strip().upper() or 'GH'),
-        region=payload.region,
-        role=UserRole(payload.user_type),
-        hashed_password=hash_password(payload.password or 'changeme')
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+    if existing_user and not existing_user.is_verified:
+        existing_user.full_name = payload.full_name or existing_user.full_name
+        existing_user.email = (payload.email.lower() if payload.email else existing_user.email)
+        existing_user.phone = payload.phone or existing_user.phone
+        existing_user.country = (str(payload.country or existing_user.country or '').strip().upper() or 'GH')
+        existing_user.region = payload.region or existing_user.region
+        existing_user.role = UserRole(payload.user_type)
+        if payload.password:
+            existing_user.hashed_password = hash_password(payload.password)
+        user = existing_user
+        db.commit()
+        db.refresh(user)
+    else:
+        user = User(
+            full_name=payload.full_name,
+            phone=payload.phone,
+            email=(payload.email.lower() if payload.email else None),
+            country=(str(payload.country or '').strip().upper() or 'GH'),
+            region=payload.region,
+            role=UserRole(payload.user_type),
+            hashed_password=hash_password(payload.password or 'changeme')
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
     _account_store_upsert_user(user)
 
     code = f"{random.randint(100000, 999999)}"
-    db.add(OTPCode(phone=payload.phone, destination=dest, channel=method, code=code))
+    db.add(OTPCode(phone=user.phone, destination=dest, channel=method, code=code))
     db.commit()
 
     delivery = _send_otp(dest, method, code)
@@ -636,7 +652,7 @@ def register_user(payload: UserCreate, db: Session = Depends(get_db)):
         'otp_destination': dest,
         'otp_mock_code': code,
         'otp_error': delivery.get('error', ''),
-        'message': 'OTP sent'
+        'message': 'OTP sent' if not existing_user else 'OTP resent'
     }
 
 
