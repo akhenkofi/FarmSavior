@@ -706,13 +706,19 @@ def login_user(payload: UserLogin, db: Session = Depends(get_db)):
                 _push(row)
 
     valid_candidates: list[User] = []
+    unverified_match = False
     for cand in candidates:
         if cand.is_deleted or not cand.hashed_password:
             continue
         if verify_password(payload.password, cand.hashed_password):
+            if not cand.is_verified:
+                unverified_match = True
+                continue
             valid_candidates.append(cand)
 
     if not valid_candidates:
+        if unverified_match:
+            raise HTTPException(status_code=403, detail='Account not verified. Please verify OTP before logging in.')
         raise HTTPException(status_code=401, detail='Invalid login credentials')
 
     user = sorted(valid_candidates, key=lambda u: _user_link_score(db, u), reverse=True)[0]
