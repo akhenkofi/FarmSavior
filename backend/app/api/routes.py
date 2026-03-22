@@ -2781,35 +2781,64 @@ def ai_disease_analyze(payload: DiseaseAnalyzeIn, db: Session = Depends(get_db))
 
     ranked.sort(key=lambda x: x[0], reverse=True)
 
-    if weak_signal:
-        shortlist = ranked[:min(4, len(ranked))]
+    def _match_reasons(d):
+        reasons = []
+        matched_keys = [k for k in d['keys'] if k in signal_text][:4]
+        if matched_keys:
+            reasons.append(f"Matched signs: {', '.join(matched_keys)}")
+        if d['name'] in {'PPR', 'Foot and Mouth Disease'} and any(k in signal_text for k in ['mouth sores','mouth blisters','drooling','oral lesions','ulcers']):
+            reasons.append('Mouth lesion pattern increases suspicion for erosive viral disease.')
+        if d['name'] in {'Goat Pneumonia', 'Pasteurellosis / Pneumonia', 'CBPP', 'Contagious Caprine Pleuropneumonia (CCPP)'} and any(k in signal_text for k in ['cough','labored breathing','rapid breathing','painful breathing','nasal discharge','respiratory']):
+            reasons.append('Respiratory signs cluster with this diagnosis.')
+        if d['name'] in {'Haemonchosis', 'Anaplasmosis', 'Liver Fluke Disease'} and any(k in signal_text for k in ['pale gums','anemia','bottle jaw','pale eyes','weakness']):
+            reasons.append('Anemia/bottle-jaw type signs fit this diagnosis.')
+        if d['name'] in {'Foot Rot'} and any(k in signal_text for k in ['limping','hoof','foot','foul smell','interdigital']):
+            reasons.append('Hoof/lameness pattern matches this diagnosis.')
+        if d['name'] in {'Mastitis'} and any(k in signal_text for k in ['udder','milk','teat','clots in milk','hot udder']):
+            reasons.append('Udder or milk abnormalities support this diagnosis.')
+        return reasons[:3]
+
+    top_candidates = ranked[:3]
+    evidence_strength = sum(hits for _, hits, _ in top_candidates)
+    insufficient_evidence = weak_signal or evidence_strength == 0
+
+    if insufficient_evidence:
+        shortlist = ranked[:min(3, len(ranked))]
         chosen_index = image_seed % len(shortlist)
         top_score, top_hits, top = shortlist[chosen_index]
-        confidence = round(min(0.61, max(0.44, top_score - 0.22)), 2)
+        confidence = round(min(0.58, max(0.38, top_score - 0.24)), 2)
+        primary_label = f"Possible {top['name']} (low evidence)"
     else:
         top_score, top_hits, top = ranked[0]
         confidence = min(0.97, round(top_score if top_hits > 0 else max(0.52, top_score - 0.18), 2))
+        primary_label = f"Possible {top['name']}"
 
     top_matches = []
-    for s, hits, d in ranked[:5]:
-        match_conf = round(min(0.97, s if hits > 0 else s - (0.22 if weak_signal else 0.14)), 2)
+    for s, hits, d in ranked[:3]:
+        match_conf = round(min(0.97, s if hits > 0 else s - (0.24 if insufficient_evidence else 0.14)), 2)
         top_matches.append({
             'diagnosis': d['name'],
-            'confidence': match_conf
+            'confidence': match_conf,
+            'why_it_matches': _match_reasons(d),
+            'how_to_tell_apart': d['differentiate'],
+            'prevention': d['prevention'],
+            'treatment': d['treatment'],
         })
 
     result = {
-        'diagnosis': f"Possible {top['name']}",
+        'diagnosis': primary_label,
         'confidence': confidence,
         'differentiation': top['differentiate'],
         'recommendation': ' | '.join(top['prevention']),
         'prevention': top['prevention'],
         'treatment': top['treatment'],
         'top_matches': top_matches,
+        'next_best_options': [m['diagnosis'] for m in top_matches[1:]],
+        'insufficient_evidence': insufficient_evidence,
         'vet_notice': 'Important: Contact a licensed veterinarian for confirmation before treatment.',
         'context_note_used': payload.context_note or '',
-        'analysis_signal': 'weak' if weak_signal else 'context-assisted',
-        'engine': 'FarmSavior AI Analyzer (livestock differential engine v4)'
+        'analysis_signal': 'weak' if insufficient_evidence else 'context-assisted',
+        'engine': 'FarmSavior AI Analyzer (livestock differential engine v5)'
     }
 
     rec = DiseaseScan(user_id=payload.user_id, image_url=payload.image_url, crop_type=payload.crop_type, result=json.dumps(result))
