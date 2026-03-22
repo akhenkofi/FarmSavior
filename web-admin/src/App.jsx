@@ -1038,6 +1038,7 @@ export default function App() {
   const [diseaseImageFileName, setDiseaseImageFileName] = useState('')
   const [diseaseImagePreview, setDiseaseImagePreview] = useState('')
   const [diseaseResult, setDiseaseResult] = useState(null)
+  const [diseaseAnalyzing, setDiseaseAnalyzing] = useState(false)
   const [plantIdForm, setPlantIdForm] = useState({ user_id: 1, image_url: '', file_name: '', context_hint: '', target_livestock: 'goats' })
   const [plantIdPreview, setPlantIdPreview] = useState('')
   const [plantIdResult, setPlantIdResult] = useState(null)
@@ -3959,6 +3960,7 @@ export default function App() {
         <form className='inlineForm' onSubmit={async e => {
           e.preventDefault();
           try {
+            setDiseaseAnalyzing(true)
             if (!diseaseForm.target) { alert('Please select animal type first.'); return }
             if (!diseaseForm.image_url) { alert('Please upload an animal image from your phone/camera.'); return }
             const r = await api.analyzeDisease({ user_id: Number(diseaseForm.user_id), category: 'animal', crop_type: diseaseForm.target, image_url: diseaseForm.image_url, context_note: diseaseForm.context_note });
@@ -3966,6 +3968,8 @@ export default function App() {
             await load();
           } catch (err) {
             alert(`Analyze failed: ${errMsg(err)}`)
+          } finally {
+            setDiseaseAnalyzing(false)
           }
         }}>
           <input className='input' placeholder='User ID' value={diseaseForm.user_id} onChange={(e)=>setDiseaseForm({...diseaseForm,user_id:e.target.value,category:'animal'})} />
@@ -3986,8 +3990,9 @@ export default function App() {
               alert(`Could not prepare image: ${err?.message || err}`)
             }
           }} />
-          <button className='btn btn-dark'>Analyze</button>
+          <button className='btn btn-dark' disabled={diseaseAnalyzing}>{diseaseAnalyzing ? 'FarmSavior is analyzing…' : 'Analyze'}</button>
         </form>
+        {diseaseAnalyzing && <div className='panel list' style={{marginBottom:12}}><div className='list-row'><strong>🌿 FarmSavior</strong><span>Analyzing image…</span></div><div style={{fontSize:'.9rem', color:'#64748b'}}>Please wait while FarmSavior checks the image, compares likely conditions, and prepares treatment guidance.</div></div>}
         {diseaseImageFileName && <p style={{fontSize:'.82rem',color:'#475569'}}>Uploaded: {diseaseImageFileName}</p>}
         {diseaseImagePreview && <img src={diseaseImagePreview} alt='Disease scan preview' style={{maxWidth:260,borderRadius:8,border:'1px solid #e2e8f0',marginBottom:8}} />}
         {diseaseResult && <div className='panel list' style={{marginBottom:12}}>
