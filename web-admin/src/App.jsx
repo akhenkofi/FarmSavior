@@ -1762,25 +1762,32 @@ export default function App() {
           {authMode === 'signup' && <form className='list' noValidate onSubmit={async (e) => {
             try {
               e.preventDefault();
-              const emailValue = String(signup.email || '').trim().toLowerCase()
-              const phoneValue = normalizePhone(signup.phone)
+              const form = new FormData(e.currentTarget)
+              const fullNameValue = String(form.get('full_name') || signup.full_name || '').trim()
+              const emailValue = String(form.get('email') || signup.email || '').trim().toLowerCase()
+              const phoneValue = normalizePhone(String(form.get('phone') || signup.phone || ''))
+              const countryValue = String(form.get('country') || signup.country || '').trim()
+              const regionValue = String(form.get('region') || signup.region || '').trim()
+              const passwordValue = String(form.get('password') || signup.password || '').trim()
+              const signupMethodValue = signup.signup_method
               if (!signup.accept_terms || !signup.accept_privacy) { setAuthMsg('Please accept Terms and Privacy to continue.'); return }
-              if (!String(signup.full_name || '').trim()) { setAuthMsg('Please enter your full name.'); return }
-              if (!String(signup.country || '').trim()) { setAuthMsg('Please enter your country.'); return }
-              if (!String(signup.region || '').trim()) { setAuthMsg('Please enter your region.'); return }
-              if (!String(signup.password || '').trim()) { setAuthMsg('Please enter a password.'); return }
-              if (signup.signup_method === 'phone' && !phoneValue) { setAuthMsg('Please enter a valid phone number.'); return }
-              if (signup.signup_method === 'email' && !emailValue) { setAuthMsg('Please enter your email address.'); return }
-              if (signup.signup_method === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) { setAuthMsg('Please enter a valid email address.'); return }
+              if (!fullNameValue) { setAuthMsg('Please enter your full name.'); return }
+              if (!countryValue) { setAuthMsg('Please enter your country.'); return }
+              if (!regionValue) { setAuthMsg('Please enter your region.'); return }
+              if (!passwordValue) { setAuthMsg('Please enter a password.'); return }
+              if (signupMethodValue === 'phone' && !phoneValue) { setAuthMsg('Please enter a valid phone number.'); return }
+              if (signupMethodValue === 'email' && !emailValue) { setAuthMsg('Please enter your email address.'); return }
+              if (signupMethodValue === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) { setAuthMsg('Please enter a valid email address.'); return }
+              setSignup(prev => ({ ...prev, full_name: fullNameValue, email: emailValue || prev.email, phone: phoneValue || prev.phone, country: countryValue, region: regionValue, password: passwordValue }))
               const payload = {
-                full_name: signup.full_name,
-                signup_method: signup.signup_method,
-                phone: signup.signup_method === 'phone' ? phoneValue : undefined,
-                email: signup.signup_method === 'email' ? emailValue : undefined,
-                country: signup.country,
-                region: signup.region,
+                full_name: fullNameValue,
+                signup_method: signupMethodValue,
+                phone: signupMethodValue === 'phone' ? phoneValue : undefined,
+                email: signupMethodValue === 'email' ? emailValue : undefined,
+                country: countryValue,
+                region: regionValue,
                 user_type: signup.user_type,
-                password: signup.password,
+                password: passwordValue,
               }
               const registerRes = await api.register(payload)
               await api.trackAnalyticsEvent({
