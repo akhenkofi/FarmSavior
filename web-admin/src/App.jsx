@@ -3997,7 +3997,8 @@ export default function App() {
             try {
               const data = await compressImageFileToDataUrl(f, { maxDim: 960, quality: 0.7, maxChars: 450000 })
               setDiseaseImagePreview(data)
-              setDiseaseForm(prev => ({ ...prev, category:'animal', image_url: data }))
+              const lightweightImageRef = `uploaded-image://${encodeURIComponent(f.name || 'animal-photo.jpg')}`
+              setDiseaseForm(prev => ({ ...prev, category:'animal', image_url: lightweightImageRef }))
             } catch (err) {
               alert(`Could not prepare image: ${err?.message || err}`)
             }
