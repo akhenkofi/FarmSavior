@@ -550,9 +550,16 @@ def _send_otp(destination: str, method: str, code: str):
             msg['From'] = settings.SMTP_FROM
             msg['To'] = destination
             msg.set_content(message)
-            with smtplib.SMTP(settings.SMTP_HOST, int(settings.SMTP_PORT or 587), timeout=12) as smtp:
+            smtp_host = str(settings.SMTP_HOST or '').strip().strip('"').strip("'")
+            smtp_user = str(settings.SMTP_USER or '').strip().strip('"').strip("'")
+            smtp_pass = str(settings.SMTP_PASS or '').strip().strip('"').strip("'")
+            smtp_from = str(settings.SMTP_FROM or '').strip().strip('"').strip("'") or smtp_user
+            msg['From'] = smtp_from
+            with smtplib.SMTP(smtp_host, int(settings.SMTP_PORT or 587), timeout=4) as smtp:
+                smtp.ehlo()
                 smtp.starttls()
-                smtp.login(settings.SMTP_USER, settings.SMTP_PASS)
+                smtp.ehlo()
+                smtp.login(smtp_user, smtp_pass)
                 smtp.send_message(msg)
             return {'sent': True, 'channel': 'email'}
         except Exception as e:
