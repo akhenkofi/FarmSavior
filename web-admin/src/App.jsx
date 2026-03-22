@@ -732,6 +732,8 @@ export default function App() {
   const [uiLang, setUiLang] = useState(() => localStorage.getItem('farmsavior_ui_lang') || 'en')
   const [phoneForOtp, setPhoneForOtp] = useState('')
   const [authMsg, setAuthMsg] = useState('')
+  const [authLoading, setAuthLoading] = useState(false)
+  const [communitySubmitting, setCommunitySubmitting] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [pendingFeatureLabel, setPendingFeatureLabel] = useState('')
   const [pendingFeatureSection, setPendingFeatureSection] = useState('')
@@ -1762,6 +1764,7 @@ export default function App() {
           {authMode === 'signup' && <form className='list' noValidate onSubmit={async (e) => {
             try {
               e.preventDefault();
+              setAuthLoading(true)
               const form = new FormData(e.currentTarget)
               const fullNameValue = String(form.get('full_name') || signup.full_name || '').trim()
               const emailValue = String(form.get('email') || signup.email || '').trim().toLowerCase()
@@ -1824,6 +1827,7 @@ export default function App() {
                 ? `Account created. Enter the OTP sent to ${destination}.`
                 : `Account created, but OTP delivery was not confirmed for ${destination}. Check backend mail/SMS sender settings or use the returned fallback code if shown.`)
             } catch (e) { setAuthMsg(`Signup failed: ${errMsg(e)}`) }
+            finally { setAuthLoading(false) }
           }}>
             <input className='input' name='full_name' autoComplete='name' placeholder='Full name' value={signup.full_name} onChange={e => setSignup({ ...signup, full_name: e.target.value })} onInput={e => setSignup({ ...signup, full_name: e.target.value })} required />
             <div className='row2'>
@@ -1849,28 +1853,33 @@ export default function App() {
               <label style={{display:'block',fontSize:'.84rem'}}><input type='checkbox' checked={signup.consent_aggregated_insights} onChange={e => setSignup({ ...signup, consent_aggregated_insights: e.target.checked })} /> Allow anonymized aggregated insights for ecosystem reports.</label>
               <div style={{fontSize:'.76rem', color:'#64748b', marginTop:6}}>You can update these preferences anytime in account settings.</div>
             </div>
-            <button className='btn btn-dark'>Create Account</button>
+            <button className='btn btn-dark' disabled={authLoading}>{authLoading ? 'FarmSavior is creating your account…' : 'Create Account'}</button>
+            {authLoading && <div className='panel' style={{padding:10, display:'flex', alignItems:'center', gap:10}}><div style={{fontSize:'1.2rem'}}>🌿</div><div><strong>FarmSavior</strong><div style={{fontSize:'.85rem', color:'#64748b'}}>Please wait while we create your account and contact the OTP service…</div></div></div>}
           </form>}
 
           {authMode === 'login' && <form className='list' onSubmit={async (e) => {
-            try { e.preventDefault(); const r = await api.login({ ...login, identifier: normalizeIdentifier(login.identifier) }); saveToken(r.access_token) } catch (e) { setAuthMsg(`Login failed: ${errMsg(e)}`) }
+            try { e.preventDefault(); setAuthLoading(true); const r = await api.login({ ...login, identifier: normalizeIdentifier(login.identifier) }); saveToken(r.access_token) } catch (e) { setAuthMsg(`Login failed: ${errMsg(e)}`) } finally { setAuthLoading(false) }
           }}>
             <input className='input' placeholder={t('Phone or Email','Téléphone ou e-mail','手机号或邮箱')} value={login.identifier} onChange={e => setLogin({ ...login, identifier: e.target.value })} required />
             <input className='input' type='password' placeholder={t('Password','Mot de passe','密码')} value={login.password} onChange={e => setLogin({ ...login, password: e.target.value })} required />
-            <button className='btn btn-dark'>{t('Login','Connexion','登录')}</button>
+            <button className='btn btn-dark' disabled={authLoading}>{authLoading ? 'FarmSavior is signing you in…' : t('Login','Connexion','登录')}</button>
+            {authLoading && <div className='panel' style={{padding:10, display:'flex', alignItems:'center', gap:10}}><div style={{fontSize:'1.2rem'}}>🌿</div><div><strong>FarmSavior</strong><div style={{fontSize:'.85rem', color:'#64748b'}}>Connecting to your account…</div></div></div>}
           </form>}
 
           {authMode === 'verify-otp' && <form className='list' onSubmit={async (e) => {
             try {
               e.preventDefault()
+              setAuthLoading(true)
               const r = await api.verifyOtp({ destination: otp.destination, code: otp.code })
               saveToken(r.access_token)
               setAuthMsg('Phone verified and account signed in successfully.')
             } catch (e) { setAuthMsg(`OTP verification failed: ${errMsg(e)}`) }
+            finally { setAuthLoading(false) }
           }}>
             <input className='input' placeholder='OTP destination' value={otp.destination} onChange={e => setOtp({ ...otp, destination: e.target.value })} required />
             <input className='input' placeholder={t('OTP Code','Code OTP','验证码')} value={otp.code} onChange={e => setOtp({ ...otp, code: e.target.value })} required />
-            <button className='btn btn-dark'>{t('Verify OTP','Vérifier OTP','验证 OTP')}</button>
+            <button className='btn btn-dark' disabled={authLoading}>{authLoading ? 'FarmSavior is verifying your OTP…' : t('Verify OTP','Vérifier OTP','验证 OTP')}</button>
+            {authLoading && <div className='panel' style={{padding:10, display:'flex', alignItems:'center', gap:10}}><div style={{fontSize:'1.2rem'}}>🌿</div><div><strong>FarmSavior</strong><div style={{fontSize:'.85rem', color:'#64748b'}}>Verifying your code…</div></div></div>}
           </form>}
 
           </>}
@@ -3839,7 +3848,7 @@ export default function App() {
 
           <article className='panel'>
             <h4>{t('Create Post','Créer une publication','创建帖子')}</h4>
-            <form className='list' onSubmit={async(e)=>{e.preventDefault(); if (editingCommunityPostId) { await api.updateCommunityPost(editingCommunityPostId, communityPostForm) } else { await api.createCommunityPost(communityPostForm) } setCommunityPostForm({ text:'', media_url:'', media_type:'TEXT', tags:'' }); setEditingCommunityPostId(null); await loadCommunity(); }}>
+            <form className='list' onSubmit={async(e)=>{e.preventDefault(); try { setCommunitySubmitting(true); if (editingCommunityPostId) { await api.updateCommunityPost(editingCommunityPostId, communityPostForm) } else { await api.createCommunityPost(communityPostForm) } setCommunityPostForm({ text:'', media_url:'', media_type:'TEXT', tags:'' }); setEditingCommunityPostId(null); await loadCommunity(); } finally { setCommunitySubmitting(false) } }}>
               <textarea className='input' rows={4} placeholder='Share your farm update, innovation, or product...' value={communityPostForm.text} onChange={(e)=>setCommunityPostForm({...communityPostForm, text:e.target.value})} />
               <input className='input' type='file' accept='image/*,video/*' onChange={(e)=>{
                 const f = e.target.files?.[0]
@@ -3856,9 +3865,10 @@ export default function App() {
               </select>
               <input className='input' placeholder='Tags (e.g. goats, irrigation, organic)' value={communityPostForm.tags} onChange={(e)=>setCommunityPostForm({...communityPostForm, tags:e.target.value})} />
               <div className='inlineForm'>
-                <button className='btn btn-dark'>{editingCommunityPostId ? 'Save Post Changes' : 'Post to Community'}</button>
-                {editingCommunityPostId && <button type='button' className='btn' onClick={()=>{ setEditingCommunityPostId(null); setCommunityPostForm({ text:'', media_url:'', media_type:'TEXT', tags:'' }) }}>Cancel Edit</button>}
+                <button className='btn btn-dark' disabled={communitySubmitting}>{communitySubmitting ? (editingCommunityPostId ? 'FarmSavior is saving your post…' : 'FarmSavior is uploading your post…') : (editingCommunityPostId ? 'Save Post Changes' : 'Post to Community')}</button>
+                {editingCommunityPostId && <button type='button' className='btn' onClick={()=>{ setEditingCommunityPostId(null); setCommunityPostForm({ text:'', media_url:'', media_type:'TEXT', tags:'' }) }} disabled={communitySubmitting}>Cancel Edit</button>}
               </div>
+              {communitySubmitting && <div className='panel' style={{padding:10, display:'flex', alignItems:'center', gap:10}}><div style={{fontSize:'1.2rem'}}>🌿</div><div><strong>FarmSavior Community</strong><div style={{fontSize:'.85rem', color:'#64748b'}}>{communityPostForm.media_url ? 'Uploading your image/video and publishing your post…' : 'Publishing your post…'}</div></div></div>}
             </form>
           </article>
         </div>
