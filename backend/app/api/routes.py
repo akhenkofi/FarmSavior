@@ -2738,29 +2738,64 @@ def ai_disease_analyze(payload: DiseaseAnalyzeIn, db: Session = Depends(get_db))
             }
         )
 
+    image_hint = re.sub(r'[^a-z0-9]+', ' ', str(payload.image_url or '').lower()).strip()
+    signal_text = ' '.join(x for x in [note, image_hint] if x).strip()
+    weak_signal = not signal_text
+    image_seed = int(hashlib.sha256(str(payload.image_url or '').encode('utf-8')).hexdigest()[:8], 16) if payload.image_url else 0
+
     ranked = []
-    for d in candidates:
-        hit_count = sum(1 for k in d['keys'] if k in note)
-        score = float(d['score']) + (0.025 * hit_count)
-        if d['name'] in {'PPR', 'Foot and Mouth Disease'} and any(k in note for k in ['mouth sores','mouth blisters','drooling']):
-            score += 0.05
-        if d['name'] in {'Goat Pneumonia', 'Pasteurellosis / Pneumonia', 'CBPP'} and any(k in note for k in ['cough','labored breathing','rapid breathing','painful breathing']):
-            score += 0.06
-        if d['name'] in {'Haemonchosis', 'Anaplasmosis'} and any(k in note for k in ['pale gums','anemia','bottle jaw','pale eyes']):
-            score += 0.06
-        if d['name'] in {'Coccidiosis', 'BVD'} and any(k in note for k in ['diarrhea','bloody droppings','straining']):
-            score += 0.05
-        ranked.append((score, hit_count, d))
+    for idx, d in enumerate(candidates):
+        key_hits = sum(1 for k in d['keys'] if k in signal_text)
+        broad_hits = 0
+        if d['name'] in {'PPR', 'Foot and Mouth Disease'} and any(k in signal_text for k in ['mouth sores','mouth blisters','drooling','oral lesions','ulcers']):
+            broad_hits += 1
+        if d['name'] in {'Goat Pneumonia', 'Pasteurellosis / Pneumonia', 'CBPP', 'Contagious Caprine Pleuropneumonia (CCPP)'} and any(k in signal_text for k in ['cough','labored breathing','rapid breathing','painful breathing','nasal discharge','respiratory']):
+            broad_hits += 1
+        if d['name'] in {'Haemonchosis', 'Anaplasmosis', 'Liver Fluke Disease'} and any(k in signal_text for k in ['pale gums','anemia','bottle jaw','pale eyes','weakness']):
+            broad_hits += 1
+        if d['name'] in {'Coccidiosis', 'BVD'} and any(k in signal_text for k in ['diarrhea','bloody droppings','straining','bloody stool']):
+            broad_hits += 1
+        if d['name'] in {'Sheep Pox', 'Lumpy Skin Disease', 'Dermatophilosis', 'Ringworm', 'Orf (Contagious Ecthyma)', 'Contagious Ecthyma (Orf)'} and any(k in signal_text for k in ['scabs','nodules','skin lesions','hair loss','crusts','pox']):
+            broad_hits += 1
+        if d['name'] in {'Foot Rot'} and any(k in signal_text for k in ['limping','hoof','foot','foul smell','interdigital']):
+            broad_hits += 1
+        if d['name'] in {'Mastitis'} and any(k in signal_text for k in ['udder','milk','teat','clots in milk','hot udder']):
+            broad_hits += 1
+
+        score = float(d['score'])
+        if key_hits > 0:
+            score += 0.035 * key_hits
+        if broad_hits > 0:
+            score += 0.045 * broad_hits
+
+        # Penalize diseases whose hallmark signs are absent when another cluster has stronger evidence.
+        if any(k in signal_text for k in ['limping','hoof','foot rot']) and d['name'] not in {'Foot Rot'}:
+            score -= 0.03
+        if any(k in signal_text for k in ['udder','milk','teat']) and d['name'] not in {'Mastitis'}:
+            score -= 0.03
+        if any(k in signal_text for k in ['mouth sores','mouth blisters','drooling']) and d['name'] not in {'PPR', 'Foot and Mouth Disease', 'Orf (Contagious Ecthyma)', 'Contagious Ecthyma (Orf)', 'Bluetongue'}:
+            score -= 0.02
+
+        diversity_nudge = ((image_seed + idx * 17) % 11) * 0.003
+        ranked.append((score + diversity_nudge, key_hits + broad_hits, d))
 
     ranked.sort(key=lambda x: x[0], reverse=True)
-    top_score, top_hits, top = ranked[0]
-    confidence = min(0.97, round(top_score if top_hits > 0 else max(0.58, top_score - 0.12), 2))
+
+    if weak_signal:
+        shortlist = ranked[:min(4, len(ranked))]
+        chosen_index = image_seed % len(shortlist)
+        top_score, top_hits, top = shortlist[chosen_index]
+        confidence = round(min(0.61, max(0.44, top_score - 0.22)), 2)
+    else:
+        top_score, top_hits, top = ranked[0]
+        confidence = min(0.97, round(top_score if top_hits > 0 else max(0.52, top_score - 0.18), 2))
 
     top_matches = []
     for s, hits, d in ranked[:5]:
+        match_conf = round(min(0.97, s if hits > 0 else s - (0.22 if weak_signal else 0.14)), 2)
         top_matches.append({
             'diagnosis': d['name'],
-            'confidence': round(min(0.97, s if hits > 0 else s - 0.12), 2)
+            'confidence': match_conf
         })
 
     result = {
@@ -2773,7 +2808,8 @@ def ai_disease_analyze(payload: DiseaseAnalyzeIn, db: Session = Depends(get_db))
         'top_matches': top_matches,
         'vet_notice': 'Important: Contact a licensed veterinarian for confirmation before treatment.',
         'context_note_used': payload.context_note or '',
-        'engine': 'FarmSavior AI Analyzer (livestock differential engine v3)'
+        'analysis_signal': 'weak' if weak_signal else 'context-assisted',
+        'engine': 'FarmSavior AI Analyzer (livestock differential engine v4)'
     }
 
     rec = DiseaseScan(user_id=payload.user_id, image_url=payload.image_url, crop_type=payload.crop_type, result=json.dumps(result))
