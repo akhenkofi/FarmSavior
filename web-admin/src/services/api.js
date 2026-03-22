@@ -5,6 +5,50 @@ const baseURL = rawBaseUrl.replace(/^http:\/\/api\.farmsavior\.com/i, 'https://a
 
 const api = axios.create({ baseURL })
 
+const AUTH_FAILURE_KEY = 'farmsavior_auth_failures'
+const AUTH_FAILURE_WINDOW_MS = 10 * 60 * 1000
+const AUTH_FAILURE_THRESHOLD = 3
+
+const readAuthFailures = () => {
+  try {
+    const raw = localStorage.getItem(AUTH_FAILURE_KEY)
+    const parsed = JSON.parse(raw || '[]')
+    const now = Date.now()
+    return Array.isArray(parsed)
+      ? parsed.filter((ts) => Number.isFinite(ts) && now - ts < AUTH_FAILURE_WINDOW_MS)
+      : []
+  } catch {
+    return []
+  }
+}
+
+const writeAuthFailures = (items) => {
+  try {
+    localStorage.setItem(AUTH_FAILURE_KEY, JSON.stringify(items))
+  } catch {}
+}
+
+const clearAuthFailures = () => {
+  try {
+    localStorage.removeItem(AUTH_FAILURE_KEY)
+  } catch {}
+}
+
+const recordAuthFailure = () => {
+  const next = [...readAuthFailures(), Date.now()]
+  writeAuthFailures(next)
+  return next.length
+}
+
+const forceLogoutToLogin = () => {
+  clearAuthFailures()
+  localStorage.removeItem('farmsavior_token')
+  if (typeof window !== 'undefined') {
+    const onPublic = window.location.search.includes('public=1')
+    if (!onPublic) window.location.href = '/?public=1&auth=login'
+  }
+}
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('farmsavior_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
@@ -12,17 +56,40 @@ api.interceptors.request.use((config) => {
 })
 
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    if (String(res?.config?.url || '').includes('/auth/me')) clearAuthFailures()
+    return res
+  },
   (error) => {
     const status = error?.response?.status
-    const detail = String(error?.response?.data?.detail || '').toLowerCase()
-    if (status === 401 || detail.includes('user not found') || detail.includes('missing bearer token')) {
-      localStorage.removeItem('farmsavior_token')
-      if (typeof window !== 'undefined') {
-        const onPublic = window.location.search.includes('public=1')
-        if (!onPublic) window.location.href = '/?public=1&auth=login'
-      }
+    const detailSource = error?.response?.data?.detail
+    const detail = typeof detailSource === 'string'
+      ? detailSource.toLowerCase()
+      : JSON.stringify(detailSource || {}).toLowerCase()
+    const reqUrl = String(error?.config?.url || '')
+    const isAuthMe = reqUrl.includes('/auth/me')
+
+    // Prevent random logout loops during deploy/restarts/network hiccups.
+    // Only hard-logout on repeated identity failures, or immediately for clearly invalid tokens.
+    const isStrongTokenFailure =
+      detail.includes('signature') ||
+      detail.includes('token') ||
+      detail.includes('jwt') ||
+      detail.includes('expired') ||
+      detail.includes('not enough segments')
+
+    const isIdentityFailure =
+      detail.includes('user not found') ||
+      detail.includes('missing bearer token') ||
+      (status === 401 && isAuthMe)
+
+    if (isStrongTokenFailure) {
+      forceLogoutToLogin()
+    } else if (isIdentityFailure) {
+      const failures = recordAuthFailure()
+      if (failures >= AUTH_FAILURE_THRESHOLD) forceLogoutToLogin()
     }
+
     return Promise.reject(error)
   }
 )
@@ -30,7 +97,19 @@ api.interceptors.response.use(
 export const register = async (payload) => (await api.post('/auth/register', payload)).data
 export const login = async (payload) => (await api.post('/auth/login', payload)).data
 export const verifyOtp = async (payload) => (await api.post('/auth/verify-otp', payload)).data
-export const fetchMe = async () => (await api.get('/auth/me')).data
+export const fetchMe = async () => {
+  try {
+    return (await api.get('/auth/me')).data
+  } catch (error) {
+    const status = error?.response?.status
+    const reqUrl = String(error?.config?.url || '')
+    if (status === 401 && reqUrl.includes('/auth/me')) {
+      await new Promise((resolve) => setTimeout(resolve, 700))
+      return (await api.get('/auth/me')).data
+    }
+    throw error
+  }
+}
 export const updateMe = async (payload) => (await api.put('/auth/me', payload)).data
 export const changePassword = async (payload) => (await api.post('/auth/change-password', payload)).data
 export const deleteAccount = async (payload) => (await api.post('/auth/delete-account', payload)).data
@@ -102,6 +181,18 @@ export const fetchSpotTradingHistory = async () => (await api.get('/market/spot-
 export const fetchTradeExportStats = async () => (await api.get('/trade/export-stats')).data
 export const fetchLivestockRecordsPlans = async () => (await api.get('/livestock-records/subscription/plans')).data
 export const checkoutLivestockRecordsPlan = async (payload) => (await api.post('/livestock-records/subscription/checkout', payload)).data
+export const fetchUniversityPlans = async (product) => (await api.get(`/university/${product}/plans`)).data
+export const fetchUniversitySubscriptionMe = async (product) => (await api.get(`/university/${product}/subscription/me`)).data
+export const checkoutUniversityPlan = async (product, payload) => (await api.post(`/university/${product}/subscription/checkout`, payload)).data
+export const verifyUniversitySubscription = async (product, reference) => (await api.get(`/university/${product}/subscription/verify/${reference}`)).data
+export const fetchPoultryUniversityPlans = async () => fetchUniversityPlans('poultry')
+export const fetchPoultryUniversitySubscriptionMe = async () => fetchUniversitySubscriptionMe('poultry')
+export const checkoutPoultryUniversityPlan = async (payload) => checkoutUniversityPlan('poultry', payload)
+export const verifyPoultryUniversitySubscription = async (reference) => verifyUniversitySubscription('poultry', reference)
+export const fetchLivestockRecordsAnimals = async (params) => (await api.get('/livestock-records/animals', { params })).data
+export const createLivestockRecord = async (payload) => (await api.post('/livestock-records/animals', payload)).data
+export const updateLivestockRecord = async (recordId, payload) => (await api.put(`/livestock-records/animals/${recordId}`, payload)).data
+export const deleteLivestockRecord = async (recordId) => (await api.delete(`/livestock-records/animals/${recordId}`)).data
 
 export const registerDeviceToken = async (payload) => (await api.post('/messaging/device-token', payload)).data
 export const fetchDeviceTokens = async () => (await api.get('/messaging/device-token')).data
@@ -124,6 +215,8 @@ export const fetchCommunityProfileMe = async () => (await api.get('/community/pr
 export const saveCommunityProfileMe = async (payload) => (await api.post('/community/profile/me', payload)).data
 export const fetchCommunityPosts = async (limit = 60) => (await api.get('/community/posts', { params: { limit } })).data
 export const createCommunityPost = async (payload) => (await api.post('/community/posts', payload)).data
+export const updateCommunityPost = async (postId, payload) => (await api.put(`/community/posts/${postId}`, payload)).data
+export const deleteCommunityPost = async (postId) => (await api.delete(`/community/posts/${postId}`)).data
 export const toggleCommunityPostLike = async (postId) => (await api.post(`/community/posts/${postId}/like`)).data
 export const fetchCommunityPostComments = async (postId) => (await api.get(`/community/posts/${postId}/comments`)).data
 export const addCommunityPostComment = async (postId, payload) => (await api.post(`/community/posts/${postId}/comments`, payload)).data
