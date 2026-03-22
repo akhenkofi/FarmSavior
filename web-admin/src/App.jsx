@@ -17,6 +17,29 @@ const normalizeIdentifier = (v='') => {
   return normalizePhone(s)
 }
 
+const compressImageFileToDataUrl = (file, { maxDim = 1600, quality = 0.82 } = {}) => new Promise((resolve, reject) => {
+  const reader = new FileReader()
+  reader.onerror = () => reject(new Error('Could not read image file'))
+  reader.onload = () => {
+    const img = new Image()
+    img.onerror = () => reject(new Error('Could not load selected image'))
+    img.onload = () => {
+      const scale = Math.min(1, maxDim / Math.max(img.width || 1, img.height || 1))
+      const width = Math.max(1, Math.round((img.width || 1) * scale))
+      const height = Math.max(1, Math.round((img.height || 1) * scale))
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return reject(new Error('Could not prepare image for upload'))
+      ctx.drawImage(img, 0, 0, width, height)
+      resolve(canvas.toDataURL('image/jpeg', quality))
+    }
+    img.src = String(reader.result || '')
+  }
+  reader.readAsDataURL(file)
+})
+
 const openLivestockManagement = () => {
   // Try route hints first
   try { window.location.hash = '#livestock-records' } catch {}
@@ -3951,17 +3974,17 @@ export default function App() {
             {animalOptions.map(x => <option key={x.value} value={x.value}>{x.label}</option>)}
           </select>
           <textarea className='input' placeholder='Describe animal symptoms (optional): e.g., coughing, discharge, lesions, diarrhea, fever...' value={diseaseForm.context_note || ''} onChange={(e)=>setDiseaseForm({...diseaseForm,context_note:e.target.value,category:'animal'})} rows={3} style={{minWidth:'100%'}} />
-          <input className='input' type='file' accept='image/*' onChange={(e)=>{
+          <input className='input' type='file' accept='image/*' onChange={async (e)=>{
             const f = e.target.files?.[0]
             if (!f) return
             setDiseaseImageFileName(f.name)
-            const reader = new FileReader()
-            reader.onload = () => {
-              const data = String(reader.result || '')
+            try {
+              const data = await compressImageFileToDataUrl(f)
               setDiseaseImagePreview(data)
               setDiseaseForm(prev => ({ ...prev, category:'animal', image_url: data }))
+            } catch (err) {
+              alert(`Could not prepare image: ${err?.message || err}`)
             }
-            reader.readAsDataURL(f)
           }} />
           <button className='btn btn-dark'>Analyze</button>
         </form>
