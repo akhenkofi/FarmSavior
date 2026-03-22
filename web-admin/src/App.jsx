@@ -1759,15 +1759,24 @@ export default function App() {
 
           <div className='tabs'>{['login', 'signup', ...(authMode === 'verify-otp' ? ['verify-otp'] : [])].map(m => <button key={m} className={`tab ${authMode === m ? 'active' : ''}`} onClick={() => setAuthMode(m)}>{m === 'login' ? t('LOGIN','LOGIN','登录') : m === 'signup' ? t('SIGNUP','INSCRIPTION','注册') : t('Verify OTP','Vérifier OTP','验证 OTP')}</button>)}</div>
 
-          {authMode === 'signup' && <form className='list' onSubmit={async (e) => {
+          {authMode === 'signup' && <form className='list' noValidate onSubmit={async (e) => {
             try {
               e.preventDefault();
+              const emailValue = String(signup.email || '').trim().toLowerCase()
+              const phoneValue = normalizePhone(signup.phone)
               if (!signup.accept_terms || !signup.accept_privacy) { setAuthMsg('Please accept Terms and Privacy to continue.'); return }
+              if (!String(signup.full_name || '').trim()) { setAuthMsg('Please enter your full name.'); return }
+              if (!String(signup.country || '').trim()) { setAuthMsg('Please enter your country.'); return }
+              if (!String(signup.region || '').trim()) { setAuthMsg('Please enter your region.'); return }
+              if (!String(signup.password || '').trim()) { setAuthMsg('Please enter a password.'); return }
+              if (signup.signup_method === 'phone' && !phoneValue) { setAuthMsg('Please enter a valid phone number.'); return }
+              if (signup.signup_method === 'email' && !emailValue) { setAuthMsg('Please enter your email address.'); return }
+              if (signup.signup_method === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) { setAuthMsg('Please enter a valid email address.'); return }
               const payload = {
                 full_name: signup.full_name,
                 signup_method: signup.signup_method,
-                phone: signup.signup_method === 'phone' ? normalizePhone(signup.phone) : undefined,
-                email: signup.signup_method === 'email' ? signup.email : undefined,
+                phone: signup.signup_method === 'phone' ? phoneValue : undefined,
+                email: signup.signup_method === 'email' ? emailValue : undefined,
                 country: signup.country,
                 region: signup.region,
                 user_type: signup.user_type,
