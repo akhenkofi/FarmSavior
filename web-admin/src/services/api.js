@@ -122,11 +122,13 @@ export const fetchUsers = async () => (await api.get('/users')).data
 export const fetchListings = async () => (await api.get('/marketplace/listings')).data
 export const createListing = async (payload) => (await api.post('/marketplace/listings', payload)).data
 export const updateListing = async (id, payload) => (await api.put(`/marketplace/listings/${id}`, payload)).data
+export const deleteListing = async (id) => (await api.delete(`/marketplace/listings/${id}`)).data
 export const patchListingPriceQty = async (id, payload) => (await api.patch(`/marketplace/listings/${id}/price-qty`, payload)).data
 
 export const fetchLivestock = async () => (await api.get('/marketplace/livestock')).data
 export const createLivestock = async (payload) => (await api.post('/marketplace/livestock', payload)).data
 export const updateLivestock = async (id, payload) => (await api.put(`/marketplace/livestock/${id}`, payload)).data
+export const deleteLivestock = async (id) => (await api.delete(`/marketplace/livestock/${id}`)).data
 export const patchLivestockPriceQty = async (id, payload) => (await api.patch(`/marketplace/livestock/${id}/price-qty`, payload)).data
 
 export const fetchLogistics = async () => (await api.get('/services/logistics')).data

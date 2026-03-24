@@ -2999,6 +2999,16 @@ def patch_listing_price_qty(listing_id: int, payload: dict = Body(...), db: Sess
     return {'decision': decision, 'ai_score': score, 'reason': reason, 'record': listing}
 
 
+
+@router.delete('/marketplace/listings/{listing_id}')
+def delete_listing(listing_id: int, db: Session = Depends(get_db)):
+    listing = db.query(CropListing).filter(CropListing.id == listing_id).first()
+    if not listing:
+        raise HTTPException(status_code=404, detail='Listing not found')
+    db.delete(listing)
+    db.commit()
+    return {'ok': True}
+
 @router.post('/marketplace/livestock')
 def create_livestock_listing(payload: LivestockListingIn, db: Session = Depends(get_db)):
     _require_transact_verified_user(db, int(payload.farmer_id), 'Seller')
@@ -3430,6 +3440,16 @@ def create_offer(payload: OfferIn, db: Session = Depends(get_db)):
 def list_offers(db: Session = Depends(get_db)):
     return db.query(ListingOffer).all()
 
+
+
+@router.delete('/marketplace/livestock/{listing_id}')
+def delete_livestock_listing(listing_id: int, db: Session = Depends(get_db)):
+    listing = db.query(LivestockListing).filter(LivestockListing.id == listing_id).first()
+    if not listing:
+        raise HTTPException(status_code=404, detail='Livestock listing not found')
+    db.delete(listing)
+    db.commit()
+    return {'ok': True}
 
 @router.post('/services/logistics')
 def create_logistics(payload: LogisticsIn, db: Session = Depends(get_db)):

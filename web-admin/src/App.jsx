@@ -812,6 +812,26 @@ function EmptyListingsState({ title, body, actionLabel, onAction }) {
   </div>
 }
 
+function ListingGallery({ images = [], title = 'Listing images' }) {
+  const [index, setIndex] = useState(0)
+  const list = parseImageList(images)
+  useEffect(() => { if (index >= list.length) setIndex(0) }, [list.length, index])
+  if (!list.length) return <div className='listing-cover placeholder'>No photo yet</div>
+  return <div className='gallery'>
+    <img src={list[index]} alt={`${title} ${index + 1}`} className='listing-cover' />
+    {list.length > 1 && <>
+      <div className='gallery-controls'>
+        <button type='button' className='btn btn-mini' onClick={() => setIndex((index - 1 + list.length) % list.length)}>‹</button>
+        <span className='gallery-count'>{index + 1}/{list.length}</span>
+        <button type='button' className='btn btn-mini' onClick={() => setIndex((index + 1) % list.length)}>›</button>
+      </div>
+      <div className='gallery-dots'>
+        {list.map((_, i) => <button key={`${title}-dot-${i}`} type='button' className={`gallery-dot ${i === index ? 'active' : ''}`} onClick={() => setIndex(i)} />)}
+      </div>
+    </>}
+  </div>
+}
+
 function DataTable({ columns, rows, filterKey, onEdit, onRowClick }) {
   const [q, setQ] = useState('')
   const filtered = rows.filter((r) => !q || String(r[filterKey] ?? '').toLowerCase().includes(q.toLowerCase()))
@@ -2755,11 +2775,11 @@ export default function App() {
               {state.listings.map((r) => {
                 const images = parseImageList(r.image_urls)
                 return <article key={`product-card-${r.id}`} className='listing-card'>
-                  <div className='listing-card-media'>{(r.cover_image_url || images[0]) ? <img src={r.cover_image_url || images[0]} alt={r.crop_name} className='listing-cover' /> : <div className='listing-cover placeholder'>No photo yet</div>}</div>
+                  <div className='listing-card-media'><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={r.crop_name} /></div>
                   <div className='listing-card-body'>
                     <strong>{r.crop_name}</strong>
                     <div className='helper-text'>{r.location || 'Location not set'} • {r.country} • {r.status}</div>
-                    <div className='listing-card-metrics'><span>{r.quantity_kg} kg</span><span>{r.unit_price}</span><span>{images.length} photos</span></div>
+                    <div className='listing-card-metrics'><span>{r.quantity_kg} kg</span><span>{r.unit_price}</span><span>{images.length} photos</span>{images.length ? <span className='cover-badge'>Cover ready</span> : null}</div>
                     <div className='card-actions'>
                       <button className='btn btn-dark' type='button' onClick={() => {
                         setCropEdit({ id: r.id, farmer_id: r.farmer_id || 1, crop_name: r.crop_name || '', quantity_kg: r.quantity_kg || '', unit_price: r.unit_price || '', location: r.location || '', country: r.country || 'GH', status: r.status || 'OPEN' })
@@ -2767,6 +2787,7 @@ export default function App() {
                         setProductEditImages(images)
                         setProductsView('edit')
                       }}>Edit</button>
+                      <button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete product #${r.id}?`)) return; await api.deleteListing(r.id); await load() }}>Delete</button>
                     </div>
                   </div>
                 </article>
@@ -2844,11 +2865,11 @@ export default function App() {
               {state.livestock.map((r) => {
                 const images = parseImageList(r.image_urls)
                 return <article key={`livestock-card-${r.id}`} className='listing-card'>
-                  <div className='listing-card-media'>{(r.cover_image_url || images[0]) ? <img src={r.cover_image_url || images[0]} alt={r.livestock_type} className='listing-cover' /> : <div className='listing-cover placeholder'>No photo yet</div>}</div>
+                  <div className='listing-card-media'><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={r.livestock_type} /></div>
                   <div className='listing-card-body'>
                     <strong>{r.livestock_type}</strong>
                     <div className='helper-text'>{r.location || 'Location not set'} • {r.country} • {r.status}</div>
-                    <div className='listing-card-metrics'><span>{r.quantity} animals</span><span>{r.unit_price}</span><span>{images.length} photos</span></div>
+                    <div className='listing-card-metrics'><span>{r.quantity} animals</span><span>{r.unit_price}</span><span>{images.length} photos</span>{images.length ? <span className='cover-badge'>Cover ready</span> : null}</div>
                     <div className='card-actions'>
                       <button className='btn btn-dark' type='button' onClick={() => {
                         setLivestockEdit({ id: r.id, farmer_id: r.farmer_id || 1, livestock_type: r.livestock_type || '', quantity: r.quantity || '', unit_price: r.unit_price || '', location: r.location || '', country: r.country || 'GH', status: r.status || 'OPEN' })
@@ -2856,6 +2877,7 @@ export default function App() {
                         setLivestockEditImages(images)
                         setLivestockView('edit')
                       }}>Edit</button>
+                      <button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete product #${r.id}?`)) return; await api.deleteListing(r.id); await load() }}>Delete</button>
                     </div>
                   </div>
                 </article>
