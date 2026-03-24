@@ -737,6 +737,84 @@ const currencyByCountry = { GH: 'GHS', NG: 'NGN', BF: 'XOF' }
 const fxByCurrency = { USD: 1, GHS: 15, NGN: 1600, XOF: 610 }
 const universityProducts = ['poultry', 'sheep', 'goat', 'cattle']
 const emptyUniversitySubscription = { tier: 'free', subscription: null, plans: [] }
+
+const professionalOutcomeBenchmarks = {
+  poultry: ['Flock readiness score', 'Health-compliance score', 'Feed-efficiency watchpoints', 'Market margin review'],
+  sheep: ['Breeding-discipline score', 'Lamb survival score', 'Parasite-control score', 'Replacement quality review'],
+  goat: ['Doe productivity score', 'Kid survival score', 'Parasite-risk score', 'Market batch readiness'],
+  cattle: ['Herd fertility score', 'Calf survival score', 'Tick-control score', 'Commercial growth review']
+}
+
+const executiveBriefs = {
+  poultry: `Poultry University Executive Brief
+
+Professional poultry production succeeds when climate control, feed discipline, vaccination timing, mortality management, and route-to-market are managed as one operating system.
+
+Minister-level message
+- Humid systems need litter dryness, drainage, and mycotoxin discipline.
+- Dry systems need heat relief, water security, and airflow reliability.
+- The most bankable poultry farms are not the biggest; they are the most consistent by tray, cycle, and margin.`,
+  sheep: `Sheep University Executive Brief
+
+A serious sheep program combines breeding discipline, lamb survival, parasite control, and measured market grading.
+
+Minister-level message
+- Breed improvement must be backed by records, not animal appearance alone.
+- Climate-fit management determines whether genetics translate into farmer profit.
+- The strongest systems reduce avoidable loss before chasing larger size.`,
+  goat: `Goat University Executive Brief
+
+A professional goat enterprise depends on kidding survival, parasite discipline, climate-fit browse strategy, and smart sire selection.
+
+Minister-level message
+- WAD resilience must be protected while improving frame and market weight.
+- Humid-zone parasite losses can erase the value of better genetics if management is weak.
+- Strong goat businesses are built on repeatable kidding and sale batches, not isolated showcase animals.`,
+  cattle: `Cattle University Executive Brief
+
+A modern cattle program should be judged by fertility, calf survival, feed-water resilience, and repeatable market weights.
+
+Minister-level message
+- Local adaptation is an asset to preserve, not a weakness to replace.
+- Climate adaptation, health schedule discipline, and breeding records create the real productivity gains.
+- Scalable cattle systems are built through measured herd improvement, not one-off large animals.`
+}
+
+function ProfessionalAssets({ product, progress, setProgress, trackKey, openModule }) {
+  const completed = (progress?.completed || []).length
+  return <>
+    <article className='panel' style={{marginTop:10, border:'1.5px solid #334155', background:'#f8fafc'}}>
+      <h4 style={{marginTop:0}}>🏛️ Executive / Policy Brief</h4>
+      <div className='helper-text' style={{marginBottom:8}}>Designed to feel credible to senior buyers, partners, and public-sector reviewers.</div>
+      <div className='inlineForm' style={{flexWrap:'wrap'}}>
+        <a className='btn' download={`${product}-Executive-Brief.txt`} href={'data:text/plain;charset=utf-8,' + encodeURIComponent(executiveBriefs[product] || '')}>Download Executive Brief</a>
+        <button className='btn' type='button' onClick={() => setProgress((s) => ({ ...s, completed: Array.from(new Set([...(s.completed || []), `${trackKey}:${openModule}`, `${product}:brief`])) }))}>Mark Brief Reviewed</button>
+      </div>
+    </article>
+    <article className='panel' style={{marginTop:10}}>
+      <h4 style={{marginTop:0}}>📊 Professional Benchmark Scorecard</h4>
+      <div className='list'>
+        {(professionalOutcomeBenchmarks[product] || []).map((item) => <div className='list-row' key={item}><span>{item}</span><strong>Track weekly</strong></div>)}
+      </div>
+    </article>
+    <article className='panel' style={{marginTop:10}}>
+      <h4 style={{marginTop:0}}>✅ Module Outcome Summary</h4>
+      <div className='list'>
+        <div className='list-row'><span>Module 1 outcome</span><strong>Foundation setup defined</strong></div>
+        <div className='list-row'><span>Module 2 outcome</span><strong>Breeding / sourcing standard locked</strong></div>
+        <div className='list-row'><span>Module 3 outcome</span><strong>Production routine and climate controls clear</strong></div>
+        <div className='list-row'><span>Module 4 outcome</span><strong>Health schedule and loss-response system active</strong></div>
+        <div className='list-row'><span>Module 5 outcome</span><strong>Commercial scaling rules and records in place</strong></div>
+      </div>
+    </article>
+    {completed >= 3 && <article className='panel' style={{marginTop:10, border:'2px solid #0f766e', background:'#ecfdf5'}}>
+      <h4 style={{marginTop:0}}>🧾 Professional Report Card</h4>
+      <p>This learner has completed multiple professional checkpoints and can export a review-ready completion record.</p>
+      <button className='btn btn-dark' type='button' onClick={() => window.print()}>Print Report Card / Certificate</button>
+    </article>}
+  </>
+}
+
 const universityPlanPreview = {
   free: {
     title: 'Free',
@@ -3330,6 +3408,8 @@ function AppInner() {
           </div>
         </article>}
 
+        {sheepTier === 'pro' && <ProfessionalAssets product='sheep' progress={sheepProgress} setProgress={setSheepProgress} trackKey={sheepTrack} openModule={openSheepModule} />}
+
         {sheepTier === 'pro' && (sheepProgress.completed||[]).length >= 3 && <article className='panel' style={{marginTop:10, border:'2px solid #7c3aed', background:'#f5f3ff'}}>
           <h4 style={{marginTop:0}}>🎓 Certificate of Completion</h4>
           <p>You have completed required sheep-program checkpoints. Certificate is ready.</p>
@@ -3454,6 +3534,8 @@ function AppInner() {
           </div>
         </article>}
 
+        {goatTier === 'pro' && <ProfessionalAssets product='goat' progress={goatProgress} setProgress={setGoatProgress} trackKey={goatTrack} openModule={openGoatModule} />}
+
         {goatTier === 'pro' && (goatProgress.completed||[]).length >= 3 && <article className='panel' style={{marginTop:10, border:'2px solid #0d9488', background:'#f0fdfa'}}>
           <h4 style={{marginTop:0}}>🎓 Certificate of Completion</h4>
           <p>You have completed required goat-program checkpoints. Certificate is ready.</p>
@@ -3574,6 +3656,8 @@ function AppInner() {
             <div className='list-row' style={{padding:'6px 10px', background:'#fff'}}><span>Completed checkpoints</span><strong>{(cattleProgress.completed||[]).length}</strong></div>
           </div>
         </article>}
+
+        {cattleTier === 'pro' && <ProfessionalAssets product='cattle' progress={cattleProgress} setProgress={setCattleProgress} trackKey={cattleTrack} openModule={openCattleModule} />}
 
         {cattleTier === 'pro' && (cattleProgress.completed||[]).length >= 3 && <article className='panel' style={{marginTop:10, border:'2px solid #d97706', background:'#fff7ed'}}>
           <h4 style={{marginTop:0}}>🎓 Certificate of Completion</h4>
