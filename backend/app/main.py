@@ -51,6 +51,11 @@ def ensure_runtime_columns():
 
 
 
+
+            if 'payout_history' in tables:
+                hcols = {c['name'] for c in inspector.get_columns('payout_history')}
+                if 'transfer_code' not in hcols:
+                    conn.execute(text('ALTER TABLE payout_history ADD COLUMN transfer_code VARCHAR(120)'))
             if 'marketplace_orders' in tables:
                 ocols = {c['name'] for c in inspector.get_columns('marketplace_orders')}
                 extra = {
@@ -67,7 +72,7 @@ def ensure_runtime_columns():
                     'user_id': 'INTEGER', 'country': "VARCHAR(10) DEFAULT 'GH'", 'payout_method': "VARCHAR(40) DEFAULT 'MOBILE_MONEY'",
                     'account_name': 'VARCHAR(160)', 'bank_name': 'VARCHAR(120)', 'account_number': 'VARCHAR(120)',
                     'mobile_money_provider': 'VARCHAR(80)', 'mobile_money_number': 'VARCHAR(80)', 'currency': "VARCHAR(10) DEFAULT 'GHS'",
-                    'is_verified': 'BOOLEAN DEFAULT 0', 'verification_status': "VARCHAR(40) DEFAULT 'PENDING'", 'default_payout_method': 'BOOLEAN DEFAULT 1',
+                    'is_verified': 'BOOLEAN DEFAULT 0', 'verification_status': "VARCHAR(40) DEFAULT 'PENDING'", 'transfer_recipient_code': 'VARCHAR(120)', 'recipient_last_status': 'VARCHAR(120)', 'default_payout_method': 'BOOLEAN DEFAULT 1',
                     'updated_at': 'DATETIME'
                 }
                 for col, ddl in required.items():

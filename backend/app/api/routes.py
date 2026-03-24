@@ -501,6 +501,41 @@ def _paystack_signature_valid(raw_body: bytes, signature: str) -> bool:
     expected = hmac.new(secret, raw_body, hashlib.sha512).hexdigest()
     return bool(signature) and hmac.compare_digest(expected, signature)
 
+
+def _paystack_create_transfer_recipient(profile: SellerPayoutProfile) -> dict:
+    recipient_type = 'mobile_money' if str(profile.payout_method).upper() == 'MOBILE_MONEY' else 'nuban'
+    details = {
+        'type': recipient_type,
+        'name': profile.account_name,
+        'currency': profile.currency or 'GHS',
+    }
+    if recipient_type == 'mobile_money':
+        details.update({
+            'account_number': profile.mobile_money_number,
+            'bank_code': profile.mobile_money_provider or 'MTN',
+        })
+    else:
+        details.update({
+            'account_number': profile.account_number,
+            'bank_code': profile.bank_name or 'BANK',
+        })
+    req = Request('https://api.paystack.co/transferrecipient', data=json.dumps(details).encode('utf-8'), headers=_paystack_headers(), method='POST')
+    with urlopen(req, timeout=20) as resp:
+        return json.loads(resp.read().decode('utf-8', errors='ignore'))
+
+
+def _paystack_initiate_transfer(amount_major: float, recipient_code: str, reason: str, reference: str) -> dict:
+    payload = {
+        'source': 'balance',
+        'amount': int(round(float(amount_major or 0) * 100)),
+        'recipient': recipient_code,
+        'reason': reason,
+        'reference': reference,
+    }
+    req = Request('https://api.paystack.co/transfer', data=json.dumps(payload).encode('utf-8'), headers=_paystack_headers(), method='POST')
+    with urlopen(req, timeout=20) as resp:
+        return json.loads(resp.read().decode('utf-8', errors='ignore'))
+
 def _trial_ledger_path() -> Path:
     p = (Path(__file__).resolve().parents[3] / 'data' / 'runtime' / 'subscription-trial-ledger.json')
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -3728,6 +3763,16 @@ def verify_seller_payout_profile(user_id: int, payload: SellerPayoutVerification
         raise HTTPException(status_code=404, detail='Payout profile not found')
     rec.is_verified = bool(payload.is_verified)
     rec.verification_status = payload.verification_status
+    if rec.is_verified and not rec.transfer_recipient_code and _paystack_secret_clean():
+        try:
+            ps = _paystack_create_transfer_recipient(rec)
+            data = (ps or {}).get('data') or {}
+            rec.transfer_recipient_code = data.get('recipient_code')
+            rec.recipient_last_status = str((ps or {}).get('message') or 'recipient created')
+        except Exception as e:
+            rec.is_verified = False
+            rec.verification_status = 'RECIPIENT_SETUP_FAILED'
+            rec.recipient_last_status = str(e)
     rec.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(rec)
@@ -3900,6 +3945,17 @@ async def paystack_webhook(request: Request, db: Session = Depends(get_db)):
             _notify_user(db, order.buyer_id, 'Payment secured', f'Your payment for order #{order.id} is now held in FarmSavior escrow.')
             _notify_user(db, order.seller_id, 'Escrow funded', f'Buyer payment for order #{order.id} is secured. You can now fulfill the order.')
             db.commit()
+    elif event in ['transfer.success', 'transfer.failed', 'transfer.reversed']:
+        transfer_code = str(data.get('transfer_code') or '')
+        hist = db.query(PayoutHistory).filter(PayoutHistory.transfer_code == transfer_code).order_by(PayoutHistory.id.desc()).first()
+        if hist:
+            hist.status = 'PAYOUT_SENT' if event == 'transfer.success' else ('PAYOUT_FAILED' if event == 'transfer.failed' else 'PAYOUT_REVERSED')
+            hist.receipt_note = str(data.get('status') or event)
+            order = db.query(MarketplaceOrder).filter(MarketplaceOrder.id == hist.order_id).first()
+            if order:
+                order.payout_status = hist.status
+                _notify_user(db, order.seller_id, 'Payout status updated', f'Order #{order.id} payout status: {hist.status}.')
+            db.commit()
     return {'ok': True}
 
 
@@ -3951,13 +4007,26 @@ def release_marketplace_order(order_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail='Seller payout method missing')
     if not payout.is_verified:
         raise HTTPException(status_code=400, detail='Seller payout method is not verified yet')
+    payout_ref = f"PO-{int(datetime.utcnow().timestamp())}-{random.randint(100,999)}"
+    transfer_code = None
+    payout_status = 'PAYOUT_PENDING'
+    receipt_note = 'Payout queued for disbursement'
+    if _paystack_secret_clean() and payout.transfer_recipient_code:
+        try:
+            ps_transfer = _paystack_initiate_transfer(order.seller_net, payout.transfer_recipient_code, f'FarmSavior order #{order.id} payout', payout_ref)
+            transfer_data = (ps_transfer or {}).get('data') or {}
+            transfer_code = transfer_data.get('transfer_code')
+            payout_status = 'PAYOUT_SENT'
+            receipt_note = str((ps_transfer or {}).get('message') or 'Paystack transfer initiated')
+        except Exception as e:
+            payout_status = 'PAYOUT_FAILED'
+            receipt_note = f'Paystack transfer failed: {e}'
     order.escrow_status = 'RELEASED'
-    order.payout_status = 'PAYOUT_SENT'
+    order.payout_status = payout_status
     order.updated_at = datetime.utcnow()
     setattr(order, 'released_at', datetime.utcnow())
-    payout_ref = f"PO-{int(datetime.utcnow().timestamp())}-{random.randint(100,999)}"
-    db.add(PayoutHistory(order_id=order.id, seller_id=order.seller_id, payout_profile_id=payout.id if payout else None, amount=order.seller_net, currency=order.currency or 'GHS', status='SENT', reference=payout_ref, receipt_note='Escrow released to seller payout method'))
-    _notify_user(db, order.seller_id, 'Payout released', f'FarmSavior released {order.seller_net} {order.currency} for order #{order.id}.')
+    db.add(PayoutHistory(order_id=order.id, seller_id=order.seller_id, payout_profile_id=payout.id if payout else None, amount=order.seller_net, currency=order.currency or 'GHS', status=payout_status, reference=payout_ref, transfer_code=transfer_code, receipt_note=receipt_note))
+    _notify_user(db, order.seller_id, 'Payout released', f'FarmSavior released {order.seller_net} {order.currency} for order #{order.id}. Status: {payout_status}.')
     _notify_user(db, order.buyer_id, 'Order completed', f'Order #{order.id} escrow has been released to the seller.')
     db.commit()
     db.refresh(order)

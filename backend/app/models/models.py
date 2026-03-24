@@ -229,6 +229,7 @@ class PayoutHistory(Base):
     currency = Column(String(10), default='GHS')
     status = Column(String(40), default='PENDING')
     reference = Column(String(120), nullable=True)
+    transfer_code = Column(String(120), nullable=True)
     receipt_note = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -246,6 +247,8 @@ class SellerPayoutProfile(Base):
     currency = Column(String(10), default='GHS')
     is_verified = Column(Boolean, default=False)
     verification_status = Column(String(40), default='PENDING')
+    transfer_recipient_code = Column(String(120), nullable=True)
+    recipient_last_status = Column(String(120), nullable=True)
     default_payout_method = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
