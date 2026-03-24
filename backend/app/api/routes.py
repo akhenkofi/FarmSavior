@@ -1761,6 +1761,8 @@ def public_main_weather():
             })
     write_snapshot('raw/weather/public_main_latest.json', rows)
     write_jsonl('raw/weather/public_main_history.jsonl', {'items': rows})
+    for row in rows:
+        row.text = _mask_contact_info(getattr(row, 'text', ''))
     return rows
 
 
@@ -1967,6 +1969,37 @@ def _world_chat_recover_db_from_store(db: Session):
     db.commit()
 
 
+
+
+def _text_has_blocked_contact_info(value: Optional[str]) -> bool:
+    raw = (value or '').strip()
+    if not raw:
+        return False
+    lower = raw.lower()
+    if re.search(r'(?i)\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b', raw):
+        return True
+    if re.search(r'(?:\+?\d[\d\s().-]{6,}\d)', raw) and len(re.sub(r'\D', '', raw)) >= 7:
+        return True
+    blocked = ['whatsapp', 'telegram', 'call me', 'text me', 'email me', 'reach me on', 'contact me at', '@gmail', '@yahoo']
+    return any(token in lower for token in blocked)
+
+
+def _assert_no_contact_info(*values: Optional[str]):
+    for value in values:
+        if _text_has_blocked_contact_info(value):
+            raise HTTPException(status_code=400, detail='Direct contact info is not allowed here. Use FarmSavior in-app contact flow.')
+
+
+def _mask_contact_info(value: Optional[str]) -> str:
+    raw = value or ''
+    if not raw:
+        return raw
+    raw = re.sub(r'(?i)\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b', '[contact removed]', raw)
+    raw = re.sub(r'(?:\+?\d[\d\s().-]{6,}\d)', '[contact removed]', raw)
+    for token in ['whatsapp', 'telegram', 'call me', 'text me', 'email me', 'reach me on', 'contact me at']:
+        raw = re.sub(token, '[contact removed]', raw, flags=re.IGNORECASE)
+    return raw
+
 def _moderate_world_chat_text(text: str) -> dict:
     raw = (text or '').strip()
     lower = raw.lower()
@@ -2013,7 +2046,7 @@ def world_chat_messages(limit: int = 120, db: Session = Depends(get_db)):
                 'user_id': r.user_id,
                 'user_name': r.user_name,
                 'user_country': r.user_country,
-                'text': r.text,
+                'text': _mask_contact_info(r.text),
                 'status': r.status,
                 'moderation_label': r.moderation_label,
                 'moderation_reason': r.moderation_reason,
@@ -2028,7 +2061,7 @@ def world_chat_messages(limit: int = 120, db: Session = Depends(get_db)):
             'user_id': r.user_id,
             'user_name': r.user_name,
             'user_country': r.user_country,
-            'text': r.text,
+            'text': _mask_contact_info(r.text),
             'created_at': r.created_at,
         } for r in rows]
 
@@ -2224,9 +2257,9 @@ def community_profile_me(authorization: Optional[str] = Header(None), db: Sessio
         'username': p.username,
         'avatar_url': p.avatar_url,
         'cover_image_url': p.cover_image_url,
-        'bio': p.bio,
-        'farm_life': p.farm_life,
-        'interests': p.interests,
+        'bio': _mask_contact_info(p.bio),
+        'farm_life': _mask_contact_info(p.farm_life),
+        'interests': _mask_contact_info(p.interests),
         'visibility': p.visibility,
     }
 
@@ -2246,6 +2279,7 @@ def community_profile_upsert(payload: CommunityProfileIn, authorization: Optiona
     if username:
         username = ''.join(ch for ch in username if ch.isalnum() or ch in ['_', '.'])[:30]
         data['username'] = username
+    _assert_no_contact_info(data.get('bio'), data.get('farm_life'), data.get('interests'), full_name)
     for k, v in data.items():
         setattr(p, k, v)
     if not p.username:
@@ -2259,9 +2293,9 @@ def community_profile_upsert(payload: CommunityProfileIn, authorization: Optiona
         'username': p.username,
         'avatar_url': p.avatar_url,
         'cover_image_url': p.cover_image_url,
-        'bio': p.bio,
-        'farm_life': p.farm_life,
-        'interests': p.interests,
+        'bio': _mask_contact_info(p.bio),
+        'farm_life': _mask_contact_info(p.farm_life),
+        'interests': _mask_contact_info(p.interests),
         'visibility': p.visibility,
     }
 
@@ -2285,7 +2319,7 @@ def community_posts(limit: int = 60, db: Session = Depends(get_db)):
             'author_username': profile.username if profile else None,
             'author_avatar_url': profile.avatar_url if profile else None,
             'author_cover_image_url': profile.cover_image_url if profile else None,
-            'text': r.text,
+            'text': _mask_contact_info(r.text),
             'media_url': r.media_url,
             'media_type': r.media_type,
             'tags': r.tags,
@@ -2954,6 +2988,7 @@ def list_farmer_profiles(db: Session = Depends(get_db)):
 @router.post('/marketplace/listings')
 def create_listing(payload: CropListingIn, db: Session = Depends(get_db)):
     _require_transact_verified_user(db, int(payload.farmer_id), 'Seller')
+    _assert_no_contact_info(payload.crop_name, payload.location)
     listing = CropListing(**payload.model_dump())
     db.add(listing)
     db.commit()
@@ -2972,6 +3007,7 @@ def update_listing(listing_id: int, payload: CropListingIn, db: Session = Depend
     if not listing:
         raise HTTPException(status_code=404, detail='Listing not found')
     data = payload.model_dump()
+    _assert_no_contact_info(data.get('crop_name'), data.get('location'))
 
     decision, score, reason = _ai_review_change('products', data)
     _save_update_review(db, 'products', listing_id, 'update', data, decision, score, reason)
@@ -3018,6 +3054,7 @@ def delete_listing(listing_id: int, db: Session = Depends(get_db)):
 @router.post('/marketplace/livestock')
 def create_livestock_listing(payload: LivestockListingIn, db: Session = Depends(get_db)):
     _require_transact_verified_user(db, int(payload.farmer_id), 'Seller')
+    _assert_no_contact_info(payload.livestock_type, payload.location)
     listing = LivestockListing(**payload.model_dump())
     db.add(listing)
     db.commit()
@@ -3037,6 +3074,7 @@ def update_livestock_listing(listing_id: int, payload: LivestockListingIn, db: S
         raise HTTPException(status_code=404, detail='Livestock listing not found')
 
     data = payload.model_dump()
+    _assert_no_contact_info(data.get('livestock_type'), data.get('location'))
     decision, score, reason = _ai_review_change('livestock', data)
     _save_update_review(db, 'livestock', listing_id, 'update', data, decision, score, reason)
     if decision == 'DENIED':
@@ -3460,6 +3498,7 @@ def delete_livestock_listing(listing_id: int, db: Session = Depends(get_db)):
 @router.post('/services/logistics')
 def create_logistics(payload: LogisticsIn, db: Session = Depends(get_db)):
     data = payload.model_dump()
+    _assert_no_contact_info(data.get('pickup_location'), data.get('dropoff_location'), data.get('cargo_type'), data.get('cargo_details'))
     req = LogisticsRequest(
         requester_id=data.get('requester_id') or data.get('created_by'),
         pickup_location=data['pickup_location'],
@@ -3487,6 +3526,7 @@ def update_logistics(request_id: int, payload: LogisticsIn, db: Session = Depend
     if not req:
         raise HTTPException(status_code=404, detail='Logistics request not found')
     data = payload.model_dump()
+    _assert_no_contact_info(data.get('pickup_location'), data.get('dropoff_location'), data.get('cargo_type'), data.get('cargo_details'))
     req.requester_id = data.get('requester_id') or data.get('created_by') or req.requester_id
     req.pickup_location = data.get('pickup_location', req.pickup_location)
     req.dropoff_location = data.get('dropoff_location', req.dropoff_location)
@@ -3523,6 +3563,7 @@ def accept_logistics(request_id: int, payload: LogisticsAcceptIn, db: Session = 
 
 @router.post('/services/equipment-rentals')
 def create_equipment_rental(payload: EquipmentRentalIn, db: Session = Depends(get_db)):
+    _assert_no_contact_info(payload.equipment_type, payload.location)
     rec = EquipmentRental(**payload.model_dump())
     db.add(rec)
     db.commit()
@@ -3549,6 +3590,7 @@ def update_equipment_rental(rental_id: int, payload: EquipmentRentalIn, db: Sess
     rec = db.query(EquipmentRental).filter(EquipmentRental.id == rental_id).first()
     if not rec:
         raise HTTPException(status_code=404, detail='Equipment rental not found')
+    _assert_no_contact_info(payload.equipment_type, payload.location)
     for k, v in payload.model_dump().items():
         setattr(rec, k, v)
     db.commit()
@@ -3567,6 +3609,7 @@ def delete_equipment_rental(rental_id: int, db: Session = Depends(get_db)):
 
 @router.post('/services/storage-reservations')
 def create_storage_reservation(payload: StorageReservationIn, db: Session = Depends(get_db)):
+    _assert_no_contact_info(payload.storage_type, payload.location)
     rec = StorageReservation(**payload.model_dump())
     db.add(rec)
     db.commit()
@@ -3584,6 +3627,7 @@ def update_storage_reservation(reservation_id: int, payload: StorageReservationI
     rec = db.query(StorageReservation).filter(StorageReservation.id == reservation_id).first()
     if not rec:
         raise HTTPException(status_code=404, detail='Storage reservation not found')
+    _assert_no_contact_info(payload.storage_type, payload.location)
     for k, v in payload.model_dump().items():
         setattr(rec, k, v)
     db.commit()
