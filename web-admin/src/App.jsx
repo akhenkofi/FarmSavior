@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 // homepage-priority-refresh
 import * as api from './services/api'
 
@@ -886,7 +886,7 @@ function DataTable({ columns, rows, filterKey, onEdit, onRowClick }) {
   </div>
 }
 
-export default function App() {
+function AppInner() {
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams('')
   const forcePublicView = searchParams.get('public') === '1'
   const authPrompt = searchParams.get('auth') || ''
@@ -4634,4 +4634,8 @@ export default function App() {
     </main>
   </div>
   </>
+}
+
+export default function App() {
+  return <AppErrorBoundary><AppInner /></AppErrorBoundary>
 }
