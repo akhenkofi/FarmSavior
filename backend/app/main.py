@@ -1,10 +1,13 @@
 from fastapi import FastAPI, Request
+import asyncio
+import random
+from datetime import datetime
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from app.core.config import settings
 from app.core.data_lake import write_jsonl
 from sqlalchemy import inspect, text
-from app.db.session import Base, engine
+from app.db.session import Base, engine, SessionLocal
 from app.api.routes import router
 
 Base.metadata.create_all(bind=engine)
@@ -97,6 +100,43 @@ def ensure_runtime_columns():
 
 ensure_runtime_columns()
 
+
+
+async def _auto_release_loop():
+    from app.models.models import MarketplaceOrder, SellerPayoutProfile, PayoutHistory, MarketplaceNotification
+    if not settings.AUTO_RELEASE_ENABLED:
+        return
+    while True:
+        await asyncio.sleep(max(60, int(settings.AUTO_RELEASE_INTERVAL_SECONDS or 900)))
+        try:
+            with SessionLocal() as db:
+                now = datetime.utcnow()
+                orders = db.query(MarketplaceOrder).filter(MarketplaceOrder.payment_status == 'PAID').all()
+                changed = False
+                for order in orders:
+                    auto_release_at = getattr(order, 'auto_release_at', None)
+                    if order.escrow_status in ['DISPUTED', 'REFUNDED', 'RELEASED']:
+                        continue
+                    if order.fulfillment_status not in ['DELIVERED', 'COMPLETED']:
+                        continue
+                    if not auto_release_at or auto_release_at > now:
+                        continue
+                    payout = db.query(SellerPayoutProfile).filter(SellerPayoutProfile.user_id == order.seller_id, SellerPayoutProfile.is_verified == True).first()
+                    if not payout:
+                        continue
+                    order.escrow_status = 'RELEASED'
+                    order.payout_status = 'PAYOUT_SENT'
+                    setattr(order, 'released_at', now)
+                    payout_ref = f"PO-{int(now.timestamp())}-{random.randint(100,999)}"
+                    db.add(PayoutHistory(order_id=order.id, seller_id=order.seller_id, payout_profile_id=payout.id, amount=order.seller_net, currency=order.currency or 'GHS', status='AUTO_RELEASED', reference=payout_ref, receipt_note='Scheduled auto release after delivery window'))
+                    db.add(MarketplaceNotification(user_id=order.seller_id, title='Auto payout released', message=f'FarmSavior auto-released escrow for order #{order.id}.'))
+                    db.add(MarketplaceNotification(user_id=order.buyer_id, title='Order auto-completed', message=f'FarmSavior auto-released escrow for order #{order.id} after the review window.'))
+                    changed = True
+                if changed:
+                    db.commit()
+        except Exception:
+            pass
+
 app = FastAPI(title=settings.APP_NAME, version='0.1.0')
 
 allowed_origins = [o.strip() for o in str(settings.FRONTEND_ORIGINS or '').split(',') if o.strip()]
@@ -147,3 +187,9 @@ async def security_and_capture(request: Request, call_next):
 @app.get('/')
 def health():
     return {'status': 'ok', 'service': settings.APP_NAME}
+
+
+@app.on_event('startup')
+async def startup_auto_release_task():
+    if settings.AUTO_RELEASE_ENABLED:
+        asyncio.create_task(_auto_release_loop())

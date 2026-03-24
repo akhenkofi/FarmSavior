@@ -34,6 +34,8 @@ class Settings(BaseSettings):
 
     # Optional external AI connectors
     PLANT_ID_API_KEY: str = ''
+    AUTO_RELEASE_ENABLED: bool = True
+    AUTO_RELEASE_INTERVAL_SECONDS: int = 900
 
 
 settings = Settings()
