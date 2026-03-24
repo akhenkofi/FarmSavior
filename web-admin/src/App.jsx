@@ -759,9 +759,9 @@ Object.values(goatTracks).forEach(track => {
  ...m,
  details: [
  ...(m.details || []),
- ` turn ${m.name.toLowerCase()} into a written checklist used before every major flock decision.`,
- ' compare humid-zone and dry-zone risk exposure before changing feed, breeding, or housing strategy.',
- idx === 4 ? ' summarize margin per doe exposed, per kid weaned, and per batch sold before scaling.' : ' define what evidence would prove this module is working on your farm within 30 days.'
+ `Turn ${m.name.toLowerCase()} into a practical checklist that can guide every major flock decision.`,
+ 'Compare humid-zone and dry-zone risks before changing feed, breeding, or housing strategy.',
+ idx === 4 ? 'Summarize margin per doe exposed, per kid weaned, and per batch sold before scaling.' : 'Define the signs that would show this module is improving farm performance within 30 days.'
  ]
  }))
 })
@@ -771,9 +771,9 @@ Object.values(cattleTracks).forEach(track => {
  ...m,
  details: [
  ...(m.details || []),
- ` assign one financial KPI and one biological KPI to ${m.name.toLowerCase()} so performance is reviewed as a business system.`,
- ' record the seasonal constraint most likely to break performance—water, feed, heat, ticks, or labor—and define the contingency action now.',
- idx === 2 ? ' require a calving-risk response plan, including labor readiness, calf support, and postpartum recovery review.' : ' review whether management improvements, not genetics alone, are responsible for the current results.'
+ `Assign one financial KPI and one biological KPI to ${m.name.toLowerCase()} so performance is reviewed as a business system.`,
+ 'Record the seasonal constraint most likely to break performance—water, feed, heat, ticks, or labor—and define the contingency action now.',
+ idx === 2 ? 'Require a calving-risk response plan, including labor readiness, calf support, and postpartum recovery review.' : 'Review whether management improvements, not genetics alone, are responsible for current results.'
  ]
  }))
 })
@@ -848,56 +848,56 @@ appendManualDetails(sheepTracks, {
 appendManualDetails(goatTracks, {
  0: [
  ' Explain why resilience genetics are commercially valuable, especially where parasite pressure, feed stress, and housing weakness are common.',
- ' score foundation does on kidding history, udder quality, parasite resilience, feet, and market-kid output.',
- ' define how much growth improvement is worth accepting before resilience begins to erode.'
+ 'Score foundation does on kidding history, udder quality, parasite resilience, feet, and market-kid output.',
+ 'Define how much growth improvement is worth accepting before resilience begins to erode.'
  ],
  1: [
- ' describe buck selection as a portfolio decision—frame, fertility, adaptation, and market fit must be balanced, not chased one at a time.',
- ' set a written buck quarantine, observation, and breeding-readiness procedure before introducing males to the flock.',
- ' match breeding groups to a clear output target such as market kids, replacement females, or terminal offspring.'
+ 'Treat buck selection as a portfolio decision: frame, fertility, adaptation, and market fit must be balanced rather than chased one at a time.',
+ 'Set a written buck quarantine, observation, and breeding-readiness procedure before introducing males to the flock.',
+ 'Match breeding groups to a clear output target such as market kids, replacement females, or terminal offspring.'
  ],
  2: [
- ' write a kidding-risk plan covering weak kids, twins, doe exhaustion, cold stress, and labor escalation.',
- ' identify what feed, water, and pen changes are required in the last trimester to reduce avoidable kid loss.',
- ' for {TITLE}, separate reproductive success from visible kidding events by measuring kid survival and doe recovery too.'
+ 'Write a kidding-risk plan covering weak kids, twins, doe exhaustion, cold stress, and labor escalation.',
+ 'Identify what feed, water, and pen changes are required in the last trimester to reduce avoidable kid loss.',
+ 'For {TITLE}, measure success through kid survival and doe recovery, not only through visible kidding events.'
  ],
  3: [
- ' define the practical signs that distinguish worm burden, respiratory stress, and nutritional lag in growing kids.',
- ' use a weekly kid review to decide who needs treatment, who needs separation, and which lines are underperforming.',
- ' create a parasite-risk calendar tied to rainfall, browsing pressure, and paddock hygiene rather than reacting only after visible weakness.'
+ 'Define the practical signs that distinguish worm burden, respiratory stress, and nutritional lag in growing kids.',
+ 'Use a weekly kid review to decide which animals need treatment, separation, or closer performance monitoring.',
+ 'Create a parasite-risk calendar tied to rainfall, browsing pressure, and paddock hygiene instead of reacting only after visible weakness.'
  ],
  4: [
- ' build sale batches by weight and body condition so buyers see consistency rather than random mixed-quality animals.',
- ' compare income from replacement quality, breeding stock, and meat sales so the flock strategy is aligned to the best margin path.',
- ' document why expansion is justified using kidding rate, kid survival, market acceptance, and labor readiness.'
+ 'Build sale batches by weight and body condition so buyers see consistency rather than random mixed-quality animals.',
+ 'Compare income from replacement quality, breeding stock, and meat sales so the flock strategy follows the best margin path.',
+ 'Document why expansion is justified using kidding rate, kid survival, market acceptance, and labor readiness.'
  ]
 })
 
 appendManualDetails(cattleTracks, {
  0: [
  ' Identify the commercial logic for preserving adapted cow lines while improving frame and carcass performance through selected sires.',
- ' score foundation cows for fertility, calving ease, calf survival, temperament, and drought-season performance.',
- ' define what kinds of visible size are useful and what kinds merely increase maintenance cost without market advantage.'
+ 'Score foundation cows for fertility, calving ease, calf survival, temperament, and drought-season performance.',
+ 'Define which visible size gains are commercially useful and which only raise maintenance cost without market advantage.'
  ],
  1: [
- ' write herd grouping rules that prevent random breeding and ensure every bull assignment serves a measurable herd-improvement purpose.',
- ' combine water planning, mineral access, and grazing movement into the breeding-season plan rather than treating them as separate tasks.',
- ' use a bull readiness checklist that covers feet, condition, reproductive behavior, and health before service begins.'
+ 'Write herd-grouping rules that prevent random breeding and ensure every bull assignment serves a measurable herd-improvement purpose.',
+ 'Combine water planning, mineral access, and grazing movement into the breeding-season plan rather than treating them as separate tasks.',
+ 'Use a bull-readiness checklist that covers feet, condition, reproductive behavior, and health before service begins.'
  ],
  2: [
- ' create a calving preparedness checklist with labor roles, calf support materials, emergency referral contacts, and postpartum follow-up timing.',
- ' pregnancy success should be reviewed through calf vigor, dam recovery, and rebreeding readiness—not simply a calf being born.',
- ' for {TITLE}, set clear response steps for calving delay, weak calves, retained placenta, or poor maternal behavior.'
+ 'Create a calving-preparedness checklist with labor roles, calf-support materials, emergency referral contacts, and postpartum follow-up timing.',
+ 'Review pregnancy success through calf vigor, dam recovery, and rebreeding readiness—not simply whether a calf was born.',
+ 'For {TITLE}, set clear response steps for calving delay, weak calves, retained placenta, or poor maternal behavior.'
  ],
  3: [
- ' define the weekly herd-health walk so it captures tick pressure, coat condition, manure changes, gait, appetite, and calf behavior.',
- ' separate disease pressure from poor forage, water stress, and handling stress before deciding the herd has a health problem.',
- ' use calf growth data to decide whether management, genetics, or environment is limiting performance.'
+ 'Define the weekly herd-health walk so it captures tick pressure, coat condition, manure changes, gait, appetite, and calf behavior.',
+ 'Separate disease pressure from poor forage, water stress, and handling stress before deciding the herd has a health problem.',
+ 'Use calf-growth data to decide whether management, genetics, or environment is limiting performance.'
  ],
  4: [
- ' grade market animals by class, frame, finish, and health reliability so pricing reflects system quality instead of guesswork.',
- ' treat herd scaling as a capital allocation decision that must be backed by feed security, labor strength, and stable reproductive data.',
- ' require a post-season review that answers whether the herd is truly improving or simply surviving.'
+ 'Grade market animals by class, frame, finish, and health reliability so pricing reflects system quality instead of guesswork.',
+ 'Treat herd scaling as a capital-allocation decision backed by feed security, labor strength, and stable reproductive data.',
+ 'Require a post-season review that answers whether the herd is truly improving or simply surviving.'
  ]
 })
 
