@@ -2,6 +2,38 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 // homepage-priority-refresh
 import * as api from './services/api'
 
+class AppErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false, message: '' }
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, message: error?.message || 'The app hit an unexpected problem.' }
+  }
+
+  componentDidCatch(error, info) {
+    console.error('FarmSavior UI crash', error, info)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <div className='crash-shell'>
+        <div className='crash-card'>
+          <h2>FarmSavior hit a problem</h2>
+          <p>The app recovered into safe mode instead of showing a blank screen.</p>
+          <div className='helper-text' style={{marginBottom:12}}>Error: {this.state.message}</div>
+          <div className='card-actions'>
+            <button className='btn btn-dark' type='button' onClick={() => window.location.reload()}>Reload app</button>
+            <button className='btn' type='button' onClick={() => { try { localStorage.removeItem('farmsavior_token') } catch {} window.location.href='/?public=1' }}>Open public view</button>
+          </div>
+        </div>
+      </div>
+    }
+    return this.props.children
+  }
+}
+
 const errMsg = (e) => e?.response?.data?.detail || e?.message || 'Request failed'
 const normalizePhone = (v='') => {
   const raw = String(v || '').trim()
