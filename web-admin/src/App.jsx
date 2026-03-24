@@ -844,6 +844,9 @@ function ListingDetailCard({ title, subtitle, stats = [], contact = '', children
   </article>
 }
 
+const listingKey = (kind, id) => `${kind}:${id}`
+const isSavedListing = (saved, kind, id) => saved.includes(listingKey(kind, id))
+
 function DataTable({ columns, rows, filterKey, onEdit, onRowClick }) {
   const [q, setQ] = useState('')
   const filtered = rows.filter((r) => !q || String(r[filterKey] ?? '').toLowerCase().includes(q.toLowerCase()))
@@ -892,6 +895,8 @@ export default function App() {
   const [livestockView, setLivestockView] = useState('list')
   const [servicesView, setServicesView] = useState('list')
   const [lightbox, setLightbox] = useState({ open: false, images: [], index: 0, title: '' })
+  const [savedListings, setSavedListings] = useState(() => { try { return JSON.parse(localStorage.getItem('farmsavior_saved_listings') || '[]') } catch { return [] } })
+  const [publicDetail, setPublicDetail] = useState(null)
   const [homeQuery, setHomeQuery] = useState('')
   const [publicQuery, setPublicQuery] = useState('')
   const [recentSearches, setRecentSearches] = useState([])
@@ -1169,6 +1174,10 @@ export default function App() {
   useEffect(() => {
     setMobileMenuOpen(false)
   }, [active])
+
+  useEffect(() => {
+    try { localStorage.setItem('farmsavior_saved_listings', JSON.stringify(savedListings)) } catch {}
+  }, [savedListings])
 
   useEffect(() => {
     setOpenPoultryModule(0)
@@ -1810,7 +1819,7 @@ export default function App() {
               (n) => ({ name: `Market item ${n}` })
             ).map((x,i)=>{
               const inventory = Number(productInventoryByName.get(x.name) || 0)
-              return <div className='list-row' key={`p-${i}`}><span>{displayProductName(x.name)}</span><strong>{inventory.toLocaleString()}</strong></div>
+              return <div className='list-row' key={`p-${i}`} role='button' tabIndex={0} onClick={() => setPublicDetail({ title: displayProductName(x.name), subtitle: 'High demand product listing preview', stats: [`${inventory.toLocaleString()} in marketplace`, 'Public preview'], images: [], section: 'products' })}><span>{displayProductName(x.name)}</span><strong>{inventory.toLocaleString()}</strong></div>
             })}
           </div>}
         </article>
@@ -1826,7 +1835,7 @@ export default function App() {
               (n) => ({ name: `Service slot ${n}` })
             ).map((x,i)=>{
               const inventory = Number(serviceInventoryByName.get(x.name) || 0)
-              return <div className='list-row' key={`s-${i}`}><span>{displayServiceName(x.name)}</span><strong>{inventory.toLocaleString()}</strong></div>
+              return <div className='list-row' key={`s-${i}`} role='button' tabIndex={0} onClick={() => setPublicDetail({ title: displayServiceName(x.name), subtitle: 'High demand service listing preview', stats: [`${inventory.toLocaleString()} in marketplace`, 'Public preview'], images: [], section: 'services' })}><span>{displayServiceName(x.name)}</span><strong>{inventory.toLocaleString()}</strong></div>
             })}
           </div>}
         </article>
@@ -2352,6 +2361,25 @@ export default function App() {
         <div style={{marginTop:6}}>{t('Information in marketplace, AI tools, weather, plant/pest insights, and community content is provided as guidance only and does not replace professional agronomy, veterinary, legal, or financial advice. Always verify locally before acting.','Les informations du marché, des outils IA, de la météo, des analyses plantes/ravageurs et du contenu communautaire sont fournies à titre indicatif et ne remplacent pas les conseils professionnels en agronomie, vétérinaire, juridique ou financier. Vérifiez toujours localement avant d’agir.','市场、AI工具、天气、植物/害虫洞察和社区内容仅供参考，不可替代农业、兽医、法律或金融专业意见。请在本地核实后再行动。')}</div>
       </article>
 
+      {publicDetail && <div className='lightbox' onClick={() => setPublicDetail(null)}>
+        <div className='lightbox-inner public-detail' onClick={(e) => e.stopPropagation()}>
+          <div className='list-row' style={{marginBottom:8}}>
+            <strong>{publicDetail.title}</strong>
+            <button type='button' className='btn btn-dark' onClick={() => setPublicDetail(null)}>Close</button>
+          </div>
+          <ListingGallery images={publicDetail.images} title={publicDetail.title} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} />
+          <div className='detail-meta' style={{marginTop:10}}>
+            <div className='helper-text'>{publicDetail.subtitle}</div>
+            <div className='listing-card-metrics'>{(publicDetail.stats || []).map((item) => <span key={item}>{item}</span>)}</div>
+            <div className='contact-panel'>Sign in to contact this seller/provider directly.</div>
+            <div className='card-actions'>
+              <button type='button' className='btn btn-dark' onClick={() => handleProtectedAction(publicDetail.section, `Contact ${publicDetail.title}`)}>Contact Seller</button>
+              <button type='button' className='btn' onClick={() => handleProtectedAction(publicDetail.section, `Save ${publicDetail.title}`)}>Save Listing</button>
+              <button type='button' className='btn' onClick={async () => { try { await navigator.share?.({ title: publicDetail.title, text: publicDetail.subtitle, url: window.location.href }) } catch {} }}>Share</button>
+            </div>
+          </div>
+        </div>
+      </div>}
       <div className='panel' style={{marginTop:10, fontSize:'.84rem', color:'#475569', display:'flex', gap:14, flexWrap:'wrap'}}>
         <a href='/privacy-policy.html' target='_blank' rel='noreferrer'>Privacy Policy</a>
         <a href='/terms-of-service.html' target='_blank' rel='noreferrer'>Terms of Service</a>
@@ -2808,7 +2836,7 @@ export default function App() {
                         setProductEditImages(images)
                         setProductsView('edit')
                       }}>Edit</button>
-                      <button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete product #${r.id}?`)) return; await api.deleteListing(r.id); await load() }}>Delete</button>
+                      <button className='btn' type='button' onClick={() => setSavedListings(prev => isSavedListing(prev, 'product', r.id) ? prev.filter(x => x !== listingKey('product', r.id)) : [...prev, listingKey('product', r.id)])}>{isSavedListing(savedListings, 'product', r.id) ? 'Saved ✓' : 'Save'}</button><button className='btn' type='button' onClick={async () => { try { await navigator.share?.({ title: r.crop_name, text: `${r.location || ''} • ${r.quantity_kg} kg`, url: window.location.href }) } catch {} }}>Share</button><a className='btn' href={`https://wa.me/?text=${encodeURIComponent(`I am interested in ${r.crop_name} on FarmSavior`)}`} target='_blank' rel='noreferrer'>WhatsApp</a><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete product #${r.id}?`)) return; await api.deleteListing(r.id); await load() }}>Delete</button>
                     </div>
                   </div>
                 </ListingDetailCard>
@@ -2892,7 +2920,7 @@ export default function App() {
                         setLivestockEditImages(images)
                         setLivestockView('edit')
                       }}>Edit</button>
-                      <button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete product #${r.id}?`)) return; await api.deleteListing(r.id); await load() }}>Delete</button>
+                      <button className='btn' type='button' onClick={() => setSavedListings(prev => isSavedListing(prev, 'product', r.id) ? prev.filter(x => x !== listingKey('product', r.id)) : [...prev, listingKey('product', r.id)])}>{isSavedListing(savedListings, 'product', r.id) ? 'Saved ✓' : 'Save'}</button><button className='btn' type='button' onClick={async () => { try { await navigator.share?.({ title: r.crop_name, text: `${r.location || ''} • ${r.quantity_kg} kg`, url: window.location.href }) } catch {} }}>Share</button><a className='btn' href={`https://wa.me/?text=${encodeURIComponent(`I am interested in ${r.crop_name} on FarmSavior`)}`} target='_blank' rel='noreferrer'>WhatsApp</a><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete product #${r.id}?`)) return; await api.deleteListing(r.id); await load() }}>Delete</button>
                     </div>
                   </div>
                 </ListingDetailCard>
@@ -3849,13 +3877,13 @@ export default function App() {
 
         {servicesView === 'list' && <div className='three-col'>
           <article className='panel'><h4>Logistics Requests</h4>{!state.logistics.length ? <EmptyListingsState title='No logistics services yet' body='Create your first logistics request or transport service listing.' actionLabel='Add Logistics Service' onAction={() => setServicesView('create')} /> : <div className='list'>
-            {state.logistics.map((r) => { const images = parseImageList(r.image_urls); return <ListingDetailCard key={`log-${r.id}`} title={`${r.pickup_location} → ${r.dropoff_location}`} subtitle={`${r.cargo_type || 'General cargo'} • ${r.status}`} stats={[`${r.weight_kg || 0} kg`, `${images.length} photos`]} contact={r.contact_name || r.phone || `Requester #${r.requester_id || '—'}`}><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={`Logistics ${r.id}`} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /><div className='card-actions'><button className='btn btn-dark' type='button' onClick={() => { setLogisticsEdit({ id: r.id, requester_id: r.requester_id || 1, pickup_location: r.pickup_location || '', dropoff_location: r.dropoff_location || '', cargo_type: r.cargo_type || '', weight_kg: r.weight_kg || '', status: r.status || 'PENDING' }); setServiceEditImages(images); setServicesView('edit') }}>Edit</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete logistics service #${r.id}?`)) return; await api.deleteLogistics(r.id); await load() }}>Delete</button></div></ListingDetailCard> })}
+            {state.logistics.map((r) => { const images = parseImageList(r.image_urls); return <ListingDetailCard key={`log-${r.id}`} title={`${r.pickup_location} → ${r.dropoff_location}`} subtitle={`${r.cargo_type || 'General cargo'} • ${r.status}`} stats={[`${r.weight_kg || 0} kg`, `${images.length} photos`]} contact={r.contact_name || r.phone || `Requester #${r.requester_id || '—'}`}><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={`Logistics ${r.id}`} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /><div className='card-actions'><button className='btn btn-dark' type='button' onClick={() => { setLogisticsEdit({ id: r.id, requester_id: r.requester_id || 1, pickup_location: r.pickup_location || '', dropoff_location: r.dropoff_location || '', cargo_type: r.cargo_type || '', weight_kg: r.weight_kg || '', status: r.status || 'PENDING' }); setServiceEditImages(images); setServicesView('edit') }}>Edit</button><button className='btn' type='button' onClick={() => setSavedListings(prev => isSavedListing(prev, 'logistics', r.id) ? prev.filter(x => x !== listingKey('logistics', r.id)) : [...prev, listingKey('logistics', r.id)])}>{isSavedListing(savedListings, 'logistics', r.id) ? 'Saved ✓' : 'Save'}</button><button className='btn' type='button' onClick={async () => { try { await navigator.share?.({ title: `${r.pickup_location} → ${r.dropoff_location}`, text: r.cargo_type || 'Logistics service', url: window.location.href }) } catch {} }}>Share</button><a className='btn' href={`https://wa.me/?text=${encodeURIComponent(`I am interested in your logistics service on FarmSavior`)}`} target='_blank' rel='noreferrer'>WhatsApp</a><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete logistics service #${r.id}?`)) return; await api.deleteLogistics(r.id); await load() }}>Delete</button></div></ListingDetailCard> })}
           </div>}</article>
           <article className='panel'><h4>Equipment Rentals</h4>{!state.equipment.length ? <EmptyListingsState title='No equipment rentals yet' body='Create your first machinery or equipment rental service.' actionLabel='Add Equipment Service' onAction={() => setServicesView('create')} /> : <div className='list'>
-            {state.equipment.map((r) => { const images = parseImageList(r.image_urls); return <ListingDetailCard key={`eq-${r.id}`} title={r.equipment_type} subtitle={`${r.location || 'Location not set'} • ${r.status}`} stats={[`${r.duration_days} days`, `${r.budget} budget`, `${images.length} photos`]} contact={r.contact_name || r.phone || `Requester #${r.requester_id || '—'}`}><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={`Equipment ${r.id}`} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /><div className='card-actions'><button className='btn btn-dark' type='button' onClick={() => { setEquipmentEdit({ id: r.id, requester_id: r.requester_id || 1, equipment_type: r.equipment_type || '', duration_days: r.duration_days || '', location: r.location || '', budget: r.budget || '', status: r.status || 'PENDING' }); setServiceEditImages(images); setServicesView('edit') }}>Edit</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete equipment service #${r.id}?`)) return; await api.deleteEquipment(r.id); await load() }}>Delete</button></div></ListingDetailCard> })}
+            {state.equipment.map((r) => { const images = parseImageList(r.image_urls); return <ListingDetailCard key={`eq-${r.id}`} title={r.equipment_type} subtitle={`${r.location || 'Location not set'} • ${r.status}`} stats={[`${r.duration_days} days`, `${r.budget} budget`, `${images.length} photos`]} contact={r.contact_name || r.phone || `Requester #${r.requester_id || '—'}`}><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={`Equipment ${r.id}`} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /><div className='card-actions'><button className='btn btn-dark' type='button' onClick={() => { setEquipmentEdit({ id: r.id, requester_id: r.requester_id || 1, equipment_type: r.equipment_type || '', duration_days: r.duration_days || '', location: r.location || '', budget: r.budget || '', status: r.status || 'PENDING' }); setServiceEditImages(images); setServicesView('edit') }}>Edit</button><button className='btn' type='button' onClick={() => setSavedListings(prev => isSavedListing(prev, 'equipment', r.id) ? prev.filter(x => x !== listingKey('equipment', r.id)) : [...prev, listingKey('equipment', r.id)])}>{isSavedListing(savedListings, 'equipment', r.id) ? 'Saved ✓' : 'Save'}</button><button className='btn' type='button' onClick={async () => { try { await navigator.share?.({ title: r.equipment_type, text: r.location || 'Equipment service', url: window.location.href }) } catch {} }}>Share</button><a className='btn' href={`https://wa.me/?text=${encodeURIComponent(`I am interested in your equipment rental on FarmSavior`)}`} target='_blank' rel='noreferrer'>WhatsApp</a><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete equipment service #${r.id}?`)) return; await api.deleteEquipment(r.id); await load() }}>Delete</button></div></ListingDetailCard> })}
           </div>}</article>
           <article className='panel'><h4>Storage Reservations</h4>{!state.storage.length ? <EmptyListingsState title='No storage services yet' body='Create your first storage or cold-room service listing.' actionLabel='Add Storage Service' onAction={() => setServicesView('create')} /> : <div className='list'>
-            {state.storage.map((r) => { const images = parseImageList(r.image_urls); return <ListingDetailCard key={`st-${r.id}`} title={r.storage_type} subtitle={`${r.location || 'Location not set'} • ${r.status}`} stats={[`${r.quantity_kg} kg`, `${r.duration_days} days`, `${images.length} photos`]} contact={r.contact_name || r.phone || `Requester #${r.requester_id || '—'}`}><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={`Storage ${r.id}`} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /><div className='card-actions'><button className='btn btn-dark' type='button' onClick={() => { setStorageEdit({ id: r.id, requester_id: r.requester_id || 1, storage_type: r.storage_type || '', quantity_kg: r.quantity_kg || '', location: r.location || '', duration_days: r.duration_days || '', status: r.status || 'PENDING' }); setServiceEditImages(images); setServicesView('edit') }}>Edit</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete storage service #${r.id}?`)) return; await api.deleteStorage(r.id); await load() }}>Delete</button></div></ListingDetailCard> })}
+            {state.storage.map((r) => { const images = parseImageList(r.image_urls); return <ListingDetailCard key={`st-${r.id}`} title={r.storage_type} subtitle={`${r.location || 'Location not set'} • ${r.status}`} stats={[`${r.quantity_kg} kg`, `${r.duration_days} days`, `${images.length} photos`]} contact={r.contact_name || r.phone || `Requester #${r.requester_id || '—'}`}><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={`Storage ${r.id}`} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /><div className='card-actions'><button className='btn btn-dark' type='button' onClick={() => { setStorageEdit({ id: r.id, requester_id: r.requester_id || 1, storage_type: r.storage_type || '', quantity_kg: r.quantity_kg || '', location: r.location || '', duration_days: r.duration_days || '', status: r.status || 'PENDING' }); setServiceEditImages(images); setServicesView('edit') }}>Edit</button><button className='btn' type='button' onClick={() => setSavedListings(prev => isSavedListing(prev, 'storage', r.id) ? prev.filter(x => x !== listingKey('storage', r.id)) : [...prev, listingKey('storage', r.id)])}>{isSavedListing(savedListings, 'storage', r.id) ? 'Saved ✓' : 'Save'}</button><button className='btn' type='button' onClick={async () => { try { await navigator.share?.({ title: r.storage_type, text: r.location || 'Storage service', url: window.location.href }) } catch {} }}>Share</button><a className='btn' href={`https://wa.me/?text=${encodeURIComponent(`I am interested in your storage service on FarmSavior`)}`} target='_blank' rel='noreferrer'>WhatsApp</a><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete storage service #${r.id}?`)) return; await api.deleteStorage(r.id); await load() }}>Delete</button></div></ListingDetailCard> })}
           </div>}</article>
         </div>}
       </section>}
