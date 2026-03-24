@@ -147,6 +147,11 @@ export const updateStorage = async (id, payload) => (await api.put(`/services/st
 export const deleteStorage = async (id) => (await api.delete(`/services/storage-reservations/${id}`)).data
 
 
+
+export const fetchPayoutProfiles = async () => (await api.get('/payouts/profiles')).data
+export const savePayoutProfile = async (payload) => (await api.post('/payouts/profiles', payload)).data
+export const verifyPayoutProfile = async (userId, payload) => (await api.put(`/payouts/profiles/${userId}/verify`, payload)).data
+
 export const fetchOrders = async () => (await api.get('/orders')).data
 export const createOrder = async (payload) => (await api.post('/orders', payload)).data
 export const payOrder = async (id, payload) => (await api.post(`/orders/${id}/pay`, payload)).data

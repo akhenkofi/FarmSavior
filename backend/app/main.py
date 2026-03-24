@@ -46,6 +46,19 @@ def ensure_runtime_columns():
                         conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN cover_image_url TEXT"))
 
 
+
+            if 'seller_payout_profiles' in tables:
+                pcols = {c['name'] for c in inspector.get_columns('seller_payout_profiles')}
+                required = {
+                    'user_id': 'INTEGER', 'country': "VARCHAR(10) DEFAULT 'GH'", 'payout_method': "VARCHAR(40) DEFAULT 'MOBILE_MONEY'",
+                    'account_name': 'VARCHAR(160)', 'bank_name': 'VARCHAR(120)', 'account_number': 'VARCHAR(120)',
+                    'mobile_money_provider': 'VARCHAR(80)', 'mobile_money_number': 'VARCHAR(80)', 'currency': "VARCHAR(10) DEFAULT 'GHS'",
+                    'is_verified': 'BOOLEAN DEFAULT 0', 'verification_status': "VARCHAR(40) DEFAULT 'PENDING'", 'default_payout_method': 'BOOLEAN DEFAULT 1',
+                    'updated_at': 'DATETIME'
+                }
+                for col, ddl in required.items():
+                    if col not in pcols:
+                        conn.execute(text(f'ALTER TABLE seller_payout_profiles ADD COLUMN {col} {ddl}'))
             if 'marketplace_orders' in tables:
                 ocols = {c['name'] for c in inspector.get_columns('marketplace_orders')}
                 required = {

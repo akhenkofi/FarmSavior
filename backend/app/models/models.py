@@ -205,6 +205,26 @@ class StorageReservation(Base):
 
 
 
+
+
+class SellerPayoutProfile(Base):
+    __tablename__ = 'seller_payout_profiles'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), unique=True)
+    country = Column(String(10), default='GH')
+    payout_method = Column(String(40), default='MOBILE_MONEY')
+    account_name = Column(String(160), nullable=False)
+    bank_name = Column(String(120), nullable=True)
+    account_number = Column(String(120), nullable=True)
+    mobile_money_provider = Column(String(80), nullable=True)
+    mobile_money_number = Column(String(80), nullable=True)
+    currency = Column(String(10), default='GHS')
+    is_verified = Column(Boolean, default=False)
+    verification_status = Column(String(40), default='PENDING')
+    default_payout_method = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
 class MarketplaceOrder(Base):
     __tablename__ = 'marketplace_orders'
     id = Column(Integer, primary_key=True)

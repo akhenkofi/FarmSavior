@@ -164,6 +164,25 @@ class LogisticsAcceptIn(BaseModel):
 
 
 
+
+
+class SellerPayoutProfileIn(BaseModel):
+    user_id: int
+    country: Optional[str] = 'GH'
+    payout_method: str
+    account_name: str
+    bank_name: Optional[str] = None
+    account_number: Optional[str] = None
+    mobile_money_provider: Optional[str] = None
+    mobile_money_number: Optional[str] = None
+    currency: Optional[str] = 'GHS'
+    default_payout_method: Optional[bool] = True
+
+
+class SellerPayoutVerificationIn(BaseModel):
+    is_verified: bool = False
+    verification_status: str = 'PENDING'
+
 class MarketplaceOrderIn(BaseModel):
     buyer_id: int
     seller_id: int

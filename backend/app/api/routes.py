@@ -3654,6 +3654,40 @@ def _order_fee_breakdown(unit_price: float, quantity: float):
     return gross, platform_fee, processing_fee, seller_net
 
 
+
+
+@router.get('/payouts/profiles')
+def list_seller_payout_profiles(db: Session = Depends(get_db)):
+    return db.query(SellerPayoutProfile).order_by(SellerPayoutProfile.id.desc()).all()
+
+
+@router.post('/payouts/profiles')
+def upsert_seller_payout_profile(payload: SellerPayoutProfileIn, db: Session = Depends(get_db)):
+    _assert_no_contact_info(payload.account_name, payload.bank_name)
+    rec = db.query(SellerPayoutProfile).filter(SellerPayoutProfile.user_id == payload.user_id).first()
+    if not rec:
+        rec = SellerPayoutProfile(user_id=payload.user_id)
+        db.add(rec)
+    for key, value in payload.model_dump().items():
+        setattr(rec, key, value)
+    rec.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(rec)
+    return rec
+
+
+@router.put('/payouts/profiles/{user_id}/verify')
+def verify_seller_payout_profile(user_id: int, payload: SellerPayoutVerificationIn, db: Session = Depends(get_db)):
+    rec = db.query(SellerPayoutProfile).filter(SellerPayoutProfile.user_id == user_id).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail='Payout profile not found')
+    rec.is_verified = bool(payload.is_verified)
+    rec.verification_status = payload.verification_status
+    rec.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(rec)
+    return rec
+
 @router.post('/orders')
 def create_marketplace_order(payload: MarketplaceOrderIn, db: Session = Depends(get_db)):
     _require_transact_verified_user(db, int(payload.buyer_id), 'Buyer')
@@ -3763,8 +3797,13 @@ def release_marketplace_order(order_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail='Order not found')
     if order.payment_status != 'PAID':
         raise HTTPException(status_code=400, detail='Order has not been paid into escrow')
+    payout = db.query(SellerPayoutProfile).filter(SellerPayoutProfile.user_id == order.seller_id).first()
+    if not payout:
+        raise HTTPException(status_code=400, detail='Seller payout method missing')
+    if not payout.is_verified:
+        raise HTTPException(status_code=400, detail='Seller payout method is not verified yet')
     order.escrow_status = 'RELEASED'
-    order.payout_status = 'RELEASED'
+    order.payout_status = 'PAYOUT_SENT'
     order.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(order)
