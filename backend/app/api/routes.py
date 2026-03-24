@@ -3736,6 +3736,40 @@ def list_marketplace_orders(db: Session = Depends(get_db)):
     return db.query(MarketplaceOrder).order_by(MarketplaceOrder.id.desc()).all()
 
 
+
+
+@router.get('/orders/{order_id}')
+def get_marketplace_order(order_id: int, db: Session = Depends(get_db)):
+    order = db.query(MarketplaceOrder).filter(MarketplaceOrder.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail='Order not found')
+    return order
+
+
+@router.get('/orders/{order_id}/receipt')
+def marketplace_order_receipt(order_id: int, db: Session = Depends(get_db)):
+    order = db.query(MarketplaceOrder).filter(MarketplaceOrder.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail='Order not found')
+    return {
+        'order_id': order.id,
+        'listing_title': order.listing_title,
+        'listing_type': order.listing_type,
+        'gross_amount': order.gross_amount,
+        'platform_fee': order.platform_fee,
+        'processing_fee': order.processing_fee,
+        'seller_net': order.seller_net,
+        'currency': order.currency,
+        'escrow_status': order.escrow_status,
+        'payment_status': order.payment_status,
+        'payout_status': order.payout_status,
+        'payment_reference': order.payment_reference,
+        'receipt_message': f'FarmSavior escrow receipt for order #{order.id}',
+        'created_at': order.created_at,
+        'released_at': getattr(order, 'released_at', None),
+        'refunded_at': getattr(order, 'refunded_at', None),
+    }
+
 @router.post('/orders/{order_id}/pay')
 def pay_marketplace_order(order_id: int, payload: PaymentIn, db: Session = Depends(get_db)):
     order = db.query(MarketplaceOrder).filter(MarketplaceOrder.id == order_id).first()

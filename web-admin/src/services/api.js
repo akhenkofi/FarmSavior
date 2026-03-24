@@ -160,6 +160,8 @@ export const verifyPayoutProfile = async (userId, payload) => (await api.put(`/p
 
 export const fetchOrders = async () => (await api.get('/orders')).data
 export const createOrder = async (payload) => (await api.post('/orders', payload)).data
+export const fetchOrder = async (id) => (await api.get(`/orders/${id}`)).data
+export const fetchOrderReceipt = async (id) => (await api.get(`/orders/${id}/receipt`)).data
 export const payOrder = async (id, payload) => (await api.post(`/orders/${id}/pay`, payload)).data
 export const updateOrderStatus = async (id, payload) => (await api.put(`/orders/${id}/status`, payload)).data
 export const confirmOrder = async (id) => (await api.post(`/orders/${id}/confirm`)).data

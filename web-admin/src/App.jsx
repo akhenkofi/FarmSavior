@@ -972,6 +972,8 @@ export default function App() {
   const [payoutForm, setPayoutForm] = useState({ user_id: 2, country: 'GH', payout_method: 'MOBILE_MONEY', account_name: '', bank_name: '', account_number: '', mobile_money_provider: 'MTN', mobile_money_number: '', currency: 'GHS', default_payout_method: true })
   const [buyerOrderUserId, setBuyerOrderUserId] = useState(String(me?.id || 1))
   const [sellerOrderUserId, setSellerOrderUserId] = useState(String(me?.id || 2))
+  const [selectedOrder, setSelectedOrder] = useState(null)
+  const [selectedReceipt, setSelectedReceipt] = useState(null)
   const [paymentForm, setPaymentForm] = useState({ payer_id: 2, payee_id: 1, amount: '', country: 'GH', method: 'MobileMoney', provider: 'MTN MoMo', escrow_enabled: true })
   const [paymentEdit, setPaymentEdit] = useState({ id: '', payer_id: 2, payee_id: 1, amount: '', country: 'GH', method: 'MobileMoney', provider: 'MTN MoMo', escrow_enabled: true })
   const [alertForm, setAlertForm] = useState({ country: 'GH', region: '', severity: 'MEDIUM', alert_type: '', message: '', valid_until: '' })
@@ -2443,6 +2445,32 @@ export default function App() {
         </div>}
       </div>
     </div>}
+    {selectedOrder && <div className='lightbox' onClick={() => setSelectedOrder(null)}>
+      <div className='lightbox-inner public-detail' onClick={(e) => e.stopPropagation()}>
+        <div className='list-row' style={{marginBottom:8}}><strong>Order details</strong><button type='button' className='btn btn-dark' onClick={() => setSelectedOrder(null)}>Close</button></div>
+        <div className='detail-meta'>
+          <div className='listing-card-metrics'>
+            <span>Order {selectedOrder.id}</span><span>{selectedOrder.listing_type}</span><span>{selectedOrder.escrow_status}</span>
+          </div>
+          <h4>{selectedOrder.listing_title}</h4>
+          <div className='helper-text'>Payment {selectedOrder.payment_status} • Payout {selectedOrder.payout_status}</div>
+          <div className='panel' style={{marginTop:10}}>
+            <div>Gross: {selectedOrder.gross_amount} {selectedOrder.currency}</div>
+            <div>Platform fee: {selectedOrder.platform_fee}</div>
+            <div>Processing fee: {selectedOrder.processing_fee}</div>
+            <div>Seller net: {selectedOrder.seller_net}</div>
+            <div>Payment ref: {selectedOrder.payment_reference || 'Pending'}</div>
+          </div>
+        </div>
+      </div>
+    </div>}
+    {selectedReceipt && <div className='lightbox' onClick={() => setSelectedReceipt(null)}>
+      <div className='lightbox-inner public-detail' onClick={(e) => e.stopPropagation()}>
+        <div className='list-row' style={{marginBottom:8}}><strong>Receipt / Invoice</strong><button type='button' className='btn btn-dark' onClick={() => setSelectedReceipt(null)}>Close</button></div>
+        <pre className='receipt-box'>{JSON.stringify(selectedReceipt, null, 2)}</pre>
+        <div className='card-actions'><button type='button' className='btn btn-dark' onClick={() => window.print()}>Print / Save PDF</button></div>
+      </div>
+    </div>}
     <div className='layout'>
     <aside className={`sidebar ${mobileMenuOpen ? 'open' : ''}`}>
       <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
@@ -2456,6 +2484,7 @@ export default function App() {
       <div className='mobileTopBar'>
         <button className='btn btn-dark' type='button' onClick={() => setMobileMenuOpen(v => !v)}>{mobileMenuOpen ? 'Close menu' : 'Menu'}</button>
         <strong>FarmSavior</strong>
+        <span className='notif-badge'>{state.notifications.filter(n => !n.is_read).length}</span>
       </div>
       <div className='inlineForm' style={{marginBottom:10, justifyContent:'space-between'}}>
         <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
@@ -3938,27 +3967,27 @@ export default function App() {
         <div className='three-col' style={{marginTop:12}}>
           <article className='panel'><h4>Buyer Order Page</h4><input className='input filter' placeholder='View orders for this buyer account' value={buyerOrderUserId} onChange={e => setBuyerOrderUserId(e.target.value)} />
             <div className='list'>
-              {state.orders.filter(o => String(o.buyer_id) === String(buyerOrderUserId)).map((o) => <ListingDetailCard key={`buyer-${o.id}`} title={`${o.listing_title} • Order ${o.id}`} subtitle={`Escrow ${o.escrow_status} • Fulfillment ${o.fulfillment_status}`} stats={[`${o.gross_amount} ${o.currency}`, `seller net ${o.seller_net}`, `ref ${o.payment_reference || '—'}`]} contact={'Seller protected by FarmSavior escrow'}><div className='card-actions'><button className='btn btn-dark' type='button' onClick={async () => { await api.payOrder(o.id, { ...orderPayment, payer_id: o.buyer_id, payee_id: o.seller_id, amount: o.gross_amount }); await load() }}>Pay Securely</button><button className='btn' type='button' onClick={async () => { await api.confirmOrder(o.id); await load() }}>Confirm Receipt</button><button className='btn' type='button' onClick={async () => { await api.disputeOrder(o.id, { buyer_note: 'Buyer dispute submitted from dashboard' }); await load() }}>Open Dispute</button><button className='btn' type='button' onClick={async () => { await api.refundOrder(o.id, { buyer_note: 'Buyer refund requested from dashboard' }); await load() }}>Request Refund</button></div></ListingDetailCard>)}
+              {state.orders.filter(o => String(o.buyer_id) === String(buyerOrderUserId)).map((o) => <ListingDetailCard key={`buyer-${o.id}`} title={`${o.listing_title} • Order ${o.id}`} subtitle={`Escrow ${o.escrow_status} • Fulfillment ${o.fulfillment_status}`} stats={[`${o.gross_amount} ${o.currency}`, `seller net ${o.seller_net}`, `ref ${o.payment_reference || '—'}`]} contact={'Seller protected by FarmSavior escrow'}><div className='card-actions'><button className='btn btn-dark' type='button' onClick={async () => { await api.payOrder(o.id, { ...orderPayment, payer_id: o.buyer_id, payee_id: o.seller_id, amount: o.gross_amount }); await load() }}>Pay Securely</button><button className='btn' type='button' onClick={async () => { await api.confirmOrder(o.id); await load() }}>Confirm Receipt</button><button className='btn' type='button' onClick={async () => { await api.disputeOrder(o.id, { buyer_note: 'Buyer dispute submitted from dashboard' }); await load() }}>Open Dispute</button><button className='btn' type='button' onClick={async () => { const order = await api.fetchOrder(o.id); setSelectedOrder(order) }}>View Order</button><button className='btn' type='button' onClick={async () => { const receipt = await api.fetchOrderReceipt(o.id); setSelectedReceipt(receipt) }}>Receipt</button><button className='btn' type='button' onClick={async () => { await api.refundOrder(o.id, { buyer_note: 'Buyer refund requested from dashboard' }); await load() }}>Request Refund</button></div></ListingDetailCard>)}
               {!state.orders.filter(o => String(o.buyer_id) === String(buyerOrderUserId)).length && <EmptyListingsState title='No buyer orders yet' body='Buyer orders will appear here with escrow, payment, and dispute controls.' />}
             </div>
           </article>
 
           <article className='panel'><h4>Seller Order Dashboard</h4><input className='input filter' placeholder='View orders for this seller account' value={sellerOrderUserId} onChange={e => setSellerOrderUserId(e.target.value)} />
             <div className='list'>
-              {state.orders.filter(o => String(o.seller_id) === String(sellerOrderUserId)).map((o) => <ListingDetailCard key={`seller-${o.id}`} title={`${o.listing_title} • Order ${o.id}`} subtitle={`Escrow ${o.escrow_status} • Payout ${o.payout_status}`} stats={[`${o.quantity} qty`, `${o.gross_amount} ${o.currency}`, `${o.fulfillment_status}`]} contact={`Delivery ${o.delivery_method}`}><div className='card-actions'><button className='btn btn-dark' type='button' onClick={async () => { await api.updateOrderStatus(o.id, { fulfillment_status: 'SELLER_ACCEPTED', seller_note: 'Seller accepted order' }); await load() }}>Accept</button><button className='btn' type='button' onClick={async () => { await api.updateOrderStatus(o.id, { fulfillment_status: 'IN_FULFILLMENT', escrow_status: 'IN_FULFILLMENT', seller_note: 'Seller is preparing order' }); await load() }}>Preparing</button><button className='btn' type='button' onClick={async () => { await api.updateOrderStatus(o.id, { fulfillment_status: 'SHIPPED', escrow_status: 'IN_FULFILLMENT', seller_note: 'Seller marked as shipped' }); await load() }}>Mark Shipped</button><button className='btn' type='button' onClick={async () => { await api.updateOrderStatus(o.id, { fulfillment_status: 'DELIVERED', seller_note: 'Seller marked as delivered' }); await load() }}>Mark Delivered</button></div></ListingDetailCard>)}
+              {state.orders.filter(o => String(o.seller_id) === String(sellerOrderUserId)).map((o) => <ListingDetailCard key={`seller-${o.id}`} title={`${o.listing_title} • Order ${o.id}`} subtitle={`Escrow ${o.escrow_status} • Payout ${o.payout_status}`} stats={[`${o.quantity} qty`, `${o.gross_amount} ${o.currency}`, `${o.fulfillment_status}`]} contact={`Delivery ${o.delivery_method}`}><div className='card-actions'><button className='btn btn-dark' type='button' onClick={async () => { await api.updateOrderStatus(o.id, { fulfillment_status: 'SELLER_ACCEPTED', seller_note: 'Seller accepted order' }); await load() }}>Accept</button><button className='btn' type='button' onClick={async () => { await api.updateOrderStatus(o.id, { fulfillment_status: 'IN_FULFILLMENT', escrow_status: 'IN_FULFILLMENT', seller_note: 'Seller is preparing order' }); await load() }}>Preparing</button><button className='btn' type='button' onClick={async () => { await api.updateOrderStatus(o.id, { fulfillment_status: 'SHIPPED', escrow_status: 'IN_FULFILLMENT', seller_note: 'Seller marked as shipped' }); await load() }}>Mark Shipped</button><button className='btn' type='button' onClick={async () => { await api.updateOrderStatus(o.id, { fulfillment_status: 'DELIVERED', seller_note: 'Seller marked as delivered' }); await load() }}>Mark Delivered</button><button className='btn' type='button' onClick={async () => { const order = await api.fetchOrder(o.id); setSelectedOrder(order) }}>View Order</button><button className='btn' type='button' onClick={async () => { const receipt = await api.fetchOrderReceipt(o.id); setSelectedReceipt(receipt) }}>Receipt</button></div></ListingDetailCard>)}
               {!state.orders.filter(o => String(o.seller_id) === String(sellerOrderUserId)).length && <EmptyListingsState title='No seller orders yet' body='Seller orders will appear here with fulfillment and payout tracking.' />}
             </div>
           </article>
 
           <article className='panel'><h4>Admin Dispute & Release Console</h4>
             <div className='list'>
-              {state.orders.map((o) => <ListingDetailCard key={`admin-${o.id}`} title={`${o.listing_title} • Order ${o.id}`} subtitle={`Escrow ${o.escrow_status} • Fulfillment ${o.fulfillment_status} • Payout ${o.payout_status}`} stats={[`${o.listing_type}`, `${o.gross_amount} ${o.currency}`, `${o.payment_status}`]} contact={`Platform fee ${o.platform_fee} • processing ${o.processing_fee}`}><div className='card-actions'><button className='btn btn-dark' type='button' onClick={async () => { try { await api.releaseOrder(o.id); await load() } catch (err) { alert(err?.response?.data?.detail || 'Could not release funds') } }}>Release Funds</button><button className='btn' type='button' onClick={async () => { await api.disputeOrder(o.id, { buyer_note: 'Admin escalated dispute for review' }); await load() }}>Flag Dispute</button><button className='btn' type='button' onClick={async () => { await api.updateOrderStatus(o.id, { escrow_status: 'REFUND_REVIEW', payout_status: 'ON_HOLD' }); await load() }}>Hold / Review</button></div></ListingDetailCard>)}
+              {state.orders.map((o) => <ListingDetailCard key={`admin-${o.id}`} title={`${o.listing_title} • Order ${o.id}`} subtitle={`Escrow ${o.escrow_status} • Fulfillment ${o.fulfillment_status} • Payout ${o.payout_status}`} stats={[`${o.listing_type}`, `${o.gross_amount} ${o.currency}`, `${o.payment_status}`]} contact={`Platform fee ${o.platform_fee} • processing ${o.processing_fee}`}><div className='card-actions'><button className='btn btn-dark' type='button' onClick={async () => { try { await api.releaseOrder(o.id); await load() } catch (err) { alert(err?.response?.data?.detail || 'Could not release funds') } }}>Release Funds</button><button className='btn' type='button' onClick={async () => { await api.disputeOrder(o.id, { buyer_note: 'Admin escalated dispute for review' }); await load() }}>Flag Dispute</button><button className='btn' type='button' onClick={async () => { await api.updateOrderStatus(o.id, { escrow_status: 'REFUND_REVIEW', payout_status: 'ON_HOLD' }); await load() }}>Hold / Review</button><button className='btn' type='button' onClick={async () => { const order = await api.fetchOrder(o.id); setSelectedOrder(order) }}>View Order</button><button className='btn' type='button' onClick={async () => { const receipt = await api.fetchOrderReceipt(o.id); setSelectedReceipt(receipt) }}>Receipt</button></div></ListingDetailCard>)}
               {!state.orders.length && <EmptyListingsState title='No orders yet' body='Create an escrow order to start the marketplace order flow.' />}
             </div>
           </article>
         </div>
 
-        <article className='panel' style={{marginTop:12}}><div className='panelHeadActions'><h4 style={{margin:0}}>Payment Records</h4><button className='btn btn-dark' type='button' onClick={async () => { await api.autoReleaseOrders({ force: false }); await load() }}>Run Auto Release</button></div><DataTable columns={['id', 'payer_id', 'payee_id', 'amount', 'currency', 'status', 'reference']} rows={state.payments} filterKey='reference' /></article><article className='panel' style={{marginTop:12}}><h4>Payout History & Receipts</h4><DataTable columns={['id', 'order_id', 'amount', 'currency', 'status', 'reference', 'receipt_note']} rows={state.payoutHistory} filterKey='reference' /></article>
+        <article className='panel' style={{marginTop:12}}><div className='panelHeadActions'><h4 style={{margin:0}}>Payment Records</h4><button className='btn btn-dark' type='button' onClick={async () => { await api.autoReleaseOrders({ force: false }); await load() }}>Run Auto Release</button><span className='helper-text'>Provider integration prep: receipts, payout history, and payment refs are now exposed.</span></div><DataTable columns={['id', 'payer_id', 'payee_id', 'amount', 'currency', 'status', 'reference']} rows={state.payments} filterKey='reference' /></article><article className='panel' style={{marginTop:12}}><h4>Payout History & Receipts</h4><DataTable columns={['id', 'order_id', 'amount', 'currency', 'status', 'reference', 'receipt_note']} rows={state.payoutHistory} filterKey='reference' /></article>
       </section>}
 
       {active === 'alerts' && <section><h3>{t('Weather Alerts (GH • NG • BF)','Alertes météo (GH • NG • BF)','天气预警（GH • NG • BF）')}</h3>
