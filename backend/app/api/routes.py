@@ -2068,6 +2068,8 @@ def world_chat_post(payload: WorldChatMessageIn, authorization: Optional[str] = 
 
     moderation = _moderate_world_chat_text(payload.text)
     action = moderation['action']
+    if action == 'block':
+        raise HTTPException(status_code=400, detail=moderation['reason'])
 
     msg = WorldChatMessage(
         user_id=user.id,
@@ -2303,6 +2305,8 @@ def community_create_post(payload: CommunityPostIn, authorization: Optional[str]
         raise HTTPException(status_code=400, detail='Post must include text or media')
 
     moderation = _moderate_world_chat_text(text or 'safe media post')
+    if moderation['action'] == 'block':
+        raise HTTPException(status_code=400, detail=moderation['reason'])
     status = 'VISIBLE' if moderation['action'] == 'allow' else 'HIDDEN'
 
     profile = db.query(CommunityProfile).filter(CommunityProfile.user_id == u.id).first()
@@ -2341,6 +2345,8 @@ def community_update_post(post_id: int, payload: CommunityPostIn, authorization:
         raise HTTPException(status_code=400, detail='Post must include text or media')
 
     moderation = _moderate_world_chat_text(text or 'safe media post')
+    if moderation['action'] == 'block':
+        raise HTTPException(status_code=400, detail=moderation['reason'])
     post.text = text
     post.media_url = media_url
     post.media_type = payload.media_type or ('IMAGE' if media_url else 'TEXT')
@@ -2407,7 +2413,7 @@ def community_add_comment(post_id: int, payload: CommunityCommentIn, authorizati
 
     moderation = _moderate_world_chat_text(text)
     if moderation['action'] == 'block':
-        raise HTTPException(status_code=400, detail='Comment blocked by safety filter')
+        raise HTTPException(status_code=400, detail=moderation['reason'])
 
     c = CommunityPostComment(post_id=post_id, user_id=u.id, author_name=u.full_name, text=text)
     db.add(c)
