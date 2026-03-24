@@ -1,6 +1,7 @@
 import random
 import json
 import hashlib
+import hmac
 import smtplib
 from email.message import EmailMessage
 from datetime import datetime, timedelta
@@ -12,7 +13,7 @@ import xml.etree.ElementTree as ET
 import re
 import ssl
 from pathlib import Path
-from fastapi import APIRouter, Depends, HTTPException, Body, Header
+from fastapi import APIRouter, Depends, HTTPException, Body, Header, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -24,7 +25,8 @@ from app.models.models import (
     LivestockListing, EquipmentRental, StorageReservation, TradeContract, VerificationReview, UpdateReview,
     DeviceToken, DiseaseScan, SheepGoatRecord, SheepGoatBreedingGroup, SheepGoatSubscription,
     WorldChatMessage, WorldChatUserModeration,
-    CommunityProfile, CommunityPost, CommunityPostLike, CommunityPostComment
+    CommunityProfile, CommunityPost, CommunityPostLike, CommunityPostComment,
+    MarketplaceOrder, SellerPayoutProfile, PayoutHistory, MarketplaceNotification
 )
 from app.schemas.schemas import (
     UserCreate, UserLogin, OTPVerify, TokenResponse, FarmerProfileIn,
@@ -35,7 +37,8 @@ from app.schemas.schemas import (
     SheepGoatRecordIn, SheepGoatBreedingGroupIn, SheepGoatSubscriptionIn, PoultryUniversitySubscriptionIn,
     WorldChatMessageIn, WorldChatModerationActionIn, WorldChatUserSanctionIn,
     CommunityProfileIn, CommunityPostIn, CommunityCommentIn,
-    PlantIdentifyIn, PestIdentifyIn, AccountUpdateIn, PasswordChangeIn, DeleteAccountIn
+    PlantIdentifyIn, PestIdentifyIn, AccountUpdateIn, PasswordChangeIn, DeleteAccountIn,
+    MarketplaceOrderIn, MarketplaceOrderStatusIn, SellerPayoutProfileIn, SellerPayoutVerificationIn, RefundRequestIn, AutoReleaseIn
 )
 from app.core.config import settings
 from app.core.security import create_access_token, hash_password, verify_password, decode_access_token
@@ -456,12 +459,47 @@ def _account_store_recover_user(db: Session, identifier: str) -> Optional[User]:
         return None
 
 
+
 def _paystack_secret_clean() -> str:
     raw = str(settings.PAYSTACK_SECRET_KEY or '').strip().strip('"').strip("'")
     if raw.lower().startswith('bearer '):
         raw = raw.split(' ', 1)[1].strip()
     return raw
 
+
+def _paystack_headers() -> dict:
+    secret = _paystack_secret_clean()
+    return {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'FarmSavior/1.0 (+https://www.farmsavior.com)',
+        'Authorization': f'Bearer {secret}'
+    }
+
+
+def _paystack_transaction_initialize(email: str, amount_major: float, reference: str, callback_url: Optional[str] = None, metadata: Optional[dict] = None) -> dict:
+    payload = {
+        'email': email,
+        'amount': int(round(float(amount_major or 0) * 100)),
+        'reference': reference,
+        'callback_url': callback_url or settings.PAYSTACK_CALLBACK_URL,
+        'metadata': metadata or {}
+    }
+    req = Request('https://api.paystack.co/transaction/initialize', data=json.dumps(payload).encode('utf-8'), headers=_paystack_headers(), method='POST')
+    with urlopen(req, timeout=20) as resp:
+        return json.loads(resp.read().decode('utf-8', errors='ignore'))
+
+
+def _paystack_transaction_verify(reference: str) -> dict:
+    req = Request(f'https://api.paystack.co/transaction/verify/{reference}', headers=_paystack_headers(), method='GET')
+    with urlopen(req, timeout=20) as resp:
+        return json.loads(resp.read().decode('utf-8', errors='ignore'))
+
+
+def _paystack_signature_valid(raw_body: bytes, signature: str) -> bool:
+    secret = _paystack_secret_clean().encode('utf-8')
+    expected = hmac.new(secret, raw_body, hashlib.sha512).hexdigest()
+    return bool(signature) and hmac.compare_digest(expected, signature)
 
 def _trial_ledger_path() -> Path:
     p = (Path(__file__).resolve().parents[3] / 'data' / 'runtime' / 'subscription-trial-ledger.json')
@@ -3775,24 +3813,58 @@ def pay_marketplace_order(order_id: int, payload: PaymentIn, db: Session = Depen
     order = db.query(MarketplaceOrder).filter(MarketplaceOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail='Order not found')
+    buyer = db.query(User).filter(User.id == order.buyer_id).first()
     if order.payment_status == 'PAID':
-        return order
-    provider_currency = {'GH': 'GHS', 'NG': 'NGN', 'BF': 'XOF'}
-    ref = f"ESC-{int(datetime.utcnow().timestamp())}-{random.randint(100,999)}"
-    payment = Payment(
-        payer_id=payload.payer_id,
-        payee_id=payload.payee_id,
-        amount=order.gross_amount,
-        currency=payload.currency or provider_currency.get(payload.country, order.currency or 'GHS'),
-        country=CountryCode(payload.country),
-        method=payload.method,
-        provider=payload.provider,
-        escrow_enabled=True,
-        reference=ref,
-        status='SUCCESS'
-    )
-    db.add(payment)
-    order.payment_reference = ref
+        return {'order': order, 'message': 'Order already paid'}
+    email = (getattr(buyer, 'email', '') or '').strip() or f'user{order.buyer_id}@farmsavior.local'
+    reference = order.payment_reference or f"ESC-{order.id}-{int(datetime.utcnow().timestamp())}-{random.randint(100,999)}"
+    try:
+        ps_resp = _paystack_transaction_initialize(
+            email=email,
+            amount_major=order.gross_amount,
+            reference=reference,
+            metadata={'kind': 'marketplace_order', 'order_id': order.id, 'buyer_id': order.buyer_id, 'seller_id': order.seller_id}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f'Paystack initialize failed: {e}')
+    data = (ps_resp or {}).get('data') or {}
+    order.payment_reference = reference
+    order.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(order)
+    return {'order': order, 'payment': {'authorization_url': data.get('authorization_url'), 'access_code': data.get('access_code'), 'reference': reference}}
+
+
+@router.post('/orders/{order_id}/verify-payment')
+def verify_marketplace_order_payment(order_id: int, db: Session = Depends(get_db)):
+    order = db.query(MarketplaceOrder).filter(MarketplaceOrder.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail='Order not found')
+    if not order.payment_reference:
+        raise HTTPException(status_code=400, detail='Order has no Paystack payment reference')
+    try:
+        ps_resp = _paystack_transaction_verify(order.payment_reference)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f'Paystack verify failed: {e}')
+    data = (ps_resp or {}).get('data') or {}
+    if str(data.get('status') or '').lower() != 'success':
+        raise HTTPException(status_code=400, detail='Payment not successful yet')
+    existing = db.query(Payment).filter(Payment.reference == order.payment_reference).first()
+    if not existing:
+        buyer = db.query(User).filter(User.id == order.buyer_id).first()
+        payment = Payment(
+            payer_id=order.buyer_id,
+            payee_id=order.seller_id,
+            amount=order.gross_amount,
+            currency=order.currency or 'GHS',
+            country=getattr(buyer, 'country', CountryCode.gh),
+            method='Paystack',
+            provider='Paystack',
+            escrow_enabled=True,
+            reference=order.payment_reference,
+            status='SUCCESS'
+        )
+        db.add(payment)
     order.payment_status = 'PAID'
     order.escrow_status = 'PAID_IN_ESCROW'
     order.fulfillment_status = 'READY_FOR_SELLER'
@@ -3801,7 +3873,34 @@ def pay_marketplace_order(order_id: int, payload: PaymentIn, db: Session = Depen
     _notify_user(db, order.seller_id, 'Escrow funded', f'Buyer payment for order #{order.id} is secured. You can now fulfill the order.')
     db.commit()
     db.refresh(order)
-    return order
+    return {'order': order, 'verification': data}
+
+
+@router.post('/paystack/webhook')
+async def paystack_webhook(request: Request, db: Session = Depends(get_db)):
+    raw_body = await request.body()
+    signature = request.headers.get('x-paystack-signature', '')
+    if not _paystack_signature_valid(raw_body, signature):
+        raise HTTPException(status_code=401, detail='Invalid Paystack signature')
+    payload = json.loads(raw_body.decode('utf-8', errors='ignore') or '{}')
+    event = str(payload.get('event') or '')
+    data = payload.get('data') or {}
+    reference = str(data.get('reference') or '')
+    if event == 'charge.success' and reference:
+        order = db.query(MarketplaceOrder).filter(MarketplaceOrder.payment_reference == reference).first()
+        if order and order.payment_status != 'PAID':
+            existing = db.query(Payment).filter(Payment.reference == reference).first()
+            if not existing:
+                buyer = db.query(User).filter(User.id == order.buyer_id).first()
+                db.add(Payment(payer_id=order.buyer_id, payee_id=order.seller_id, amount=order.gross_amount, currency=order.currency or 'GHS', country=getattr(buyer, 'country', CountryCode.gh), method='Paystack', provider='Paystack', escrow_enabled=True, reference=reference, status='SUCCESS'))
+            order.payment_status = 'PAID'
+            order.escrow_status = 'PAID_IN_ESCROW'
+            order.fulfillment_status = 'READY_FOR_SELLER'
+            setattr(order, 'auto_release_at', datetime.utcnow() + timedelta(days=3))
+            _notify_user(db, order.buyer_id, 'Payment secured', f'Your payment for order #{order.id} is now held in FarmSavior escrow.')
+            _notify_user(db, order.seller_id, 'Escrow funded', f'Buyer payment for order #{order.id} is secured. You can now fulfill the order.')
+            db.commit()
+    return {'ok': True}
 
 
 @router.put('/orders/{order_id}/status')
