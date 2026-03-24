@@ -728,6 +728,57 @@ const cattleHealthProgram = [
 
 const cattlePhaseLabels = ['Phase 1: Foundation Cross', 'Phase 2: Hybrid Consolidation', 'Phase 3: Elite Finish']
 
+
+
+// Premium curriculum deepening pass
+Object.values(poultryTracks).forEach(track => {
+  track.modules = (track.modules || []).map((m, idx) => ({
+    ...m,
+    details: [
+      ...(m.details || []),
+      `Professional expansion: define the weekly operating standard for ${track.title.toLowerCase()} before increasing flock size.`,
+      'Professional expansion: capture one measurable output, one health signal, one feed signal, and one market signal every week.',
+      idx === 0 ? 'Professional expansion: convert the setup module into a written SOP that a supervisor can follow without verbal explanation.' : 'Professional expansion: add a corrective-action rule so the manager knows exactly what to do when the KPI slips.'
+    ]
+  }))
+})
+
+Object.values(sheepTracks).forEach(track => {
+  track.modules = (track.modules || []).map((m, idx) => ({
+    ...m,
+    details: [
+      ...(m.details || []),
+      `Professional expansion: write the breeding objective for ${track.title.toLowerCase()} in one sentence and test every retention decision against it.`,
+      'Professional expansion: keep a simple ranking sheet for fertility, survival, structure, growth, and mothering so replacement decisions are evidence-based.',
+      idx === 3 ? 'Professional expansion: include a red-flag protocol for parasite pressure, lamb weakness, and post-lambing maternal failure.' : 'Professional expansion: document one avoidable loss source and one management fix after every cycle review.'
+    ]
+  }))
+})
+
+Object.values(goatTracks).forEach(track => {
+  track.modules = (track.modules || []).map((m, idx) => ({
+    ...m,
+    details: [
+      ...(m.details || []),
+      `Professional expansion: turn ${m.name.toLowerCase()} into a written checklist used before every major flock decision.`,
+      'Professional expansion: compare humid-zone and dry-zone risk exposure before changing feed, breeding, or housing strategy.',
+      idx === 4 ? 'Professional expansion: summarize margin per doe exposed, per kid weaned, and per batch sold before scaling.' : 'Professional expansion: define what evidence would prove this module is working on your farm within 30 days.'
+    ]
+  }))
+})
+
+Object.values(cattleTracks).forEach(track => {
+  track.modules = (track.modules || []).map((m, idx) => ({
+    ...m,
+    details: [
+      ...(m.details || []),
+      `Professional expansion: assign one financial KPI and one biological KPI to ${m.name.toLowerCase()} so performance is reviewed as a business system.`,
+      'Professional expansion: record the seasonal constraint most likely to break performance—water, feed, heat, ticks, or labor—and define the contingency action now.',
+      idx === 2 ? 'Professional expansion: require a calving-risk response plan, including labor readiness, calf support, and postpartum recovery review.' : 'Professional expansion: review whether management improvements, not genetics alone, are responsible for the current results.'
+    ]
+  }))
+})
+
 const paymentProviders = {
   GH: ['MTN MoMo', 'Vodafone Cash', 'AirtelTigo Money'],
   NG: ['OPay', 'PalmPay', 'Paga'],
