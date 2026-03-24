@@ -956,8 +956,8 @@ export default function App() {
   const [orderForm, setOrderForm] = useState({ buyer_id: 1, seller_id: 2, listing_type: 'PRODUCT', listing_id: 1, listing_title: '', quantity: 1, unit_price: '', currency: 'GHS', delivery_method: 'STANDARD', buyer_note: '' })
   const [orderPayment, setOrderPayment] = useState({ payer_id: 1, payee_id: 2, country: 'GH', method: 'MobileMoney', provider: 'MTN', currency: 'GHS', escrow_enabled: true })
   const [payoutForm, setPayoutForm] = useState({ user_id: 2, country: 'GH', payout_method: 'MOBILE_MONEY', account_name: '', bank_name: '', account_number: '', mobile_money_provider: 'MTN', mobile_money_number: '', currency: 'GHS', default_payout_method: true })
-  const [buyerOrderUserId, setBuyerOrderUserId] = useState('1')
-  const [sellerOrderUserId, setSellerOrderUserId] = useState('2')
+  const [buyerOrderUserId, setBuyerOrderUserId] = useState(String(me?.id || 1))
+  const [sellerOrderUserId, setSellerOrderUserId] = useState(String(me?.id || 2))
   const [paymentForm, setPaymentForm] = useState({ payer_id: 2, payee_id: 1, amount: '', country: 'GH', method: 'MobileMoney', provider: 'MTN MoMo', escrow_enabled: true })
   const [paymentEdit, setPaymentEdit] = useState({ id: '', payer_id: 2, payee_id: 1, amount: '', country: 'GH', method: 'MobileMoney', provider: 'MTN MoMo', escrow_enabled: true })
   const [alertForm, setAlertForm] = useState({ country: 'GH', region: '', severity: 'MEDIUM', alert_type: '', message: '', valid_until: '' })
@@ -3893,7 +3893,7 @@ export default function App() {
         </div>}
       </section>}
 
-      {active === 'payments' && <section><h3>{t('Payments & Escrow','Paiements et séquestre','支付和托管')}</h3>
+      {active === 'payments' && <section><h3>{t('Payments & Escrow','Paiements et séquestre','支付和托管')}</h3><div className='panel' style={{marginBottom:12}}><strong>Marketplace notifications</strong><div className='list' style={{marginTop:8}}>{state.notifications.slice(0,6).map((n) => <div key={`note-${n.id}`} className='list-row'><span><strong>{n.title}</strong><br /><span className='helper-text'>{n.message}</span></span></div>)}{!state.notifications.length && <div className='helper-text' style={{marginTop:8}}>No notifications yet.</div>}</div></div>
         <div className='three-col'>
           <article className='panel'><h4>Seller Payout Settings</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.savePayoutProfile({ ...payoutForm, user_id: Number(payoutForm.user_id) }); await load() }}>
             <div className='row2'><input className='input' placeholder='Seller User ID' value={payoutForm.user_id} onChange={e => setPayoutForm({ ...payoutForm, user_id: e.target.value })} /><input className='input' placeholder='Country' value={payoutForm.country} onChange={e => setPayoutForm({ ...payoutForm, country: e.target.value })} /></div>
@@ -3916,7 +3916,7 @@ export default function App() {
         <div className='three-col' style={{marginTop:12}}>
           <article className='panel'><h4>Buyer Order Page</h4><input className='input filter' placeholder='Buyer user ID' value={buyerOrderUserId} onChange={e => setBuyerOrderUserId(e.target.value)} />
             <div className='list'>
-              {state.orders.filter(o => String(o.buyer_id) === String(buyerOrderUserId)).map((o) => <ListingDetailCard key={`buyer-${o.id}`} title={`${o.listing_title} (#${o.id})`} subtitle={`Escrow ${o.escrow_status} • Fulfillment ${o.fulfillment_status}`} stats={[`${o.gross_amount} ${o.currency}`, `seller net ${o.seller_net}`, `ref ${o.payment_reference || '—'}`]} contact={`Seller ${o.seller_id}`}><div className='card-actions'><button className='btn btn-dark' type='button' onClick={async () => { await api.payOrder(o.id, { ...orderPayment, payer_id: o.buyer_id, payee_id: o.seller_id, amount: o.gross_amount }); await load() }}>Pay Securely</button><button className='btn' type='button' onClick={async () => { await api.confirmOrder(o.id); await load() }}>Confirm Receipt</button><button className='btn' type='button' onClick={async () => { await api.disputeOrder(o.id, { buyer_note: 'Buyer dispute submitted from dashboard' }); await load() }}>Open Dispute</button></div></ListingDetailCard>)}
+              {state.orders.filter(o => String(o.buyer_id) === String(buyerOrderUserId)).map((o) => <ListingDetailCard key={`buyer-${o.id}`} title={`${o.listing_title} (#${o.id})`} subtitle={`Escrow ${o.escrow_status} • Fulfillment ${o.fulfillment_status}`} stats={[`${o.gross_amount} ${o.currency}`, `seller net ${o.seller_net}`, `ref ${o.payment_reference || '—'}`]} contact={`Seller ${o.seller_id}`}><div className='card-actions'><button className='btn btn-dark' type='button' onClick={async () => { await api.payOrder(o.id, { ...orderPayment, payer_id: o.buyer_id, payee_id: o.seller_id, amount: o.gross_amount }); await load() }}>Pay Securely</button><button className='btn' type='button' onClick={async () => { await api.confirmOrder(o.id); await load() }}>Confirm Receipt</button><button className='btn' type='button' onClick={async () => { await api.disputeOrder(o.id, { buyer_note: 'Buyer dispute submitted from dashboard' }); await load() }}>Open Dispute</button><button className='btn' type='button' onClick={async () => { await api.refundOrder(o.id, { buyer_note: 'Buyer refund requested from dashboard' }); await load() }}>Request Refund</button></div></ListingDetailCard>)}
               {!state.orders.filter(o => String(o.buyer_id) === String(buyerOrderUserId)).length && <EmptyListingsState title='No buyer orders yet' body='Buyer orders will appear here with escrow, payment, and dispute controls.' />}
             </div>
           </article>
@@ -3936,7 +3936,7 @@ export default function App() {
           </article>
         </div>
 
-        <article className='panel' style={{marginTop:12}}><h4>Payment Records</h4><DataTable columns={['id', 'payer_id', 'payee_id', 'amount', 'currency', 'status', 'reference']} rows={state.payments} filterKey='reference' /></article>
+        <article className='panel' style={{marginTop:12}}><div className='panelHeadActions'><h4 style={{margin:0}}>Payment Records</h4><button className='btn btn-dark' type='button' onClick={async () => { await api.autoReleaseOrders({ force: false }); await load() }}>Run Auto Release</button></div><DataTable columns={['id', 'payer_id', 'payee_id', 'amount', 'currency', 'status', 'reference']} rows={state.payments} filterKey='reference' /></article><article className='panel' style={{marginTop:12}}><h4>Payout History & Receipts</h4><DataTable columns={['id', 'order_id', 'seller_id', 'amount', 'currency', 'status', 'reference', 'receipt_note']} rows={state.payoutHistory} filterKey='reference' /></article>
       </section>}
 
       {active === 'alerts' && <section><h3>{t('Weather Alerts (GH • NG • BF)','Alertes météo (GH • NG • BF)','天气预警（GH • NG • BF）')}</h3>

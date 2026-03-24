@@ -3646,6 +3646,13 @@ def delete_storage_reservation(reservation_id: int, db: Session = Depends(get_db
 
 
 
+
+
+def _notify_user(db: Session, user_id: Optional[int], title: str, message: str):
+    if not user_id:
+        return
+    db.add(MarketplaceNotification(user_id=user_id, title=title[:180], message=message[:2000]))
+
 def _order_fee_breakdown(unit_price: float, quantity: float):
     gross = round(float(unit_price or 0) * float(quantity or 0), 2)
     platform_fee = round(gross * 0.10, 2)
@@ -3715,7 +3722,10 @@ def create_marketplace_order(payload: MarketplaceOrderIn, db: Session = Depends(
         payment_status='UNPAID',
         payout_status='HELD'
     )
+    setattr(rec, 'auto_release_at', None)
     db.add(rec)
+    _notify_user(db, payload.buyer_id, 'Order created', f'Your order for {payload.listing_title} is awaiting payment into escrow.')
+    _notify_user(db, payload.seller_id, 'New order received', f'You received a new order for {payload.listing_title}.')
     db.commit()
     db.refresh(rec)
     return rec
@@ -3752,6 +3762,9 @@ def pay_marketplace_order(order_id: int, payload: PaymentIn, db: Session = Depen
     order.payment_status = 'PAID'
     order.escrow_status = 'PAID_IN_ESCROW'
     order.fulfillment_status = 'READY_FOR_SELLER'
+    setattr(order, 'auto_release_at', datetime.utcnow() + timedelta(days=3))
+    _notify_user(db, order.buyer_id, 'Payment secured', f'Your payment for order #{order.id} is now held in FarmSavior escrow.')
+    _notify_user(db, order.seller_id, 'Escrow funded', f'Buyer payment for order #{order.id} is secured. You can now fulfill the order.')
     db.commit()
     db.refresh(order)
     return order
@@ -3767,10 +3780,12 @@ def update_marketplace_order_status(order_id: int, payload: MarketplaceOrderStat
     for key, value in data.items():
         setattr(order, key, value)
     order.updated_at = datetime.utcnow()
-    if order.fulfillment_status in ['SHIPPED', 'DELIVERED', 'COMPLETED'] and order.payment_status == 'PAID' and order.escrow_status == 'PAID_IN_ESCROW':
+    if order.fulfillment_status in ['SHIPPED', 'DELIVERED', 'COMPLETED', 'IN_FULFILLMENT'] and order.payment_status == 'PAID' and order.escrow_status == 'PAID_IN_ESCROW':
         order.escrow_status = 'IN_FULFILLMENT'
     if order.fulfillment_status in ['DELIVERED', 'COMPLETED'] and data.get('escrow_status') == 'BUYER_CONFIRMED':
         order.payout_status = 'READY_FOR_RELEASE'
+    _notify_user(db, order.buyer_id, 'Order updated', f'Order #{order.id} status changed to {order.fulfillment_status}.')
+    _notify_user(db, order.seller_id, 'Order updated', f'Order #{order.id} status changed to {order.fulfillment_status}.')
     db.commit()
     db.refresh(order)
     return order
@@ -3785,6 +3800,7 @@ def confirm_marketplace_order(order_id: int, db: Session = Depends(get_db)):
     order.escrow_status = 'BUYER_CONFIRMED'
     order.payout_status = 'READY_FOR_RELEASE'
     order.updated_at = datetime.utcnow()
+    _notify_user(db, order.seller_id, 'Buyer confirmed order', f'Buyer confirmed order #{order.id}. Funds are ready for release review.')
     db.commit()
     db.refresh(order)
     return order
@@ -3805,6 +3821,11 @@ def release_marketplace_order(order_id: int, db: Session = Depends(get_db)):
     order.escrow_status = 'RELEASED'
     order.payout_status = 'PAYOUT_SENT'
     order.updated_at = datetime.utcnow()
+    setattr(order, 'released_at', datetime.utcnow())
+    payout_ref = f"PO-{int(datetime.utcnow().timestamp())}-{random.randint(100,999)}"
+    db.add(PayoutHistory(order_id=order.id, seller_id=order.seller_id, payout_profile_id=payout.id if payout else None, amount=order.seller_net, currency=order.currency or 'GHS', status='SENT', reference=payout_ref, receipt_note='Escrow released to seller payout method'))
+    _notify_user(db, order.seller_id, 'Payout released', f'FarmSavior released {order.seller_net} {order.currency} for order #{order.id}.')
+    _notify_user(db, order.buyer_id, 'Order completed', f'Order #{order.id} escrow has been released to the seller.')
     db.commit()
     db.refresh(order)
     return order
@@ -3823,9 +3844,65 @@ def dispute_marketplace_order(order_id: int, payload: MarketplaceOrderStatusIn, 
     if payload.seller_note:
         order.seller_note = payload.seller_note
     order.updated_at = datetime.utcnow()
+    _notify_user(db, order.buyer_id, 'Dispute opened', f'Order #{order.id} is now under dispute review.')
+    _notify_user(db, order.seller_id, 'Dispute opened', f'Order #{order.id} is now under dispute review.')
     db.commit()
     db.refresh(order)
     return order
+
+@router.get('/notifications')
+def list_marketplace_notifications(user_id: Optional[int] = None, db: Session = Depends(get_db)):
+    q = db.query(MarketplaceNotification).order_by(MarketplaceNotification.id.desc())
+    if user_id:
+        q = q.filter(MarketplaceNotification.user_id == user_id)
+    return q.limit(200).all()
+
+
+@router.get('/payout-history')
+def list_payout_history(db: Session = Depends(get_db)):
+    return db.query(PayoutHistory).order_by(PayoutHistory.id.desc()).all()
+
+
+@router.post('/orders/{order_id}/refund')
+def refund_marketplace_order(order_id: int, payload: RefundRequestIn, db: Session = Depends(get_db)):
+    order = db.query(MarketplaceOrder).filter(MarketplaceOrder.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail='Order not found')
+    order.escrow_status = 'REFUNDED'
+    order.payout_status = 'REFUND_COMPLETED'
+    setattr(order, 'refunded_at', datetime.utcnow())
+    order.updated_at = datetime.utcnow()
+    if payload and payload.buyer_note:
+        _assert_no_contact_info(payload.buyer_note)
+        order.buyer_note = payload.buyer_note
+    _notify_user(db, order.buyer_id, 'Refund issued', f'Order #{order.id} has been refunded through FarmSavior.')
+    _notify_user(db, order.seller_id, 'Order refunded', f'Order #{order.id} was refunded and payout will not be released.')
+    db.commit()
+    db.refresh(order)
+    return order
+
+
+@router.post('/orders/auto-release')
+def auto_release_marketplace_orders(payload: AutoReleaseIn, db: Session = Depends(get_db)):
+    now = datetime.utcnow()
+    orders = db.query(MarketplaceOrder).filter(MarketplaceOrder.payment_status == 'PAID', MarketplaceOrder.payout_status.in_(['READY_FOR_RELEASE', 'HELD', 'ON_HOLD'])).all()
+    released = []
+    for order in orders:
+        payout = db.query(SellerPayoutProfile).filter(SellerPayoutProfile.user_id == order.seller_id, SellerPayoutProfile.is_verified == True).first()
+        auto_release_at = getattr(order, 'auto_release_at', None)
+        eligible = payload.force or ((order.fulfillment_status in ['DELIVERED', 'COMPLETED']) and auto_release_at and auto_release_at <= now and order.escrow_status not in ['DISPUTED', 'REFUNDED', 'RELEASED'])
+        if not (eligible and payout):
+            continue
+        order.escrow_status = 'RELEASED'
+        order.payout_status = 'PAYOUT_SENT'
+        setattr(order, 'released_at', now)
+        payout_ref = f"PO-{int(now.timestamp())}-{random.randint(100,999)}"
+        db.add(PayoutHistory(order_id=order.id, seller_id=order.seller_id, payout_profile_id=payout.id, amount=order.seller_net, currency=order.currency or 'GHS', status='AUTO_RELEASED', reference=payout_ref, receipt_note='Auto release after delivery window'))
+        _notify_user(db, order.seller_id, 'Auto payout released', f'FarmSavior auto-released escrow for order #{order.id}.')
+        _notify_user(db, order.buyer_id, 'Order auto-completed', f'FarmSavior auto-released escrow for order #{order.id} after the review window.')
+        released.append(order.id)
+    db.commit()
+    return {'released_order_ids': released}
 
 @router.post('/payments')
 def create_payment(payload: PaymentIn, db: Session = Depends(get_db)):

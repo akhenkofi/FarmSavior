@@ -47,6 +47,17 @@ def ensure_runtime_columns():
 
 
 
+
+            if 'marketplace_orders' in tables:
+                ocols = {c['name'] for c in inspector.get_columns('marketplace_orders')}
+                extra = {
+                    'auto_release_at': 'DATETIME',
+                    'released_at': 'DATETIME',
+                    'refunded_at': 'DATETIME'
+                }
+                for col, ddl in extra.items():
+                    if col not in ocols:
+                        conn.execute(text(f'ALTER TABLE marketplace_orders ADD COLUMN {col} {ddl}'))
             if 'seller_payout_profiles' in tables:
                 pcols = {c['name'] for c in inspector.get_columns('seller_payout_profiles')}
                 required = {

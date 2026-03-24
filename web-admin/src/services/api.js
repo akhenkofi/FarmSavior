@@ -148,6 +148,12 @@ export const deleteStorage = async (id) => (await api.delete(`/services/storage-
 
 
 
+
+export const fetchNotifications = async (userId) => (await api.get('/notifications', { params: userId ? { user_id: userId } : {} })).data
+export const fetchPayoutHistory = async () => (await api.get('/payout-history')).data
+export const refundOrder = async (id, payload) => (await api.post(`/orders/${id}/refund`, payload || {})).data
+export const autoReleaseOrders = async (payload) => (await api.post('/orders/auto-release', payload || {})).data
+
 export const fetchPayoutProfiles = async () => (await api.get('/payouts/profiles')).data
 export const savePayoutProfile = async (payload) => (await api.post('/payouts/profiles', payload)).data
 export const verifyPayoutProfile = async (userId, payload) => (await api.put(`/payouts/profiles/${userId}/verify`, payload)).data

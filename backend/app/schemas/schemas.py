@@ -166,6 +166,16 @@ class LogisticsAcceptIn(BaseModel):
 
 
 
+
+
+class RefundRequestIn(BaseModel):
+    buyer_note: Optional[str] = None
+    amount: Optional[float] = None
+
+
+class AutoReleaseIn(BaseModel):
+    force: bool = False
+
 class SellerPayoutProfileIn(BaseModel):
     user_id: int
     country: Optional[str] = 'GH'

@@ -207,6 +207,31 @@ class StorageReservation(Base):
 
 
 
+
+
+class MarketplaceNotification(Base):
+    __tablename__ = 'marketplace_notifications'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    title = Column(String(180), nullable=False)
+    message = Column(Text, nullable=False)
+    is_read = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class PayoutHistory(Base):
+    __tablename__ = 'payout_history'
+    id = Column(Integer, primary_key=True)
+    order_id = Column(Integer, nullable=False)
+    seller_id = Column(Integer, ForeignKey('users.id'))
+    payout_profile_id = Column(Integer, ForeignKey('seller_payout_profiles.id'), nullable=True)
+    amount = Column(Float, nullable=False)
+    currency = Column(String(10), default='GHS')
+    status = Column(String(40), default='PENDING')
+    reference = Column(String(120), nullable=True)
+    receipt_note = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 class SellerPayoutProfile(Base):
     __tablename__ = 'seller_payout_profiles'
     id = Column(Integer, primary_key=True)
