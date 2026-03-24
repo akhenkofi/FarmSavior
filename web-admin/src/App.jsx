@@ -4117,6 +4117,35 @@ export default function App() {
 
         <div className='two-col'>
           <article className='panel'>
+            <h4>Seller payout settings</h4>
+            <p className='helper-text'>This is where a seller tells FarmSavior how to receive released escrow payouts.</p>
+            <form className='list' onSubmit={async e => { e.preventDefault(); await api.savePayoutProfile({ ...payoutForm, user_id: Number(payoutForm.user_id) }); await load(); alert('Seller payout method saved.') }}>
+              <div className='row2'>
+                <input className='input' placeholder='Your user ID' value={payoutForm.user_id} onChange={e => setPayoutForm({ ...payoutForm, user_id: e.target.value })} />
+                <select className='input' value={payoutForm.payout_method} onChange={e => setPayoutForm({ ...payoutForm, payout_method: e.target.value })}>
+                  <option value='MOBILE_MONEY'>Mobile Money</option>
+                  <option value='BANK_TRANSFER'>Bank Transfer</option>
+                </select>
+              </div>
+              <div className='row2'>
+                <input className='input' placeholder='Account name' value={payoutForm.account_name} onChange={e => setPayoutForm({ ...payoutForm, account_name: e.target.value })} />
+                <input className='input' placeholder='Country' value={payoutForm.country} onChange={e => setPayoutForm({ ...payoutForm, country: e.target.value })} />
+              </div>
+              {payoutForm.payout_method === 'BANK_TRANSFER' ? <div className='row2'>
+                <input className='input' placeholder='Bank name' value={payoutForm.bank_name} onChange={e => setPayoutForm({ ...payoutForm, bank_name: e.target.value })} />
+                <input className='input' placeholder='Account number' value={payoutForm.account_number} onChange={e => setPayoutForm({ ...payoutForm, account_number: e.target.value })} />
+              </div> : <div className='row2'>
+                <input className='input' placeholder='MoMo provider' value={payoutForm.mobile_money_provider} onChange={e => setPayoutForm({ ...payoutForm, mobile_money_provider: e.target.value })} />
+                <input className='input' placeholder='MoMo number' value={payoutForm.mobile_money_number} onChange={e => setPayoutForm({ ...payoutForm, mobile_money_number: e.target.value })} />
+              </div>}
+              <button className='btn btn-dark'>Save payout settings</button>
+            </form>
+            <div className='panel' style={{marginTop:10, background:'#f8fafc'}}>
+              <strong>Payout status</strong>
+              <div className='helper-text' style={{marginTop:6}}>{(state.payoutProfiles.find(x => String(x.user_id) === String(payoutForm.user_id))?.verification_status) || 'PENDING'} — funds release only after verification.</div>
+            </div>
+          </article>
+          <article className='panel'>
             <h4>{t('My Community Profile','Mon profil communautaire','我的社区资料')}</h4>
             <div style={{position:'relative', marginBottom:12}}>
               {isUserImage(communityProfile.cover_image_url)
