@@ -3524,6 +3524,15 @@ def create_equipment_rental(payload: EquipmentRentalIn, db: Session = Depends(ge
     return rec
 
 
+@router.delete('/services/logistics/{request_id}')
+def delete_logistics(request_id: int, db: Session = Depends(get_db)):
+    req = db.query(LogisticsRequest).filter(LogisticsRequest.id == request_id).first()
+    if not req:
+        raise HTTPException(status_code=404, detail='Logistics request not found')
+    db.delete(req)
+    db.commit()
+    return {'ok': True}
+
 @router.get('/services/equipment-rentals')
 def list_equipment_rentals(db: Session = Depends(get_db)):
     return db.query(EquipmentRental).order_by(EquipmentRental.id.desc()).all()
@@ -3540,6 +3549,15 @@ def update_equipment_rental(rental_id: int, payload: EquipmentRentalIn, db: Sess
     db.refresh(rec)
     return rec
 
+
+@router.delete('/services/equipment-rentals/{rental_id}')
+def delete_equipment_rental(rental_id: int, db: Session = Depends(get_db)):
+    rec = db.query(EquipmentRental).filter(EquipmentRental.id == rental_id).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail='Equipment rental not found')
+    db.delete(rec)
+    db.commit()
+    return {'ok': True}
 
 @router.post('/services/storage-reservations')
 def create_storage_reservation(payload: StorageReservationIn, db: Session = Depends(get_db)):
@@ -3566,6 +3584,15 @@ def update_storage_reservation(reservation_id: int, payload: StorageReservationI
     db.refresh(rec)
     return rec
 
+
+@router.delete('/services/storage-reservations/{reservation_id}')
+def delete_storage_reservation(reservation_id: int, db: Session = Depends(get_db)):
+    rec = db.query(StorageReservation).filter(StorageReservation.id == reservation_id).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail='Storage reservation not found')
+    db.delete(rec)
+    db.commit()
+    return {'ok': True}
 
 @router.post('/payments')
 def create_payment(payload: PaymentIn, db: Session = Depends(get_db)):

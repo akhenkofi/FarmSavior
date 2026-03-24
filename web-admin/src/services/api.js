@@ -134,14 +134,17 @@ export const patchLivestockPriceQty = async (id, payload) => (await api.patch(`/
 export const fetchLogistics = async () => (await api.get('/services/logistics')).data
 export const createLogistics = async (payload) => (await api.post('/services/logistics', payload)).data
 export const updateLogistics = async (id, payload) => (await api.put(`/services/logistics/${id}`, payload)).data
+export const deleteLogistics = async (id) => (await api.delete(`/services/logistics/${id}`)).data
 
 export const fetchEquipment = async () => (await api.get('/services/equipment-rentals')).data
 export const createEquipment = async (payload) => (await api.post('/services/equipment-rentals', payload)).data
 export const updateEquipment = async (id, payload) => (await api.put(`/services/equipment-rentals/${id}`, payload)).data
+export const deleteEquipment = async (id) => (await api.delete(`/services/equipment-rentals/${id}`)).data
 
 export const fetchStorage = async () => (await api.get('/services/storage-reservations')).data
 export const createStorage = async (payload) => (await api.post('/services/storage-reservations', payload)).data
 export const updateStorage = async (id, payload) => (await api.put(`/services/storage-reservations/${id}`, payload)).data
+export const deleteStorage = async (id) => (await api.delete(`/services/storage-reservations/${id}`)).data
 
 export const fetchPayments = async () => (await api.get('/payments')).data
 export const createPayment = async (payload) => (await api.post('/payments', payload)).data

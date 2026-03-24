@@ -812,13 +812,13 @@ function EmptyListingsState({ title, body, actionLabel, onAction }) {
   </div>
 }
 
-function ListingGallery({ images = [], title = 'Listing images' }) {
+function ListingGallery({ images = [], title = 'Listing images', onOpen }) {
   const [index, setIndex] = useState(0)
   const list = parseImageList(images)
   useEffect(() => { if (index >= list.length) setIndex(0) }, [list.length, index])
   if (!list.length) return <div className='listing-cover placeholder'>No photo yet</div>
   return <div className='gallery'>
-    <img src={list[index]} alt={`${title} ${index + 1}`} className='listing-cover' />
+    <img src={list[index]} alt={`${title} ${index + 1}`} className='listing-cover' onClick={() => onOpen && onOpen(list, index, title)} />
     {list.length > 1 && <>
       <div className='gallery-controls'>
         <button type='button' className='btn btn-mini' onClick={() => setIndex((index - 1 + list.length) % list.length)}>‹</button>
@@ -830,6 +830,18 @@ function ListingGallery({ images = [], title = 'Listing images' }) {
       </div>
     </>}
   </div>
+}
+
+function ListingDetailCard({ title, subtitle, stats = [], contact = '', children }) {
+  return <article className='panel detail-card'>
+    <div className='detail-meta'>
+      <h4>{title}</h4>
+      <div className='helper-text'>{subtitle}</div>
+      {!!stats.length && <div className='listing-card-metrics'>{stats.map((item) => <span key={item}>{item}</span>)}</div>}
+      {!!contact && <div className='contact-panel'>Seller/contact: {contact}</div>}
+    </div>
+    {children}
+  </article>
 }
 
 function DataTable({ columns, rows, filterKey, onEdit, onRowClick }) {
@@ -879,6 +891,7 @@ export default function App() {
   const [productsView, setProductsView] = useState('list')
   const [livestockView, setLivestockView] = useState('list')
   const [servicesView, setServicesView] = useState('list')
+  const [lightbox, setLightbox] = useState({ open: false, images: [], index: 0, title: '' })
   const [homeQuery, setHomeQuery] = useState('')
   const [publicQuery, setPublicQuery] = useState('')
   const [recentSearches, setRecentSearches] = useState([])
@@ -2361,6 +2374,20 @@ export default function App() {
         <p>Check your network and try again.</p>
       </div>
     </div>}
+    {lightbox.open && <div className='lightbox' onClick={() => setLightbox({ open: false, images: [], index: 0, title: '' })}>
+      <div className='lightbox-inner' onClick={(e) => e.stopPropagation()}>
+        <div className='list-row' style={{marginBottom:8}}>
+          <strong>{lightbox.title}</strong>
+          <button type='button' className='btn btn-dark' onClick={() => setLightbox({ open: false, images: [], index: 0, title: '' })}>Close</button>
+        </div>
+        <img src={lightbox.images[lightbox.index]} alt={lightbox.title} className='lightbox-image' />
+        {lightbox.images.length > 1 && <div className='gallery-controls' style={{position:'static', marginTop:8}}>
+          <button type='button' className='btn btn-mini' onClick={() => setLightbox(prev => ({ ...prev, index: (prev.index - 1 + prev.images.length) % prev.images.length }))}>Prev</button>
+          <span className='gallery-count'>{lightbox.index + 1}/{lightbox.images.length}</span>
+          <button type='button' className='btn btn-mini' onClick={() => setLightbox(prev => ({ ...prev, index: (prev.index + 1) % prev.images.length }))}>Next</button>
+        </div>}
+      </div>
+    </div>}
     <div className='layout'>
     <aside className={`sidebar ${mobileMenuOpen ? 'open' : ''}`}>
       <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
@@ -2774,13 +2801,7 @@ export default function App() {
             <div className='card-grid'>
               {state.listings.map((r) => {
                 const images = parseImageList(r.image_urls)
-                return <article key={`product-card-${r.id}`} className='listing-card'>
-                  <div className='listing-card-media'><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={r.crop_name} /></div>
-                  <div className='listing-card-body'>
-                    <strong>{r.crop_name}</strong>
-                    <div className='helper-text'>{r.location || 'Location not set'} • {r.country} • {r.status}</div>
-                    <div className='listing-card-metrics'><span>{r.quantity_kg} kg</span><span>{r.unit_price}</span><span>{images.length} photos</span>{images.length ? <span className='cover-badge'>Cover ready</span> : null}</div>
-                    <div className='card-actions'>
+                return <ListingDetailCard key={`product-card-${r.id}`} title={r.crop_name} subtitle={`${r.location || 'Location not set'} • ${r.country} • ${r.status}`} stats={[`${r.quantity_kg} kg`, `${r.unit_price}`, `${images.length} photos`]} contact={r.contact_name || r.phone || `Farmer #${r.farmer_id || '—'}`}><div className='listing-card-media'><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={r.crop_name} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /></div><div className='listing-card-body'><div className='listing-card-metrics'>{images.length ? <span className='cover-badge'>Cover ready</span> : null}</div><div className='card-actions'>
                       <button className='btn btn-dark' type='button' onClick={() => {
                         setCropEdit({ id: r.id, farmer_id: r.farmer_id || 1, crop_name: r.crop_name || '', quantity_kg: r.quantity_kg || '', unit_price: r.unit_price || '', location: r.location || '', country: r.country || 'GH', status: r.status || 'OPEN' })
                         setCropQuickEdit({ id: r.id, quantity_kg: r.quantity_kg || '', unit_price: r.unit_price || '' })
@@ -2790,7 +2811,7 @@ export default function App() {
                       <button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete product #${r.id}?`)) return; await api.deleteListing(r.id); await load() }}>Delete</button>
                     </div>
                   </div>
-                </article>
+                </ListingDetailCard>
               })}
             </div>
             <DataTable columns={['id', 'crop_name', 'quantity_kg', 'unit_price', 'country', 'status']} rows={state.listings} filterKey='crop_name' onEdit={(r) => {
@@ -2864,13 +2885,7 @@ export default function App() {
             <div className='card-grid'>
               {state.livestock.map((r) => {
                 const images = parseImageList(r.image_urls)
-                return <article key={`livestock-card-${r.id}`} className='listing-card'>
-                  <div className='listing-card-media'><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={r.livestock_type} /></div>
-                  <div className='listing-card-body'>
-                    <strong>{r.livestock_type}</strong>
-                    <div className='helper-text'>{r.location || 'Location not set'} • {r.country} • {r.status}</div>
-                    <div className='listing-card-metrics'><span>{r.quantity} animals</span><span>{r.unit_price}</span><span>{images.length} photos</span>{images.length ? <span className='cover-badge'>Cover ready</span> : null}</div>
-                    <div className='card-actions'>
+                return <ListingDetailCard key={`livestock-card-${r.id}`} title={r.livestock_type} subtitle={`${r.location || 'Location not set'} • ${r.country} • ${r.status}`} stats={[`${r.quantity} animals`, `${r.unit_price}`, `${images.length} photos`]} contact={r.contact_name || r.phone || `Farmer #${r.farmer_id || '—'}`}><div className='listing-card-media'><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={r.livestock_type} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /></div><div className='listing-card-body'><div className='listing-card-metrics'>{images.length ? <span className='cover-badge'>Cover ready</span> : null}</div><div className='card-actions'>
                       <button className='btn btn-dark' type='button' onClick={() => {
                         setLivestockEdit({ id: r.id, farmer_id: r.farmer_id || 1, livestock_type: r.livestock_type || '', quantity: r.quantity || '', unit_price: r.unit_price || '', location: r.location || '', country: r.country || 'GH', status: r.status || 'OPEN' })
                         setLivestockQuickEdit({ id: r.id, quantity: r.quantity || '', unit_price: r.unit_price || '' })
@@ -2880,7 +2895,7 @@ export default function App() {
                       <button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete product #${r.id}?`)) return; await api.deleteListing(r.id); await load() }}>Delete</button>
                     </div>
                   </div>
-                </article>
+                </ListingDetailCard>
               })}
             </div>
             <DataTable columns={['id', 'livestock_type', 'quantity', 'unit_price', 'country', 'status']} rows={state.livestock} filterKey='livestock_type' onEdit={(r) => {
@@ -3833,9 +3848,15 @@ export default function App() {
         </div>}
 
         {servicesView === 'list' && <div className='three-col'>
-          <article className='panel'><h4>Logistics Requests</h4>{!state.logistics.length ? <EmptyListingsState title='No logistics services yet' body='Create your first logistics request or transport service listing.' actionLabel='Add Logistics Service' onAction={() => setServicesView('create')} /> : <DataTable columns={['id', 'pickup_location', 'dropoff_location', 'cargo_type', 'weight_kg', 'status']} rows={state.logistics} filterKey='pickup_location' onEdit={(r) => { setLogisticsEdit({ id: r.id, requester_id: r.requester_id || 1, pickup_location: r.pickup_location || '', dropoff_location: r.dropoff_location || '', cargo_type: r.cargo_type || '', weight_kg: r.weight_kg || '', status: r.status || 'PENDING' }); setServiceEditImages(parseImageList(r.image_urls)); setServicesView('edit') }} />}</article>
-          <article className='panel'><h4>Equipment Rentals</h4>{!state.equipment.length ? <EmptyListingsState title='No equipment rentals yet' body='Create your first machinery or equipment rental service.' actionLabel='Add Equipment Service' onAction={() => setServicesView('create')} /> : <DataTable columns={['id', 'equipment_type', 'duration_days', 'location', 'budget', 'status']} rows={state.equipment} filterKey='equipment_type' onEdit={(r) => { setEquipmentEdit({ id: r.id, requester_id: r.requester_id || 1, equipment_type: r.equipment_type || '', duration_days: r.duration_days || '', location: r.location || '', budget: r.budget || '', status: r.status || 'PENDING' }); setServiceEditImages(parseImageList(r.image_urls)); setServicesView('edit') }} />}</article>
-          <article className='panel'><h4>Storage Reservations</h4>{!state.storage.length ? <EmptyListingsState title='No storage services yet' body='Create your first storage or cold-room service listing.' actionLabel='Add Storage Service' onAction={() => setServicesView('create')} /> : <DataTable columns={['id', 'storage_type', 'quantity_kg', 'location', 'duration_days', 'status']} rows={state.storage} filterKey='storage_type' onEdit={(r) => { setStorageEdit({ id: r.id, requester_id: r.requester_id || 1, storage_type: r.storage_type || '', quantity_kg: r.quantity_kg || '', location: r.location || '', duration_days: r.duration_days || '', status: r.status || 'PENDING' }); setServiceEditImages(parseImageList(r.image_urls)); setServicesView('edit') }} />}</article>
+          <article className='panel'><h4>Logistics Requests</h4>{!state.logistics.length ? <EmptyListingsState title='No logistics services yet' body='Create your first logistics request or transport service listing.' actionLabel='Add Logistics Service' onAction={() => setServicesView('create')} /> : <div className='list'>
+            {state.logistics.map((r) => { const images = parseImageList(r.image_urls); return <ListingDetailCard key={`log-${r.id}`} title={`${r.pickup_location} → ${r.dropoff_location}`} subtitle={`${r.cargo_type || 'General cargo'} • ${r.status}`} stats={[`${r.weight_kg || 0} kg`, `${images.length} photos`]} contact={r.contact_name || r.phone || `Requester #${r.requester_id || '—'}`}><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={`Logistics ${r.id}`} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /><div className='card-actions'><button className='btn btn-dark' type='button' onClick={() => { setLogisticsEdit({ id: r.id, requester_id: r.requester_id || 1, pickup_location: r.pickup_location || '', dropoff_location: r.dropoff_location || '', cargo_type: r.cargo_type || '', weight_kg: r.weight_kg || '', status: r.status || 'PENDING' }); setServiceEditImages(images); setServicesView('edit') }}>Edit</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete logistics service #${r.id}?`)) return; await api.deleteLogistics(r.id); await load() }}>Delete</button></div></ListingDetailCard> })}
+          </div>}</article>
+          <article className='panel'><h4>Equipment Rentals</h4>{!state.equipment.length ? <EmptyListingsState title='No equipment rentals yet' body='Create your first machinery or equipment rental service.' actionLabel='Add Equipment Service' onAction={() => setServicesView('create')} /> : <div className='list'>
+            {state.equipment.map((r) => { const images = parseImageList(r.image_urls); return <ListingDetailCard key={`eq-${r.id}`} title={r.equipment_type} subtitle={`${r.location || 'Location not set'} • ${r.status}`} stats={[`${r.duration_days} days`, `${r.budget} budget`, `${images.length} photos`]} contact={r.contact_name || r.phone || `Requester #${r.requester_id || '—'}`}><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={`Equipment ${r.id}`} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /><div className='card-actions'><button className='btn btn-dark' type='button' onClick={() => { setEquipmentEdit({ id: r.id, requester_id: r.requester_id || 1, equipment_type: r.equipment_type || '', duration_days: r.duration_days || '', location: r.location || '', budget: r.budget || '', status: r.status || 'PENDING' }); setServiceEditImages(images); setServicesView('edit') }}>Edit</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete equipment service #${r.id}?`)) return; await api.deleteEquipment(r.id); await load() }}>Delete</button></div></ListingDetailCard> })}
+          </div>}</article>
+          <article className='panel'><h4>Storage Reservations</h4>{!state.storage.length ? <EmptyListingsState title='No storage services yet' body='Create your first storage or cold-room service listing.' actionLabel='Add Storage Service' onAction={() => setServicesView('create')} /> : <div className='list'>
+            {state.storage.map((r) => { const images = parseImageList(r.image_urls); return <ListingDetailCard key={`st-${r.id}`} title={r.storage_type} subtitle={`${r.location || 'Location not set'} • ${r.status}`} stats={[`${r.quantity_kg} kg`, `${r.duration_days} days`, `${images.length} photos`]} contact={r.contact_name || r.phone || `Requester #${r.requester_id || '—'}`}><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={`Storage ${r.id}`} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /><div className='card-actions'><button className='btn btn-dark' type='button' onClick={() => { setStorageEdit({ id: r.id, requester_id: r.requester_id || 1, storage_type: r.storage_type || '', quantity_kg: r.quantity_kg || '', location: r.location || '', duration_days: r.duration_days || '', status: r.status || 'PENDING' }); setServiceEditImages(images); setServicesView('edit') }}>Edit</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete storage service #${r.id}?`)) return; await api.deleteStorage(r.id); await load() }}>Delete</button></div></ListingDetailCard> })}
+          </div>}</article>
         </div>}
       </section>}
 
