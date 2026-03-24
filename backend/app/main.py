@@ -45,6 +45,22 @@ def ensure_runtime_columns():
                     if 'cover_image_url' not in cols:
                         conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN cover_image_url TEXT"))
 
+
+            if 'marketplace_orders' in tables:
+                ocols = {c['name'] for c in inspector.get_columns('marketplace_orders')}
+                required = {
+                    'buyer_id': 'INTEGER', 'seller_id': 'INTEGER', 'listing_type': 'VARCHAR(30)', 'listing_id': 'INTEGER',
+                    'listing_title': 'VARCHAR(180)', 'quantity': 'FLOAT DEFAULT 1', 'unit_price': 'FLOAT DEFAULT 0',
+                    'gross_amount': 'FLOAT DEFAULT 0', 'platform_fee': 'FLOAT DEFAULT 0', 'processing_fee': 'FLOAT DEFAULT 0',
+                    'seller_net': 'FLOAT DEFAULT 0', 'currency': "VARCHAR(10) DEFAULT 'GHS'", 'escrow_status': "VARCHAR(40) DEFAULT 'AWAITING_PAYMENT'",
+                    'fulfillment_status': "VARCHAR(40) DEFAULT 'PENDING'", 'payment_status': "VARCHAR(40) DEFAULT 'UNPAID'", 'payout_status': "VARCHAR(40) DEFAULT 'HELD'",
+                    'delivery_method': "VARCHAR(60) DEFAULT 'STANDARD'", 'delivery_note': 'TEXT', 'buyer_note': 'TEXT', 'seller_note': 'TEXT',
+                    'payment_reference': 'VARCHAR(120)', 'updated_at': 'DATETIME'
+                }
+                for col, ddl in required.items():
+                    if col not in ocols:
+                        conn.execute(text(f'ALTER TABLE marketplace_orders ADD COLUMN {col} {ddl}'))
+
             if 'otp_codes' in tables:
                 ocols = {c['name'] for c in inspector.get_columns('otp_codes')}
                 if 'destination' not in ocols:

@@ -953,6 +953,8 @@ export default function App() {
   const [storageEdit, setStorageEdit] = useState({ id: '', requester_id: 1, storage_type: '', quantity_kg: '', location: '', duration_days: '', status: 'PENDING' })
   const [serviceImages, setServiceImages] = useState([])
   const [serviceEditImages, setServiceEditImages] = useState([])
+  const [orderForm, setOrderForm] = useState({ buyer_id: 1, seller_id: 2, listing_type: 'PRODUCT', listing_id: 1, listing_title: '', quantity: 1, unit_price: '', currency: 'GHS', delivery_method: 'STANDARD', buyer_note: '' })
+  const [orderPayment, setOrderPayment] = useState({ payer_id: 1, payee_id: 2, country: 'GH', method: 'MobileMoney', provider: 'MTN', currency: 'GHS', escrow_enabled: true })
   const [paymentForm, setPaymentForm] = useState({ payer_id: 2, payee_id: 1, amount: '', country: 'GH', method: 'MobileMoney', provider: 'MTN MoMo', escrow_enabled: true })
   const [paymentEdit, setPaymentEdit] = useState({ id: '', payer_id: 2, payee_id: 1, amount: '', country: 'GH', method: 'MobileMoney', provider: 'MTN MoMo', escrow_enabled: true })
   const [alertForm, setAlertForm] = useState({ country: 'GH', region: '', severity: 'MEDIUM', alert_type: '', message: '', valid_until: '' })
@@ -3888,23 +3890,20 @@ export default function App() {
         </div>}
       </section>}
 
-      {active === 'payments' && <section><h3>{t('Payments + Escrow','Paiements + séquestre','支付 + 托管')}</h3><form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.createPayment({ ...paymentForm, payer_id: Number(paymentForm.payer_id), payee_id: Number(paymentForm.payee_id), amount: Number(paymentForm.amount) }); await load() }}>
-        <input className='input' placeholder='Payer ID' value={paymentForm.payer_id} onChange={e => setPaymentForm({ ...paymentForm, payer_id: e.target.value })} />
-        <input className='input' placeholder='Payee ID' value={paymentForm.payee_id} onChange={e => setPaymentForm({ ...paymentForm, payee_id: e.target.value })} />
-        <input className='input' placeholder='Amount' value={paymentForm.amount} onChange={e => setPaymentForm({ ...paymentForm, amount: e.target.value })} />
-        <select className='input' value={paymentForm.country} onChange={e => setPaymentForm({ ...paymentForm, country: e.target.value, provider: paymentProviders[e.target.value][0] })}>{countries.map(c => <option key={c}>{c}</option>)}</select>
-        <select className='input' value={paymentForm.provider} onChange={e => setPaymentForm({ ...paymentForm, provider: e.target.value })}>{paymentProviders[paymentForm.country].map(p => <option key={p}>{p}</option>)}</select>
-        <label><input type='checkbox' checked={paymentForm.escrow_enabled} onChange={e => setPaymentForm({ ...paymentForm, escrow_enabled: e.target.checked })} /> Escrow</label>
-        <button className='btn btn-dark'>Create Payment</button>
-      </form>
-      <form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.updatePayment(Number(paymentEdit.id), { ...paymentEdit, payer_id: Number(paymentEdit.payer_id), payee_id: Number(paymentEdit.payee_id), amount: Number(paymentEdit.amount) }); await load() }}>
-        <input className='input' placeholder='Payment ID to edit' value={paymentEdit.id} onChange={e => setPaymentEdit({ ...paymentEdit, id: e.target.value })} required />
-        <input className='input' placeholder='Amount' value={paymentEdit.amount} onChange={e => setPaymentEdit({ ...paymentEdit, amount: e.target.value })} />
-        <select className='input' value={paymentEdit.country} onChange={e => setPaymentEdit({ ...paymentEdit, country: e.target.value, provider: paymentProviders[e.target.value][0] })}>{countries.map(c => <option key={c}>{c}</option>)}</select>
-        <select className='input' value={paymentEdit.provider} onChange={e => setPaymentEdit({ ...paymentEdit, provider: e.target.value })}>{paymentProviders[paymentEdit.country].map(p => <option key={p}>{p}</option>)}</select>
-        <button className='btn btn-dark'>Save Edit</button>
-      </form>
-      <DataTable columns={['id', 'payer_id', 'payee_id', 'amount', 'country', 'provider', 'escrow_enabled', 'status']} rows={state.payments} filterKey='provider' /></section>}
+      {active === 'payments' && <section><h3>{t('Payments & Escrow','Paiements et séquestre','支付和托管')}</h3>
+        <div className='two-col'>
+          <article className='panel'><h4>Create Escrow Order</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.createOrder({ ...orderForm, buyer_id: Number(orderForm.buyer_id), seller_id: Number(orderForm.seller_id), listing_id: Number(orderForm.listing_id), quantity: Number(orderForm.quantity), unit_price: Number(orderForm.unit_price) }); await load() }}>
+            <div className='row2'><input className='input' placeholder='Listing title' value={orderForm.listing_title} onChange={e => setOrderForm({ ...orderForm, listing_title: e.target.value })} required /><input className='input' placeholder='Listing type' value={orderForm.listing_type} onChange={e => setOrderForm({ ...orderForm, listing_type: e.target.value })} /></div>
+            <div className='row2'><input className='input' placeholder='Buyer ID' value={orderForm.buyer_id} onChange={e => setOrderForm({ ...orderForm, buyer_id: e.target.value })} /><input className='input' placeholder='Seller ID' value={orderForm.seller_id} onChange={e => setOrderForm({ ...orderForm, seller_id: e.target.value })} /></div>
+            <div className='row2'><input className='input' placeholder='Listing ID' value={orderForm.listing_id} onChange={e => setOrderForm({ ...orderForm, listing_id: e.target.value })} /><input className='input' placeholder='Quantity' value={orderForm.quantity} onChange={e => setOrderForm({ ...orderForm, quantity: e.target.value })} /></div>
+            <div className='row2'><input className='input' placeholder='Unit price' value={orderForm.unit_price} onChange={e => setOrderForm({ ...orderForm, unit_price: e.target.value })} required /><input className='input' placeholder='Delivery method' value={orderForm.delivery_method} onChange={e => setOrderForm({ ...orderForm, delivery_method: e.target.value })} /></div>
+            <input className='input' placeholder='Buyer note' value={orderForm.buyer_note} onChange={e => setOrderForm({ ...orderForm, buyer_note: e.target.value })} />
+            <button className='btn btn-dark'>Create Escrow Order</button>
+          </form></article>
+          <article className='panel'><h4>Escrow Orders</h4>{!state.orders.length ? <EmptyListingsState title='No escrow orders yet' body='Create an order to hold buyer funds with FarmSavior before seller payout.' /> : <div className='list'>{state.orders.map((o) => <ListingDetailCard key={`order-${o.id}`} title={`${o.listing_title} (#${o.id})`} subtitle={`${o.listing_type} • escrow ${o.escrow_status} • payout ${o.payout_status}`} stats={[`${o.quantity} qty`, `${o.gross_amount} ${o.currency}`, `seller net ${o.seller_net}`]} contact={`Buyer ${o.buyer_id} → Seller ${o.seller_id}`}><div className='card-actions'><button className='btn btn-dark' type='button' onClick={async () => { await api.payOrder(o.id, { ...orderPayment, payer_id: o.buyer_id, payee_id: o.seller_id, amount: o.gross_amount }); await load() }}>Pay to Escrow</button><button className='btn' type='button' onClick={async () => { await api.updateOrderStatus(o.id, { fulfillment_status: 'SHIPPED', escrow_status: 'IN_FULFILLMENT', seller_note: 'Seller marked as shipped' }); await load() }}>Mark Shipped</button><button className='btn' type='button' onClick={async () => { await api.confirmOrder(o.id); await load() }}>Buyer Confirm</button><button className='btn' type='button' onClick={async () => { await api.releaseOrder(o.id); await load() }}>Release Funds</button><button className='btn' type='button' onClick={async () => { await api.disputeOrder(o.id, { buyer_note: 'Buyer opened dispute' }); await load() }}>Dispute</button></div></ListingDetailCard>)}</div>}</article>
+        </div>
+        <article className='panel' style={{marginTop:12}}><h4>Payment Records</h4><DataTable columns={['id', 'payer_id', 'payee_id', 'amount', 'currency', 'status', 'reference']} rows={state.payments} filterKey='reference' /></article>
+      </section>}
 
       {active === 'alerts' && <section><h3>{t('Weather Alerts (GH • NG • BF)','Alertes météo (GH • NG • BF)','天气预警（GH • NG • BF）')}</h3>
         <div className='inlineForm' style={{marginBottom: 10}}>

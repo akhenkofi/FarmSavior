@@ -162,6 +162,31 @@ class LogisticsAcceptIn(BaseModel):
     transporter_id: int
 
 
+
+
+class MarketplaceOrderIn(BaseModel):
+    buyer_id: int
+    seller_id: int
+    listing_type: str
+    listing_id: int
+    listing_title: str
+    quantity: float = 1
+    unit_price: float
+    currency: Optional[str] = 'GHS'
+    delivery_method: Optional[str] = 'STANDARD'
+    delivery_note: Optional[str] = None
+    buyer_note: Optional[str] = None
+
+
+class MarketplaceOrderStatusIn(BaseModel):
+    escrow_status: Optional[str] = None
+    fulfillment_status: Optional[str] = None
+    payment_status: Optional[str] = None
+    payout_status: Optional[str] = None
+    seller_note: Optional[str] = None
+    delivery_note: Optional[str] = None
+    buyer_note: Optional[str] = None
+
 class PaymentIn(BaseModel):
     payer_id: int
     payee_id: int

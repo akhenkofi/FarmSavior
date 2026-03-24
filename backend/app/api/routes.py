@@ -3644,6 +3644,150 @@ def delete_storage_reservation(reservation_id: int, db: Session = Depends(get_db
     db.commit()
     return {'ok': True}
 
+
+
+def _order_fee_breakdown(unit_price: float, quantity: float):
+    gross = round(float(unit_price or 0) * float(quantity or 0), 2)
+    platform_fee = round(gross * 0.10, 2)
+    processing_fee = round(gross * 0.03, 2)
+    seller_net = round(max(0, gross - platform_fee - processing_fee), 2)
+    return gross, platform_fee, processing_fee, seller_net
+
+
+@router.post('/orders')
+def create_marketplace_order(payload: MarketplaceOrderIn, db: Session = Depends(get_db)):
+    _require_transact_verified_user(db, int(payload.buyer_id), 'Buyer')
+    _require_transact_verified_user(db, int(payload.seller_id), 'Seller')
+    _assert_no_contact_info(payload.listing_title, payload.delivery_note, payload.buyer_note)
+    gross, platform_fee, processing_fee, seller_net = _order_fee_breakdown(payload.unit_price, payload.quantity)
+    rec = MarketplaceOrder(
+        buyer_id=payload.buyer_id,
+        seller_id=payload.seller_id,
+        listing_type=(payload.listing_type or 'product').upper(),
+        listing_id=payload.listing_id,
+        listing_title=payload.listing_title,
+        quantity=payload.quantity,
+        unit_price=payload.unit_price,
+        gross_amount=gross,
+        platform_fee=platform_fee,
+        processing_fee=processing_fee,
+        seller_net=seller_net,
+        currency=payload.currency or 'GHS',
+        delivery_method=payload.delivery_method or 'STANDARD',
+        delivery_note=payload.delivery_note,
+        buyer_note=payload.buyer_note,
+        escrow_status='AWAITING_PAYMENT',
+        fulfillment_status='PENDING',
+        payment_status='UNPAID',
+        payout_status='HELD'
+    )
+    db.add(rec)
+    db.commit()
+    db.refresh(rec)
+    return rec
+
+
+@router.get('/orders')
+def list_marketplace_orders(db: Session = Depends(get_db)):
+    return db.query(MarketplaceOrder).order_by(MarketplaceOrder.id.desc()).all()
+
+
+@router.post('/orders/{order_id}/pay')
+def pay_marketplace_order(order_id: int, payload: PaymentIn, db: Session = Depends(get_db)):
+    order = db.query(MarketplaceOrder).filter(MarketplaceOrder.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail='Order not found')
+    if order.payment_status == 'PAID':
+        return order
+    provider_currency = {'GH': 'GHS', 'NG': 'NGN', 'BF': 'XOF'}
+    ref = f"ESC-{int(datetime.utcnow().timestamp())}-{random.randint(100,999)}"
+    payment = Payment(
+        payer_id=payload.payer_id,
+        payee_id=payload.payee_id,
+        amount=order.gross_amount,
+        currency=payload.currency or provider_currency.get(payload.country, order.currency or 'GHS'),
+        country=CountryCode(payload.country),
+        method=payload.method,
+        provider=payload.provider,
+        escrow_enabled=True,
+        reference=ref,
+        status='SUCCESS'
+    )
+    db.add(payment)
+    order.payment_reference = ref
+    order.payment_status = 'PAID'
+    order.escrow_status = 'PAID_IN_ESCROW'
+    order.fulfillment_status = 'READY_FOR_SELLER'
+    db.commit()
+    db.refresh(order)
+    return order
+
+
+@router.put('/orders/{order_id}/status')
+def update_marketplace_order_status(order_id: int, payload: MarketplaceOrderStatusIn, db: Session = Depends(get_db)):
+    order = db.query(MarketplaceOrder).filter(MarketplaceOrder.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail='Order not found')
+    data = payload.model_dump(exclude_none=True)
+    _assert_no_contact_info(data.get('seller_note'), data.get('delivery_note'), data.get('buyer_note'))
+    for key, value in data.items():
+        setattr(order, key, value)
+    order.updated_at = datetime.utcnow()
+    if order.fulfillment_status in ['SHIPPED', 'DELIVERED', 'COMPLETED'] and order.payment_status == 'PAID' and order.escrow_status == 'PAID_IN_ESCROW':
+        order.escrow_status = 'IN_FULFILLMENT'
+    if order.fulfillment_status in ['DELIVERED', 'COMPLETED'] and data.get('escrow_status') == 'BUYER_CONFIRMED':
+        order.payout_status = 'READY_FOR_RELEASE'
+    db.commit()
+    db.refresh(order)
+    return order
+
+
+@router.post('/orders/{order_id}/confirm')
+def confirm_marketplace_order(order_id: int, db: Session = Depends(get_db)):
+    order = db.query(MarketplaceOrder).filter(MarketplaceOrder.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail='Order not found')
+    order.fulfillment_status = 'COMPLETED'
+    order.escrow_status = 'BUYER_CONFIRMED'
+    order.payout_status = 'READY_FOR_RELEASE'
+    order.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(order)
+    return order
+
+
+@router.post('/orders/{order_id}/release')
+def release_marketplace_order(order_id: int, db: Session = Depends(get_db)):
+    order = db.query(MarketplaceOrder).filter(MarketplaceOrder.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail='Order not found')
+    if order.payment_status != 'PAID':
+        raise HTTPException(status_code=400, detail='Order has not been paid into escrow')
+    order.escrow_status = 'RELEASED'
+    order.payout_status = 'RELEASED'
+    order.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(order)
+    return order
+
+
+@router.post('/orders/{order_id}/dispute')
+def dispute_marketplace_order(order_id: int, payload: MarketplaceOrderStatusIn, db: Session = Depends(get_db)):
+    order = db.query(MarketplaceOrder).filter(MarketplaceOrder.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail='Order not found')
+    _assert_no_contact_info(payload.buyer_note, payload.seller_note, payload.delivery_note)
+    order.escrow_status = 'DISPUTED'
+    order.payout_status = 'ON_HOLD'
+    if payload.buyer_note:
+        order.buyer_note = payload.buyer_note
+    if payload.seller_note:
+        order.seller_note = payload.seller_note
+    order.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(order)
+    return order
+
 @router.post('/payments')
 def create_payment(payload: PaymentIn, db: Session = Depends(get_db)):
     _require_transact_verified_user(db, int(payload.payer_id), 'Payer')

@@ -203,6 +203,35 @@ class StorageReservation(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
+
+
+class MarketplaceOrder(Base):
+    __tablename__ = 'marketplace_orders'
+    id = Column(Integer, primary_key=True)
+    buyer_id = Column(Integer, ForeignKey('users.id'))
+    seller_id = Column(Integer, ForeignKey('users.id'))
+    listing_type = Column(String(30), nullable=False)
+    listing_id = Column(Integer, nullable=False)
+    listing_title = Column(String(180), nullable=False)
+    quantity = Column(Float, default=1)
+    unit_price = Column(Float, nullable=False)
+    gross_amount = Column(Float, nullable=False)
+    platform_fee = Column(Float, default=0)
+    processing_fee = Column(Float, default=0)
+    seller_net = Column(Float, default=0)
+    currency = Column(String(10), default='GHS')
+    escrow_status = Column(String(40), default='AWAITING_PAYMENT')
+    fulfillment_status = Column(String(40), default='PENDING')
+    payment_status = Column(String(40), default='UNPAID')
+    payout_status = Column(String(40), default='HELD')
+    delivery_method = Column(String(60), default='STANDARD')
+    delivery_note = Column(Text, nullable=True)
+    buyer_note = Column(Text, nullable=True)
+    seller_note = Column(Text, nullable=True)
+    payment_reference = Column(String(120), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
 class Payment(Base):
     __tablename__ = 'payments'
     id = Column(Integer, primary_key=True)

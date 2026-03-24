@@ -146,6 +146,15 @@ export const createStorage = async (payload) => (await api.post('/services/stora
 export const updateStorage = async (id, payload) => (await api.put(`/services/storage-reservations/${id}`, payload)).data
 export const deleteStorage = async (id) => (await api.delete(`/services/storage-reservations/${id}`)).data
 
+
+export const fetchOrders = async () => (await api.get('/orders')).data
+export const createOrder = async (payload) => (await api.post('/orders', payload)).data
+export const payOrder = async (id, payload) => (await api.post(`/orders/${id}/pay`, payload)).data
+export const updateOrderStatus = async (id, payload) => (await api.put(`/orders/${id}/status`, payload)).data
+export const confirmOrder = async (id) => (await api.post(`/orders/${id}/confirm`)).data
+export const releaseOrder = async (id) => (await api.post(`/orders/${id}/release`)).data
+export const disputeOrder = async (id, payload) => (await api.post(`/orders/${id}/dispute`, payload)).data
+
 export const fetchPayments = async () => (await api.get('/payments')).data
 export const createPayment = async (payload) => (await api.post('/payments', payload)).data
 export const updatePayment = async (id, payload) => (await api.put(`/payments/${id}`, payload)).data
