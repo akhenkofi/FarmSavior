@@ -1252,8 +1252,8 @@ export default function App() {
     }
     const isAdmin = (meRes?.role || '').toLowerCase() === 'admin'
 
-    const [metrics, users, listings, livestock, livestockRecords, logistics, equipment, storage, payments, alerts, contracts, idv, passports, regions, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, publicWeather, govPrograms, spotTrading, spotHistory, tradeExportStats, livestockPlans] = await Promise.all([
-      api.fetchMetrics(), api.fetchUsers(), api.fetchListings(), api.fetchLivestock(), api.fetchLivestockRecordsAnimals().catch(() => []), api.fetchLogistics(), api.fetchEquipment(), api.fetchStorage(), api.fetchPayments(), api.fetchAlerts(alertCountryFilter === 'ALL' ? undefined : alertCountryFilter), api.fetchContracts(), api.fetchIdVerifications(), api.fetchPassports(), api.fetchWeatherRegions(), api.fetchVerificationApps(), api.fetchApprovedAccounts(), api.fetchDeviceTokens(), api.fetchDiseaseScans(),
+    const [metrics, users, listings, livestock, livestockRecords, logistics, equipment, storage, payments, orders, payoutProfiles, notifications, payoutHistory, alerts, contracts, idv, passports, regions, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, publicWeather, govPrograms, spotTrading, spotHistory, tradeExportStats, livestockPlans] = await Promise.all([
+      api.fetchMetrics(), api.fetchUsers(), api.fetchListings(), api.fetchLivestock(), api.fetchLivestockRecordsAnimals().catch(() => []), api.fetchLogistics(), api.fetchEquipment(), api.fetchStorage(), api.fetchPayments(), api.fetchOrders().catch(() => []), api.fetchPayoutProfiles().catch(() => []), api.fetchNotifications(meRes?.id || undefined).catch(() => []), api.fetchPayoutHistory().catch(() => []), api.fetchAlerts(alertCountryFilter === 'ALL' ? undefined : alertCountryFilter), api.fetchContracts(), api.fetchIdVerifications(), api.fetchPassports(), api.fetchWeatherRegions(), api.fetchVerificationApps(), api.fetchApprovedAccounts(), api.fetchDeviceTokens(), api.fetchDiseaseScans(),
       isAdmin ? api.fetchAdminDisputes() : Promise.resolve([]),
       isAdmin ? api.fetchAdminFraudFlags() : Promise.resolve([]),
       api.fetchPublicNews().catch(() => []),
@@ -1265,7 +1265,7 @@ export default function App() {
       api.fetchLivestockRecordsPlans().catch(() => ({ plans: [] }))
     ])
     setRegionMap(regions || { GH: [], NG: [], BF: [] })
-    setState({ metrics, users, listings, livestock, livestockRecords, logistics, equipment, storage, payments, alerts, contracts, idv, passports, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, publicWeather, govPrograms: govPrograms.items || [], spotTrading: spotTrading.items || [], spotHistory: spotHistory.items || [], tradeExportStats: tradeExportStats.items || [], livestockPlans: livestockPlans.plans || [] })
+    setState({ metrics, users, listings, livestock, livestockRecords, logistics, equipment, storage, payments, orders, payoutProfiles, notifications, payoutHistory, alerts, contracts, idv, passports, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, publicWeather, govPrograms: govPrograms.items || [], spotTrading: spotTrading.items || [], spotHistory: spotHistory.items || [], tradeExportStats: tradeExportStats.items || [], livestockPlans: livestockPlans.plans || [] })
   }
 
   const loadLivestockRecords = async () => {
