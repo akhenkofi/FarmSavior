@@ -36,6 +36,15 @@ def ensure_runtime_columns():
                 if 'deleted_at' not in ucols:
                     conn.execute(text('ALTER TABLE users ADD COLUMN deleted_at DATETIME'))
 
+
+            for table_name in ['crop_listings', 'livestock_listings', 'logistics_requests', 'equipment_rentals', 'storage_reservations']:
+                if table_name in tables:
+                    cols = {c['name'] for c in inspector.get_columns(table_name)}
+                    if 'image_urls' not in cols:
+                        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN image_urls TEXT DEFAULT '[]'"))
+                    if 'cover_image_url' not in cols:
+                        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN cover_image_url TEXT"))
+
             if 'otp_codes' in tables:
                 ocols = {c['name'] for c in inspector.get_columns('otp_codes')}
                 if 'destination' not in ocols:

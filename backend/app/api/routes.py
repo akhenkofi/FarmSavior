@@ -3440,7 +3440,9 @@ def create_logistics(payload: LogisticsIn, db: Session = Depends(get_db)):
         dropoff_location=data['dropoff_location'],
         cargo_type=data.get('cargo_type') or data.get('cargo_details') or 'General Cargo',
         weight_kg=data.get('weight_kg') or 0,
-        status=data.get('status') or 'PENDING'
+        status=data.get('status') or 'PENDING',
+        image_urls=data.get('image_urls') or '[]',
+        cover_image_url=data.get('cover_image_url')
     )
     db.add(req)
     db.commit()

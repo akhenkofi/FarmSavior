@@ -100,6 +100,8 @@ class CropListingIn(BaseModel):
     location: Optional[str] = None
     country: Country = 'GH'
     status: str = 'OPEN'
+    image_urls: str = '[]'
+    cover_image_url: Optional[str] = None
 
 
 class LivestockListingIn(BaseModel):
@@ -110,6 +112,8 @@ class LivestockListingIn(BaseModel):
     location: Optional[str] = None
     country: Country = 'GH'
     status: str = 'OPEN'
+    image_urls: str = '[]'
+    cover_image_url: Optional[str] = None
 
 
 class LogisticsIn(BaseModel):
@@ -121,6 +125,8 @@ class LogisticsIn(BaseModel):
     cargo_details: Optional[str] = None
     weight_kg: float = 0
     status: str = 'PENDING'
+    image_urls: str = '[]'
+    cover_image_url: Optional[str] = None
 
 
 class EquipmentRentalIn(BaseModel):
@@ -130,6 +136,8 @@ class EquipmentRentalIn(BaseModel):
     location: str
     budget: float
     status: str = 'PENDING'
+    image_urls: str = '[]'
+    cover_image_url: Optional[str] = None
 
 
 class StorageReservationIn(BaseModel):
@@ -139,6 +147,8 @@ class StorageReservationIn(BaseModel):
     location: str
     duration_days: int
     status: str = 'PENDING'
+    image_urls: str = '[]'
+    cover_image_url: Optional[str] = None
 
 
 class OfferIn(BaseModel):
@@ -273,6 +283,7 @@ class WorldChatUserSanctionIn(BaseModel):
 
 
 class CommunityProfileIn(BaseModel):
+    full_name: Optional[str] = None
     username: Optional[str] = None
     avatar_url: Optional[str] = None
     cover_image_url: Optional[str] = None

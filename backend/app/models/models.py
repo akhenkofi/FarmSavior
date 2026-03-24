@@ -121,6 +121,8 @@ class CropListing(Base):
     location = Column(String(120), nullable=True)
     country = Column(Enum(CountryCode), default=CountryCode.gh)
     status = Column(Enum(ListingStatus), default=ListingStatus.open)
+    image_urls = Column(Text, default='[]')
+    cover_image_url = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -134,6 +136,8 @@ class LivestockListing(Base):
     location = Column(String(120), nullable=True)
     country = Column(Enum(CountryCode), default=CountryCode.gh)
     status = Column(String(30), default='OPEN')
+    image_urls = Column(Text, default='[]')
+    cover_image_url = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -166,6 +170,8 @@ class LogisticsRequest(Base):
     weight_kg = Column(Float, default=0)
     status = Column(String(30), default='PENDING')
     tracking_note = Column(String(255), default='Awaiting transporter')
+    image_urls = Column(Text, default='[]')
+    cover_image_url = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -178,6 +184,8 @@ class EquipmentRental(Base):
     location = Column(String(120), nullable=False)
     budget = Column(Float, nullable=False)
     status = Column(String(30), default='PENDING')
+    image_urls = Column(Text, default='[]')
+    cover_image_url = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -190,6 +198,8 @@ class StorageReservation(Base):
     location = Column(String(120), nullable=False)
     duration_days = Column(Integer, nullable=False)
     status = Column(String(30), default='PENDING')
+    image_urls = Column(Text, default='[]')
+    cover_image_url = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 

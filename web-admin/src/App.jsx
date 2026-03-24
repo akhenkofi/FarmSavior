@@ -730,6 +730,88 @@ const lockDemandCount = (arr, fillerFactory) => {
 
 const isUserImage = (v) => String(v || '').startsWith('data:image/')
 
+
+const MAX_IMAGE_COUNTS = { products: 20, livestock: 10, services: 20 }
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+
+const parseImageList = (value) => {
+  if (Array.isArray(value)) return value.filter(Boolean)
+  if (!value) return []
+  try {
+    const parsed = JSON.parse(value)
+    return Array.isArray(parsed) ? parsed.filter(Boolean) : []
+  } catch {
+    return []
+  }
+}
+
+const normalizeListingImages = (images = [], coverImageUrl = '') => {
+  const list = parseImageList(images)
+  const cover = coverImageUrl || list[0] || ''
+  return { image_urls: JSON.stringify(list), cover_image_url: cover }
+}
+
+function ListingImagePicker({ label, limit, images, setImages }) {
+  const onFiles = async (e) => {
+    const files = Array.from(e.target.files || [])
+    if (!files.length) return
+    if (images.length + files.length > limit) {
+      alert(`You can upload up to ${limit} images here.`)
+      e.target.value = ''
+      return
+    }
+    const next = []
+    for (const file of files) {
+      if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+        alert(`${file.name} must be JPG, PNG, or WebP.`)
+        continue
+      }
+      if (file.size > MAX_IMAGE_BYTES) {
+        alert(`${file.name} is larger than 5MB.`)
+        continue
+      }
+      try {
+        const dataUrl = await compressImageFileToDataUrl(file)
+        next.push(dataUrl)
+      } catch (err) {
+        alert(err?.message || 'Could not process image.')
+      }
+    }
+    if (next.length) setImages(prev => [...prev, ...next].slice(0, limit))
+    e.target.value = ''
+  }
+
+  return <div className='panel image-picker'>
+    <div className='list-row'>
+      <strong>{label}</strong>
+      <span>{images.length}/{limit} images</span>
+    </div>
+    <input className='input' type='file' accept='image/jpeg,image/png,image/webp' multiple onChange={onFiles} />
+    {!!images.length && <div className='image-grid'>
+      {images.map((src, idx) => <div className='image-thumb-wrap' key={`${label}-${idx}`}>
+        <img src={src} alt={`${label} ${idx + 1}`} className='image-thumb' />
+        <div className='image-thumb-actions'>
+          <button type='button' className='btn btn-mini' onClick={() => setImages(prev => prev.map((img, i) => i === idx && idx > 0 ? prev[idx - 1] : img).map((img, i) => i === idx - 1 ? prev[idx] : img))} disabled={idx === 0}>↑</button>
+          <button type='button' className='btn btn-mini' onClick={() => setImages(prev => prev.filter((_, i) => i !== idx))}>Remove</button>
+          {idx !== 0 && <button type='button' className='btn btn-mini' onClick={() => setImages(prev => [prev[idx], ...prev.filter((_, i) => i !== idx)])}>Set cover</button>}
+          {idx === 0 && <span className='cover-badge'>Cover</span>}
+        </div>
+      </div>)}
+    </div>}
+    <div className='helper-text'>JPG, PNG, or WebP only. Max 5MB each. First image is the cover.</div>
+  </div>
+}
+
+function EmptyListingsState({ title, body, actionLabel, onAction }) {
+  return <div className='empty-state panel'>
+    <div className='empty-emoji'>📭</div>
+    <h4>{title}</h4>
+    <p>{body}</p>
+    {onAction && <button type='button' className='btn btn-dark' onClick={onAction}>{actionLabel}</button>}
+  </div>
+}
+
 function DataTable({ columns, rows, filterKey, onEdit, onRowClick }) {
   const [q, setQ] = useState('')
   const filtered = rows.filter((r) => !q || String(r[filterKey] ?? '').toLowerCase().includes(q.toLowerCase()))
@@ -772,7 +854,11 @@ export default function App() {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [pendingFeatureLabel, setPendingFeatureLabel] = useState('')
   const [pendingFeatureSection, setPendingFeatureSection] = useState('')
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [active, setActive] = useState(initialSection)
+  const [productsView, setProductsView] = useState('list')
+  const [livestockView, setLivestockView] = useState('list')
+  const [servicesView, setServicesView] = useState('list')
   const [homeQuery, setHomeQuery] = useState('')
   const [publicQuery, setPublicQuery] = useState('')
   const [recentSearches, setRecentSearches] = useState([])
@@ -809,9 +895,13 @@ export default function App() {
   const [cropForm, setCropForm] = useState({ farmer_id: 1, crop_name: '', quantity_kg: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
   const [cropEdit, setCropEdit] = useState({ id: '', farmer_id: 1, crop_name: '', quantity_kg: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
   const [cropQuickEdit, setCropQuickEdit] = useState({ id: '', quantity_kg: '', unit_price: '' })
+  const [productImages, setProductImages] = useState([])
+  const [productEditImages, setProductEditImages] = useState([])
   const [livestockForm, setLivestockForm] = useState({ farmer_id: 1, livestock_type: '', quantity: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
   const [livestockEdit, setLivestockEdit] = useState({ id: '', farmer_id: 1, livestock_type: '', quantity: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
   const [livestockQuickEdit, setLivestockQuickEdit] = useState({ id: '', quantity: '', unit_price: '' })
+  const [livestockImages, setLivestockImages] = useState([])
+  const [livestockEditImages, setLivestockEditImages] = useState([])
   const [livestockRecordForm, setLivestockRecordForm] = useState({ user_id: 1, ownership: 'Owned by Me', species: 'SHEEP', animal_type: 'EWE', name: '', ear_tag: '', farm_id: '', registration_number: '', stars: 0, date_of_birth: '', acquisition_date: '', purchase_price: '', currency: 'GHS', sire_id: '', dam_id: '', litter_size: 1, initial_weight_kg: '', breeding_type: 'Natural', castrated: false, sale_date: '', sale_price: '', sold_to: '', died_date: '', cull_keep_status: 'KEEP', cull_reason: '', health_status: '', pen_location: '', notes: '', treatment_entry: '' })
   const [livestockRecordEdit, setLivestockRecordEdit] = useState({ id: '', user_id: 1, ownership: 'Owned by Me', species: 'SHEEP', animal_type: 'EWE', name: '', ear_tag: '', farm_id: '', registration_number: '', stars: 0, date_of_birth: '', acquisition_date: '', purchase_price: '', currency: 'GHS', sire_id: '', dam_id: '', litter_size: 1, initial_weight_kg: '', breeding_type: 'Natural', castrated: false, sale_date: '', sale_price: '', sold_to: '', died_date: '', cull_keep_status: 'KEEP', cull_reason: '', health_status: '', pen_location: '', notes: '', treatment_entry: '' })
   const [selectedLivestockRecord, setSelectedLivestockRecord] = useState(null)
@@ -823,6 +913,8 @@ export default function App() {
   const [equipmentEdit, setEquipmentEdit] = useState({ id: '', requester_id: 1, equipment_type: '', duration_days: '', location: '', budget: '', status: 'PENDING' })
   const [storageForm, setStorageForm] = useState({ requester_id: 1, storage_type: '', quantity_kg: '', location: '', duration_days: '', status: 'PENDING' })
   const [storageEdit, setStorageEdit] = useState({ id: '', requester_id: 1, storage_type: '', quantity_kg: '', location: '', duration_days: '', status: 'PENDING' })
+  const [serviceImages, setServiceImages] = useState([])
+  const [serviceEditImages, setServiceEditImages] = useState([])
   const [paymentForm, setPaymentForm] = useState({ payer_id: 2, payee_id: 1, amount: '', country: 'GH', method: 'MobileMoney', provider: 'MTN MoMo', escrow_enabled: true })
   const [paymentEdit, setPaymentEdit] = useState({ id: '', payer_id: 2, payee_id: 1, amount: '', country: 'GH', method: 'MobileMoney', provider: 'MTN MoMo', escrow_enabled: true })
   const [alertForm, setAlertForm] = useState({ country: 'GH', region: '', severity: 'MEDIUM', alert_type: '', message: '', valid_until: '' })
@@ -1040,6 +1132,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('farmsavior_ui_country', uiCountry)
   }, [uiCountry])
+
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [active])
 
   useEffect(() => {
     setOpenPoultryModule(0)
@@ -2246,15 +2342,19 @@ export default function App() {
       </div>
     </div>}
     <div className='layout'>
-    <aside className='sidebar'>
+    <aside className={`sidebar ${mobileMenuOpen ? 'open' : ''}`}>
       <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
         <img src='/assets/farmsavior-logo.jpg' alt='FarmSavior' style={{width:36,height:36,borderRadius:8,objectFit:'cover'}} />
         <h3 style={{margin:0}}>FarmSavior</h3>
       </div>
-      {menu.map(m => <button key={m} className={`sideBtn ${active === m ? 'on' : ''}`} onClick={() => setActive(m)}>{menuLabel(m)}</button>)}
+      {menu.map(m => <button key={m} className={`sideBtn ${active === m ? 'on' : ''}`} onClick={() => { setActive(m); setMobileMenuOpen(false) }}>{menuLabel(m)}</button>)}
       <button className='sideBtn' onClick={() => { localStorage.removeItem('farmsavior_token'); setToken('') }}>{t('logout','se déconnecter')}</button>
     </aside>
     <main className='main'>
+      <div className='mobileTopBar'>
+        <button className='btn btn-dark' type='button' onClick={() => setMobileMenuOpen(v => !v)}>{mobileMenuOpen ? 'Close menu' : 'Menu'}</button>
+        <strong>FarmSavior</strong>
+      </div>
       <div className='inlineForm' style={{marginBottom:10, justifyContent:'space-between'}}>
         <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
           <select className='input' value={uiCountry} onChange={(e)=>setUiCountry(e.target.value)}>
@@ -2593,105 +2693,182 @@ export default function App() {
         </article>}
       </section>}
 
-      {active === 'products' && <section><h3>{t('Product Listings','Annonces de produits','产品列表')}</h3><form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.createListing({ ...cropForm, farmer_id: Number(cropForm.farmer_id), quantity_kg: Number(cropForm.quantity_kg), unit_price: Number(cropForm.unit_price) }); await load() }}>
-        <input className='input' placeholder='Crop' value={cropForm.crop_name} onChange={e => setCropForm({ ...cropForm, crop_name: e.target.value })} required />
-        <input className='input' placeholder='Qty kg' value={cropForm.quantity_kg} onChange={e => setCropForm({ ...cropForm, quantity_kg: e.target.value })} required />
-        <input className='input' placeholder='Unit price' value={cropForm.unit_price} onChange={e => setCropForm({ ...cropForm, unit_price: e.target.value })} required />
-        <input className='input' placeholder='Location' value={cropForm.location} onChange={e => setCropForm({ ...cropForm, location: e.target.value })} />
-        <button className='btn btn-dark'>Create</button>
-      </form>
-      <form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.updateListing(Number(cropEdit.id), { ...cropEdit, farmer_id: Number(cropEdit.farmer_id), quantity_kg: Number(cropEdit.quantity_kg), unit_price: Number(cropEdit.unit_price) }); await load() }}>
-        <input className='input' placeholder='Listing ID to edit' value={cropEdit.id} onChange={e => setCropEdit({ ...cropEdit, id: e.target.value })} required />
-        <input className='input' placeholder='Crop' value={cropEdit.crop_name} onChange={e => setCropEdit({ ...cropEdit, crop_name: e.target.value })} required />
-        <input className='input' placeholder='Qty kg' value={cropEdit.quantity_kg} onChange={e => setCropEdit({ ...cropEdit, quantity_kg: e.target.value })} required />
-        <input className='input' placeholder='Unit price' value={cropEdit.unit_price} onChange={e => setCropEdit({ ...cropEdit, unit_price: e.target.value })} required />
-        <button className='btn btn-dark'>Save Edit</button>
-      </form>
-      <form className='inlineForm' onSubmit={async e => { e.preventDefault(); try { await api.patchListingPriceQty(Number(cropQuickEdit.id), { quantity_kg: Number(cropQuickEdit.quantity_kg), unit_price: Number(cropQuickEdit.unit_price) }); await load(); alert('Product update approved by AI and saved.'); } catch(err) { alert(err?.response?.data?.detail || 'Update denied/failed'); } }}>
-        <input className='input' placeholder='Quick edit ID' value={cropQuickEdit.id} onChange={e => setCropQuickEdit({ ...cropQuickEdit, id: e.target.value })} required />
-        <input className='input' placeholder='New quantity kg' value={cropQuickEdit.quantity_kg} onChange={e => setCropQuickEdit({ ...cropQuickEdit, quantity_kg: e.target.value })} required />
-        <input className='input' placeholder='New unit price' value={cropQuickEdit.unit_price} onChange={e => setCropQuickEdit({ ...cropQuickEdit, unit_price: e.target.value })} required />
-        <button className='btn btn-dark'>Quick Save Qty+Price</button>
-      </form>
-      <DataTable columns={['id', 'crop_name', 'quantity_kg', 'unit_price', 'country', 'status']} rows={state.listings} filterKey='crop_name' onEdit={(r) => {
-        setCropEdit({
-          id: r.id,
-          farmer_id: r.farmer_id || 1,
-          crop_name: r.crop_name || '',
-          quantity_kg: r.quantity_kg || '',
-          unit_price: r.unit_price || '',
-          location: r.location || '',
-          country: r.country || 'GH',
-          status: r.status || 'OPEN'
-        })
-        setCropQuickEdit({ id: r.id, quantity_kg: r.quantity_kg || '', unit_price: r.unit_price || '' })
-        addRecentViewed(`Product #${r.id} ${r.crop_name || ''}`)
-      }} />
-      <p style={{fontSize:'.85rem',color:'#475569'}}>Tip: click Edit on a row, update fields above, then Save Edit or Quick Save Qty+Price.</p>
+      {active === 'products' && <section>
+        <div className='section-header'>
+          <div>
+            <h3>{t('Product Listings','Annonces de produits','产品列表')}</h3>
+            <p className='helper-text'>Create, manage, and add up to 20 images for each product listing.</p>
+          </div>
+          <button className='btn btn-dark' type='button' onClick={() => setProductsView('create')}>Add New Product</button>
+        </div>
+        <div className='tabs compact-tabs'>
+          <button className={`tab ${productsView === 'list' ? 'active' : ''}`} onClick={() => setProductsView('list')}>Product List</button>
+          <button className={`tab ${productsView === 'create' ? 'active' : ''}`} onClick={() => setProductsView('create')}>Create Product</button>
+          <button className={`tab ${productsView === 'edit' ? 'active' : ''}`} onClick={() => setProductsView('edit')} disabled={!cropEdit.id}>Edit Product</button>
+        </div>
+
+        {productsView === 'create' && <article className='panel'>
+          <form className='list' onSubmit={async e => {
+            e.preventDefault();
+            await api.createListing({ ...cropForm, ...normalizeListingImages(productImages), farmer_id: Number(cropForm.farmer_id), quantity_kg: Number(cropForm.quantity_kg), unit_price: Number(cropForm.unit_price) });
+            setProductImages([])
+            await load();
+            setProductsView('list')
+          }}>
+            <div className='row2'>
+              <input className='input' placeholder='Product name' value={cropForm.crop_name} onChange={e => setCropForm({ ...cropForm, crop_name: e.target.value })} required />
+              <input className='input' placeholder='Location' value={cropForm.location} onChange={e => setCropForm({ ...cropForm, location: e.target.value })} />
+            </div>
+            <div className='row2'>
+              <input className='input' placeholder='Qty kg' value={cropForm.quantity_kg} onChange={e => setCropForm({ ...cropForm, quantity_kg: e.target.value })} required />
+              <input className='input' placeholder='Unit price' value={cropForm.unit_price} onChange={e => setCropForm({ ...cropForm, unit_price: e.target.value })} required />
+            </div>
+            <ListingImagePicker label='Product photos' limit={MAX_IMAGE_COUNTS.products} images={productImages} setImages={setProductImages} />
+            <button className='btn btn-dark'>Create Product</button>
+          </form>
+        </article>}
+
+        {productsView === 'edit' && <article className='panel'>
+          {!cropEdit.id ? <EmptyListingsState title='Choose a product to edit' body='Open Product List and tap Edit on a product card or row.' /> : <form className='list' onSubmit={async e => {
+            e.preventDefault();
+            await api.updateListing(Number(cropEdit.id), { ...cropEdit, ...normalizeListingImages(productEditImages, productEditImages[0]), farmer_id: Number(cropEdit.farmer_id), quantity_kg: Number(cropEdit.quantity_kg), unit_price: Number(cropEdit.unit_price) });
+            await load();
+            setProductsView('list')
+          }}>
+            <div className='row2'>
+              <input className='input' placeholder='Listing ID' value={cropEdit.id} onChange={e => setCropEdit({ ...cropEdit, id: e.target.value })} required />
+              <input className='input' placeholder='Product name' value={cropEdit.crop_name} onChange={e => setCropEdit({ ...cropEdit, crop_name: e.target.value })} required />
+            </div>
+            <div className='row2'>
+              <input className='input' placeholder='Qty kg' value={cropEdit.quantity_kg} onChange={e => setCropEdit({ ...cropEdit, quantity_kg: e.target.value })} required />
+              <input className='input' placeholder='Unit price' value={cropEdit.unit_price} onChange={e => setCropEdit({ ...cropEdit, unit_price: e.target.value })} required />
+            </div>
+            <input className='input' placeholder='Location' value={cropEdit.location} onChange={e => setCropEdit({ ...cropEdit, location: e.target.value })} />
+            <ListingImagePicker label='Product photos' limit={MAX_IMAGE_COUNTS.products} images={productEditImages} setImages={setProductEditImages} />
+            <button className='btn btn-dark'>Save Product Changes</button>
+          </form>}
+        </article>}
+
+        {productsView === 'list' && <article className='panel'>
+          {!state.listings.length ? <EmptyListingsState title='No products listed yet' body='Add your first product with price, quantity, location, and photos.' actionLabel='Add First Product' onAction={() => setProductsView('create')} /> : <>
+            <div className='card-grid'>
+              {state.listings.map((r) => {
+                const images = parseImageList(r.image_urls)
+                return <article key={`product-card-${r.id}`} className='listing-card'>
+                  <div className='listing-card-media'>{(r.cover_image_url || images[0]) ? <img src={r.cover_image_url || images[0]} alt={r.crop_name} className='listing-cover' /> : <div className='listing-cover placeholder'>No photo yet</div>}</div>
+                  <div className='listing-card-body'>
+                    <strong>{r.crop_name}</strong>
+                    <div className='helper-text'>{r.location || 'Location not set'} • {r.country} • {r.status}</div>
+                    <div className='listing-card-metrics'><span>{r.quantity_kg} kg</span><span>{r.unit_price}</span><span>{images.length} photos</span></div>
+                    <div className='card-actions'>
+                      <button className='btn btn-dark' type='button' onClick={() => {
+                        setCropEdit({ id: r.id, farmer_id: r.farmer_id || 1, crop_name: r.crop_name || '', quantity_kg: r.quantity_kg || '', unit_price: r.unit_price || '', location: r.location || '', country: r.country || 'GH', status: r.status || 'OPEN' })
+                        setCropQuickEdit({ id: r.id, quantity_kg: r.quantity_kg || '', unit_price: r.unit_price || '' })
+                        setProductEditImages(images)
+                        setProductsView('edit')
+                      }}>Edit</button>
+                    </div>
+                  </div>
+                </article>
+              })}
+            </div>
+            <DataTable columns={['id', 'crop_name', 'quantity_kg', 'unit_price', 'country', 'status']} rows={state.listings} filterKey='crop_name' onEdit={(r) => {
+              setCropEdit({ id: r.id, farmer_id: r.farmer_id || 1, crop_name: r.crop_name || '', quantity_kg: r.quantity_kg || '', unit_price: r.unit_price || '', location: r.location || '', country: r.country || 'GH', status: r.status || 'OPEN' })
+              setCropQuickEdit({ id: r.id, quantity_kg: r.quantity_kg || '', unit_price: r.unit_price || '' })
+              setProductEditImages(parseImageList(r.image_urls))
+              setProductsView('edit')
+            }} />
+          </>}
+        </article>}
       </section>}
 
-      {active === 'livestock' && <section><h3>{t('Livestock Listings','Annonces de bétail','牲畜列表')}</h3><form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.createLivestock({ ...livestockForm, farmer_id: Number(livestockForm.farmer_id), quantity: Number(livestockForm.quantity), unit_price: Number(livestockForm.unit_price) }); await load() }}>
-        <input className='input' placeholder='Type' value={livestockForm.livestock_type} onChange={e => setLivestockForm({ ...livestockForm, livestock_type: e.target.value })} required />
-        <input className='input' placeholder='Quantity' value={livestockForm.quantity} onChange={e => setLivestockForm({ ...livestockForm, quantity: e.target.value })} required />
-        <input className='input' placeholder='Unit price' value={livestockForm.unit_price} onChange={e => setLivestockForm({ ...livestockForm, unit_price: e.target.value })} required />
-        <input className='input' placeholder='Location' value={livestockForm.location} onChange={e => setLivestockForm({ ...livestockForm, location: e.target.value })} />
-        <button className='btn btn-dark'>Create</button>
-      </form>
+      {active === 'livestock' && <section>
+        <div className='section-header'>
+          <div>
+            <h3>{t('Livestock Listings','Annonces de bétail','牲畜列表')}</h3>
+            <p className='helper-text'>Create, manage, and add up to 10 images for each livestock listing.</p>
+          </div>
+          <button className='btn btn-dark' type='button' onClick={() => setLivestockView('create')}>Add New Livestock</button>
+        </div>
+        <div className='tabs compact-tabs'>
+          <button className={`tab ${livestockView === 'list' ? 'active' : ''}`} onClick={() => setLivestockView('list')}>Livestock List</button>
+          <button className={`tab ${livestockView === 'create' ? 'active' : ''}`} onClick={() => setLivestockView('create')}>Create Listing</button>
+          <button className={`tab ${livestockView === 'edit' ? 'active' : ''}`} onClick={() => setLivestockView('edit')} disabled={!livestockEdit.id}>Edit Listing</button>
+        </div>
 
-      <form className='inlineForm' onSubmit={async e => {
-        e.preventDefault();
-        await api.updateLivestock(Number(livestockEdit.id), {
-          farmer_id: Number(livestockEdit.farmer_id || 1),
-          livestock_type: livestockEdit.livestock_type,
-          quantity: Number(livestockEdit.quantity),
-          unit_price: Number(livestockEdit.unit_price),
-          location: livestockEdit.location,
-          country: livestockEdit.country,
-          status: livestockEdit.status
-        });
-        await load();
-      }}>
-        <input className='input' placeholder='Listing ID to edit' value={livestockEdit.id} onChange={e => setLivestockEdit({ ...livestockEdit, id: e.target.value })} required />
-        <input className='input' placeholder='Type' value={livestockEdit.livestock_type} onChange={e => setLivestockEdit({ ...livestockEdit, livestock_type: e.target.value })} required />
-        <input className='input' placeholder='Quantity' value={livestockEdit.quantity} onChange={e => setLivestockEdit({ ...livestockEdit, quantity: e.target.value })} required />
-        <input className='input' placeholder='Unit price' value={livestockEdit.unit_price} onChange={e => setLivestockEdit({ ...livestockEdit, unit_price: e.target.value })} required />
-        <input className='input' placeholder='Location' value={livestockEdit.location} onChange={e => setLivestockEdit({ ...livestockEdit, location: e.target.value })} />
-        <button className='btn btn-dark'>Save Edit</button>
-      </form>
+        {livestockView === 'create' && <article className='panel'>
+          <form className='list' onSubmit={async e => {
+            e.preventDefault();
+            await api.createLivestock({ ...livestockForm, ...normalizeListingImages(livestockImages), farmer_id: Number(livestockForm.farmer_id), quantity: Number(livestockForm.quantity), unit_price: Number(livestockForm.unit_price) });
+            setLivestockImages([])
+            await load();
+            setLivestockView('list')
+          }}>
+            <div className='row2'>
+              <input className='input' placeholder='Livestock type' value={livestockForm.livestock_type} onChange={e => setLivestockForm({ ...livestockForm, livestock_type: e.target.value })} required />
+              <input className='input' placeholder='Location' value={livestockForm.location} onChange={e => setLivestockForm({ ...livestockForm, location: e.target.value })} />
+            </div>
+            <div className='row2'>
+              <input className='input' placeholder='Quantity' value={livestockForm.quantity} onChange={e => setLivestockForm({ ...livestockForm, quantity: e.target.value })} required />
+              <input className='input' placeholder='Unit price' value={livestockForm.unit_price} onChange={e => setLivestockForm({ ...livestockForm, unit_price: e.target.value })} required />
+            </div>
+            <ListingImagePicker label='Livestock photos' limit={MAX_IMAGE_COUNTS.livestock} images={livestockImages} setImages={setLivestockImages} />
+            <button className='btn btn-dark'>Create Livestock Listing</button>
+          </form>
+        </article>}
 
-      <form className='inlineForm' onSubmit={async e => {
-        e.preventDefault();
-        try {
-          await api.patchLivestockPriceQty(Number(livestockQuickEdit.id), {
-            quantity: Number(livestockQuickEdit.quantity),
-            unit_price: Number(livestockQuickEdit.unit_price)
-          });
-          await load();
-          alert('Livestock update approved by AI and saved.');
-        } catch(err) {
-          alert(err?.response?.data?.detail || 'Update denied/failed');
-        }
-      }}>
-        <input className='input' placeholder='Quick edit ID' value={livestockQuickEdit.id} onChange={e => setLivestockQuickEdit({ ...livestockQuickEdit, id: e.target.value })} required />
-        <input className='input' placeholder='New quantity' value={livestockQuickEdit.quantity} onChange={e => setLivestockQuickEdit({ ...livestockQuickEdit, quantity: e.target.value })} required />
-        <input className='input' placeholder='New unit price' value={livestockQuickEdit.unit_price} onChange={e => setLivestockQuickEdit({ ...livestockQuickEdit, unit_price: e.target.value })} required />
-        <button className='btn btn-dark'>Quick Save Qty+Price</button>
-      </form>
-      <DataTable columns={['id', 'livestock_type', 'quantity', 'unit_price', 'country', 'status']} rows={state.livestock} filterKey='livestock_type' onEdit={(r) => {
-        setLivestockEdit({
-          id: r.id,
-          farmer_id: r.farmer_id || 1,
-          livestock_type: r.livestock_type || '',
-          quantity: r.quantity || '',
-          unit_price: r.unit_price || '',
-          location: r.location || '',
-          country: r.country || 'GH',
-          status: r.status || 'OPEN'
-        })
-        setLivestockQuickEdit({ id: r.id, quantity: r.quantity || '', unit_price: r.unit_price || '' })
-        addRecentViewed(`Livestock #${r.id} ${r.livestock_type || ''}`)
-      }} />
-      <p style={{fontSize:'.85rem',color:'#475569'}}>Tip: click Edit on a row, change fields, then Save Edit or Quick Save Qty+Price.</p>
+        {livestockView === 'edit' && <article className='panel'>
+          {!livestockEdit.id ? <EmptyListingsState title='Choose a livestock listing to edit' body='Open Livestock List and tap Edit on a listing.' /> : <form className='list' onSubmit={async e => {
+            e.preventDefault();
+            await api.updateLivestock(Number(livestockEdit.id), { ...livestockEdit, ...normalizeListingImages(livestockEditImages), farmer_id: Number(livestockEdit.farmer_id || 1), quantity: Number(livestockEdit.quantity), unit_price: Number(livestockEdit.unit_price) });
+            await load();
+            setLivestockView('list')
+          }}>
+            <div className='row2'>
+              <input className='input' placeholder='Listing ID' value={livestockEdit.id} onChange={e => setLivestockEdit({ ...livestockEdit, id: e.target.value })} required />
+              <input className='input' placeholder='Type' value={livestockEdit.livestock_type} onChange={e => setLivestockEdit({ ...livestockEdit, livestock_type: e.target.value })} required />
+            </div>
+            <div className='row2'>
+              <input className='input' placeholder='Quantity' value={livestockEdit.quantity} onChange={e => setLivestockEdit({ ...livestockEdit, quantity: e.target.value })} required />
+              <input className='input' placeholder='Unit price' value={livestockEdit.unit_price} onChange={e => setLivestockEdit({ ...livestockEdit, unit_price: e.target.value })} required />
+            </div>
+            <input className='input' placeholder='Location' value={livestockEdit.location} onChange={e => setLivestockEdit({ ...livestockEdit, location: e.target.value })} />
+            <ListingImagePicker label='Livestock photos' limit={MAX_IMAGE_COUNTS.livestock} images={livestockEditImages} setImages={setLivestockEditImages} />
+            <button className='btn btn-dark'>Save Livestock Changes</button>
+          </form>}
+        </article>}
+
+        {livestockView === 'list' && <article className='panel'>
+          {!state.livestock.length ? <EmptyListingsState title='No livestock listings yet' body='Add your first livestock listing with price, quantity, location, and photos.' actionLabel='Add First Livestock' onAction={() => setLivestockView('create')} /> : <>
+            <div className='card-grid'>
+              {state.livestock.map((r) => {
+                const images = parseImageList(r.image_urls)
+                return <article key={`livestock-card-${r.id}`} className='listing-card'>
+                  <div className='listing-card-media'>{(r.cover_image_url || images[0]) ? <img src={r.cover_image_url || images[0]} alt={r.livestock_type} className='listing-cover' /> : <div className='listing-cover placeholder'>No photo yet</div>}</div>
+                  <div className='listing-card-body'>
+                    <strong>{r.livestock_type}</strong>
+                    <div className='helper-text'>{r.location || 'Location not set'} • {r.country} • {r.status}</div>
+                    <div className='listing-card-metrics'><span>{r.quantity} animals</span><span>{r.unit_price}</span><span>{images.length} photos</span></div>
+                    <div className='card-actions'>
+                      <button className='btn btn-dark' type='button' onClick={() => {
+                        setLivestockEdit({ id: r.id, farmer_id: r.farmer_id || 1, livestock_type: r.livestock_type || '', quantity: r.quantity || '', unit_price: r.unit_price || '', location: r.location || '', country: r.country || 'GH', status: r.status || 'OPEN' })
+                        setLivestockQuickEdit({ id: r.id, quantity: r.quantity || '', unit_price: r.unit_price || '' })
+                        setLivestockEditImages(images)
+                        setLivestockView('edit')
+                      }}>Edit</button>
+                    </div>
+                  </div>
+                </article>
+              })}
+            </div>
+            <DataTable columns={['id', 'livestock_type', 'quantity', 'unit_price', 'country', 'status']} rows={state.livestock} filterKey='livestock_type' onEdit={(r) => {
+              setLivestockEdit({ id: r.id, farmer_id: r.farmer_id || 1, livestock_type: r.livestock_type || '', quantity: r.quantity || '', unit_price: r.unit_price || '', location: r.location || '', country: r.country || 'GH', status: r.status || 'OPEN' })
+              setLivestockQuickEdit({ id: r.id, quantity: r.quantity || '', unit_price: r.unit_price || '' })
+              setLivestockEditImages(parseImageList(r.image_urls))
+              setLivestockView('edit')
+            }} />
+          </>}
+        </article>}
       </section>}
 
       {active === 'poultry-university' && <section>
@@ -3568,51 +3745,76 @@ export default function App() {
         />
       </section>}
 
-      {active === 'services' && <section><h3>{t('Services','Services','服务')}</h3>
-        <div className='three-col'>
-          <article className='panel'><h4>Logistics Requests</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.createLogistics({ ...logisticsForm, requester_id: Number(logisticsForm.requester_id), weight_kg: Number(logisticsForm.weight_kg) }); await load() }}>
+      {active === 'services' && <section>
+        <div className='section-header'>
+          <div>
+            <h3>{t('Services','Services','服务')}</h3>
+            <p className='helper-text'>Use separate create/list/edit flows. Service listings support up to 20 images.</p>
+          </div>
+          <button className='btn btn-dark' type='button' onClick={() => setServicesView('create')}>Add New Service</button>
+        </div>
+        <div className='tabs compact-tabs'>
+          <button className={`tab ${servicesView === 'list' ? 'active' : ''}`} onClick={() => setServicesView('list')}>Service Lists</button>
+          <button className={`tab ${servicesView === 'create' ? 'active' : ''}`} onClick={() => setServicesView('create')}>Create Service</button>
+          <button className={`tab ${servicesView === 'edit' ? 'active' : ''}`} onClick={() => setServicesView('edit')}>Edit Service</button>
+        </div>
+
+        {servicesView === 'create' && <div className='three-col'>
+          <article className='panel'><h4>Logistics Request</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.createLogistics({ ...logisticsForm, ...normalizeListingImages(serviceImages), requester_id: Number(logisticsForm.requester_id), weight_kg: Number(logisticsForm.weight_kg) }); setServiceImages([]); await load(); setServicesView('list') }}>
             <input className='input' placeholder='Pickup' value={logisticsForm.pickup_location} onChange={e => setLogisticsForm({ ...logisticsForm, pickup_location: e.target.value })} />
             <input className='input' placeholder='Dropoff' value={logisticsForm.dropoff_location} onChange={e => setLogisticsForm({ ...logisticsForm, dropoff_location: e.target.value })} />
             <input className='input' placeholder='Cargo type' value={logisticsForm.cargo_type} onChange={e => setLogisticsForm({ ...logisticsForm, cargo_type: e.target.value })} />
             <input className='input' placeholder='Weight kg' value={logisticsForm.weight_kg} onChange={e => setLogisticsForm({ ...logisticsForm, weight_kg: e.target.value })} />
+            <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceImages} setImages={setServiceImages} />
             <button className='btn btn-dark'>Create Logistics</button>
-          </form>
-          <form className='list' onSubmit={async e => { e.preventDefault(); await api.updateLogistics(Number(logisticsEdit.id), { ...logisticsEdit, requester_id: Number(logisticsEdit.requester_id), weight_kg: Number(logisticsEdit.weight_kg) }); await load() }}>
-            <input className='input' placeholder='ID to edit' value={logisticsEdit.id} onChange={e => setLogisticsEdit({ ...logisticsEdit, id: e.target.value })} required />
-            <input className='input' placeholder='Pickup' value={logisticsEdit.pickup_location} onChange={e => setLogisticsEdit({ ...logisticsEdit, pickup_location: e.target.value })} />
-            <input className='input' placeholder='Dropoff' value={logisticsEdit.dropoff_location} onChange={e => setLogisticsEdit({ ...logisticsEdit, dropoff_location: e.target.value })} />
-            <button className='btn btn-dark'>Save Edit</button>
-          </form>
-          <DataTable columns={['id', 'pickup_location', 'dropoff_location', 'cargo_type', 'weight_kg', 'status']} rows={state.logistics} filterKey='pickup_location' /></article>
-          <article className='panel'><h4>Equipment Rentals</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.createEquipment({ ...equipmentForm, requester_id: Number(equipmentForm.requester_id), duration_days: Number(equipmentForm.duration_days), budget: Number(equipmentForm.budget) }); await load() }}>
+          </form></article>
+          <article className='panel'><h4>Equipment Rental</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.createEquipment({ ...equipmentForm, ...normalizeListingImages(serviceImages), requester_id: Number(equipmentForm.requester_id), duration_days: Number(equipmentForm.duration_days), budget: Number(equipmentForm.budget) }); setServiceImages([]); await load(); setServicesView('list') }}>
             <input className='input' placeholder='Equipment' value={equipmentForm.equipment_type} onChange={e => setEquipmentForm({ ...equipmentForm, equipment_type: e.target.value })} />
             <input className='input' placeholder='Duration days' value={equipmentForm.duration_days} onChange={e => setEquipmentForm({ ...equipmentForm, duration_days: e.target.value })} />
             <input className='input' placeholder='Location' value={equipmentForm.location} onChange={e => setEquipmentForm({ ...equipmentForm, location: e.target.value })} />
             <input className='input' placeholder='Budget' value={equipmentForm.budget} onChange={e => setEquipmentForm({ ...equipmentForm, budget: e.target.value })} />
+            <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceImages} setImages={setServiceImages} />
             <button className='btn btn-dark'>Create Rental</button>
-          </form>
-          <form className='list' onSubmit={async e => { e.preventDefault(); await api.updateEquipment(Number(equipmentEdit.id), { ...equipmentEdit, requester_id: Number(equipmentEdit.requester_id), duration_days: Number(equipmentEdit.duration_days), budget: Number(equipmentEdit.budget) }); await load() }}>
-            <input className='input' placeholder='ID to edit' value={equipmentEdit.id} onChange={e => setEquipmentEdit({ ...equipmentEdit, id: e.target.value })} required />
-            <input className='input' placeholder='Equipment' value={equipmentEdit.equipment_type} onChange={e => setEquipmentEdit({ ...equipmentEdit, equipment_type: e.target.value })} />
-            <input className='input' placeholder='Duration days' value={equipmentEdit.duration_days} onChange={e => setEquipmentEdit({ ...equipmentEdit, duration_days: e.target.value })} />
-            <button className='btn btn-dark'>Save Edit</button>
-          </form>
-          <DataTable columns={['id', 'equipment_type', 'duration_days', 'location', 'budget', 'status']} rows={state.equipment} filterKey='equipment_type' /></article>
-          <article className='panel'><h4>Storage Reservations</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.createStorage({ ...storageForm, requester_id: Number(storageForm.requester_id), quantity_kg: Number(storageForm.quantity_kg), duration_days: Number(storageForm.duration_days) }); await load() }}>
+          </form></article>
+          <article className='panel'><h4>Storage Reservation</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.createStorage({ ...storageForm, ...normalizeListingImages(serviceImages), requester_id: Number(storageForm.requester_id), duration_days: Number(storageForm.duration_days), quantity_kg: Number(storageForm.quantity_kg) }); setServiceImages([]); await load(); setServicesView('list') }}>
             <input className='input' placeholder='Storage type' value={storageForm.storage_type} onChange={e => setStorageForm({ ...storageForm, storage_type: e.target.value })} />
-            <input className='input' placeholder='Qty kg' value={storageForm.quantity_kg} onChange={e => setStorageForm({ ...storageForm, quantity_kg: e.target.value })} />
+            <input className='input' placeholder='Quantity kg' value={storageForm.quantity_kg} onChange={e => setStorageForm({ ...storageForm, quantity_kg: e.target.value })} />
             <input className='input' placeholder='Location' value={storageForm.location} onChange={e => setStorageForm({ ...storageForm, location: e.target.value })} />
             <input className='input' placeholder='Duration days' value={storageForm.duration_days} onChange={e => setStorageForm({ ...storageForm, duration_days: e.target.value })} />
-            <button className='btn btn-dark'>Create Reservation</button>
-          </form>
-          <form className='list' onSubmit={async e => { e.preventDefault(); await api.updateStorage(Number(storageEdit.id), { ...storageEdit, requester_id: Number(storageEdit.requester_id), quantity_kg: Number(storageEdit.quantity_kg), duration_days: Number(storageEdit.duration_days) }); await load() }}>
+            <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceImages} setImages={setServiceImages} />
+            <button className='btn btn-dark'>Create Storage</button>
+          </form></article>
+        </div>}
+
+        {servicesView === 'edit' && <div className='three-col'>
+          <article className='panel'><h4>Edit Logistics</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.updateLogistics(Number(logisticsEdit.id), { ...logisticsEdit, ...normalizeListingImages(serviceEditImages), requester_id: Number(logisticsEdit.requester_id), weight_kg: Number(logisticsEdit.weight_kg) }); await load(); setServicesView('list') }}>
+            <input className='input' placeholder='ID to edit' value={logisticsEdit.id} onChange={e => setLogisticsEdit({ ...logisticsEdit, id: e.target.value })} required />
+            <input className='input' placeholder='Pickup' value={logisticsEdit.pickup_location} onChange={e => setLogisticsEdit({ ...logisticsEdit, pickup_location: e.target.value })} />
+            <input className='input' placeholder='Dropoff' value={logisticsEdit.dropoff_location} onChange={e => setLogisticsEdit({ ...logisticsEdit, dropoff_location: e.target.value })} />
+            <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceEditImages} setImages={setServiceEditImages} />
+            <button className='btn btn-dark'>Save Logistics</button>
+          </form></article>
+          <article className='panel'><h4>Edit Equipment</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.updateEquipment(Number(equipmentEdit.id), { ...equipmentEdit, ...normalizeListingImages(serviceEditImages), requester_id: Number(equipmentEdit.requester_id), duration_days: Number(equipmentEdit.duration_days), budget: Number(equipmentEdit.budget) }); await load(); setServicesView('list') }}>
+            <input className='input' placeholder='ID to edit' value={equipmentEdit.id} onChange={e => setEquipmentEdit({ ...equipmentEdit, id: e.target.value })} required />
+            <input className='input' placeholder='Equipment' value={equipmentEdit.equipment_type} onChange={e => setEquipmentEdit({ ...equipmentEdit, equipment_type: e.target.value })} />
+            <input className='input' placeholder='Location' value={equipmentEdit.location} onChange={e => setEquipmentEdit({ ...equipmentEdit, location: e.target.value })} />
+            <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceEditImages} setImages={setServiceEditImages} />
+            <button className='btn btn-dark'>Save Equipment</button>
+          </form></article>
+          <article className='panel'><h4>Edit Storage</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.updateStorage(Number(storageEdit.id), { ...storageEdit, ...normalizeListingImages(serviceEditImages), requester_id: Number(storageEdit.requester_id), duration_days: Number(storageEdit.duration_days), quantity_kg: Number(storageEdit.quantity_kg) }); await load(); setServicesView('list') }}>
             <input className='input' placeholder='ID to edit' value={storageEdit.id} onChange={e => setStorageEdit({ ...storageEdit, id: e.target.value })} required />
             <input className='input' placeholder='Storage type' value={storageEdit.storage_type} onChange={e => setStorageEdit({ ...storageEdit, storage_type: e.target.value })} />
-            <input className='input' placeholder='Qty kg' value={storageEdit.quantity_kg} onChange={e => setStorageEdit({ ...storageEdit, quantity_kg: e.target.value })} />
-            <button className='btn btn-dark'>Save Edit</button>
-          </form>
-          <DataTable columns={['id', 'storage_type', 'quantity_kg', 'location', 'duration_days', 'status']} rows={state.storage} filterKey='storage_type' /></article>
-        </div>
+            <input className='input' placeholder='Location' value={storageEdit.location} onChange={e => setStorageEdit({ ...storageEdit, location: e.target.value })} />
+            <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceEditImages} setImages={setServiceEditImages} />
+            <button className='btn btn-dark'>Save Storage</button>
+          </form></article>
+        </div>}
+
+        {servicesView === 'list' && <div className='three-col'>
+          <article className='panel'><h4>Logistics Requests</h4>{!state.logistics.length ? <EmptyListingsState title='No logistics services yet' body='Create your first logistics request or transport service listing.' actionLabel='Add Logistics Service' onAction={() => setServicesView('create')} /> : <DataTable columns={['id', 'pickup_location', 'dropoff_location', 'cargo_type', 'weight_kg', 'status']} rows={state.logistics} filterKey='pickup_location' onEdit={(r) => { setLogisticsEdit({ id: r.id, requester_id: r.requester_id || 1, pickup_location: r.pickup_location || '', dropoff_location: r.dropoff_location || '', cargo_type: r.cargo_type || '', weight_kg: r.weight_kg || '', status: r.status || 'PENDING' }); setServiceEditImages(parseImageList(r.image_urls)); setServicesView('edit') }} />}</article>
+          <article className='panel'><h4>Equipment Rentals</h4>{!state.equipment.length ? <EmptyListingsState title='No equipment rentals yet' body='Create your first machinery or equipment rental service.' actionLabel='Add Equipment Service' onAction={() => setServicesView('create')} /> : <DataTable columns={['id', 'equipment_type', 'duration_days', 'location', 'budget', 'status']} rows={state.equipment} filterKey='equipment_type' onEdit={(r) => { setEquipmentEdit({ id: r.id, requester_id: r.requester_id || 1, equipment_type: r.equipment_type || '', duration_days: r.duration_days || '', location: r.location || '', budget: r.budget || '', status: r.status || 'PENDING' }); setServiceEditImages(parseImageList(r.image_urls)); setServicesView('edit') }} />}</article>
+          <article className='panel'><h4>Storage Reservations</h4>{!state.storage.length ? <EmptyListingsState title='No storage services yet' body='Create your first storage or cold-room service listing.' actionLabel='Add Storage Service' onAction={() => setServicesView('create')} /> : <DataTable columns={['id', 'storage_type', 'quantity_kg', 'location', 'duration_days', 'status']} rows={state.storage} filterKey='storage_type' onEdit={(r) => { setStorageEdit({ id: r.id, requester_id: r.requester_id || 1, storage_type: r.storage_type || '', quantity_kg: r.quantity_kg || '', location: r.location || '', duration_days: r.duration_days || '', status: r.status || 'PENDING' }); setServiceEditImages(parseImageList(r.image_urls)); setServicesView('edit') }} />}</article>
+        </div>}
       </section>}
 
       {active === 'payments' && <section><h3>{t('Payments + Escrow','Paiements + séquestre','支付 + 托管')}</h3><form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.createPayment({ ...paymentForm, payer_id: Number(paymentForm.payer_id), payee_id: Number(paymentForm.payee_id), amount: Number(paymentForm.amount) }); await load() }}>
