@@ -779,6 +779,130 @@ Object.values(cattleTracks).forEach(track => {
   }))
 })
 
+
+
+// Hand-expanded manual pass for pro tiers
+const appendManualDetails = (tracks, extraByIndex) => {
+  Object.values(tracks).forEach(track => {
+    track.modules = (track.modules || []).map((m, idx) => ({
+      ...m,
+      details: [...(m.details || []), ...((extraByIndex[idx] || []).map(x => x.replaceAll('{TITLE}', track.title)))]
+    }))
+  })
+}
+
+appendManualDetails(poultryTracks, {
+  0: [
+    'Manual expansion: draft a one-page operating SOP covering brooder readiness, feed arrival, water sanitation, and emergency contacts before birds arrive.',
+    'Manual expansion: calculate break-even output using realistic mortality, feed cost, and farm-gate selling assumptions instead of optimistic estimates.',
+    'Manual expansion: assign daily responsibilities to a named person so biosecurity and brooder checks are never treated as shared assumptions.'
+  ],
+  1: [
+    'Manual expansion: observe chick behavior every few hours during the first week and write down what crowding, panting, silence, and noisy distress mean in your own house conditions.',
+    'Manual expansion: separate transport stress from disease by checking crop fill, hydration, and ambient conditions before medicating weak birds.',
+    'Manual expansion: create a first-14-day mortality review form that records likely cause, correction taken, and whether losses repeat.'
+  ],
+  2: [
+    'Manual expansion: build a weekly body-weight and uniformity board visible to staff so poor flock performance is noticed early, not after feed has been wasted for weeks.',
+    'Manual expansion: compare litter, airflow, and drinker management before blaming poor growth on genetics or feed supplier alone.',
+    'Manual expansion: for {TITLE}, define the exact threshold that triggers intervention on weight lag, feather condition, droppings change, or feed refusal.'
+  ],
+  3: [
+    'Manual expansion: create a daily production review habit that links output to heat, water pressure, shell quality, and flock behavior rather than looking at egg trays or weight alone.',
+    'Manual expansion: document what an acceptable flock day looks like in numbers so a supervisor can detect abnormal performance without waiting for owner review.',
+    'Manual expansion: add a corrective sequence for sudden production drop, starting with water, feed, heat, disease signs, and only then supplier complaints.'
+  ],
+  4: [
+    'Manual expansion: categorize buyers into dependable cashflow channels, premium channels, and opportunistic channels so sales strategy is intentional.',
+    'Manual expansion: prepare a restart decision rule that says when to scale, when to pause, and when to improve systems before placing another flock.',
+    'Manual expansion: review margin per tray, per kilogram, or per bird sold and separate operational excellence from lucky price spikes.'
+  ]
+})
+
+appendManualDetails(sheepTracks, {
+  0: [
+    'Manual expansion: write the breed-improvement objective in terms of fertility, lamb survival, growth, carcass, and climate resilience before introducing new ram genetics.',
+    'Manual expansion: profile foundation ewes by mothering quality, disease history, feet, body condition recovery, and lamb performance, not just visible size.',
+    'Manual expansion: define which weaknesses are acceptable to manage and which weaknesses automatically disqualify an animal from the breeding core.'
+  ],
+  1: [
+    'Manual expansion: describe how mating groups are formed, why each ram is assigned to each ewe group, and what outcome is expected from that pairing.',
+    'Manual expansion: plan for breeding-season labor, feed, fencing, and records before ram release so the season is managed rather than merely observed.',
+    'Manual expansion: use pre-breeding review meetings to decide which animals are retained, culled, isolated, or deferred.'
+  ],
+  2: [
+    'Manual expansion: treat pregnancy management as a survival and growth investment, not only a gestation waiting period.',
+    'Manual expansion: specify how to respond to late-pregnancy weight loss, suspected abortion risk, or lambing stress before those events happen.',
+    'Manual expansion: for {TITLE}, document what a successful breeding season looks like in conception, births, recovery, and replacement quality.'
+  ],
+  3: [
+    'Manual expansion: neonatal management should include first-hour checks, colostrum confirmation, mother-young bonding review, and weak-lamb escalation steps.',
+    'Manual expansion: distinguish between parasite pressure, underfeeding, exposure stress, and genetic weakness before making retention decisions.',
+    'Manual expansion: use lamb growth tracking to identify not only sick animals but also mediocre lines that should not shape the future flock.'
+  ],
+  4: [
+    'Manual expansion: create sale classes by weight, structure, breeding potential, and health score so marketing reflects real value differences.',
+    'Manual expansion: review flock growth as a multi-season program; one good market day does not prove the breeding system is stable.',
+    'Manual expansion: define the exact performance evidence needed before expanding numbers, buying more rams, or claiming a new line is proven.'
+  ]
+})
+
+appendManualDetails(goatTracks, {
+  0: [
+    'Manual expansion: explain why resilience genetics are commercially valuable, especially where parasite pressure, feed stress, and housing weakness are common.',
+    'Manual expansion: score foundation does on kidding history, udder quality, parasite resilience, feet, and market-kid output.',
+    'Manual expansion: define how much growth improvement is worth accepting before resilience begins to erode.'
+  ],
+  1: [
+    'Manual expansion: describe buck selection as a portfolio decision—frame, fertility, adaptation, and market fit must be balanced, not chased one at a time.',
+    'Manual expansion: set a written buck quarantine, observation, and breeding-readiness procedure before introducing males to the flock.',
+    'Manual expansion: match breeding groups to a clear output target such as market kids, replacement females, or terminal offspring.'
+  ],
+  2: [
+    'Manual expansion: write a kidding-risk plan covering weak kids, twins, doe exhaustion, cold stress, and labor escalation.',
+    'Manual expansion: identify what feed, water, and pen changes are required in the last trimester to reduce avoidable kid loss.',
+    'Manual expansion: for {TITLE}, separate reproductive success from visible kidding events by measuring kid survival and doe recovery too.'
+  ],
+  3: [
+    'Manual expansion: define the practical signs that distinguish worm burden, respiratory stress, and nutritional lag in growing kids.',
+    'Manual expansion: use a weekly kid review to decide who needs treatment, who needs separation, and which lines are underperforming.',
+    'Manual expansion: create a parasite-risk calendar tied to rainfall, browsing pressure, and paddock hygiene rather than reacting only after visible weakness.'
+  ],
+  4: [
+    'Manual expansion: build sale batches by weight and body condition so buyers see consistency rather than random mixed-quality animals.',
+    'Manual expansion: compare income from replacement quality, breeding stock, and meat sales so the flock strategy is aligned to the best margin path.',
+    'Manual expansion: document why expansion is justified using kidding rate, kid survival, market acceptance, and labor readiness.'
+  ]
+})
+
+appendManualDetails(cattleTracks, {
+  0: [
+    'Manual expansion: identify the commercial logic for preserving adapted cow lines while improving frame and carcass performance through selected sires.',
+    'Manual expansion: score foundation cows for fertility, calving ease, calf survival, temperament, and drought-season performance.',
+    'Manual expansion: define what kinds of visible size are useful and what kinds merely increase maintenance cost without market advantage.'
+  ],
+  1: [
+    'Manual expansion: write herd grouping rules that prevent random breeding and ensure every bull assignment serves a measurable herd-improvement purpose.',
+    'Manual expansion: combine water planning, mineral access, and grazing movement into the breeding-season plan rather than treating them as separate tasks.',
+    'Manual expansion: use a bull readiness checklist that covers feet, condition, reproductive behavior, and health before service begins.'
+  ],
+  2: [
+    'Manual expansion: create a calving preparedness checklist with labor roles, calf support materials, emergency referral contacts, and postpartum follow-up timing.',
+    'Manual expansion: pregnancy success should be reviewed through calf vigor, dam recovery, and rebreeding readiness—not simply a calf being born.',
+    'Manual expansion: for {TITLE}, set clear response steps for calving delay, weak calves, retained placenta, or poor maternal behavior.'
+  ],
+  3: [
+    'Manual expansion: define the weekly herd-health walk so it captures tick pressure, coat condition, manure changes, gait, appetite, and calf behavior.',
+    'Manual expansion: separate disease pressure from poor forage, water stress, and handling stress before deciding the herd has a health problem.',
+    'Manual expansion: use calf growth data to decide whether management, genetics, or environment is limiting performance.'
+  ],
+  4: [
+    'Manual expansion: grade market animals by class, frame, finish, and health reliability so pricing reflects system quality instead of guesswork.',
+    'Manual expansion: treat herd scaling as a capital allocation decision that must be backed by feed security, labor strength, and stable reproductive data.',
+    'Manual expansion: require a post-season review that answers whether the herd is truly improving or simply surviving.'
+  ]
+})
+
 const paymentProviders = {
   GH: ['MTN MoMo', 'Vodafone Cash', 'AirtelTigo Money'],
   NG: ['OPay', 'PalmPay', 'Paga'],
