@@ -2429,17 +2429,7 @@ function AppInner() {
  </>}
  <p>{authMsg}</p>
 
- <div className='panel' style={{marginTop:10,padding:10,background:'#f8fafc'}}>
- <h4 style={{margin:'0 0 6px'}}>{t('🌍 Global World Chat','🌍 Chat mondial','🌍 全球世界聊天')}</h4>
- <div className='list' style={{maxHeight:180, overflow:'auto'}}>
- {worldChat.slice(-5).map((m)=><div className='list-row' key={`pub-wc-${m.id}`}><span><strong>{m.user_name || `User ${m.user_id}`}:</strong> {m.text}</span></div>)}
- {!worldChat.length && <div className='list-row'><span>{t('No messages yet.','Aucun message pour le moment.')}</span></div>}
- </div>
- <div className='list-row' style={{marginTop:8}}>
- <span>{t('Join the conversation with farmers worldwide.','Rejoignez la conversation avec des agriculteurs du monde entier.','与全球农民一起加入对话。')}</span>
- <button type='button' className='btn' onClick={()=>handleProtectedAction('world-chat', 'Global World Chat')}>{t('Open Chat','Ouvrir le chat','打开聊天')}</button>
- </div>
- </div>
+
 
  <div className='panel' style={{marginTop:10,padding:10,background:'#f8fafc'}}>
  <h4 style={{margin:'0 0 6px'}}>{isZh ? '📲 下载到手机' : t('📲 Download App to Phone','📲 Télécharger l’application sur le téléphone','📲 下载到手机')}</h4>
