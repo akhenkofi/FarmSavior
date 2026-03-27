@@ -788,6 +788,8 @@ const normalizeCurriculumText = (value = '') => {
  return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
+const normalizeModuleHeading = (value = '') => String(value || '').replace(/^Module\s+(\d+)\s*:/i, 'Pillar $1:')
+
 const appendManualDetails = (tracks, extraByIndex) => {
  Object.values(tracks).forEach(track => {
  track.modules = (track.modules || []).map((m, idx) => ({
@@ -913,6 +915,7 @@ appendManualDetails(cattleTracks, {
  Object.values(group).forEach((track) => {
  track.modules = (track.modules || []).map((m) => ({
  ...m,
+ name: normalizeModuleHeading(m.name),
  summary: normalizeCurriculumText(m.summary),
  details: (m.details || []).map(normalizeCurriculumText)
  }))
@@ -3332,19 +3335,19 @@ function AppInner() {
 
  {active === 'poultry-university' && <section>
  <h3>🐔 Poultry University</h3>
- <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Professional Tier Standard:</strong> Poultry University Professional builds on Basic with executive-grade resources, printable tools, progress tracking, and certificate/report outputs.</div>
+ <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Executive standard:</strong> Poultry University Professional packages the production system in a format suitable for operators, partners, lenders, and policy stakeholders.</div>
  <article className='panel' style={{marginBottom:10}}>
- <h4 style={{marginTop:0}}>Choose Your Plan</h4>
+ <h4 style={{marginTop:0}}>Access & Delivery Format</h4>
  <p style={{fontSize:'.85rem',color:'#475569'}}>Standalone professional purchase also available (₵200–₵1,000 depending on package depth).</p>
  <div className='three-col'>
  <div className='panel' style={{padding:10, border:poultryTier==='free' || poultryPlanPreview==='free'?'2px solid #64748b':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setPoultryPlanPreview('free')}>
- <strong>🆓 Free</strong>
- <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Breeds + KPIs + Module 1 brief content.</div>
- <button className='btn' onClick={(e)=>{ e.stopPropagation(); setPoultryTier('free'); setOpenPoultryModule(0); setPoultryPlanPreview('free'); api.trackAnalyticsEvent({ event_name:'poultry_tier_select', country: uiCountry, role_hint: me?.role || 'user', properties:{tier:'free'} }).catch(()=>{})}}>{poultryTier==='free' ? 'Free Active ✓' : 'Use Free'}</button>
+ <strong>🆓 Preview Access</strong>
+ <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Program overview, breed strategy, KPIs, and opening pillar.</div>
+ <button className='btn' onClick={(e)=>{ e.stopPropagation(); setPoultryTier('free'); setOpenPoultryModule(0); setPoultryPlanPreview('free'); api.trackAnalyticsEvent({ event_name:'poultry_tier_select', country: uiCountry, role_hint: me?.role || 'user', properties:{tier:'free'} }).catch(()=>{})}}>{poultryTier==='free' ? 'Preview Active ✓' : 'Use Preview'}</button>
  </div>
  <div className='panel' style={{padding:10, border:poultryTier==='basic' || poultryPlanPreview==='basic'?'2px solid #16a34a':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setPoultryPlanPreview('basic')}>
  <strong>🌿 Basic — ₵50/mo</strong>
- <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>All modules + both zones + health schedule access + structured learning path.</div>
+ <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Full pillar access, both operating zones, health schedules, and structured implementation guidance.</div>
  <button className='btn btn-dark' onClick={async(e)=>{ e.stopPropagation();
  try {
  if (!token || !me?.id) { handleProtectedAction('onboarding', 'Poultry University Basic checkout'); return }
@@ -3359,7 +3362,7 @@ function AppInner() {
  </div>
  <div className='panel' style={{padding:10, border:poultryTier==='pro' || poultryPlanPreview==='pro'?'2px solid #f59e0b':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setPoultryPlanPreview('pro')}>
  <strong>🏆 Professional — ₵120/mo</strong>
- <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Basic + executive brief, benchmark scorecard, printable templates, progress tracking, and certificate/report outputs.</div>
+ <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus executive briefings, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
  <button className='btn btn-dark' onClick={async(e)=>{ e.stopPropagation();
  try {
  if (!token || !me?.id) { handleProtectedAction('onboarding', 'Poultry University Professional checkout'); return }
@@ -3380,12 +3383,12 @@ function AppInner() {
  </div>
  {poultryPlanPreview !== 'free' && <div style={{marginTop:8}}><button className='btn btn-dark' onClick={()=>startUniversityCheckout('poultry', poultryPlanPreview, `Poultry University ${poultryPlanPreview === 'pro' ? 'Professional' : 'Basic'} checkout`)}>{poultryPlanPreview === 'pro' ? 'Upgrade to Professional' : 'Upgrade to Basic'}</button></div>}
  </div>
- {poultryTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#fff7ed',border:'1px solid #fed7aa'}}><strong>Starter access active.</strong> This preview shows the opening module while advanced material unlocks under the relevant paid plan.</div>}
+ {poultryTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#fff7ed',border:'1px solid #fed7aa'}}><strong>Preview access active.</strong> This tier shows the opening pillar while the full operating framework remains under the paid plan.</div>}
  {poultrySubscription?.subscription?.status === 'PENDING_PAYMENT' && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}><strong>Payment pending.</strong> Reference: {poultrySubscription.subscription.reference}. <button className='btn btn-dark' style={{marginLeft:8}} onClick={async()=>{ const v = await api.verifyPoultryUniversitySubscription(poultrySubscription.subscription.reference); const tier = v.tier || 'free'; setPoultryTier(tier); const meSub = await api.fetchPoultryUniversitySubscriptionMe().catch(()=>({ tier, subscription: poultrySubscription.subscription })); setPoultrySubscription(prev => ({ ...prev, tier: meSub.tier || tier, subscription: meSub.subscription || prev.subscription })); setPoultryBillingMsg(v.message || 'Verification checked.'); }}>Verify Payment</button></div>}
  {poultrySubscription?.subscription?.status === 'ACTIVE' && <div className='panel' style={{marginTop:8,padding:8,background:'#ecfeff',border:'1px solid #99f6e4'}}><strong>{String(poultrySubscription.subscription.plan_code || '').toUpperCase()} active.</strong> Server-side subscription verified.</div>}
  {poultryBillingMsg && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}>{poultryBillingMsg}</div>}
  </article>
- {poultryTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#f5f3ff',border:'1px solid #ddd6fe'}}><strong>Starter access active.</strong> The opening module is available now; the full operating program unlocks with the higher plan.</div>}
+ {poultryTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#f5f3ff',border:'1px solid #ddd6fe'}}><strong>Preview access active.</strong> The opening pillar is available now; the full operating program unlocks with the higher plan.</div>}
 
  <div className='panel'>
  <div className='inlineForm'>
@@ -3416,7 +3419,7 @@ function AppInner() {
  </article>
 
  <article className='panel'>
- <h4>Course Modules</h4>
+ <h4>Program Pillars</h4>
  <div className='list'>
  {poultryTracks[poultryTrack].modules.map((m,i)=>{
  const locked = poultryTier === 'free' && i > 0
@@ -3441,7 +3444,7 @@ function AppInner() {
  </div>
 
  {poultryTier !== 'free' && <article className='panel' style={{marginTop:10}}>
- <h4>Climate Priorities + Vaccination Schedules</h4>
+ <h4>Climate Priorities + Health Schedule</h4>
  <div className='list'>
  {(poultryZone === 'humid' ? poultryClimate.humid : poultryClimate.dry).map((p)=><div className='list-row' key={p}><span>{p}</span></div>)}
  {poultryVaxProgram.map((v)=><div className='list-row' key={v}><span>{v}</span></div>)}
@@ -3450,7 +3453,7 @@ function AppInner() {
  </article>}
 
  {poultryTier === 'pro' && <article className='panel' style={{marginTop:10, border:'1.5px solid #f59e0b', background:'#fffbeb'}}>
- <h4 style={{marginTop:0}}>🏆 Professional Extras</h4>
+ <h4 style={{marginTop:0}}>🏆 Executive Tools</h4>
  <div className='list'>
  <div className='list-row'><span>Expanded detailed module content</span></div>
  <div className='list-row'><span>AI Disease Analyzer integration (unlimited)</span></div>
@@ -3481,7 +3484,7 @@ function AppInner() {
  </div>
 
  <div className='panel' style={{marginTop:8,padding:8,background:'#fff'}}>
- <strong>Expert Q&A</strong>
+ <strong>Operational Guidance</strong>
  <div className='inlineForm' style={{marginTop:6}}>
  <input className='input' placeholder='Ask your poultry operations question...' value={poultryQuestion} onChange={(e)=>setPoultryQuestion(e.target.value)} />
  <button className='btn' onClick={()=>{
@@ -3491,13 +3494,13 @@ function AppInner() {
  else if (q.includes('feed') || q.includes('fcr')) setPoultryAnswer('Track daily feed intake + weight gain by batch. Correct feeder height, reduce wastage, and align phase feed timing with actual bird weights.')
  else if (q.includes('vaccine')) setPoultryAnswer('Use cold-chain compliant vaccines and maintain lot/time records. Confirm final timing with licensed local veterinary guidance before field execution.')
  else setPoultryAnswer('Use the module SOPs: diagnose root cause from daily records, apply one corrective action at a time, and re-measure within 72 hours.')
- }}>Get Expert Guidance</button>
+ }}>Get Guidance</button>
  </div>
  {!!poultryAnswer && <p style={{marginTop:8}}>{poultryAnswer}</p>}
  </div>
 
  <div className='panel' style={{marginTop:8,padding:8,background:'#fff'}}>
- <strong>Progress tracking dashboard</strong>
+ <strong>Implementation Tracker</strong>
  <div className='inlineForm' style={{marginTop:6}}>
  <button className='btn' disabled={openPoultryModule < 0} onClick={()=>{
  if (openPoultryModule < 0) return
@@ -3525,9 +3528,9 @@ function AppInner() {
 
  {active === 'sheep-university' && <section>
  <h3>🐑 Sheep University</h3>
- <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Professional Tier Standard:</strong> Sheep University Professional builds on Basic with executive-grade resources, printable tools, progress tracking, and certificate/report outputs.</div>
+ <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Executive standard:</strong> Sheep University Professional presents the breeding and operating system in a format suitable for institutional, investor, and policy review.</div>
  <article className='panel' style={{marginBottom:10,border:'1px solid #ddd6fe',background:'#faf5ff'}}>
- <h4 style={{marginTop:0,color:'#6d28d9'}}>Ghana Sheep Breed Program (3 Phases)</h4>
+ <h4 style={{marginTop:0,color:'#6d28d9'}}>Ghana Sheep Breed Development Framework</h4>
  <div className='list'>
  {sheepPhaseLabels.map((p,idx)=><div className='list-row' key={p}><span>{idx===0?'🧬':idx===1?'🔁':'🏆'} {p}</span></div>)}
  </div>
@@ -3535,21 +3538,21 @@ function AppInner() {
  </article>
 
  <article className='panel' style={{marginBottom:10}}>
- <h4 style={{marginTop:0}}>Choose Your Plan</h4>
+ <h4 style={{marginTop:0}}>Access & Delivery Format</h4>
  <div className='three-col'>
  <div className='panel' style={{padding:10, border:sheepTier==='free' || sheepPlanPreview==='free'?'2px solid #7c3aed':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setSheepPlanPreview('free')}>
- <strong>🆓 Free</strong>
- <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Module 1 + breed cards + KPI preview.</div>
- <button className='btn' onClick={(e)=>{e.stopPropagation(); setSheepTier('free'); setOpenSheepModule(0); setSheepPlanPreview('free')}}>{sheepTier==='free' ? 'Free Active ✓' : 'Use Free'}</button>
+ <strong>🆓 Preview Access</strong>
+ <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Program overview, breed cards, KPIs, and opening pillar.</div>
+ <button className='btn' onClick={(e)=>{e.stopPropagation(); setSheepTier('free'); setOpenSheepModule(0); setSheepPlanPreview('free')}}>{sheepTier==='free' ? 'Preview Active ✓' : 'Use Preview'}</button>
  </div>
  <div className='panel' style={{padding:10, border:sheepTier==='basic' || sheepPlanPreview==='basic'?'2px solid #16a34a':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setSheepPlanPreview('basic')}>
  <strong>🌿 Basic — ₵50/mo</strong>
- <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>All modules + both zones + health schedule.</div>
+ <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Full pillar access, both operating zones, and health schedule guidance.</div>
  <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('sheep', 'basic', 'Sheep University Basic checkout')}}>Unlock Basic</button>
  </div>
  <div className='panel' style={{padding:10, border:sheepTier==='pro' || sheepPlanPreview==='pro'?'2px solid #7c3aed':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setSheepPlanPreview('pro')}>
  <strong>🏆 Professional — ₵120/mo</strong>
- <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Basic + executive brief, benchmark scorecard, printable templates, progress tracking, and certificate/report outputs.</div>
+ <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus executive briefings, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
  <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('sheep', 'pro', 'Sheep University Professional checkout')}}>Go Professional</button>
  </div>
  </div>
@@ -3564,7 +3567,7 @@ function AppInner() {
  {universitySubscriptions.sheep?.subscription?.status === 'PENDING_PAYMENT' && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}><strong>Payment pending.</strong> Reference: {universitySubscriptions.sheep.subscription.reference}. <button className='btn btn-dark' style={{marginLeft:8}} onClick={()=>verifyUniversityCheckout('sheep')}>Verify Payment</button></div>}
  {universitySubscriptions.sheep?.subscription?.status === 'ACTIVE' && <div className='panel' style={{marginTop:8,padding:8,background:'#ecfeff',border:'1px solid #99f6e4'}}><strong>{String(universitySubscriptions.sheep.subscription.plan_code || '').toUpperCase()} active.</strong> Server-side subscription verified.</div>}
  {!!universityBillingMsg.sheep && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}>{universityBillingMsg.sheep}</div>}
- {sheepTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#f5f3ff',border:'1px solid #ddd6fe'}}><strong>Starter access active.</strong> The opening module is available now; the full operating program unlocks with the higher plan.</div>}
+ {sheepTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#f5f3ff',border:'1px solid #ddd6fe'}}><strong>Preview access active.</strong> The opening pillar is available now; the full operating program unlocks with the higher plan.</div>}
 
  <div className='panel'>
  <div className='inlineForm'>
@@ -3620,7 +3623,7 @@ function AppInner() {
  </article>}
 
  {sheepTier === 'pro' && <article className='panel' style={{marginTop:10,border:'1.5px solid #7c3aed',background:'#faf5ff'}}>
- <h4 style={{marginTop:0}}>🏆 Professional Extras</h4>
+ <h4 style={{marginTop:0}}>🏆 Executive Tools</h4>
  <div className='list'>
  <div className='list-row'><span>Expanded breeding decision frameworks</span></div>
  <div className='list-row'><span>Printable mating + lambing calendars</span></div>
@@ -3649,9 +3652,9 @@ function AppInner() {
 
  {active === 'goat-university' && <section>
  <h3>🐐 Goat University</h3>
- <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Professional Tier Standard:</strong> Goat University Professional builds on Basic with executive-grade resources, printable tools, progress tracking, and certificate/report outputs.</div>
+ <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Executive standard:</strong> Goat University Professional presents the breeding and operating system in a format suitable for institutional, investor, and policy review.</div>
  <article className='panel' style={{marginBottom:10,border:'1px solid #99f6e4',background:'#f0fdfa'}}>
- <h4 style={{marginTop:0,color:'#0f766e'}}>Ghana Goat Breed Program (3 Phases)</h4>
+ <h4 style={{marginTop:0,color:'#0f766e'}}>Ghana Goat Breed Development Framework</h4>
  <div className='list'>
  {goatPhaseLabels.map((p,idx)=><div className='list-row' key={p}><span>{idx===0?'🧬':idx===1?'🔁':'🏆'} {p}</span></div>)}
  </div>
@@ -3659,21 +3662,21 @@ function AppInner() {
  </article>
 
  <article className='panel' style={{marginBottom:10}}>
- <h4 style={{marginTop:0}}>Choose Your Plan</h4>
+ <h4 style={{marginTop:0}}>Access & Delivery Format</h4>
  <div className='three-col'>
  <div className='panel' style={{padding:10, border:goatTier==='free' || goatPlanPreview==='free'?'2px solid #0d9488':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setGoatPlanPreview('free')}>
- <strong>🆓 Free</strong>
- <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Module 1 + breed cards + KPI preview.</div>
- <button className='btn' onClick={(e)=>{e.stopPropagation(); setGoatTier('free'); setOpenGoatModule(0); setGoatPlanPreview('free')}}>{goatTier==='free' ? 'Free Active ✓' : 'Use Free'}</button>
+ <strong>🆓 Preview Access</strong>
+ <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Program overview, breed cards, KPIs, and opening pillar.</div>
+ <button className='btn' onClick={(e)=>{e.stopPropagation(); setGoatTier('free'); setOpenGoatModule(0); setGoatPlanPreview('free')}}>{goatTier==='free' ? 'Preview Active ✓' : 'Use Preview'}</button>
  </div>
  <div className='panel' style={{padding:10, border:goatTier==='basic' || goatPlanPreview==='basic'?'2px solid #16a34a':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setGoatPlanPreview('basic')}>
  <strong>🌿 Basic — ₵50/mo</strong>
- <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>All modules + both zones + health schedule.</div>
+ <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Full pillar access, both operating zones, and health schedule guidance.</div>
  <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('goat', 'basic', 'Goat University Basic checkout')}}>Unlock Basic</button>
  </div>
  <div className='panel' style={{padding:10, border:goatTier==='pro' || goatPlanPreview==='pro'?'2px solid #0d9488':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setGoatPlanPreview('pro')}>
  <strong>🏆 Professional — ₵120/mo</strong>
- <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Basic + executive brief, benchmark scorecard, printable templates, progress tracking, and certificate/report outputs.</div>
+ <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus executive briefings, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
  <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('goat', 'pro', 'Goat University Professional checkout')}}>Go Professional</button>
  </div>
  </div>
@@ -3688,7 +3691,7 @@ function AppInner() {
  {universitySubscriptions.goat?.subscription?.status === 'PENDING_PAYMENT' && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}><strong>Payment pending.</strong> Reference: {universitySubscriptions.goat.subscription.reference}. <button className='btn btn-dark' style={{marginLeft:8}} onClick={()=>verifyUniversityCheckout('goat')}>Verify Payment</button></div>}
  {universitySubscriptions.goat?.subscription?.status === 'ACTIVE' && <div className='panel' style={{marginTop:8,padding:8,background:'#ecfeff',border:'1px solid #99f6e4'}}><strong>{String(universitySubscriptions.goat.subscription.plan_code || '').toUpperCase()} active.</strong> Server-side subscription verified.</div>}
  {!!universityBillingMsg.goat && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}>{universityBillingMsg.goat}</div>}
- {goatTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#f0fdfa',border:'1px solid #99f6e4'}}><strong>Starter access active.</strong> The opening module is available now; the full operating program unlocks with the higher plan.</div>}
+ {goatTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#f0fdfa',border:'1px solid #99f6e4'}}><strong>Preview access active.</strong> The opening pillar is available now; the full operating program unlocks with the higher plan.</div>}
 
  <div className='panel'>
  <div className='inlineForm'>
@@ -3745,7 +3748,7 @@ function AppInner() {
  </article>}
 
  {goatTier === 'pro' && <article className='panel' style={{marginTop:10,border:'1.5px solid #0d9488',background:'#ecfeff'}}>
- <h4 style={{marginTop:0}}>🏆 Professional Extras</h4>
+ <h4 style={{marginTop:0}}>🏆 Executive Tools</h4>
  <div className='list'>
  <div className='list-row'><span>Browse resource mapping toolkit</span></div>
  <div className='list-row'><span>Printable breeding + health templates</span></div>
@@ -3775,7 +3778,7 @@ function AppInner() {
 
  {active === 'cattle-university' && <section>
  <h3>🐄 Cattle University</h3>
- <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Professional Tier Standard:</strong> Cattle University Professional builds on Basic with executive-grade resources, printable tools, progress tracking, and certificate/report outputs.</div>
+ <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Executive standard:</strong> Cattle University Professional presents the herd-improvement system in a format suitable for institutional, investor, and policy review.</div>
  <article className='panel' style={{marginBottom:10,border:'1px solid #fde68a',background:'#fffbeb'}}>
  <h4 style={{marginTop:0,color:'#92400e'}}>Ghana Cattle Breed Program (3 Phases)</h4>
  <p style={{fontSize:'.85rem',color:'#92400e'}}>Final breeding sires: <strong>Brahman or Gudali</strong>.</p>
@@ -3785,21 +3788,21 @@ function AppInner() {
  </article>
 
  <article className='panel' style={{marginBottom:10}}>
- <h4 style={{marginTop:0}}>Choose Your Plan</h4>
+ <h4 style={{marginTop:0}}>Access & Delivery Format</h4>
  <div className='three-col'>
  <div className='panel' style={{padding:10, border:cattleTier==='free' || cattlePlanPreview==='free'?'2px solid #d97706':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setCattlePlanPreview('free')}>
- <strong>🆓 Free</strong>
- <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Module 1 + breed cards + KPI preview.</div>
- <button className='btn' onClick={(e)=>{e.stopPropagation(); setCattleTier('free'); setOpenCattleModule(0); setCattlePlanPreview('free')}}>{cattleTier==='free' ? 'Free Active ✓' : 'Use Free'}</button>
+ <strong>🆓 Preview Access</strong>
+ <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Program overview, breed cards, KPIs, and opening pillar.</div>
+ <button className='btn' onClick={(e)=>{e.stopPropagation(); setCattleTier('free'); setOpenCattleModule(0); setCattlePlanPreview('free')}}>{cattleTier==='free' ? 'Preview Active ✓' : 'Use Preview'}</button>
  </div>
  <div className='panel' style={{padding:10, border:cattleTier==='basic' || cattlePlanPreview==='basic'?'2px solid #16a34a':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setCattlePlanPreview('basic')}>
  <strong>🌿 Basic — ₵50/mo</strong>
- <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>All modules + both zones + health schedule.</div>
+ <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Full pillar access, both operating zones, and health schedule guidance.</div>
  <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('cattle', 'basic', 'Cattle University Basic checkout')}}>Unlock Basic</button>
  </div>
  <div className='panel' style={{padding:10, border:cattleTier==='pro' || cattlePlanPreview==='pro'?'2px solid #d97706':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setCattlePlanPreview('pro')}>
  <strong>🏆 Professional — ₵120/mo</strong>
- <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Basic + executive brief, benchmark scorecard, printable templates, progress tracking, and certificate/report outputs.</div>
+ <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus executive briefings, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
  <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('cattle', 'pro', 'Cattle University Professional checkout')}}>Go Professional</button>
  </div>
  </div>
@@ -3869,7 +3872,7 @@ function AppInner() {
  </article>}
 
  {cattleTier === 'pro' && <article className='panel' style={{marginTop:10,border:'1.5px solid #d97706',background:'#fff7ed'}}>
- <h4 style={{marginTop:0}}>🏆 Professional Extras</h4>
+ <h4 style={{marginTop:0}}>🏆 Executive Tools</h4>
  <div className='list'>
  <div className='list-row'><span>Advanced herd selection matrix</span></div>
  <div className='list-row'><span>Printable breeding and calving templates</span></div>
