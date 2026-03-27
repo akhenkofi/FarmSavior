@@ -386,7 +386,7 @@ const poultryTracks = {
  },
  {
  name: 'Module 5: Sales, Records, and Scale Plan',
- summary: 'Turn production into consistent profit.',
+ summary: 'Build consistent production and reliable profit.',
  details: [
  'Grade eggs by size and shell quality for better pricing.',
  'Use customer mix: wholesalers + retailers + institutions (schools/hotels).',
@@ -683,7 +683,7 @@ const cattleTracks = {
  { name:'Module 2: Foundation Herd Setup + Bull Selection', summary:'Organize breeding groups and choose performance sires.', details:['Bull:cow ratio and mating season design.','Body condition, mineral and water planning.','Bull health screening and libido checks.','Pedigree + growth log setup.']},
  { name:'Module 3: Breeding Management + Pregnancy/Calving Care', summary:'Run controlled breeding and safe calving workflows.', details:['Heat detection and service records.','Pregnancy nutrition by stage.','Pre-calving housing and emergency plan.','Postpartum recovery and rebreeding timing.']},
  { name:'Module 4: Calf Survival, Growth + Herd Health', summary:'Protect calves and accelerate healthy growth.', details:['Colostrum protocol and neonatal checks.','Tick/blood-parasite control schedule.','Respiratory + digestive disease monitoring.','Growth tracking and weak-line correction.']},
- { name:'Module 5: Sales, Records + Scale Program', summary:'Turn herd performance into repeatable business growth.', details:['Grade by frame, health, and weight class.','Retention strategy for replacement heifers.','Performance-led culling decisions.','Scale after multi-cycle KPI stability.']}
+ { name:'Module 5: Sales, Records + Scale Program', summary:'Translate herd performance into repeatable business growth.', details:['Grade by frame, health, and weight class.','Retention strategy for replacement heifers.','Performance-led culling decisions.','Scale after multi-cycle KPI stability.']}
  ]
  },
  wadFulani: {
@@ -799,113 +799,113 @@ const appendManualDetails = (tracks, extraByIndex) => {
 
 appendManualDetails(poultryTracks, {
  0: [
- ' draft a one-page operating SOP covering brooder readiness, feed arrival, water sanitation, and emergency contacts before birds arrive.',
- ' calculate break-even output using realistic mortality, feed cost, and farm-gate selling assumptions instead of optimistic estimates.',
- ' assign daily responsibilities to a named person so biosecurity and brooder checks are never treated as shared assumptions.'
+ 'A written startup operating procedure should cover brooder readiness, feed arrival, water sanitation, and emergency contacts before birds arrive.',
+ 'Break-even planning should use realistic mortality, feed cost, and farm-gate selling assumptions.',
+ 'Daily responsibilities should be assigned clearly so biosecurity and brooder checks are consistently executed.'
  ],
  1: [
- ' observe chick behavior every few hours during the first week and write down what crowding, panting, silence, and noisy distress mean in your own house conditions.',
- ' separate transport stress from disease by checking crop fill, hydration, and ambient conditions before medicating weak birds.',
- ' create a first-14-day mortality review form that records likely cause, correction taken, and whether losses repeat.'
+ 'First-week chick observation should translate crowding, panting, silence, and distress into practical management action.',
+ 'Weak chick assessment should separate transport stress from disease by checking crop fill, hydration, and ambient conditions.',
+ 'A first-14-day mortality review should record likely cause, corrective action, and recurrence risk.'
  ],
  2: [
- ' build a weekly body-weight and uniformity board visible to staff so poor flock performance is noticed early, not after feed has been wasted for weeks.',
- ' compare litter, airflow, and drinker management before blaming poor growth on genetics or feed supplier alone.',
- ' for {TITLE}, Define the exact threshold that triggers intervention on weight lag, feather condition, droppings change, or feed refusal.'
+ 'Weekly body-weight and uniformity tracking should be visible to staff so poor flock performance is noticed early.',
+ 'Litter, airflow, and drinker management should be reviewed before poor growth is blamed on genetics or feed supply.',
+ 'Clear intervention thresholds should be set for weight lag, feather condition, droppings change, and feed refusal.'
  ],
  3: [
- ' create a daily production review habit that links output to heat, water pressure, shell quality, and flock behavior rather than looking at egg trays or weight alone.',
- ' document what an acceptable flock day looks like in numbers so a supervisor can detect abnormal performance without waiting for owner review.',
- ' add a corrective sequence for sudden production drop, starting with water, feed, heat, disease signs, and only then supplier complaints.'
+ 'Daily production review should connect output to heat, water pressure, shell quality, and flock behavior.',
+ 'An acceptable production day should be defined in numbers so supervisors can detect abnormal performance quickly.',
+ 'A response sequence for sudden production drop should begin with water, feed, heat, and disease signs before supplier complaints are considered.'
  ],
  4: [
- ' categorize buyers into dependable cashflow channels, premium channels, and opportunistic channels so sales strategy is intentional.',
- ' prepare a restart decision rule that says when to scale, when to pause, and when to improve systems before placing another flock.',
- ' review margin per tray, per kilogram, or per bird sold and separate operational excellence from lucky price spikes.'
+ 'Buyer categories should distinguish dependable cashflow channels, premium channels, and opportunistic channels.',
+ 'Scale decisions should be tied to a restart rule that separates expansion from system correction.',
+ 'Margin review should distinguish operational excellence from temporary price advantage.'
  ]
 })
 
 appendManualDetails(sheepTracks, {
  0: [
- ' Write the breed-improvement objective in terms of fertility, lamb survival, growth, carcass, and climate resilience before introducing new ram genetics.',
- ' profile foundation ewes by mothering quality, disease history, feet, body condition recovery, and lamb performance, not just visible size.',
- ' define which weaknesses are acceptable to manage and which weaknesses automatically disqualify an animal from the breeding core.'
+ 'The breed-improvement objective should be framed around fertility, lamb survival, growth, carcass value, and climate resilience.',
+ 'Foundation ewes should be assessed for mothering quality, disease history, feet, body-condition recovery, and lamb performance.',
+ 'The breeding core should exclude weaknesses that cannot be managed economically.'
  ],
  1: [
- ' describe how mating groups are formed, why each ram is assigned to each ewe group, and what outcome is expected from that pairing.',
- ' plan for breeding-season labor, feed, fencing, and records before ram release so the season is managed rather than merely observed.',
- ' use pre-breeding review meetings to decide which animals are retained, culled, isolated, or deferred.'
+ 'Mating groups should be explained by purpose, ram assignment, and expected breeding outcome.',
+ 'Breeding-season labor, feed, fencing, and records should be prepared before ram release.',
+ 'Pre-breeding review should determine which animals are retained, culled, isolated, or deferred.'
  ],
  2: [
- ' treat pregnancy management as a survival and growth investment, not only a gestation waiting period.',
- ' specify how to respond to late-pregnancy weight loss, suspected abortion risk, or lambing stress before those events happen.',
- ' for {TITLE}, document what a successful breeding season looks like in conception, births, recovery, and replacement quality.'
+ 'Pregnancy management should be treated as a survival and growth investment rather than a waiting period.',
+ 'Response plans should cover late-pregnancy weight loss, abortion risk, and lambing stress before they occur.',
+ 'A successful breeding season should be measured through conception, births, recovery, and replacement quality.'
  ],
  3: [
- ' neonatal management should include first-hour checks, colostrum confirmation, mother-young bonding review, and weak-lamb escalation steps.',
- ' distinguish between parasite pressure, underfeeding, exposure stress, and genetic weakness before making retention decisions.',
- ' use lamb growth tracking to identify not only sick animals but also mediocre lines that should not shape the future flock.'
+ 'Neonatal management should cover first-hour checks, colostrum confirmation, mother-young bonding, and weak-lamb escalation.',
+ 'Retention decisions should distinguish parasite pressure, underfeeding, exposure stress, and genetic weakness.',
+ 'Lamb growth tracking should identify weak health status and underperforming genetic lines.'
  ],
  4: [
- ' create sale classes by weight, structure, breeding potential, and health score so marketing reflects real value differences.',
- ' review flock growth as a multi-season program; one good market day does not prove the breeding system is stable.',
- ' define the exact performance evidence needed before expanding numbers, buying more rams, or claiming a new line is proven.'
+ 'Sale classes should reflect weight, structure, breeding potential, and health score.',
+ 'Flock growth should be reviewed as a multi-season program rather than a one-market outcome.',
+ 'Expansion should depend on clear performance evidence, not optimism.'
  ]
 })
 
 appendManualDetails(goatTracks, {
  0: [
- ' Explain why resilience genetics are commercially valuable, especially where parasite pressure, feed stress, and housing weakness are common.',
- 'Score foundation does on kidding history, udder quality, parasite resilience, feet, and market-kid output.',
- 'Define how much growth improvement is worth accepting before resilience begins to erode.'
+ 'Resilience genetics should be presented as commercially valuable under parasite pressure, feed stress, and weak housing conditions.',
+ 'Foundation does should be scored on kidding history, udder quality, parasite resilience, feet, and market-kid output.',
+ 'Growth improvement should not come at the cost of core resilience.'
  ],
  1: [
- 'Treat buck selection as a portfolio decision: frame, fertility, adaptation, and market fit must be balanced rather than chased one at a time.',
- 'Set a written buck quarantine, observation, and breeding-readiness procedure before introducing males to the flock.',
- 'Match breeding groups to a clear output target such as market kids, replacement females, or terminal offspring.'
+ 'Buck selection should balance frame, fertility, adaptation, and market fit.',
+ 'Buck quarantine, observation, and breeding-readiness procedures should be defined before introduction to the flock.',
+ 'Breeding groups should match a clear output target such as market kids, replacement females, or terminal offspring.'
  ],
  2: [
- 'Write a kidding-risk plan covering weak kids, twins, doe exhaustion, cold stress, and labor escalation.',
- 'Identify what feed, water, and pen changes are required in the last trimester to reduce avoidable kid loss.',
- 'For {TITLE}, measure success through kid survival and doe recovery, not only through visible kidding events.'
+ 'Kidding-risk planning should cover weak kids, twins, doe exhaustion, cold stress, and labor escalation.',
+ 'Late-trimester feed, water, and pen adjustments should be planned to reduce avoidable kid loss.',
+ 'Module success should be measured through kid survival and doe recovery, not only visible kidding events.'
  ],
  3: [
- 'Define the practical signs that distinguish worm burden, respiratory stress, and nutritional lag in growing kids.',
- 'Use a weekly kid review to decide which animals need treatment, separation, or closer performance monitoring.',
- 'Create a parasite-risk calendar tied to rainfall, browsing pressure, and paddock hygiene instead of reacting only after visible weakness.'
+ 'Managers should be able to distinguish worm burden, respiratory stress, and nutritional lag in growing kids.',
+ 'Weekly kid review should guide treatment, separation, and closer performance monitoring.',
+ 'Parasite-risk planning should follow rainfall, browsing pressure, and paddock hygiene patterns.'
  ],
  4: [
- 'Build sale batches by weight and body condition so buyers see consistency rather than random mixed-quality animals.',
- 'Compare income from replacement quality, breeding stock, and meat sales so the flock strategy follows the best margin path.',
- 'Document why expansion is justified using kidding rate, kid survival, market acceptance, and labor readiness.'
+ 'Sale batches should be built by weight and body condition so buyers see consistency.',
+ 'Flock strategy should compare income from replacement quality, breeding stock, and meat sales.',
+ 'Expansion should be justified through kidding rate, kid survival, market acceptance, and labor readiness.'
  ]
 })
 
 appendManualDetails(cattleTracks, {
  0: [
- ' Identify the commercial logic for preserving adapted cow lines while improving frame and carcass performance through selected sires.',
- 'Score foundation cows for fertility, calving ease, calf survival, temperament, and drought-season performance.',
- 'Define which visible size gains are commercially useful and which only raise maintenance cost without market advantage.'
+ 'The commercial case should preserve adapted cow lines while improving frame and carcass performance through selected sires.',
+ 'Foundation cows should be scored for fertility, calving ease, calf survival, temperament, and drought-season performance.',
+ 'Visible size gains should be judged against maintenance cost and market advantage.'
  ],
  1: [
- 'Write herd-grouping rules that prevent random breeding and ensure every bull assignment serves a measurable herd-improvement purpose.',
- 'Combine water planning, mineral access, and grazing movement into the breeding-season plan rather than treating them as separate tasks.',
- 'Use a bull-readiness checklist that covers feet, condition, reproductive behavior, and health before service begins.'
+ 'Herd-grouping rules should prevent random breeding and give each bull assignment a measurable improvement purpose.',
+ 'Water planning, mineral access, and grazing movement should be integrated into the breeding-season plan.',
+ 'Bull readiness should be checked through feet, condition, reproductive behavior, and health before service begins.'
  ],
  2: [
- 'Create a calving-preparedness checklist with labor roles, calf-support materials, emergency referral contacts, and postpartum follow-up timing.',
- 'Review pregnancy success through calf vigor, dam recovery, and rebreeding readiness—not simply whether a calf was born.',
- 'For {TITLE}, set clear response steps for calving delay, weak calves, retained placenta, or poor maternal behavior.'
+ 'Calving preparedness should define labor roles, calf-support materials, emergency referral contacts, and postpartum follow-up timing.',
+ 'Pregnancy success should be reviewed through calf vigor, dam recovery, and rebreeding readiness, not simply birth outcome.',
+ 'Clear response steps should exist for calving delay, weak calves, retained placenta, and poor maternal behavior.'
  ],
  3: [
- 'Define the weekly herd-health walk so it captures tick pressure, coat condition, manure changes, gait, appetite, and calf behavior.',
- 'Separate disease pressure from poor forage, water stress, and handling stress before deciding the herd has a health problem.',
- 'Use calf-growth data to decide whether management, genetics, or environment is limiting performance.'
+ 'The weekly herd-health walk should capture tick pressure, coat condition, manure change, gait, appetite, and calf behavior.',
+ 'Disease pressure should be separated from poor forage, water stress, and handling stress before major conclusions are drawn.',
+ 'Calf-growth data should clarify whether management, genetics, or environment is limiting performance.'
  ],
  4: [
- 'Grade market animals by class, frame, finish, and health reliability so pricing reflects system quality instead of guesswork.',
- 'Treat herd scaling as a capital-allocation decision backed by feed security, labor strength, and stable reproductive data.',
- 'Require a post-season review that answers whether the herd is truly improving or simply surviving.'
+ 'Market animals should be graded by class, frame, finish, and health reliability.',
+ 'Herd scaling should be treated as a capital-allocation decision backed by feed security, labor strength, and stable reproductive data.',
+ 'Post-season review should determine whether the herd is truly improving or only surviving.'
  ]
 })
 
