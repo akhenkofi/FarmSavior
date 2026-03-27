@@ -3916,7 +3916,7 @@ function AppInner() {
 
  <article className='panel'>
  <div className='list-row' style={{marginBottom:10}}>
- <div>
+ <div style={{cursor:'pointer'}} onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: !prev.create, edit: false }))}>
  <h4 style={{margin:'0 0 4px 0'}}>Create Record</h4>
  <div className='helper-text'>Add a new animal or batch record without exposing every field at once.</div>
  </div>
@@ -4012,7 +4012,10 @@ function AppInner() {
 
  <article className='panel'>
  <div className='list-row' style={{marginBottom:10}}>
- <div>
+ <div style={{cursor:(selectedLivestockRecord || livestockRecordEdit.id) ? 'pointer' : 'default'}} onClick={() => {
+ if (!(selectedLivestockRecord || livestockRecordEdit.id)) return
+ setRecordsSectionOpen(prev => ({ ...prev, edit: !prev.edit, create: false }))
+ }}>
  <h4 style={{margin:'0 0 4px 0'}}>Edit Record</h4>
  <div className='helper-text'>{selectedLivestockRecord ? 'Tap Edit from the table below to prefill this form automatically.' : 'Select a record from the table first.'}</div>
  </div>
