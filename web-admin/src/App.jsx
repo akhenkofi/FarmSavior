@@ -85,15 +85,18 @@ const compressImageFileToDataUrl = (file, { maxDim = 1600, quality = 0.82, maxCh
 })
 
 const openLivestockManagement = () => {
- // Try route hints first
- try { window.location.hash = '#livestock-records' } catch {}
+ try {
+ const url = new URL(window.location.href)
+ url.searchParams.set('public', '0')
+ url.searchParams.set('go', 'livestock-records')
+ window.location.href = url.toString()
+ return
+ } catch {}
 
- // Then try clicking matching navigation buttons/tabs by label.
- const labels = ['sheep', 'goat', 'livestock', 'records', 'management']
  const btns = Array.from(document.querySelectorAll('button, a, [role="tab"]'))
  const target = btns.find(el => {
- const t = String(el.textContent || '').toLowerCase()
- return labels.some(k => t.includes(k))
+ const t = String(el.textContent || '').toLowerCase().trim()
+ return t.includes('livestock records management') || t === 'records' || t.includes('牲畜档案管理')
  })
  if (target && typeof target.click === 'function') target.click()
 }
