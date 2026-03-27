@@ -779,12 +779,17 @@ Object.values(cattleTracks).forEach(track => {
 })
 
 
+const normalizeCurriculumText = (value = '') => {
+ const text = String(value || '').replace(/\s+/g, ' ').trim()
+ if (!text) return ''
+ return text.charAt(0).toUpperCase() + text.slice(1)
+}
 
 const appendManualDetails = (tracks, extraByIndex) => {
  Object.values(tracks).forEach(track => {
  track.modules = (track.modules || []).map((m, idx) => ({
  ...m,
- details: [...(m.details || []), ...((extraByIndex[idx] || []).map(x => x.replaceAll('{TITLE}', track.title)))]
+ details: [...(m.details || []), ...((extraByIndex[idx] || []).map(x => normalizeCurriculumText(x.replaceAll('{TITLE}', track.title))))].map(normalizeCurriculumText)
  }))
  })
 }
@@ -901,6 +906,18 @@ appendManualDetails(cattleTracks, {
  ]
 })
 
+;[poultryTracks, sheepTracks, goatTracks, cattleTracks].forEach((group) => {
+ Object.values(group).forEach((track) => {
+ track.modules = (track.modules || []).map((m) => ({
+ ...m,
+ summary: normalizeCurriculumText(m.summary),
+ details: (m.details || []).map(normalizeCurriculumText)
+ }))
+ track.breeds = (track.breeds || []).map(normalizeCurriculumText)
+ track.kpis = (track.kpis || []).map(normalizeCurriculumText)
+ })
+})
+
 const paymentProviders = {
  GH: ['MTN MoMo', 'Vodafone Cash', 'AirtelTigo Money'],
  NG: ['OPay', 'PalmPay', 'Paga'],
@@ -995,11 +1012,11 @@ const universityPlanPreview = {
  },
  basic: {
  title: 'Basic',
- features: ['All 5 modules unlocked', 'Climate/zone guidance', 'Health schedule access', 'Structured paid learning path']
+ features: ['All 5 modules unlocked', 'Climate/zone guidance', 'Health schedule access', 'Structured learning path']
  },
  pro: {
  title: 'Professional',
- features: ['Everything in Basic', 'Professional extras/resources', 'Progress tracking', 'Certificate path where supported']
+ features: ['Everything in Basic', 'Executive briefs, scorecards, and printable templates', 'Progress tracking dashboard', 'Certificate/report path where supported']
  }
 }
 
@@ -1203,14 +1220,27 @@ function AppInner() {
  const [worldChatMsg, setWorldChatMsg] = useState('')
  const [worldChatQueue, setWorldChatQueue] = useState([])
 
- const [communityProfile, setCommunityProfile] = useState({ full_name: '', username: '', avatar_url: '', cover_image_url: '', bio: '', farm_life: '', interests: 'farming,gardening', visibility: 'PUBLIC' })
+ const [communityProfile, setCommunityProfile] = useState(() => {
+ try {
+ const raw = localStorage.getItem('farmsavior_community_profile_cache')
+ return raw ? JSON.parse(raw) : { full_name: '', username: '', avatar_url: '', cover_image_url: '', bio: '', farm_life: '', interests: 'farming,gardening', visibility: 'PUBLIC' }
+ } catch {
+ return { full_name: '', username: '', avatar_url: '', cover_image_url: '', bio: '', farm_life: '', interests: 'farming,gardening', visibility: 'PUBLIC' }
+ }
+ })
+ const [communityProfileBaseline, setCommunityProfileBaseline] = useState(null)
  const [communityProfileDirty, setCommunityProfileDirty] = useState(false)
+ const [communityProfileSaving, setCommunityProfileSaving] = useState(false)
  const [communityPosts, setCommunityPosts] = useState([])
  const [communityFeedMode, setCommunityFeedMode] = useState('for-you')
  const [communityPostForm, setCommunityPostForm] = useState({ text: '', media_url: '', media_type: 'TEXT', tags: '' })
  const [editingCommunityPostId, setEditingCommunityPostId] = useState(null)
  const [communityCommentText, setCommunityCommentText] = useState({})
  const [communityComments, setCommunityComments] = useState({})
+
+ useEffect(() => {
+ try { localStorage.setItem('farmsavior_community_profile_cache', JSON.stringify(communityProfile || {})) } catch {}
+ }, [communityProfile])
 
  const [state, setState] = useState({ metrics: {}, users: [], listings: [], livestock: [], livestockRecords: [], logistics: [], equipment: [], storage: [], payments: [], orders: [], payoutProfiles: [], notifications: [], payoutHistory: [], alerts: [], contracts: [], idv: [], passports: [], verificationApps: [], approvedAccounts: [], deviceTokens: [], diseaseScans: [], disputes: [], fraudFlags: [], news: [], publicWeather: [], govPrograms: [], spotTrading: [], spotHistory: [], tradeExportStats: [], livestockPlans: [] })
  const [me, setMe] = useState(null)
@@ -1241,6 +1271,7 @@ function AppInner() {
  const [livestockRecordEdit, setLivestockRecordEdit] = useState({ id: '', user_id: 1, ownership: 'Owned by Me', species: 'SHEEP', animal_type: 'EWE', name: '', ear_tag: '', farm_id: '', registration_number: '', stars: 0, date_of_birth: '', acquisition_date: '', purchase_price: '', currency: 'GHS', sire_id: '', dam_id: '', litter_size: 1, initial_weight_kg: '', breeding_type: 'Natural', castrated: false, sale_date: '', sale_price: '', sold_to: '', died_date: '', cull_keep_status: 'KEEP', cull_reason: '', health_status: '', pen_location: '', notes: '', treatment_entry: '' })
  const [selectedLivestockRecord, setSelectedLivestockRecord] = useState(null)
  const [livestockRecordsFilter, setLivestockRecordsFilter] = useState('ALL')
+ const [recordsSectionOpen, setRecordsSectionOpen] = useState({ create: false, edit: false, batch: false, details: false })
  const [batchMedicationForm, setBatchMedicationForm] = useState({ species:'ALL', animal_type:'ALL', health_status:'ALL', cull_keep_status:'ALL', minStars:'', pen_location:'', medication:'', dose:'', days:'' })
  const [logisticsForm, setLogisticsForm] = useState({ requester_id: 1, pickup_location: '', dropoff_location: '', cargo_type: '', weight_kg: '', status: 'PENDING' })
  const [logisticsEdit, setLogisticsEdit] = useState({ id: '', requester_id: 1, pickup_location: '', dropoff_location: '', cargo_type: '', weight_kg: '', status: 'PENDING' })
@@ -1253,6 +1284,8 @@ function AppInner() {
  const [orderForm, setOrderForm] = useState({ buyer_id: 1, seller_id: 2, listing_type: 'PRODUCT', listing_id: 1, listing_title: '', quantity: 1, unit_price: '', currency: 'GHS', delivery_method: 'STANDARD', buyer_note: '' })
  const [orderPayment, setOrderPayment] = useState({ payer_id: 1, payee_id: 2, country: 'GH', method: 'MobileMoney', provider: 'MTN', currency: 'GHS', escrow_enabled: true })
  const [payoutForm, setPayoutForm] = useState({ user_id: 2, country: 'GH', payout_method: 'MOBILE_MONEY', account_name: '', bank_name: '', account_number: '', mobile_money_provider: 'MTN', mobile_money_number: '', currency: 'GHS', default_payout_method: true })
+ const [payoutSettingsOpen, setPayoutSettingsOpen] = useState(false)
+ const [payoutSaving, setPayoutSaving] = useState(false)
  const [buyerOrderUserId, setBuyerOrderUserId] = useState(String(me?.id || 1))
  const [sellerOrderUserId, setSellerOrderUserId] = useState(String(me?.id || 2))
  const [selectedOrder, setSelectedOrder] = useState(null)
@@ -1549,6 +1582,22 @@ function AppInner() {
  ])
  setRegionMap(regions || { GH: [], NG: [], BF: [] })
  setState({ metrics, users, listings, livestock, livestockRecords, logistics, equipment, storage, payments, orders, payoutProfiles, notifications, payoutHistory, alerts, contracts, idv, passports, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, publicWeather, govPrograms: govPrograms.items || [], spotTrading: spotTrading.items || [], spotHistory: spotHistory.items || [], tradeExportStats: tradeExportStats.items || [], livestockPlans: livestockPlans.plans || [] })
+ const myPayoutProfile = (payoutProfiles || []).find(x => String(x.user_id) === String(meRes?.id || ''))
+ if (myPayoutProfile) {
+ setPayoutForm(prev => ({
+ ...prev,
+ user_id: Number(meRes?.id || prev.user_id),
+ country: myPayoutProfile.country || prev.country,
+ payout_method: myPayoutProfile.payout_method || prev.payout_method,
+ account_name: myPayoutProfile.account_name || '',
+ bank_name: myPayoutProfile.bank_name || '',
+ account_number: myPayoutProfile.account_number || '',
+ mobile_money_provider: myPayoutProfile.mobile_money_provider || 'MTN',
+ mobile_money_number: myPayoutProfile.mobile_money_number || '',
+ currency: myPayoutProfile.currency || prev.currency,
+ default_payout_method: typeof myPayoutProfile.default_payout_method === 'boolean' ? myPayoutProfile.default_payout_method : prev.default_payout_method
+ }))
+ }
  }
 
  const loadLivestockRecords = async () => {
@@ -1572,7 +1621,10 @@ function AppInner() {
  api.fetchCommunityProfileMe().catch(() => null),
  api.fetchCommunityPosts(80).catch(() => [])
  ])
- if (p && !communityProfileDirty) setCommunityProfile(p)
+ if (p && !communityProfileDirty && !communityProfileSaving) {
+ setCommunityProfile(p)
+ setCommunityProfileBaseline(p)
+ }
  setCommunityPosts(posts || [])
  }
 
@@ -2852,7 +2904,7 @@ function AppInner() {
  {isUserImage(communityProfile.avatar_url)
  ? <img src={communityProfile.avatar_url} alt='Community avatar' style={{position:'absolute',left:10,bottom:-22,width:56,height:56,objectFit:'cover',borderRadius:'50%',border:'3px solid #fff',boxShadow:'0 6px 12px rgba(0,0,0,.2)'}} />
  : <div style={{position:'absolute',left:10,bottom:-22,width:56,height:56,borderRadius:'50%',border:'3px solid #fff',background:'#e2e8f0',display:'grid',placeItems:'center',color:'#64748b',fontSize:11}}>No DP</div>}
- <div style={{position:'absolute',left:74,bottom:8,color:'#fff',fontWeight:700,textShadow:'0 1px 2px rgba(0,0,0,.6)'}}>{(me?.full_name || 'Your Community Profile') + (communityProfile.username ? ` • @${communityProfile.username}` : '')}</div>
+ <div style={{position:'absolute',left:74,bottom:8,color:'#fff',fontWeight:700,textShadow:'0 1px 2px rgba(0,0,0,.6)'}}>{(communityProfile.full_name || me?.full_name || 'Your Community Profile') + (communityProfile.username ? ` • @${communityProfile.username}` : '')}</div>
  </div>
 
  <div className='list' style={{maxHeight:220, overflow:'auto', marginTop:26}}>
@@ -3277,7 +3329,7 @@ function AppInner() {
 
  {active === 'poultry-university' && <section>
  <h3>🐔 Poultry University</h3>
- <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Professional Tier Standard:</strong> Poultry University Professional includes climate/zone guidance, health schedule access, and a structured paid learning path.</div>
+ <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Professional Tier Standard:</strong> Poultry University Professional builds on Basic with executive-grade resources, printable tools, progress tracking, and certificate/report outputs.</div>
  <article className='panel' style={{marginBottom:10}}>
  <h4 style={{marginTop:0}}>Choose Your Plan</h4>
  <p style={{fontSize:'.85rem',color:'#475569'}}>Standalone professional purchase also available (₵200–₵1,000 depending on package depth).</p>
@@ -3304,7 +3356,7 @@ function AppInner() {
  </div>
  <div className='panel' style={{padding:10, border:poultryTier==='pro' || poultryPlanPreview==='pro'?'2px solid #f59e0b':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setPoultryPlanPreview('pro')}>
  <strong>🏆 Professional — ₵120/mo</strong>
- <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Basic + climate/zone guidance + health schedule access + structured paid learning path + progress tracking + certificate.</div>
+ <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Basic + executive brief, benchmark scorecard, printable templates, progress tracking, and certificate/report outputs.</div>
  <button className='btn btn-dark' onClick={async(e)=>{ e.stopPropagation();
  try {
  if (!token || !me?.id) { handleProtectedAction('onboarding', 'Poultry University Professional checkout'); return }
@@ -3470,7 +3522,7 @@ function AppInner() {
 
  {active === 'sheep-university' && <section>
  <h3>🐑 Sheep University</h3>
- <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Professional Tier Standard:</strong> Sheep University Professional includes climate/zone guidance, health schedule access, and a structured paid learning path.</div>
+ <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Professional Tier Standard:</strong> Sheep University Professional builds on Basic with executive-grade resources, printable tools, progress tracking, and certificate/report outputs.</div>
  <article className='panel' style={{marginBottom:10,border:'1px solid #ddd6fe',background:'#faf5ff'}}>
  <h4 style={{marginTop:0,color:'#6d28d9'}}>Ghana Sheep Breed Program (3 Phases)</h4>
  <div className='list'>
@@ -3494,7 +3546,7 @@ function AppInner() {
  </div>
  <div className='panel' style={{padding:10, border:sheepTier==='pro' || sheepPlanPreview==='pro'?'2px solid #7c3aed':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setSheepPlanPreview('pro')}>
  <strong>🏆 Professional — ₵120/mo</strong>
- <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Basic + climate/zone guidance + health schedule access + structured paid learning path + progress tracking + certificate.</div>
+ <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Basic + executive brief, benchmark scorecard, printable templates, progress tracking, and certificate/report outputs.</div>
  <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('sheep', 'pro', 'Sheep University Professional checkout')}}>Go Professional</button>
  </div>
  </div>
@@ -3594,7 +3646,7 @@ function AppInner() {
 
  {active === 'goat-university' && <section>
  <h3>🐐 Goat University</h3>
- <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Professional Tier Standard:</strong> Goat University Professional includes climate/zone guidance, health schedule access, and a structured paid learning path.</div>
+ <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Professional Tier Standard:</strong> Goat University Professional builds on Basic with executive-grade resources, printable tools, progress tracking, and certificate/report outputs.</div>
  <article className='panel' style={{marginBottom:10,border:'1px solid #99f6e4',background:'#f0fdfa'}}>
  <h4 style={{marginTop:0,color:'#0f766e'}}>Ghana Goat Breed Program (3 Phases)</h4>
  <div className='list'>
@@ -3618,7 +3670,7 @@ function AppInner() {
  </div>
  <div className='panel' style={{padding:10, border:goatTier==='pro' || goatPlanPreview==='pro'?'2px solid #0d9488':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setGoatPlanPreview('pro')}>
  <strong>🏆 Professional — ₵120/mo</strong>
- <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Basic + climate/zone guidance + health schedule access + structured paid learning path + progress tracking + certificate.</div>
+ <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Basic + executive brief, benchmark scorecard, printable templates, progress tracking, and certificate/report outputs.</div>
  <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('goat', 'pro', 'Goat University Professional checkout')}}>Go Professional</button>
  </div>
  </div>
@@ -3720,7 +3772,7 @@ function AppInner() {
 
  {active === 'cattle-university' && <section>
  <h3>🐄 Cattle University</h3>
- <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Professional Tier Standard:</strong> Cattle University Professional includes climate/zone guidance, health schedule access, and a structured paid learning path.</div>
+ <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Professional Tier Standard:</strong> Cattle University Professional builds on Basic with executive-grade resources, printable tools, progress tracking, and certificate/report outputs.</div>
  <article className='panel' style={{marginBottom:10,border:'1px solid #fde68a',background:'#fffbeb'}}>
  <h4 style={{marginTop:0,color:'#92400e'}}>Ghana Cattle Breed Program (3 Phases)</h4>
  <p style={{fontSize:'.85rem',color:'#92400e'}}>Final breeding sires: <strong>Brahman or Gudali</strong>.</p>
@@ -3744,7 +3796,7 @@ function AppInner() {
  </div>
  <div className='panel' style={{padding:10, border:cattleTier==='pro' || cattlePlanPreview==='pro'?'2px solid #d97706':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setCattlePlanPreview('pro')}>
  <strong>🏆 Professional — ₵120/mo</strong>
- <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Basic + climate/zone guidance + health schedule access + structured paid learning path + progress tracking + certificate.</div>
+ <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Basic + executive brief, benchmark scorecard, printable templates, progress tracking, and certificate/report outputs.</div>
  <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('cattle', 'pro', 'Cattle University Professional checkout')}}>Go Professional</button>
  </div>
  </div>
@@ -3841,6 +3893,12 @@ function AppInner() {
 
  {active === 'livestock-records' && <section>
  <h3>{t('Livestock Records Management (Sheep • Goats • Cattle • Poultry)','Gestion des registres élevage (ovins • caprins • bovins • volailles)','牲畜档案管理（羊•山羊•牛•家禽）')}</h3>
+ <div className='panel' style={{marginBottom:12}}>
+ <div className='list-row' style={{alignItems:'center', gap:12}}>
+ <strong>{t('Records overview','Aperçu des registres','记录概览')}</strong>
+ <div className='helper-text'>{livestockRecordsFiltered.length} visible</div>
+ </div>
+ </div>
  <div className='panel'>
  <div className='inlineForm' style={{flexWrap:'wrap'}}>
  <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('ALL')} style={{border:livestockRecordsFilter==='ALL'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Total records','Total registres','记录总数')}: {state.livestockRecords.length}</button>
@@ -3849,12 +3907,22 @@ function AppInner() {
  <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('CATTLE')} style={{border:livestockRecordsFilter==='CATTLE'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Cattle','Bovins','牛')}: {state.livestockRecords.filter(r => r.species === 'CATTLE').length}</button>
  <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('POULTRY')} style={{border:livestockRecordsFilter==='POULTRY'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Poultry','Volailles','家禽')}: {state.livestockRecords.filter(r => r.species === 'POULTRY').length}</button>
  </div>
+ <div className='inlineForm' style={{marginTop:10, flexWrap:'wrap'}}>
+ <button type='button' className='btn btn-dark' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: !prev.create, edit: false }))}>{recordsSectionOpen.create ? 'Close Create Record' : 'Create Record'}</button>
+ <button type='button' className='btn' onClick={() => selectedLivestockRecord ? setRecordsSectionOpen(prev => ({ ...prev, edit: !prev.edit, create: false })) : alert('Select a record to edit first')}>{recordsSectionOpen.edit ? 'Close Edit Record' : 'Edit Selected Record'}</button>
+ </div>
  <p style={{margin:'8px 0 0',fontSize:'.82rem',color:'#475569'}}>Showing: <strong>{livestockRecordsFilter}</strong> ({livestockRecordsFiltered.length} records)</p>
  </div>
 
  <article className='panel'>
- <h4>Create Record</h4>
- <form className='list' onSubmit={async e => {
+ <div className='list-row' style={{marginBottom:10}}>
+ <div>
+ <h4 style={{margin:'0 0 4px 0'}}>Create Record</h4>
+ <div className='helper-text'>Add a new animal or batch record without exposing every field at once.</div>
+ </div>
+ <button type='button' className='btn' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: !prev.create, edit: false }))}>{recordsSectionOpen.create ? 'Hide' : 'Open'}</button>
+ </div>
+ {recordsSectionOpen.create && <form className='list' onSubmit={async e => {
  e.preventDefault()
  try {
  const { treatment_entry, ...createPayload } = livestockRecordForm
@@ -3873,6 +3941,7 @@ function AppInner() {
  })
  await load()
  setLivestockRecordForm({ ...livestockRecordForm, name: '', ear_tag: '', registration_number: '', purchase_price: '', health_status: '', notes: '', treatment_entry: '' })
+ setRecordsSectionOpen(prev => ({ ...prev, create: false }))
  alert('Record created successfully')
  } catch (err) {
  alert(`Create failed: ${errMsg(err)}`)
@@ -3938,12 +4007,18 @@ function AppInner() {
  </div>
  <input className='input' placeholder='Notes (includes treatment history)' value={livestockRecordForm.notes} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, notes: e.target.value })} />
  <button className='btn btn-dark'>Create Record</button>
- </form>
+ </form>}
  </article>
 
  <article className='panel'>
- <h4>Edit Record</h4>
- <form className='list' onSubmit={async e => {
+ <div className='list-row' style={{marginBottom:10}}>
+ <div>
+ <h4 style={{margin:'0 0 4px 0'}}>Edit Record</h4>
+ <div className='helper-text'>{selectedLivestockRecord ? 'Tap Edit from the table below to prefill this form automatically.' : 'Select a record from the table first.'}</div>
+ </div>
+ <button type='button' className='btn' disabled={!selectedLivestockRecord && !livestockRecordEdit.id} onClick={() => setRecordsSectionOpen(prev => ({ ...prev, edit: !prev.edit, create: false }))}>{recordsSectionOpen.edit ? 'Hide' : 'Open'}</button>
+ </div>
+ {(recordsSectionOpen.edit && (selectedLivestockRecord || livestockRecordEdit.id)) && <form className='list' onSubmit={async e => {
  e.preventDefault()
  if (!livestockRecordEdit.id) return
  try {
@@ -3962,6 +4037,7 @@ function AppInner() {
  died_date: livestockRecordEdit.died_date || null,
  })
  await load()
+ setRecordsSectionOpen(prev => ({ ...prev, edit: false }))
  alert('Record updated successfully')
  } catch (err) {
  alert(`Update failed: ${errMsg(err)}`)
@@ -4029,13 +4105,20 @@ function AppInner() {
  <input className='input' placeholder='Notes (includes treatment history)' value={livestockRecordEdit.notes} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, notes: e.target.value })} />
  <div className='inlineForm'>
  <button className='btn btn-dark'>Save Edit</button>
- <button type='button' className='btn' onClick={async () => { try { if (!livestockRecordEdit.id) return; await api.deleteLivestockRecord(Number(livestockRecordEdit.id)); await load(); setLivestockRecordEdit({ ...livestockRecordEdit, id: '' }); alert('Record deleted successfully') } catch (err) { alert(`Delete failed: ${errMsg(err)}`) } }}>Delete Record</button>
+ <button type='button' className='btn' onClick={async () => { try { if (!livestockRecordEdit.id) return; await api.deleteLivestockRecord(Number(livestockRecordEdit.id)); await load(); setLivestockRecordEdit({ ...livestockRecordEdit, id: '' }); setSelectedLivestockRecord(null); setRecordsSectionOpen(prev => ({ ...prev, edit: false, details: false })); alert('Record deleted successfully') } catch (err) { alert(`Delete failed: ${errMsg(err)}`) } }}>Delete Record</button>
  </div>
- </form>
+ </form>}
  </article>
 
  <article className='panel'>
- <h4>Batch Medication / Treatment</h4>
+ <div className='list-row' style={{marginBottom:10}}>
+ <div>
+ <h4 style={{margin:'0 0 4px 0'}}>Batch Medication / Treatment</h4>
+ <div className='helper-text'>Apply one treatment note to multiple matching records.</div>
+ </div>
+ <button type='button' className='btn' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, batch: !prev.batch }))}>{recordsSectionOpen.batch ? 'Hide' : 'Open'}</button>
+ </div>
+ {recordsSectionOpen.batch && <>
  <div className='inlineForm'>
  <select className='input' value={batchMedicationForm.species} onChange={e=>setBatchMedicationForm({ ...batchMedicationForm, species:e.target.value, animal_type:'ALL' })}>
  <option value='ALL'>All species</option>
@@ -4115,24 +4198,31 @@ function AppInner() {
  }).length}</strong>
  </div>
  </div>
+ </>}
  </article>
 
 
  {selectedLivestockRecord && <article className='panel'>
- <h4>Animal Details</h4>
- <div className='list'>
+ <div className='list-row' style={{marginBottom:10}}>
+ <div>
+ <h4 style={{margin:'0 0 4px 0'}}>Animal Details</h4>
+ <div className='helper-text'>Opened when you tap a row in the records table.</div>
+ </div>
+ <button type='button' className='btn' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, details: !prev.details }))}>{recordsSectionOpen.details ? 'Hide' : 'Open'}</button>
+ </div>
+ {recordsSectionOpen.details && <div className='list'>
  {Object.entries(selectedLivestockRecord).map(([k,v]) => (
  <div className='list-row' key={`detail-${k}`}><span>{k}</span><strong>{v == null || v === '' ? '—' : String(v)}</strong></div>
  ))}
- </div>
+ </div>}
  </article>}
 
  <DataTable
  columns={['id','species','animal_type','name','acquisition_date','purchase_price','health_status','notes']}
  rows={livestockRecordsFiltered}
  filterKey='name'
- onRowClick={(r) => setSelectedLivestockRecord(r)}
- onEdit={(r) => setLivestockRecordEdit({
+ onRowClick={(r) => { setSelectedLivestockRecord(r); setRecordsSectionOpen(prev => ({ ...prev, details: true })) }}
+ onEdit={(r) => { setSelectedLivestockRecord(r); setRecordsSectionOpen(prev => ({ ...prev, edit: true, create: false, details: true })); setLivestockRecordEdit({
  id: r.id,
  user_id: r.user_id || me?.id || 1,
  ownership: r.ownership || 'Owned by Me',
@@ -4163,7 +4253,7 @@ function AppInner() {
  pen_location: r.pen_location || '',
  notes: r.notes || '',
  treatment_entry: ''
- })}
+ })}}
  />
  </section>}
 
@@ -4494,11 +4584,56 @@ function AppInner() {
 
  <div className='two-col'>
  <article className='panel'>
- <h4>Seller payout settings</h4>
- <p className='helper-text'>This is where a seller tells FarmSavior how to receive released escrow payouts.</p>
- <form className='list' onSubmit={async e => { e.preventDefault(); await api.savePayoutProfile({ ...payoutForm, user_id: Number(payoutForm.user_id) }); await load(); alert('Seller payout method saved.') }}>
+ <div className='list-row' style={{alignItems:'flex-start', gap:10}}>
+ <div>
+ <h4 style={{margin:'0 0 4px 0'}}>Seller payout settings</h4>
+ <p className='helper-text' style={{margin:0}}>This is where a seller tells FarmSavior how to receive released escrow payouts.</p>
+ </div>
+ <button type='button' className='btn' onClick={() => setPayoutSettingsOpen(v => !v)}>{payoutSettingsOpen ? 'Hide' : 'Edit payout settings'}</button>
+ </div>
+ <div className='panel' style={{marginTop:10, background:'#f8fafc'}}>
+ <strong>Payout status</strong>
+ <div className='helper-text' style={{marginTop:6}}>{(state.payoutProfiles.find(x => String(x.user_id) === String(payoutForm.user_id))?.verification_status) || 'PENDING'} — funds release only after verification.</div>
+ </div>
+ {payoutSettingsOpen && <form className='list' style={{marginTop:10}} onSubmit={async e => {
+ e.preventDefault()
+ try {
+ const payload = {
+ ...payoutForm,
+ user_id: Number(payoutForm.user_id),
+ country: String(payoutForm.country || 'GH').trim().toUpperCase(),
+ payout_method: String(payoutForm.payout_method || 'MOBILE_MONEY').trim().toUpperCase(),
+ account_name: String(payoutForm.account_name || '').trim(),
+ bank_name: String(payoutForm.bank_name || '').trim(),
+ account_number: String(payoutForm.account_number || '').trim(),
+ mobile_money_provider: String(payoutForm.mobile_money_provider || '').trim(),
+ mobile_money_number: String(payoutForm.mobile_money_number || '').trim(),
+ currency: String(payoutForm.currency || 'GHS').trim().toUpperCase()
+ }
+ if (!payload.user_id) throw new Error('Missing user ID')
+ if (!payload.account_name) throw new Error('Account name is required')
+ if (payload.payout_method === 'BANK_TRANSFER') {
+ if (!payload.bank_name || !payload.account_number) throw new Error('Bank name and account number are required')
+ payload.mobile_money_provider = ''
+ payload.mobile_money_number = ''
+ } else {
+ if (!payload.mobile_money_provider || !payload.mobile_money_number) throw new Error('MoMo provider and MoMo number are required')
+ payload.bank_name = ''
+ payload.account_number = ''
+ }
+ setPayoutSaving(true)
+ await api.savePayoutProfile(payload)
+ await load()
+ setPayoutSettingsOpen(false)
+ alert('Seller payout method saved.')
+ } catch (err) {
+ alert(errMsg(err))
+ } finally {
+ setPayoutSaving(false)
+ }
+ }}>
  <div className='row2'>
- <input className='input' placeholder='Your user ID' value={payoutForm.user_id} onChange={e => setPayoutForm({ ...payoutForm, user_id: e.target.value })} />
+ <input className='input' placeholder='Your user ID' value={payoutForm.user_id} readOnly />
  <select className='input' value={payoutForm.payout_method} onChange={e => setPayoutForm({ ...payoutForm, payout_method: e.target.value })}>
  <option value='MOBILE_MONEY'>Mobile Money</option>
  <option value='BANK_TRANSFER'>Bank Transfer</option>
@@ -4506,21 +4641,31 @@ function AppInner() {
  </div>
  <div className='row2'>
  <input className='input' placeholder='Account name' value={payoutForm.account_name} onChange={e => setPayoutForm({ ...payoutForm, account_name: e.target.value })} />
- <input className='input' placeholder='Country' value={payoutForm.country} onChange={e => setPayoutForm({ ...payoutForm, country: e.target.value })} />
+ <select className='input' value={payoutForm.country} onChange={e => setPayoutForm({ ...payoutForm, country: e.target.value, currency: e.target.value === 'NG' ? 'NGN' : e.target.value === 'BF' ? 'XOF' : 'GHS' })}>
+ <option value='GH'>GH</option>
+ <option value='NG'>NG</option>
+ <option value='BF'>BF</option>
+ </select>
  </div>
  {payoutForm.payout_method === 'BANK_TRANSFER' ? <div className='row2'>
  <input className='input' placeholder='Bank name' value={payoutForm.bank_name} onChange={e => setPayoutForm({ ...payoutForm, bank_name: e.target.value })} />
  <input className='input' placeholder='Account number' value={payoutForm.account_number} onChange={e => setPayoutForm({ ...payoutForm, account_number: e.target.value })} />
  </div> : <div className='row2'>
- <input className='input' placeholder='MoMo provider' value={payoutForm.mobile_money_provider} onChange={e => setPayoutForm({ ...payoutForm, mobile_money_provider: e.target.value })} />
+ <select className='input' value={payoutForm.mobile_money_provider} onChange={e => setPayoutForm({ ...payoutForm, mobile_money_provider: e.target.value })}>
+ <option value='MTN'>MTN</option>
+ <option value='Vodafone Cash'>Vodafone Cash</option>
+ <option value='AirtelTigo Money'>AirtelTigo Money</option>
+ <option value='Orange Money'>Orange Money</option>
+ <option value='Moov Money'>Moov Money</option>
+ <option value='OPay'>OPay</option>
+ <option value='PalmPay'>PalmPay</option>
+ <option value='Paga'>Paga</option>
+ </select>
  <input className='input' placeholder='MoMo number' value={payoutForm.mobile_money_number} onChange={e => setPayoutForm({ ...payoutForm, mobile_money_number: e.target.value })} />
  </div>}
- <button className='btn btn-dark'>Save payout settings</button>
- </form>
- <div className='panel' style={{marginTop:10, background:'#f8fafc'}}>
- <strong>Payout status</strong>
- <div className='helper-text' style={{marginTop:6}}>{(state.payoutProfiles.find(x => String(x.user_id) === String(payoutForm.user_id))?.verification_status) || 'PENDING'} — funds release only after verification.</div>
- </div>
+ <div className='helper-text'>Funds release only after verification. Saving this form should show a success popup.</div>
+ <button className='btn btn-dark' disabled={payoutSaving}>{payoutSaving ? 'Saving payout settings…' : 'Save payout settings'}</button>
+ </form>}
  </article>
  <article className='panel'>
  <h4>{t('My Community Profile','Mon profil communautaire','我的社区资料')}</h4>
@@ -4538,23 +4683,68 @@ function AppInner() {
  <div style={{fontSize:'.82rem',color:'#0284c7',fontWeight:600}}>@{communityProfile.username || 'set_username'}</div>
  <div style={{fontSize:'.85rem',color:'#475569'}}>{communityProfile.bio || 'Add a short bio to attract followers.'}</div>
  </div>
- <form className='list' onSubmit={async(e)=>{e.preventDefault(); const saved = await api.saveCommunityProfileMe(communityProfile); setCommunityProfile(prev => ({ ...prev, ...(saved || {}) })); setCommunityProfileDirty(false); const meRes = await api.fetchMe().catch(()=>null); if (meRes) { setMe(meRes); setAccountForm({ full_name: meRes.full_name || '', region: meRes.region || '' }) } await loadCommunity(); alert('Profile updated')}}>
+ <form className='list' onSubmit={async(e)=>{
+ e.preventDefault()
+ try {
+ setCommunityProfileSaving(true)
+ const nextProfile = {
+ full_name: String(communityProfile.full_name || '').trim(),
+ username: String(communityProfile.username || '').trim().toLowerCase().replace(/\s+/g,''),
+ avatar_url: communityProfile.avatar_url || '',
+ cover_image_url: communityProfile.cover_image_url || '',
+ bio: String(communityProfile.bio || '').trim(),
+ farm_life: String(communityProfile.farm_life || '').trim(),
+ interests: String(communityProfile.interests || '').trim(),
+ visibility: communityProfile.visibility || 'PUBLIC'
+ }
+ if (!nextProfile.full_name && me?.full_name) nextProfile.full_name = String(me.full_name || '').trim()
+ if (!nextProfile.username && communityProfileBaseline?.username) nextProfile.username = communityProfileBaseline.username
+ const saved = await api.saveCommunityProfileMe(nextProfile)
+ const mergedProfile = { ...nextProfile, ...(saved || {}) }
+ setCommunityProfile(mergedProfile)
+ setCommunityProfileBaseline(mergedProfile)
+ setCommunityPosts(prev => (prev || []).map(post => String(post.user_id) === String(me?.id)
+ ? { ...post, author_full_name: mergedProfile.full_name || post.author_full_name, author_username: mergedProfile.username || post.author_username, author_avatar_url: mergedProfile.avatar_url || post.author_avatar_url, author_cover_image_url: mergedProfile.cover_image_url || post.author_cover_image_url }
+ : post
+ ))
+ setCommunityProfileDirty(false)
+ const meRes = await api.fetchMe().catch(()=>null)
+ if (meRes) {
+ setMe(meRes)
+ setAccountForm({ full_name: meRes.full_name || '', region: meRes.region || '' })
+ }
+ await loadCommunity()
+ alert('Profile updated and synced across your community profile.')
+ } catch (err) {
+ alert(errMsg(err))
+ } finally {
+ setCommunityProfileSaving(false)
+ }
+ }}>
  <label style={{fontSize:'.85rem',color:'#475569'}}>Display picture</label>
- <input className='input' type='file' accept='image/*' onChange={(e)=>{
+ <input className='input' type='file' accept='image/*' onChange={async (e)=>{
  const f = e.target.files?.[0]
  if (!f) return
- const reader = new FileReader()
- reader.onload = () => { setCommunityProfileDirty(true); setCommunityProfile(prev => ({ ...prev, avatar_url: String(reader.result || '') })) }
- reader.readAsDataURL(f)
+ try {
+ const data = await compressImageFileToDataUrl(f, { maxDim: 960, quality: 0.72, maxChars: 450000 })
+ setCommunityProfileDirty(true)
+ setCommunityProfile(prev => ({ ...prev, avatar_url: data }))
+ } catch (err) {
+ alert(`Could not prepare display picture: ${err?.message || err}`)
+ }
  }} />
 
  <label style={{fontSize:'.85rem',color:'#475569'}}>Cover image</label>
- <input className='input' type='file' accept='image/*' onChange={(e)=>{
+ <input className='input' type='file' accept='image/*' onChange={async (e)=>{
  const f = e.target.files?.[0]
  if (!f) return
- const reader = new FileReader()
- reader.onload = () => { setCommunityProfileDirty(true); setCommunityProfile(prev => ({ ...prev, cover_image_url: String(reader.result || '') })) }
- reader.readAsDataURL(f)
+ try {
+ const data = await compressImageFileToDataUrl(f, { maxDim: 1400, quality: 0.76, maxChars: 700000 })
+ setCommunityProfileDirty(true)
+ setCommunityProfile(prev => ({ ...prev, cover_image_url: data }))
+ } catch (err) {
+ alert(`Could not prepare cover image: ${err?.message || err}`)
+ }
  }} />
  <input className='input' placeholder='Main name / display name' value={communityProfile.full_name || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, full_name:e.target.value}) }} />
  <input className='input' placeholder='Username (e.g. akhen_farmer)' value={communityProfile.username || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, username:e.target.value.toLowerCase().replace(/\s+/g,'')}) }} />
@@ -4565,7 +4755,7 @@ function AppInner() {
  <option value='PUBLIC'>Public</option>
  <option value='FOLLOWERS'>Followers only</option>
  </select>
- <button className='btn btn-dark'>Save Profile</button>
+ <button className='btn btn-dark' disabled={communityProfileSaving}>{communityProfileSaving ? 'Saving Profile…' : 'Save Profile'}</button>
  </form>
  </article>
 
