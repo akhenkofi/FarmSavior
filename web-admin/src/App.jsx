@@ -2897,16 +2897,7 @@ function AppInner() {
  </article>
  </div>
 
- <article className='panel' style={{marginTop:10}}>
- <div className='list-row'>
- <h3 style={{margin:0}}>{t('🌍 Global World Chat','🌍 Chat mondial','🌍 全球世界聊天')}</h3>
- <button type='button' className='btn btn-dark' onClick={() => handleProtectedAction('world-chat', 'Global World Chat')}>{t('Open World Chat','Ouvrir le chat mondial','打开全球聊天')}</button>
- </div>
- <div className='list' style={{maxHeight:180, overflow:'auto'}}>
- {worldChat.slice(-6).map((m)=><div className='list-row' key={`home-wc-${m.id}`}><span><strong>{m.user_name || `User ${m.user_id}`}:</strong> {m.text}</span></div>)}
- {!worldChat.length && <div className='list-row'><span>No messages yet.</span></div>}
- </div>
- </article>
+
 
  <article className='panel' style={{marginTop:10}}>
  <div className='list-row'>
