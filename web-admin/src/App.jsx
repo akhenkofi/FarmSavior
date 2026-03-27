@@ -1874,7 +1874,7 @@ function AppInner() {
  persistRecents(recentSearches, next)
  }
 
- const baseMenu = ['home', 'dashboard', 'ai-disease', 'poultry-university', 'sheep-university', 'goat-university', 'cattle-university', 'livestock-records', 'onboarding', 'products', 'livestock', 'services', 'payments', 'alerts', 'maps', 'messaging', 'world-chat', 'community', 'government', 'contracts']
+ const baseMenu = ['home', 'dashboard', 'ai-disease', 'poultry-university', 'sheep-university', 'goat-university', 'cattle-university', 'livestock-records', 'onboarding', 'products', 'livestock', 'services', 'payments', 'alerts', 'maps', 'world-chat', 'community', 'government', 'contracts']
  const menu = ((me?.role || '').toLowerCase() === 'admin') ? [...baseMenu, 'admin'] : baseMenu
  const menuLabel = (m) => ({
  'home':t('home','home','首页'),
@@ -2647,6 +2647,17 @@ function AppInner() {
  </div>
  </div>
  ))}
+ </div>
+ </article>
+
+ <article className='panel' style={{marginTop:10}}>
+ <div className='list-row'>
+ <h3 style={{margin:0}}>{t('🌍 Global World Chat','🌍 Chat mondial','🌍 全球世界聊天')}</h3>
+ <button type='button' className='btn btn-dark' onClick={() => handleProtectedAction('world-chat', 'Global World Chat')}>{t('Open World Chat','Ouvrir le chat mondial','打开全球聊天')}</button>
+ </div>
+ <div className='list' style={{maxHeight:180, overflow:'auto'}}>
+ {worldChat.slice(-6).map((m)=><div className='list-row' key={`home-wc-${m.id}`}><span><strong>{m.user_name || `User ${m.user_id}`}:</strong> {m.text}</span></div>)}
+ {!worldChat.length && <div className='list-row'><span>No messages yet.</span></div>}
  </div>
  </article>
 
@@ -4485,13 +4496,7 @@ function AppInner() {
  </form>
  </section>}
 
- {active === 'messaging' && <section><h3>{t('Messaging (Firebase Cloud Messaging)','Messagerie (Firebase Cloud Messaging)','消息（Firebase 云消息）')}</h3>
- <form className='inlineForm' onSubmit={async e => { e.preventDefault(); await api.registerDeviceToken({ user_id: 1, platform: 'web', token: fcmToken }); setFcmToken(''); await load(); }}>
- <input className='input' placeholder='FCM device token' value={fcmToken} onChange={(e)=>setFcmToken(e.target.value)} required />
- <button className='btn btn-dark'>Register Device Token</button>
- </form>
- <DataTable columns={['id','user_id','platform','token','created_at']} rows={state.deviceTokens} filterKey='platform' />
- </section>}
+
 
  {active === 'world-chat' && <section>
  <h3>{t('🌍 Global Farmers World Chat (AI Moderated)','🌍 Chat mondial des agriculteurs (modéré par IA)','🌍 全球农民世界聊天（AI 审核）')}</h3>
