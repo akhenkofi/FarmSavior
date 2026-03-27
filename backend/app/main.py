@@ -66,18 +66,41 @@ def ensure_runtime_columns():
                 for col, ddl in extra.items():
                     if col not in ocols:
                         conn.execute(text(f'ALTER TABLE marketplace_orders ADD COLUMN {col} {ddl}'))
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS seller_payout_profiles (
+                    id INTEGER PRIMARY KEY,
+                    user_id INTEGER,
+                    country VARCHAR(10) DEFAULT 'GH',
+                    payout_method VARCHAR(40) DEFAULT 'MOBILE_MONEY',
+                    account_name VARCHAR(160),
+                    bank_name VARCHAR(120),
+                    account_number VARCHAR(120),
+                    mobile_money_provider VARCHAR(80),
+                    mobile_money_number VARCHAR(80),
+                    currency VARCHAR(10) DEFAULT 'GHS',
+                    is_verified BOOLEAN DEFAULT 0,
+                    verification_status VARCHAR(40) DEFAULT 'PENDING',
+                    transfer_recipient_code VARCHAR(120),
+                    recipient_last_status VARCHAR(120),
+                    default_payout_method BOOLEAN DEFAULT 1,
+                    created_at DATETIME,
+                    updated_at DATETIME
+                )
+            """))
             if 'seller_payout_profiles' in tables:
                 pcols = {c['name'] for c in inspector.get_columns('seller_payout_profiles')}
-                required = {
-                    'user_id': 'INTEGER', 'country': "VARCHAR(10) DEFAULT 'GH'", 'payout_method': "VARCHAR(40) DEFAULT 'MOBILE_MONEY'",
-                    'account_name': 'VARCHAR(160)', 'bank_name': 'VARCHAR(120)', 'account_number': 'VARCHAR(120)',
-                    'mobile_money_provider': 'VARCHAR(80)', 'mobile_money_number': 'VARCHAR(80)', 'currency': "VARCHAR(10) DEFAULT 'GHS'",
-                    'is_verified': 'BOOLEAN DEFAULT 0', 'verification_status': "VARCHAR(40) DEFAULT 'PENDING'", 'transfer_recipient_code': 'VARCHAR(120)', 'recipient_last_status': 'VARCHAR(120)', 'default_payout_method': 'BOOLEAN DEFAULT 1',
-                    'updated_at': 'DATETIME'
-                }
-                for col, ddl in required.items():
-                    if col not in pcols:
-                        conn.execute(text(f'ALTER TABLE seller_payout_profiles ADD COLUMN {col} {ddl}'))
+            else:
+                pcols = {c['name'] for c in inspect(engine).get_columns('seller_payout_profiles')}
+            required = {
+                'user_id': 'INTEGER', 'country': "VARCHAR(10) DEFAULT 'GH'", 'payout_method': "VARCHAR(40) DEFAULT 'MOBILE_MONEY'",
+                'account_name': 'VARCHAR(160)', 'bank_name': 'VARCHAR(120)', 'account_number': 'VARCHAR(120)',
+                'mobile_money_provider': 'VARCHAR(80)', 'mobile_money_number': 'VARCHAR(80)', 'currency': "VARCHAR(10) DEFAULT 'GHS'",
+                'is_verified': 'BOOLEAN DEFAULT 0', 'verification_status': "VARCHAR(40) DEFAULT 'PENDING'", 'transfer_recipient_code': 'VARCHAR(120)', 'recipient_last_status': 'VARCHAR(120)', 'default_payout_method': 'BOOLEAN DEFAULT 1',
+                'updated_at': 'DATETIME'
+            }
+            for col, ddl in required.items():
+                if col not in pcols:
+                    conn.execute(text(f'ALTER TABLE seller_payout_profiles ADD COLUMN {col} {ddl}'))
             if 'marketplace_orders' in tables:
                 ocols = {c['name'] for c in inspector.get_columns('marketplace_orders')}
                 required = {

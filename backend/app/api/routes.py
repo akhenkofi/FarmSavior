@@ -15,7 +15,7 @@ import ssl
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, Body, Header, Request
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, text, inspect
 
 from app.db.session import get_db
 from app.models.models import (
@@ -3735,14 +3735,70 @@ def _order_fee_breakdown(unit_price: float, quantity: float):
 
 
 
+def _ensure_seller_payout_profile_schema(db: Session):
+    inspector = inspect(db.bind)
+    tables = set(inspector.get_table_names())
+
+    create_stmt = """
+    CREATE TABLE IF NOT EXISTS seller_payout_profiles (
+        id INTEGER PRIMARY KEY,
+        user_id INTEGER UNIQUE,
+        country VARCHAR(10) DEFAULT 'GH',
+        payout_method VARCHAR(40) DEFAULT 'MOBILE_MONEY',
+        account_name VARCHAR(160),
+        bank_name VARCHAR(120),
+        account_number VARCHAR(120),
+        mobile_money_provider VARCHAR(80),
+        mobile_money_number VARCHAR(80),
+        currency VARCHAR(10) DEFAULT 'GHS',
+        is_verified BOOLEAN DEFAULT FALSE,
+        verification_status VARCHAR(40) DEFAULT 'PENDING',
+        transfer_recipient_code VARCHAR(120),
+        recipient_last_status VARCHAR(120),
+        default_payout_method BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """
+    db.execute(text(create_stmt))
+
+    if 'seller_payout_profiles' not in tables:
+        db.commit()
+        return
+
+    cols = {c['name'] for c in inspector.get_columns('seller_payout_profiles')}
+    required = {
+        'country': "VARCHAR(10) DEFAULT 'GH'",
+        'payout_method': "VARCHAR(40) DEFAULT 'MOBILE_MONEY'",
+        'account_name': 'VARCHAR(160)',
+        'bank_name': 'VARCHAR(120)',
+        'account_number': 'VARCHAR(120)',
+        'mobile_money_provider': 'VARCHAR(80)',
+        'mobile_money_number': 'VARCHAR(80)',
+        'currency': "VARCHAR(10) DEFAULT 'GHS'",
+        'is_verified': 'BOOLEAN DEFAULT FALSE',
+        'verification_status': "VARCHAR(40) DEFAULT 'PENDING'",
+        'transfer_recipient_code': 'VARCHAR(120)',
+        'recipient_last_status': 'VARCHAR(120)',
+        'default_payout_method': 'BOOLEAN DEFAULT TRUE',
+        'created_at': 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP',
+        'updated_at': 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP',
+    }
+    for col, ddl in required.items():
+        if col not in cols:
+            db.execute(text(f'ALTER TABLE seller_payout_profiles ADD COLUMN {col} {ddl}'))
+    db.commit()
+
 
 @router.get('/payouts/profiles')
 def list_seller_payout_profiles(db: Session = Depends(get_db)):
+    _ensure_seller_payout_profile_schema(db)
     return db.query(SellerPayoutProfile).order_by(SellerPayoutProfile.id.desc()).all()
 
 
 @router.post('/payouts/profiles')
 def upsert_seller_payout_profile(payload: SellerPayoutProfileIn, db: Session = Depends(get_db)):
+    _ensure_seller_payout_profile_schema(db)
     _assert_no_contact_info(payload.account_name, payload.bank_name)
     rec = db.query(SellerPayoutProfile).filter(SellerPayoutProfile.user_id == payload.user_id).first()
     if not rec:
@@ -3758,6 +3814,7 @@ def upsert_seller_payout_profile(payload: SellerPayoutProfileIn, db: Session = D
 
 @router.put('/payouts/profiles/{user_id}/verify')
 def verify_seller_payout_profile(user_id: int, payload: SellerPayoutVerificationIn, db: Session = Depends(get_db)):
+    _ensure_seller_payout_profile_schema(db)
     rec = db.query(SellerPayoutProfile).filter(SellerPayoutProfile.user_id == user_id).first()
     if not rec:
         raise HTTPException(status_code=404, detail='Payout profile not found')
