@@ -740,7 +740,7 @@ Object.values(poultryTracks).forEach(track => {
  ...(m.details || []),
  `Set a weekly operating standard for ${track.title.toLowerCase()} before increasing flock size.`,
  'Track one production indicator, one health signal, one feed indicator, and one market indicator every week.',
- idx === 0 ? 'Turn the setup module into a written SOP that a supervisor can follow without verbal explanation.' : 'Add a corrective-action rule so the manager knows exactly what to do when the KPI slips.'
+ idx === 0 ? 'Convert the startup plan into a clear written operating procedure for managers and supervisors.' : 'Define one corrective action for each major KPI so underperformance is handled quickly and consistently.'
  ]
  }))
 })
@@ -750,9 +750,9 @@ Object.values(sheepTracks).forEach(track => {
  ...m,
  details: [
  ...(m.details || []),
- ` write the breeding objective for ${track.title.toLowerCase()} in one sentence and test every retention decision against it.`,
- ' keep a simple ranking sheet for fertility, survival, structure, growth, and mothering so replacement decisions are evidence-based.',
- idx === 3 ? ' include a red-flag protocol for parasite pressure, lamb weakness, and post-lambing maternal failure.' : ' document one avoidable loss source and one management fix after every cycle review.'
+ `State the breeding objective for ${track.title.toLowerCase()} clearly and use it to guide every retention decision.`,
+ 'Maintain a simple ranking sheet for fertility, survival, structure, growth, and mothering so replacement decisions are evidence-based.',
+ idx === 3 ? 'Include a red-flag response plan for parasite pressure, lamb weakness, and post-lambing maternal failure.' : 'Document one avoidable loss source and one management improvement after every cycle review.'
  ]
  }))
 })
@@ -762,9 +762,9 @@ Object.values(goatTracks).forEach(track => {
  ...m,
  details: [
  ...(m.details || []),
- `Turn ${m.name.toLowerCase()} into a practical checklist that can guide every major flock decision.`,
+ `Convert ${m.name.toLowerCase()} into a clear operating checklist for supervisors and farm managers.`,
  'Compare humid-zone and dry-zone risks before changing feed, breeding, or housing strategy.',
- idx === 4 ? 'Summarize margin per doe exposed, per kid weaned, and per batch sold before scaling.' : 'Define the signs that would show this module is improving farm performance within 30 days.'
+ idx === 4 ? 'Review margin per doe exposed, per kid weaned, and per batch sold before scaling.' : 'Define the early signs that this module is improving farm performance within 30 days.'
  ]
  }))
 })
@@ -776,7 +776,7 @@ Object.values(cattleTracks).forEach(track => {
  ...(m.details || []),
  `Assign one financial KPI and one biological KPI to ${m.name.toLowerCase()} so performance is reviewed as a business system.`,
  'Record the seasonal constraint most likely to break performance—water, feed, heat, ticks, or labor—and define the contingency action now.',
- idx === 2 ? 'Require a calving-risk response plan, including labor readiness, calf support, and postpartum recovery review.' : 'Review whether management improvements, not genetics alone, are responsible for current results.'
+ idx === 2 ? 'Require a calving-risk response plan covering labor readiness, calf support, and postpartum recovery.' : 'Review whether current gains come from better management, not genetics alone.'
  ]
  }))
 })
@@ -3380,12 +3380,12 @@ function AppInner() {
  </div>
  {poultryPlanPreview !== 'free' && <div style={{marginTop:8}}><button className='btn btn-dark' onClick={()=>startUniversityCheckout('poultry', poultryPlanPreview, `Poultry University ${poultryPlanPreview === 'pro' ? 'Professional' : 'Basic'} checkout`)}>{poultryPlanPreview === 'pro' ? 'Upgrade to Professional' : 'Upgrade to Basic'}</button></div>}
  </div>
- {poultryTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#fff7ed',border:'1px solid #fed7aa'}}><strong>Free tier active.</strong> Module 1 is open now. Paid plans unlock only after server-side payment verification.</div>}
+ {poultryTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#fff7ed',border:'1px solid #fed7aa'}}><strong>Starter access active.</strong> This preview shows the opening module while advanced material unlocks under the relevant paid plan.</div>}
  {poultrySubscription?.subscription?.status === 'PENDING_PAYMENT' && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}><strong>Payment pending.</strong> Reference: {poultrySubscription.subscription.reference}. <button className='btn btn-dark' style={{marginLeft:8}} onClick={async()=>{ const v = await api.verifyPoultryUniversitySubscription(poultrySubscription.subscription.reference); const tier = v.tier || 'free'; setPoultryTier(tier); const meSub = await api.fetchPoultryUniversitySubscriptionMe().catch(()=>({ tier, subscription: poultrySubscription.subscription })); setPoultrySubscription(prev => ({ ...prev, tier: meSub.tier || tier, subscription: meSub.subscription || prev.subscription })); setPoultryBillingMsg(v.message || 'Verification checked.'); }}>Verify Payment</button></div>}
  {poultrySubscription?.subscription?.status === 'ACTIVE' && <div className='panel' style={{marginTop:8,padding:8,background:'#ecfeff',border:'1px solid #99f6e4'}}><strong>{String(poultrySubscription.subscription.plan_code || '').toUpperCase()} active.</strong> Server-side subscription verified.</div>}
  {poultryBillingMsg && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}>{poultryBillingMsg}</div>}
  </article>
- {poultryTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#f5f3ff',border:'1px solid #ddd6fe'}}><strong>Free tier active.</strong> Module 1 is open now; Modules 2–5 stay locked until Basic/Pro.</div>}
+ {poultryTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#f5f3ff',border:'1px solid #ddd6fe'}}><strong>Starter access active.</strong> The opening module is available now; the full operating program unlocks with the higher plan.</div>}
 
  <div className='panel'>
  <div className='inlineForm'>
@@ -3405,11 +3405,11 @@ function AppInner() {
 
  <div className='two-col'>
  <article className='panel'>
- <h4>Breed Intelligence (Free)</h4>
+ <h4>Breed Intelligence</h4>
  <div className='list'>
  {poultryTracks[poultryTrack].breeds.map((b)=><div className='list-row' key={b}><span>{b}</span></div>)}
  </div>
- <h4 style={{marginTop:10}}>Target KPIs (Free)</h4>
+ <h4 style={{marginTop:10}}>Target KPIs</h4>
  <div className='list'>
  {poultryTracks[poultryTrack].kpis.map((k)=><div className='list-row' key={k}><strong>{k}</strong></div>)}
  </div>
@@ -3422,7 +3422,7 @@ function AppInner() {
  const locked = poultryTier === 'free' && i > 0
  return <div key={m.name} className='panel' style={{padding:8,border:locked?'1px solid #e2e8f0':'1px solid #dbe6df',opacity:locked?0.6:1,background:locked?'#f8fafc':'#fff'}}>
  <div className='list-row'>
- <span><strong>{m.name}{i===0?' (Free)':''}</strong><br/><span style={{fontSize:'.85rem',color:'#475569'}}>{m.summary}</span></span>
+ <span><strong>{m.name}</strong><br/><span style={{fontSize:'.85rem',color:'#475569'}}>{m.summary}</span></span>
  {locked ? <button className='btn' onClick={()=>{setPoultryBillingMsg('Modules 2–5 stay locked until real payment verification is live. Your account is still on Free.'); api.trackAnalyticsEvent({ event_name:'poultry_unlock_click_blocked', country: uiCountry, role_hint: me?.role || 'user', properties:{from:'free', target:'basic'} }).catch(()=>{})}}>🔒 Locked — not live yet</button> : <button className='btn' onClick={()=>setOpenPoultryModule(openPoultryModule===i ? -1 : i)}>{openPoultryModule===i ? 'Hide' : 'Open'}</button>}
  </div>
  {!locked && openPoultryModule===i && <div className='list' style={{marginTop:6}}>
@@ -3564,7 +3564,7 @@ function AppInner() {
  {universitySubscriptions.sheep?.subscription?.status === 'PENDING_PAYMENT' && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}><strong>Payment pending.</strong> Reference: {universitySubscriptions.sheep.subscription.reference}. <button className='btn btn-dark' style={{marginLeft:8}} onClick={()=>verifyUniversityCheckout('sheep')}>Verify Payment</button></div>}
  {universitySubscriptions.sheep?.subscription?.status === 'ACTIVE' && <div className='panel' style={{marginTop:8,padding:8,background:'#ecfeff',border:'1px solid #99f6e4'}}><strong>{String(universitySubscriptions.sheep.subscription.plan_code || '').toUpperCase()} active.</strong> Server-side subscription verified.</div>}
  {!!universityBillingMsg.sheep && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}>{universityBillingMsg.sheep}</div>}
- {sheepTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#f5f3ff',border:'1px solid #ddd6fe'}}><strong>Free tier active.</strong> Module 1 is open now; Modules 2–5 stay locked until Basic/Pro.</div>}
+ {sheepTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#f5f3ff',border:'1px solid #ddd6fe'}}><strong>Starter access active.</strong> The opening module is available now; the full operating program unlocks with the higher plan.</div>}
 
  <div className='panel'>
  <div className='inlineForm'>
@@ -3601,7 +3601,7 @@ function AppInner() {
  const locked = sheepTier === 'free' && i > 0
  return <div key={m.name} className='panel' style={{padding:8,border:locked?'1px solid #e2e8f0':'1px solid #dbe6df',opacity:locked?0.6:1,background:locked?'#f8fafc':'#fff'}}>
  <div className='list-row'>
- <span><strong>{m.name}{i===0?' (Free)':''}</strong><br/><span style={{fontSize:'.85rem',color:'#475569'}}>{m.summary}</span></span>
+ <span><strong>{m.name}</strong><br/><span style={{fontSize:'.85rem',color:'#475569'}}>{m.summary}</span></span>
  {locked ? <button className='btn' onClick={()=>startUniversityCheckout('sheep', 'basic', 'Sheep University Basic checkout')}>🔒 Unlock — ₵50/mo</button> : <button className='btn' onClick={()=>setOpenSheepModule(openSheepModule===i ? -1 : i)}>{openSheepModule===i ? 'Hide' : 'Open'}</button>}
  </div>
  {!locked && openSheepModule===i && <div className='list' style={{marginTop:6}}>{m.details.map((d)=><div className='list-row' key={d}><span>{d}</span></div>)}</div>}
@@ -3688,7 +3688,7 @@ function AppInner() {
  {universitySubscriptions.goat?.subscription?.status === 'PENDING_PAYMENT' && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}><strong>Payment pending.</strong> Reference: {universitySubscriptions.goat.subscription.reference}. <button className='btn btn-dark' style={{marginLeft:8}} onClick={()=>verifyUniversityCheckout('goat')}>Verify Payment</button></div>}
  {universitySubscriptions.goat?.subscription?.status === 'ACTIVE' && <div className='panel' style={{marginTop:8,padding:8,background:'#ecfeff',border:'1px solid #99f6e4'}}><strong>{String(universitySubscriptions.goat.subscription.plan_code || '').toUpperCase()} active.</strong> Server-side subscription verified.</div>}
  {!!universityBillingMsg.goat && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}>{universityBillingMsg.goat}</div>}
- {goatTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#f0fdfa',border:'1px solid #99f6e4'}}><strong>Free tier active.</strong> Module 1 is open now; Modules 2–5 are locked.</div>}
+ {goatTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#f0fdfa',border:'1px solid #99f6e4'}}><strong>Starter access active.</strong> The opening module is available now; the full operating program unlocks with the higher plan.</div>}
 
  <div className='panel'>
  <div className='inlineForm'>
@@ -3725,7 +3725,7 @@ function AppInner() {
  const locked = goatTier === 'free' && i > 0
  return <div key={m.name} className='panel' style={{padding:8,border:locked?'1px solid #e2e8f0':'1px solid #dbe6df',opacity:locked?0.6:1,background:locked?'#f8fafc':'#fff'}}>
  <div className='list-row'>
- <span><strong>{m.name}{i===0?' (Free)':''}</strong><br/><span style={{fontSize:'.85rem',color:'#475569'}}>{m.summary}</span></span>
+ <span><strong>{m.name}</strong><br/><span style={{fontSize:'.85rem',color:'#475569'}}>{m.summary}</span></span>
  {locked ? <button className='btn' onClick={()=>startUniversityCheckout('goat', 'basic', 'Goat University Basic checkout')}>🔒 Unlock — ₵50/mo</button> : <button className='btn' onClick={()=>setOpenGoatModule(openGoatModule===i ? -1 : i)}>{openGoatModule===i ? 'Hide' : 'Open'}</button>}
  </div>
  {!locked && openGoatModule===i && <div className='list' style={{marginTop:6}}>{m.details.map((d)=><div className='list-row' key={d}><span>{d}</span></div>)}</div>}
@@ -3850,7 +3850,7 @@ function AppInner() {
  const locked = cattleTier === 'free' && i > 0
  return <div key={m.name} className='panel' style={{padding:8,border:locked?'1px solid #e2e8f0':'1px solid #dbe6df',opacity:locked?0.6:1,background:locked?'#f8fafc':'#fff'}}>
  <div className='list-row'>
- <span><strong>{m.name}{i===0?' (Free)':''}</strong><br/><span style={{fontSize:'.85rem',color:'#475569'}}>{m.summary}</span></span>
+ <span><strong>{m.name}</strong><br/><span style={{fontSize:'.85rem',color:'#475569'}}>{m.summary}</span></span>
  {locked ? <button className='btn' onClick={()=>startUniversityCheckout('cattle', 'basic', 'Cattle University Basic checkout')}>🔒 Unlock — ₵50/mo</button> : <button className='btn' onClick={()=>setOpenCattleModule(openCattleModule===i ? -1 : i)}>{openCattleModule===i ? 'Hide' : 'Open'}</button>}
  </div>
  {!locked && openCattleModule===i && <div className='list' style={{marginTop:6}}>{m.details.map((d)=><div className='list-row' key={d}><span>{d}</span></div>)}</div>}
