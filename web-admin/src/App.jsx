@@ -35,6 +35,8 @@ class AppErrorBoundary extends React.Component {
 }
 
 const errMsg = (e) => e?.response?.data?.detail || e?.message || 'Request failed'
+const verificationStatusLabel = (status) => ({ APPROVED: 'Verified', PENDING: 'Pending verification', DENIED: 'Verification denied', NOT_SUBMITTED: 'Not submitted' }[String(status || '').toUpperCase()] || String(status || 'Not submitted'))
+const verificationBadge = (me) => me?.identity_blue_check ? ' 🔵' : ''
 const normalizePhone = (v='') => {
  const raw = String(v || '').trim()
  if (!raw) return ''
@@ -2944,7 +2946,7 @@ function AppInner() {
  {isUserImage(communityProfile.avatar_url)
  ? <img src={communityProfile.avatar_url} alt='Community avatar' style={{position:'absolute',left:10,bottom:-22,width:56,height:56,objectFit:'cover',borderRadius:'50%',border:'3px solid #fff',boxShadow:'0 6px 12px rgba(0,0,0,.2)'}} />
  : <div style={{position:'absolute',left:10,bottom:-22,width:56,height:56,borderRadius:'50%',border:'3px solid #fff',background:'#e2e8f0',display:'grid',placeItems:'center',color:'#64748b',fontSize:11}}>No DP</div>}
- <div style={{position:'absolute',left:74,bottom:8,color:'#fff',fontWeight:700,textShadow:'0 1px 2px rgba(0,0,0,.6)'}}>{(communityProfile.full_name || me?.full_name || 'Your Community Profile') + (communityProfile.username ? ` • @${communityProfile.username}` : '')}</div>
+ <div style={{position:'absolute',left:74,bottom:8,color:'#fff',fontWeight:700,textShadow:'0 1px 2px rgba(0,0,0,.6)'}}>{(communityProfile.full_name || me?.full_name || 'Your Community Profile') + verificationBadge(me) + (communityProfile.username ? ` • @${communityProfile.username}` : '')}</div>
  </div>
 
  <div className='list' style={{maxHeight:220, overflow:'auto', marginTop:26}}>
@@ -3060,7 +3062,7 @@ function AppInner() {
  <DataTable columns={['id', 'full_name', 'phone', 'country', 'region', 'role']} rows={state.users} filterKey='full_name' />
  </section>}
 
- {active === 'onboarding' && <section>
+ {active === 'onboarding' && <section className='onboarding-shell'>
  <div className='two-col' style={{marginBottom:12}}>
  <article className='panel'>
  <h3>{t('My Account','Mon compte','我的账户')}</h3>
@@ -3113,70 +3115,59 @@ function AppInner() {
  <article className='panel'>
  <h3>{t('My Verification Status','Mon statut de vérification','我的认证状态')}</h3>
  <div className='list'>
- <div className='list-row'><span>Current status</span><strong>{myIdVerification?.review?.status || 'NOT_SUBMITTED'}</strong></div>
+ <div className='list-row'><span>Current status</span><strong>{verificationStatusLabel(me?.identity_verification_status || myIdVerification?.review?.status || 'NOT_SUBMITTED')}{verificationBadge(me)}</strong></div>
  <div className='list-row'><span>ID type</span><strong>{myIdVerification?.application?.id_type || '-'}</strong></div>
- <div className='list-row'><span>Reviewed at</span><strong>{String(myIdVerification?.review?.reviewed_at || '-').slice(0, 16)}</strong></div>
+ <div className='list-row'><span>Submitted at</span><strong>{String(myIdVerification?.application?.created_at || myIdVerification?.application?.submitted_at || '-').slice(0, 16)}</strong></div>
+ {myIdVerification?.review?.reviewed_at ? <div className='list-row'><span>Reviewed at</span><strong>{String(myIdVerification.review.reviewed_at).slice(0, 16)}</strong></div> : null}
  </div>
  <form className='list' onSubmit={async e => {
  e.preventDefault()
- if (!myIdForm.id_front_photo_url || !myIdForm.id_back_photo_url) { alert('Please upload front and back ID photos from your phone/camera.'); return }
+ if (!myIdForm.id_front_photo_url || !myIdForm.id_back_photo_url) { alert('Please upload front and back ID photos from your device or camera.'); return }
  try {
- await api.submitMyIdVerification(myIdForm)
- alert('Verification update submitted. Status set to PENDING re-review.')
+ await api.submitMyIdVerification({ ...myIdForm, facial_verification_flag: false })
+ alert('Verification update submitted. Status set to Pending verification for re-review.')
  await load()
  } catch (e) { alert(errMsg(e)) }
  }}>
  <select className='input' value={myIdForm.id_type} onChange={e => setMyIdForm({ ...myIdForm, id_type: e.target.value })}><option>GhanaCard</option><option>NIN</option><option>BF National ID</option></select>
  <input className='input' placeholder='ID Number' value={myIdForm.id_number} onChange={e => setMyIdForm({ ...myIdForm, id_number: e.target.value })} />
- <label style={{fontSize:'.84rem'}}>Upload ID Front (camera/gallery)
- <input className='input' type='file' accept='image/*' capture='environment' onChange={(e) => {
+ <label className='upload-field'><span className='helper-text'>Upload ID Front</span>
+ <input className='input' type='file' accept='image/*' onChange={(e) => {
  const f = e.target.files?.[0]; if (!f) return
  const r = new FileReader(); r.onload = () => setMyIdForm(prev => ({ ...prev, id_front_photo_url: String(r.result || ''), id_photo_url: String(r.result || '') })); r.readAsDataURL(f)
  }} />
  </label>
- <label style={{fontSize:'.84rem'}}>Upload ID Back (camera/gallery)
- <input className='input' type='file' accept='image/*' capture='environment' onChange={(e) => {
+ <label className='upload-field'><span className='helper-text'>Upload ID Back</span>
+ <input className='input' type='file' accept='image/*' onChange={(e) => {
  const f = e.target.files?.[0]; if (!f) return
  const r = new FileReader(); r.onload = () => setMyIdForm(prev => ({ ...prev, id_back_photo_url: String(r.result || '') })); r.readAsDataURL(f)
  }} />
  </label>
- <label><input type='checkbox' checked={myIdForm.facial_verification_flag} onChange={e => setMyIdForm({ ...myIdForm, facial_verification_flag: e.target.checked })} /> Facial verification done</label>
  <button className='btn btn-dark'>Submit Verification Update</button>
  </form>
  <div style={{fontSize:'.78rem',color:'#64748b',marginTop:6}}>If you update ID details after approval, your verification goes through re-review for safety.</div>
  </article>
  </div>
 
- <div className='two-col'>
- <article className='panel'><h3>{t('ID Verification','Vérification d’identité','身份认证')}</h3><form className='list' onSubmit={async e => { e.preventDefault(); if (!idForm.id_front_photo_url || !idForm.id_back_photo_url) { alert('Please upload front and back ID photos from your phone/camera.'); return } await api.createIdVerification({ ...idForm, user_id: Number(idForm.user_id) }); await load() }}>
+ <div className='two-col onboarding-grid'>
+ {((me?.role || '').toLowerCase() === 'admin') && <article className='panel onboarding-panel'><div className='onboarding-panel-head'><h3>{t('ID Verification','Vérification d’identité','身份认证')}</h3><p className='helper-text'>Admin-only manual verification form.</p></div><form className='list onboarding-form' onSubmit={async e => { e.preventDefault(); if (!idForm.id_front_photo_url || !idForm.id_back_photo_url) { alert('Please upload front and back ID photos from your device or camera.'); return } await api.createIdVerification({ ...idForm, user_id: Number(idForm.user_id), facial_verification_flag: false }); await load() }}>
  <input className='input' type='number' placeholder='User ID' value={idForm.user_id} onChange={e => setIdForm({ ...idForm, user_id: e.target.value })} />
  <select className='input' value={idForm.id_type} onChange={e => setIdForm({ ...idForm, id_type: e.target.value })}><option>GhanaCard</option><option>NIN</option><option>BF National ID</option></select>
  <input className='input' placeholder='ID Number' value={idForm.id_number} onChange={e => setIdForm({ ...idForm, id_number: e.target.value })} />
- <label style={{fontSize:'.84rem'}}>Upload ID Front (camera/gallery)
- <input className='input' type='file' accept='image/*' capture='environment' onChange={(e) => {
+ <label className='upload-field'><span className='helper-text'>Upload ID Front</span>
+ <input className='input' type='file' accept='image/*' onChange={(e) => {
  const f = e.target.files?.[0]; if (!f) return
  const r = new FileReader(); r.onload = () => setIdForm(prev => ({ ...prev, id_front_photo_url: String(r.result || ''), id_photo_url: String(r.result || '') })); r.readAsDataURL(f)
  }} />
  </label>
- <label style={{fontSize:'.84rem'}}>Upload ID Back (camera/gallery)
- <input className='input' type='file' accept='image/*' capture='environment' onChange={(e) => {
+ <label className='upload-field'><span className='helper-text'>Upload ID Back</span>
+ <input className='input' type='file' accept='image/*' onChange={(e) => {
  const f = e.target.files?.[0]; if (!f) return
  const r = new FileReader(); r.onload = () => setIdForm(prev => ({ ...prev, id_back_photo_url: String(r.result || '') })); r.readAsDataURL(f)
  }} />
  </label>
- <label><input type='checkbox' checked={idForm.facial_verification_flag} onChange={e => setIdForm({ ...idForm, facial_verification_flag: e.target.checked })} /> Facial verification done</label>
  <button className='btn btn-dark'>Save ID Verification</button>
- </form></article>
- <article className='panel'><h3>{t('Digital Farm Passport','Passeport agricole numérique','数字农场护照')}</h3><form className='list' onSubmit={async e => { e.preventDefault(); await api.createPassport({ ...passportForm, user_id: Number(passportForm.user_id), gps_lat: Number(passportForm.gps_lat), gps_lng: Number(passportForm.gps_lng), farm_size_hectares: Number(passportForm.farm_size_hectares) }); await load() }}>
- <input className='input' type='number' placeholder='User ID' value={passportForm.user_id} onChange={e => setPassportForm({ ...passportForm, user_id: e.target.value })} />
- <div className='row2'><input className='input' placeholder='GPS Lat' value={passportForm.gps_lat} onChange={e => setPassportForm({ ...passportForm, gps_lat: e.target.value })} /><input className='input' placeholder='GPS Lng' value={passportForm.gps_lng} onChange={e => setPassportForm({ ...passportForm, gps_lng: e.target.value })} /></div>
- <input className='input' placeholder='Farm size (ha)' value={passportForm.farm_size_hectares} onChange={e => setPassportForm({ ...passportForm, farm_size_hectares: e.target.value })} />
- <input className='input' placeholder='Crop types JSON array' value={passportForm.crop_types} onChange={e => setPassportForm({ ...passportForm, crop_types: e.target.value })} />
- <input className='input' placeholder='Livestock JSON object' value={passportForm.livestock_numbers} onChange={e => setPassportForm({ ...passportForm, livestock_numbers: e.target.value })} />
- <input className='input' placeholder='Farm photos URLs JSON array' value={passportForm.farm_photo_urls} onChange={e => setPassportForm({ ...passportForm, farm_photo_urls: e.target.value })} />
- <input className='input' placeholder='Harvest notes' value={passportForm.harvest_records_notes} onChange={e => setPassportForm({ ...passportForm, harvest_records_notes: e.target.value })} />
- <button className='btn btn-dark'>Save Passport</button>
- </form></article>
+ </form></article>}
  </div>
 
  {((me?.role || '').toLowerCase() === 'admin') && <article className='panel' style={{marginTop: 12}}>
@@ -3185,6 +3176,7 @@ function AppInner() {
  <button className='btn btn-dark' onClick={async () => { await api.analyzeAllVerifications(); await load(); }}>AI Analyze & Decide All</button>
  </div>
  <DataTable columns={['id_verification_id','full_name','phone','country','id_type','status','ai_score','ai_reason']} rows={state.verificationApps} filterKey='full_name' />
+ <div className='list' style={{marginTop:12}}>{state.verificationApps.slice(0, 12).map((app) => <div key={`verify-preview-${app.id_verification_id}`} className='panel' style={{padding:12}}><div style={{fontWeight:700, marginBottom:8}}>{app.full_name} — {verificationStatusLabel(app.status)}{app.status === 'APPROVED' ? ' 🔵' : ''}</div><div className='row2'>{app.id_front_photo_view_url ? <a className='btn' href={api.withAuthToken(app.id_front_photo_view_url)} target='_blank' rel='noreferrer'>View ID Front</a> : <span className='helper-text'>No front image</span>}{app.id_back_photo_view_url ? <a className='btn' href={api.withAuthToken(app.id_back_photo_view_url)} target='_blank' rel='noreferrer'>View ID Back</a> : <span className='helper-text'>No back image</span>}</div></div>)}</div>
  <div className='inlineForm'>
  <input id='verifyAppId' className='input' placeholder='Application ID' />
  <button className='btn btn-dark' onClick={async ()=>{ const id=Number(document.getElementById('verifyAppId').value); if(id){ await api.analyzeVerification(id); await load(); }}}>Analyze One</button>
@@ -4000,8 +3992,14 @@ function AppInner() {
  <input className='input' placeholder='Registration number' value={livestockRecordForm.registration_number} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, registration_number: e.target.value })} />
  </div>
  <div className='row2'>
- <input className='input' type='date' placeholder='Date of birth' value={livestockRecordForm.date_of_birth} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, date_of_birth: e.target.value })} />
- <input className='input' type='date' placeholder='Date purchased' value={livestockRecordForm.acquisition_date} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, acquisition_date: e.target.value })} />
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Date of birth</span>
+ <input className='input' type='date' value={livestockRecordForm.date_of_birth} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, date_of_birth: e.target.value })} />
+ </label>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Date purchased</span>
+ <input className='input' type='date' value={livestockRecordForm.acquisition_date} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, acquisition_date: e.target.value })} />
+ </label>
  </div>
  <div className='row2'>
  <input className='input' list='livestock-purchase-sources-create' placeholder='Purchased from' value={livestockRecordForm.purchased_from} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, purchased_from: e.target.value })} />
@@ -4116,8 +4114,14 @@ function AppInner() {
  <input className='input' placeholder='Registration number' value={livestockRecordEdit.registration_number} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, registration_number: e.target.value })} />
  </div>
  <div className='row2'>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Date of birth</span>
  <input className='input' type='date' value={livestockRecordEdit.date_of_birth ? String(livestockRecordEdit.date_of_birth).slice(0,10) : ''} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, date_of_birth: e.target.value })} />
- <input className='input' type='date' placeholder='Date purchased' value={livestockRecordEdit.acquisition_date ? String(livestockRecordEdit.acquisition_date).slice(0,10) : ''} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, acquisition_date: e.target.value })} />
+ </label>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Date purchased</span>
+ <input className='input' type='date' value={livestockRecordEdit.acquisition_date ? String(livestockRecordEdit.acquisition_date).slice(0,10) : ''} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, acquisition_date: e.target.value })} />
+ </label>
  </div>
  <div className='row2'>
  <input className='input' list='livestock-purchase-sources-edit' placeholder='Purchased from' value={livestockRecordEdit.purchased_from} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, purchased_from: e.target.value })} />
@@ -4722,7 +4726,7 @@ function AppInner() {
  : <div style={{position:'absolute',left:14,bottom:-26,width:86,height:86,borderRadius:'50%',border:'4px solid #fff',background:'#e2e8f0',display:'grid',placeItems:'center',color:'#64748b'}}>No DP</div>}
  </div>
  <div style={{paddingLeft:4, marginTop:28, marginBottom:8}}>
- <div style={{fontSize:'1rem',fontWeight:700,color:'#0f172a'}}>{communityProfile.full_name || me?.full_name || 'Your profile'}</div>
+ <div style={{fontSize:'1rem',fontWeight:700,color:'#0f172a'}}>{(communityProfile.full_name || me?.full_name || 'Your profile') + verificationBadge(me)}</div>
  <div style={{fontSize:'.82rem',color:'#0284c7',fontWeight:600}}>@{communityProfile.username || 'set_username'}</div>
  <div style={{fontSize:'.85rem',color:'#475569'}}>{communityProfile.bio || 'Add a short bio to attract followers.'}</div>
  </div>
@@ -4894,7 +4898,7 @@ function AppInner() {
  try {
  setDiseaseAnalyzing(true)
  if (!diseaseForm.target) { alert('Please select animal type first.'); return }
- if (!diseaseForm.image_url) { alert('Please upload an animal image from your phone/camera.'); return }
+ if (!diseaseForm.image_url) { alert('Please upload an animal image from your device or camera.'); return }
  const r = await api.analyzeDisease({ user_id: Number(diseaseForm.user_id), category: 'animal', crop_type: diseaseForm.target, image_url: diseaseForm.image_url, context_note: diseaseForm.context_note });
  setDiseaseResult(r)
  api.fetchDiseaseScans().then(rows => setState(prev => ({ ...prev, diseaseScans: rows }))).catch(() => {})

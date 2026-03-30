@@ -250,3 +250,10 @@ export const deleteCommunityPost = async (postId) => (await api.delete(`/communi
 export const toggleCommunityPostLike = async (postId) => (await api.post(`/community/posts/${postId}/like`)).data
 export const fetchCommunityPostComments = async (postId) => (await api.get(`/community/posts/${postId}/comments`)).data
 export const addCommunityPostComment = async (postId, payload) => (await api.post(`/community/posts/${postId}/comments`, payload)).data
+
+export const withAuthToken = (url) => {
+  if (!url) return ''
+  const token = localStorage.getItem('farmsavior_token')
+  if (!token) return url
+  return `${url}${url.includes('?') ? '&' : '?'}token=${encodeURIComponent(token)}`
+}

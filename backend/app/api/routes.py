@@ -14,6 +14,7 @@ import re
 import ssl
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, Body, Header, Request
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, text, inspect
 from sqlalchemy.exc import SQLAlchemyError
@@ -46,6 +47,124 @@ from app.core.security import create_access_token, hash_password, verify_passwor
 from app.core.data_lake import write_jsonl, write_snapshot
 
 router = APIRouter(prefix='/api/v1')
+
+
+ID_UPLOAD_ROOT = Path(__file__).resolve().parents[3] / 'data' / 'private' / 'id-verifications'
+
+
+def _guess_ext_from_data_url(data_url: str) -> str:
+    head = str(data_url or '').split(';', 1)[0].lower()
+    if 'image/png' in head:
+        return '.png'
+    if 'image/webp' in head:
+        return '.webp'
+    if 'image/gif' in head:
+        return '.gif'
+    return '.jpg'
+
+
+def _store_uploaded_image_data(data_url: Optional[str], *, user_id: int, side: str) -> Optional[str]:
+    s = str(data_url or '').strip()
+    if not s:
+        return None
+    if not s.startswith('data:image/') or ',' not in s:
+        raise HTTPException(status_code=400, detail=f'{side} image payload is invalid')
+    try:
+        import base64
+        _, encoded = s.split(',', 1)
+        raw = base64.b64decode(encoded)
+    except Exception:
+        raise HTTPException(status_code=400, detail=f'{side} image payload could not be decoded')
+    if not raw:
+        raise HTTPException(status_code=400, detail=f'{side} image payload is empty')
+    day = datetime.utcnow().strftime('%Y%m%d')
+    folder = ID_UPLOAD_ROOT / f'user-{int(user_id)}' / day
+    folder.mkdir(parents=True, exist_ok=True)
+    digest = hashlib.sha256(raw).hexdigest()[:16]
+    filename = f"{int(datetime.utcnow().timestamp())}-{side}-{digest}{_guess_ext_from_data_url(s)}"
+    target = folder / filename
+    target.write_bytes(raw)
+    return f'local:{target.relative_to(ID_UPLOAD_ROOT).as_posix()}'
+
+
+def _photo_is_stored(v: Optional[str]) -> bool:
+    s = str(v or '').strip()
+    return bool(s and (s.startswith('data:image/') or s.startswith('local:')))
+
+
+def _local_photo_path(ref: Optional[str]) -> Optional[Path]:
+    s = str(ref or '').strip()
+    if not s.startswith('local:'):
+        return None
+    rel = s.split(':', 1)[1].strip('/').replace('..', '')
+    p = (ID_UPLOAD_ROOT / rel).resolve()
+    try:
+        p.relative_to(ID_UPLOAD_ROOT.resolve())
+    except Exception:
+        return None
+    return p
+
+
+def _identity_review_for_user(db: Session, user_id: int):
+    latest = db.query(IDVerification).filter(IDVerification.user_id == user_id).order_by(IDVerification.created_at.desc(), IDVerification.id.desc()).first()
+    review = None
+    if latest:
+        review = db.query(VerificationReview).filter(VerificationReview.id_verification_id == latest.id).first()
+    status = str(getattr(review, 'status', '') or 'NOT_SUBMITTED').upper()
+    blue = status == 'APPROVED'
+    label_map = {
+        'NOT_SUBMITTED': 'Not submitted',
+        'PENDING': 'Pending verification',
+        'APPROVED': 'Verified',
+        'DENIED': 'Verification denied',
+    }
+    return {
+        'application': latest,
+        'review': review,
+        'status': status,
+        'blue_check': blue,
+        'label': label_map.get(status, status.replace('_', ' ').title()),
+    }
+
+
+def _file_token_from_request(authorization: Optional[str], token: Optional[str]) -> Optional[str]:
+    if authorization and str(authorization).lower().startswith('bearer '):
+        return authorization
+    if token:
+        return f'Bearer {token}'
+    return authorization
+
+
+def _verification_view_payload(iv: IDVerification, review: Optional[VerificationReview], token: Optional[str] = None):
+    front_url = f"/api/v1/verification/files/{iv.id}/front"
+    back_url = f"/api/v1/verification/files/{iv.id}/back"
+    legacy_url = f"/api/v1/verification/files/{iv.id}/legacy"
+    if token:
+        front_url += f'?token={token}'
+        back_url += f'?token={token}'
+        legacy_url += f'?token={token}'
+    return {
+        'application': {
+            'id': iv.id,
+            'id_type': iv.id_type,
+            'id_number': iv.id_number,
+            'id_photo_url': iv.id_photo_url,
+            'id_front_photo_url': iv.id_front_photo_url,
+            'id_back_photo_url': iv.id_back_photo_url,
+            'id_photo_view_url': legacy_url if _photo_is_stored(iv.id_photo_url) else None,
+            'id_front_photo_view_url': front_url if _photo_is_stored(iv.id_front_photo_url) else None,
+            'id_back_photo_view_url': back_url if _photo_is_stored(iv.id_back_photo_url) else None,
+            'facial_verification_flag': iv.facial_verification_flag,
+            'created_at': iv.created_at
+        },
+        'review': {
+            'status': review.status,
+            'ai_score': review.ai_score,
+            'ai_reason': review.ai_reason,
+            'reviewer_note': review.reviewer_note,
+            'reviewed_at': review.reviewed_at
+        } if review else None
+    }
 
 
 def normalize_livestock_target(raw_target: Optional[str]) -> str:
@@ -128,7 +247,7 @@ GOV_SOURCES = [
 
 def _valid_photo_url(v: Optional[str]):
     # Only user-uploaded image payloads are accepted (base64 data URL), never remote URLs.
-    return bool(v and str(v).startswith('data:image/'))
+    return _photo_is_stored(v)
 
 
 def _validate_uploaded_image_input(v: Optional[str], field_name: str, required: bool = False):
@@ -856,6 +975,7 @@ def auth_me(authorization: Optional[str] = Header(None), db: Session = Depends(g
     u = _current_user_from_auth(authorization, db)
     role = u.role.value if hasattr(u.role, 'value') else str(u.role)
     effective_role = 'Admin' if _is_admin_user(u) else ('Farmer' if str(role).lower() == 'admin' else role)
+    identity = _identity_review_for_user(db, u.id)
     return {
         'id': u.id,
         'full_name': u.full_name,
@@ -863,7 +983,10 @@ def auth_me(authorization: Optional[str] = Header(None), db: Session = Depends(g
         'email': u.email,
         'country': u.country.value if hasattr(u.country, 'value') else str(u.country),
         'region': u.region,
-        'role': effective_role
+        'role': effective_role,
+        'identity_verification_status': identity['status'],
+        'identity_status_label': identity['label'],
+        'identity_blue_check': identity['blue_check']
     }
 
 
@@ -880,6 +1003,7 @@ def update_auth_me(payload: AccountUpdateIn, authorization: Optional[str] = Head
     _account_store_upsert_user(u)
     role = u.role.value if hasattr(u.role, 'value') else str(u.role)
     effective_role = 'Admin' if _is_admin_user(u) else ('Farmer' if str(role).lower() == 'admin' else role)
+    identity = _identity_review_for_user(db, u.id)
     return {
         'id': u.id,
         'full_name': u.full_name,
@@ -887,7 +1011,10 @@ def update_auth_me(payload: AccountUpdateIn, authorization: Optional[str] = Head
         'email': u.email,
         'country': u.country.value if hasattr(u.country, 'value') else str(u.country),
         'region': u.region,
-        'role': effective_role
+        'role': effective_role,
+        'identity_verification_status': identity['status'],
+        'identity_status_label': identity['label'],
+        'identity_blue_check': identity['blue_check']
     }
 
 
@@ -997,6 +1124,10 @@ def create_id_verification(payload: IDVerificationIn, db: Session = Depends(get_
     _validate_uploaded_image_input(data.get('id_back_photo_url'), 'id_back_photo_url', required=is_ghana_card)
     _validate_uploaded_image_input(data.get('id_photo_url'), 'id_photo_url', required=not is_ghana_card)
 
+    data['id_photo_url'] = _store_uploaded_image_data(data.get('id_photo_url'), user_id=int(data['user_id']), side='legacy') or ''
+    data['id_front_photo_url'] = _store_uploaded_image_data(data.get('id_front_photo_url'), user_id=int(data['user_id']), side='front')
+    data['id_back_photo_url'] = _store_uploaded_image_data(data.get('id_back_photo_url'), user_id=int(data['user_id']), side='back')
+
     rec = IDVerification(**data)
     db.add(rec)
     db.commit()
@@ -1026,25 +1157,10 @@ def my_latest_id_verification(authorization: Optional[str] = Header(None), db: S
     if not iv:
         return {'application': None, 'review': None}
     review = db.query(VerificationReview).filter(VerificationReview.id_verification_id == iv.id).first()
-    return {
-        'application': {
-            'id': iv.id,
-            'id_type': iv.id_type,
-            'id_number': iv.id_number,
-            'id_photo_url': iv.id_photo_url,
-            'id_front_photo_url': iv.id_front_photo_url,
-            'id_back_photo_url': iv.id_back_photo_url,
-            'facial_verification_flag': iv.facial_verification_flag,
-            'created_at': iv.created_at
-        },
-        'review': {
-            'status': review.status,
-            'ai_score': review.ai_score,
-            'ai_reason': review.ai_reason,
-            'reviewer_note': review.reviewer_note,
-            'reviewed_at': review.reviewed_at
-        } if review else None
-    }
+    token = None
+    if authorization and str(authorization).lower().startswith('bearer '):
+        token = str(authorization).split(' ', 1)[1].strip()
+    return _verification_view_payload(iv, review, token)
 
 
 @router.post('/onboarding/id-verification/me')
@@ -1060,6 +1176,10 @@ def submit_my_id_verification(payload: IDVerificationSelfIn, authorization: Opti
     _validate_uploaded_image_input(data.get('id_front_photo_url'), 'id_front_photo_url', required=is_ghana_card)
     _validate_uploaded_image_input(data.get('id_back_photo_url'), 'id_back_photo_url', required=is_ghana_card)
     _validate_uploaded_image_input(data.get('id_photo_url'), 'id_photo_url', required=not is_ghana_card)
+
+    data['id_photo_url'] = _store_uploaded_image_data(data.get('id_photo_url'), user_id=int(u.id), side='legacy') or ''
+    data['id_front_photo_url'] = _store_uploaded_image_data(data.get('id_front_photo_url'), user_id=int(u.id), side='front')
+    data['id_back_photo_url'] = _store_uploaded_image_data(data.get('id_back_photo_url'), user_id=int(u.id), side='back')
 
     rec = IDVerification(user_id=u.id, **data)
     db.add(rec)
@@ -1077,6 +1197,32 @@ def submit_my_id_verification(payload: IDVerificationSelfIn, authorization: Opti
     db.commit()
 
     return {'message': 'Verification update submitted for re-review', 'id_verification_id': rec.id, 'status': 'PENDING'}
+
+
+
+@router.get('/verification/files/{id_verification_id}/{side}')
+def verification_file(id_verification_id: int, side: str, authorization: Optional[str] = Header(None), token: Optional[str] = None, db: Session = Depends(get_db)):
+    auth_value = _file_token_from_request(authorization, token)
+    user = _current_user_from_auth(auth_value, db)
+    iv = db.query(IDVerification).filter(IDVerification.id == id_verification_id).first()
+    if not iv:
+        raise HTTPException(status_code=404, detail='Verification application not found')
+    if (not _is_admin_user(user)) and int(user.id) != int(iv.user_id):
+        raise HTTPException(status_code=403, detail='Not allowed to access this verification file')
+    side_key = str(side or '').lower()
+    ref = iv.id_photo_url
+    if side_key == 'front':
+        ref = iv.id_front_photo_url or iv.id_photo_url
+    elif side_key == 'back':
+        ref = iv.id_back_photo_url
+    elif side_key != 'legacy':
+        raise HTTPException(status_code=400, detail='Invalid verification file side')
+    path = _local_photo_path(ref)
+    if path and path.exists():
+        return FileResponse(path)
+    if str(ref or '').startswith('data:image/'):
+        raise HTTPException(status_code=409, detail='Verification image still uses legacy embedded storage')
+    raise HTTPException(status_code=404, detail='Verification file not found')
 
 
 @router.get('/verification/applications')
@@ -1099,6 +1245,9 @@ def list_verification_applications(db: Session = Depends(get_db)):
         'id_photo_url': iv.id_photo_url,
         'id_front_photo_url': iv.id_front_photo_url,
         'id_back_photo_url': iv.id_back_photo_url,
+        'id_photo_view_url': f'/api/v1/verification/files/{iv.id}/legacy',
+        'id_front_photo_view_url': f'/api/v1/verification/files/{iv.id}/front',
+        'id_back_photo_view_url': f'/api/v1/verification/files/{iv.id}/back',
         'facial_verification_flag': iv.facial_verification_flag,
         'status': r.status,
         'ai_score': r.ai_score,
@@ -1158,7 +1307,8 @@ def manual_verification_decision(id_verification_id: int, payload: VerificationD
     review.reviewer_note = payload.reviewer_note or ''
     review.reviewed_at = datetime.utcnow()
     db.commit()
-    return {'message': 'Decision saved', 'status': review.status}
+    identity = _identity_review_for_user(db, iv.user_id)
+    return {'message': 'Decision saved', 'status': review.status, 'identity_status': identity['status'], 'identity_blue_check': identity['blue_check'], 'identity_label': identity['label']}
 
 
 @router.get('/reviews/updates')
@@ -3266,6 +3416,7 @@ def list_livestock_records(species: Optional[str] = None, animal_type: Optional[
             q = q.filter(SheepGoatRecord.animal_type == animal_type.upper())
         return q.order_by(SheepGoatRecord.id.desc()).all()
     except SQLAlchemyError:
+        db.rollback()
         inspector = inspect(db.bind)
         cols = {c['name'] for c in inspector.get_columns('sheep_goat_records')}
         ordered = [
