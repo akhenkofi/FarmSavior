@@ -16,6 +16,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, Body, Header, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func, text, inspect
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.db.session import get_db
 from app.models.models import (
@@ -3257,12 +3258,39 @@ def create_purchase_source(payload: LivestockPurchaseSourceIn, db: Session = Dep
 
 @router.get('/livestock-records/animals')
 def list_livestock_records(species: Optional[str] = None, animal_type: Optional[str] = None, db: Session = Depends(get_db)):
-    q = db.query(SheepGoatRecord)
-    if species:
-        q = q.filter(SheepGoatRecord.species == species.upper())
-    if animal_type:
-        q = q.filter(SheepGoatRecord.animal_type == animal_type.upper())
-    return q.order_by(SheepGoatRecord.id.desc()).all()
+    try:
+        q = db.query(SheepGoatRecord)
+        if species:
+            q = q.filter(SheepGoatRecord.species == species.upper())
+        if animal_type:
+            q = q.filter(SheepGoatRecord.animal_type == animal_type.upper())
+        return q.order_by(SheepGoatRecord.id.desc()).all()
+    except SQLAlchemyError:
+        inspector = inspect(db.bind)
+        cols = {c['name'] for c in inspector.get_columns('sheep_goat_records')}
+        ordered = [
+            'id','user_id','ownership','species','animal_type','name','ear_tag','farm_id','registration_number','stars',
+            'date_of_birth','acquisition_date','purchased_from','purchased_from_type','purchase_price','currency',
+            'sire_id','dam_id','litter_size','initial_weight_kg','breeding_type','castrated','sale_date','sale_price',
+            'sold_to','died_date','cull_keep_status','cull_reason','health_status','pen_location','notes','created_at'
+        ]
+        select_cols = [c for c in ordered if c in cols]
+        if not select_cols:
+            return []
+        sql = f"SELECT {', '.join(select_cols)} FROM sheep_goat_records"
+        clauses = []
+        params = {}
+        if species:
+            clauses.append('species = :species')
+            params['species'] = species.upper()
+        if animal_type:
+            clauses.append('animal_type = :animal_type')
+            params['animal_type'] = animal_type.upper()
+        if clauses:
+            sql += ' WHERE ' + ' AND '.join(clauses)
+        sql += ' ORDER BY id DESC'
+        rows = db.execute(text(sql), params).mappings().all()
+        return [dict(r) for r in rows]
 
 
 @router.post('/livestock-records/animals')

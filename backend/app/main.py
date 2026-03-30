@@ -7,10 +7,21 @@ from fastapi.responses import RedirectResponse
 from app.core.config import settings
 from app.core.data_lake import write_jsonl
 from sqlalchemy import inspect, text
+import logging
 from app.db.session import Base, engine, SessionLocal
 from app.api.routes import router
 
 Base.metadata.create_all(bind=engine)
+logger = logging.getLogger(__name__)
+
+
+def _safe_add_column(conn, table_name: str, column_name: str, ddl: str):
+    try:
+        cols = {c['name'] for c in inspect(conn).get_columns(table_name)}
+        if column_name not in cols:
+            conn.execute(text(f'ALTER TABLE {table_name} ADD COLUMN {column_name} {ddl}'))
+    except Exception as exc:
+        logger.warning('Could not ensure column %s.%s: %s', table_name, column_name, exc)
 
 
 def ensure_runtime_columns():
@@ -124,11 +135,8 @@ def ensure_runtime_columns():
                     conn.execute(text("ALTER TABLE otp_codes ADD COLUMN channel VARCHAR(20) DEFAULT 'phone'"))
 
             if 'sheep_goat_records' in tables:
-                rcols = {c['name'] for c in inspector.get_columns('sheep_goat_records')}
-                if 'purchased_from' not in rcols:
-                    conn.execute(text('ALTER TABLE sheep_goat_records ADD COLUMN purchased_from VARCHAR(160)'))
-                if 'purchased_from_type' not in rcols:
-                    conn.execute(text('ALTER TABLE sheep_goat_records ADD COLUMN purchased_from_type VARCHAR(20)'))
+                _safe_add_column(conn, 'sheep_goat_records', 'purchased_from', 'VARCHAR(160)')
+                _safe_add_column(conn, 'sheep_goat_records', 'purchased_from_type', 'VARCHAR(20)')
 
             conn.execute(text("""
                 CREATE TABLE IF NOT EXISTS livestock_purchase_sources (
@@ -140,8 +148,8 @@ def ensure_runtime_columns():
                     created_at DATETIME
                 )
             """))
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.exception('Runtime schema bootstrap failed: %s', exc)
 
 
 ensure_runtime_columns()
