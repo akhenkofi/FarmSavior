@@ -359,8 +359,8 @@ class SheepGoatRecord(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=True, index=True)
     ownership = Column(String(120), nullable=True)
-    species = Column(String(20), default='SHEEP')  # SHEEP | GOAT
-    animal_type = Column(String(20), nullable=False)  # RAM|EWE|BUCK|DOE
+    species = Column(String(20), default='SHEEP')  # SHEEP | GOAT | CATTLE | POULTRY
+    animal_type = Column(String(20), nullable=False)
     name = Column(String(120), nullable=True)
     ear_tag = Column(String(120), nullable=True, index=True)
     farm_id = Column(String(120), nullable=True)
@@ -368,6 +368,8 @@ class SheepGoatRecord(Base):
     stars = Column(Integer, default=0)
     date_of_birth = Column(DateTime, nullable=True)
     acquisition_date = Column(DateTime, nullable=True)
+    purchased_from = Column(String(160), nullable=True)
+    purchased_from_type = Column(String(20), nullable=True)  # BREEDER | MARKET | OTHER
     purchase_price = Column(Float, nullable=True)
     currency = Column(String(10), default='GHS')
     sire_id = Column(String(120), nullable=True)
@@ -385,6 +387,16 @@ class SheepGoatRecord(Base):
     health_status = Column(String(120), nullable=True)
     pen_location = Column(String(120), nullable=True)
     notes = Column(Text, default='')
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class LivestockPurchaseSource(Base):
+    __tablename__ = 'livestock_purchase_sources'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True, index=True)
+    species = Column(String(20), nullable=True)  # SHEEP | GOAT | CATTLE | ALL
+    name = Column(String(160), nullable=False, index=True)
+    source_type = Column(String(20), nullable=True)  # BREEDER | MARKET | OTHER
     created_at = Column(DateTime, default=datetime.utcnow)
 
 

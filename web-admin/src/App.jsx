@@ -1248,7 +1248,7 @@ function AppInner() {
  try { localStorage.setItem('farmsavior_community_profile_cache', JSON.stringify(communityProfile || {})) } catch {}
  }, [communityProfile])
 
- const [state, setState] = useState({ metrics: {}, users: [], listings: [], livestock: [], livestockRecords: [], logistics: [], equipment: [], storage: [], payments: [], orders: [], payoutProfiles: [], notifications: [], payoutHistory: [], alerts: [], contracts: [], idv: [], passports: [], verificationApps: [], approvedAccounts: [], deviceTokens: [], diseaseScans: [], disputes: [], fraudFlags: [], news: [], publicWeather: [], govPrograms: [], spotTrading: [], spotHistory: [], tradeExportStats: [], livestockPlans: [] })
+ const [state, setState] = useState({ metrics: {}, users: [], listings: [], livestock: [], livestockRecords: [], livestockPurchaseSources: [], logistics: [], equipment: [], storage: [], payments: [], orders: [], payoutProfiles: [], notifications: [], payoutHistory: [], alerts: [], contracts: [], idv: [], passports: [], verificationApps: [], approvedAccounts: [], deviceTokens: [], diseaseScans: [], disputes: [], fraudFlags: [], news: [], publicWeather: [], govPrograms: [], spotTrading: [], spotHistory: [], tradeExportStats: [], livestockPlans: [] })
  const [me, setMe] = useState(null)
  const lastTrackRef = useRef('')
 
@@ -1273,12 +1273,46 @@ function AppInner() {
  const [livestockQuickEdit, setLivestockQuickEdit] = useState({ id: '', quantity: '', unit_price: '' })
  const [livestockImages, setLivestockImages] = useState([])
  const [livestockEditImages, setLivestockEditImages] = useState([])
- const [livestockRecordForm, setLivestockRecordForm] = useState({ user_id: 1, ownership: 'Owned by Me', species: 'SHEEP', animal_type: 'EWE', name: '', ear_tag: '', farm_id: '', registration_number: '', stars: 0, date_of_birth: '', acquisition_date: '', purchase_price: '', currency: 'GHS', sire_id: '', dam_id: '', litter_size: 1, initial_weight_kg: '', breeding_type: 'Natural', castrated: false, sale_date: '', sale_price: '', sold_to: '', died_date: '', cull_keep_status: 'KEEP', cull_reason: '', health_status: '', pen_location: '', notes: '', treatment_entry: '' })
- const [livestockRecordEdit, setLivestockRecordEdit] = useState({ id: '', user_id: 1, ownership: 'Owned by Me', species: 'SHEEP', animal_type: 'EWE', name: '', ear_tag: '', farm_id: '', registration_number: '', stars: 0, date_of_birth: '', acquisition_date: '', purchase_price: '', currency: 'GHS', sire_id: '', dam_id: '', litter_size: 1, initial_weight_kg: '', breeding_type: 'Natural', castrated: false, sale_date: '', sale_price: '', sold_to: '', died_date: '', cull_keep_status: 'KEEP', cull_reason: '', health_status: '', pen_location: '', notes: '', treatment_entry: '' })
+ const [livestockRecordForm, setLivestockRecordForm] = useState({ user_id: 1, ownership: 'Owned by Me', species: 'SHEEP', animal_type: 'EWE', name: '', ear_tag: '', farm_id: '', registration_number: '', stars: 0, date_of_birth: '', acquisition_date: '', purchased_from: '', purchased_from_type: 'BREEDER', purchase_price: '', currency: 'GHS', sire_id: '', dam_id: '', litter_size: 1, initial_weight_kg: '', breeding_type: 'Natural', castrated: false, sale_date: '', sale_price: '', sold_to: '', died_date: '', cull_keep_status: 'KEEP', cull_reason: '', health_status: '', pen_location: '', notes: '', treatment_entry: '' })
+ const [livestockRecordEdit, setLivestockRecordEdit] = useState({ id: '', user_id: 1, ownership: 'Owned by Me', species: 'SHEEP', animal_type: 'EWE', name: '', ear_tag: '', farm_id: '', registration_number: '', stars: 0, date_of_birth: '', acquisition_date: '', purchased_from: '', purchased_from_type: 'BREEDER', purchase_price: '', currency: 'GHS', sire_id: '', dam_id: '', litter_size: 1, initial_weight_kg: '', breeding_type: 'Natural', castrated: false, sale_date: '', sale_price: '', sold_to: '', died_date: '', cull_keep_status: 'KEEP', cull_reason: '', health_status: '', pen_location: '', notes: '', treatment_entry: '' })
  const [selectedLivestockRecord, setSelectedLivestockRecord] = useState(null)
  const [livestockRecordsFilter, setLivestockRecordsFilter] = useState('ALL')
  const [recordsSectionOpen, setRecordsSectionOpen] = useState({ create: false, edit: false, batch: false, details: false })
  const [batchMedicationForm, setBatchMedicationForm] = useState({ species:'ALL', animal_type:'ALL', health_status:'ALL', cull_keep_status:'ALL', minStars:'', pen_location:'', medication:'', dose:'', days:'' })
+ const mapLivestockRecordToEditForm = (r) => ({
+ id: r?.id || '',
+ user_id: r?.user_id || me?.id || 1,
+ ownership: r?.ownership || 'Owned by Me',
+ species: r?.species || 'SHEEP',
+ animal_type: r?.animal_type || (r?.species === 'GOAT' ? 'DOE' : (r?.species === 'CATTLE' ? 'COW' : (r?.species === 'POULTRY' ? 'LAYER_HEN' : 'EWE'))),
+ name: r?.name || '',
+ ear_tag: r?.ear_tag || '',
+ farm_id: r?.farm_id || '',
+ registration_number: r?.registration_number || '',
+ stars: r?.stars ?? 0,
+ date_of_birth: r?.date_of_birth || '',
+ acquisition_date: r?.acquisition_date || '',
+ purchased_from: r?.purchased_from || '',
+ purchased_from_type: r?.purchased_from_type || 'BREEDER',
+ purchase_price: r?.purchase_price ?? '',
+ currency: r?.currency || 'GHS',
+ sire_id: r?.sire_id || '',
+ dam_id: r?.dam_id || '',
+ litter_size: r?.litter_size ?? 1,
+ initial_weight_kg: r?.initial_weight_kg ?? '',
+ breeding_type: r?.breeding_type || 'Natural',
+ castrated: !!r?.castrated,
+ sale_date: r?.sale_date || '',
+ sale_price: r?.sale_price ?? '',
+ sold_to: r?.sold_to || '',
+ died_date: r?.died_date || '',
+ cull_keep_status: r?.cull_keep_status || 'KEEP',
+ cull_reason: r?.cull_reason || '',
+ health_status: r?.health_status || '',
+ pen_location: r?.pen_location || '',
+ notes: r?.notes || '',
+ treatment_entry: ''
+ })
  const [logisticsForm, setLogisticsForm] = useState({ requester_id: 1, pickup_location: '', dropoff_location: '', cargo_type: '', weight_kg: '', status: 'PENDING' })
  const [logisticsEdit, setLogisticsEdit] = useState({ id: '', requester_id: 1, pickup_location: '', dropoff_location: '', cargo_type: '', weight_kg: '', status: 'PENDING' })
  const [equipmentForm, setEquipmentForm] = useState({ requester_id: 1, equipment_type: '', duration_days: '', location: '', budget: '', status: 'PENDING' })
@@ -1574,8 +1608,8 @@ function AppInner() {
  }
  const isAdmin = (meRes?.role || '').toLowerCase() === 'admin'
 
- const [metrics, users, listings, livestock, livestockRecords, logistics, equipment, storage, payments, orders, payoutProfiles, notifications, payoutHistory, alerts, contracts, idv, passports, regions, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, publicWeather, govPrograms, spotTrading, spotHistory, tradeExportStats, livestockPlans] = await Promise.all([
- api.fetchMetrics(), api.fetchUsers(), api.fetchListings(), api.fetchLivestock(), api.fetchLivestockRecordsAnimals().catch(() => []), api.fetchLogistics(), api.fetchEquipment(), api.fetchStorage(), api.fetchPayments(), api.fetchOrders().catch(() => []), api.fetchPayoutProfiles().catch(() => []), api.fetchNotifications(meRes?.id || undefined).catch(() => []), api.fetchPayoutHistory().catch(() => []), api.fetchAlerts(alertCountryFilter === 'ALL' ? undefined : alertCountryFilter), api.fetchContracts(), api.fetchIdVerifications(), api.fetchPassports(), api.fetchWeatherRegions(), api.fetchVerificationApps(), api.fetchApprovedAccounts(), api.fetchDeviceTokens(), api.fetchDiseaseScans(),
+ const [metrics, users, listings, livestock, livestockRecords, livestockPurchaseSources, logistics, equipment, storage, payments, orders, payoutProfiles, notifications, payoutHistory, alerts, contracts, idv, passports, regions, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, publicWeather, govPrograms, spotTrading, spotHistory, tradeExportStats, livestockPlans] = await Promise.all([
+ api.fetchMetrics(), api.fetchUsers(), api.fetchListings(), api.fetchLivestock(), api.fetchLivestockRecordsAnimals().catch(() => []), api.fetchLivestockPurchaseSources({ user_id: meRes?.id || undefined }).catch(() => []), api.fetchLogistics(), api.fetchEquipment(), api.fetchStorage(), api.fetchPayments(), api.fetchOrders().catch(() => []), api.fetchPayoutProfiles().catch(() => []), api.fetchNotifications(meRes?.id || undefined).catch(() => []), api.fetchPayoutHistory().catch(() => []), api.fetchAlerts(alertCountryFilter === 'ALL' ? undefined : alertCountryFilter), api.fetchContracts(), api.fetchIdVerifications(), api.fetchPassports(), api.fetchWeatherRegions(), api.fetchVerificationApps(), api.fetchApprovedAccounts(), api.fetchDeviceTokens(), api.fetchDiseaseScans(),
  isAdmin ? api.fetchAdminDisputes() : Promise.resolve([]),
  isAdmin ? api.fetchAdminFraudFlags() : Promise.resolve([]),
  api.fetchPublicNews().catch(() => []),
@@ -1587,7 +1621,7 @@ function AppInner() {
  api.fetchLivestockRecordsPlans().catch(() => ({ plans: [] }))
  ])
  setRegionMap(regions || { GH: [], NG: [], BF: [] })
- setState({ metrics, users, listings, livestock, livestockRecords, logistics, equipment, storage, payments, orders, payoutProfiles, notifications, payoutHistory, alerts, contracts, idv, passports, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, publicWeather, govPrograms: govPrograms.items || [], spotTrading: spotTrading.items || [], spotHistory: spotHistory.items || [], tradeExportStats: tradeExportStats.items || [], livestockPlans: livestockPlans.plans || [] })
+ setState({ metrics, users, listings, livestock, livestockRecords, livestockPurchaseSources, logistics, equipment, storage, payments, orders, payoutProfiles, notifications, payoutHistory, alerts, contracts, idv, passports, verificationApps, approvedAccounts, deviceTokens, diseaseScans, disputes, fraudFlags, news, publicWeather, govPrograms: govPrograms.items || [], spotTrading: spotTrading.items || [], spotHistory: spotHistory.items || [], tradeExportStats: tradeExportStats.items || [], livestockPlans: livestockPlans.plans || [] })
  const myPayoutProfile = (payoutProfiles || []).find(x => String(x.user_id) === String(meRes?.id || ''))
  if (myPayoutProfile) {
  setPayoutForm(prev => ({
@@ -1607,8 +1641,11 @@ function AppInner() {
  }
 
  const loadLivestockRecords = async () => {
- const rows = await api.fetchLivestockRecordsAnimals().catch(() => [])
- setState(prev => ({ ...prev, livestockRecords: rows || [] }))
+ const [rows, sources] = await Promise.all([
+ api.fetchLivestockRecordsAnimals().catch(() => []),
+ api.fetchLivestockPurchaseSources({ user_id: me?.id || undefined }).catch(() => [])
+ ])
+ setState(prev => ({ ...prev, livestockRecords: rows || [], livestockPurchaseSources: sources || [] }))
  }
 
  const loadWorldChat = async () => {
@@ -1909,6 +1946,11 @@ function AppInner() {
  if (livestockRecordsFilter === 'POULTRY') return state.livestockRecords.filter(r => r.species === 'POULTRY')
  return state.livestockRecords
  }, [state.livestockRecords, livestockRecordsFilter])
+
+ useEffect(() => {
+ if (!selectedLivestockRecord?.id) return
+ setLivestockRecordEdit(mapLivestockRecordToEditForm(selectedLivestockRecord))
+ }, [selectedLivestockRecord])
 
  const kpis = useMemo(() => [
  ['Users', state.metrics.users_total || 0],
@@ -3938,7 +3980,7 @@ function AppInner() {
  died_date: livestockRecordForm.died_date || null,
  })
  await load()
- setLivestockRecordForm({ ...livestockRecordForm, name: '', ear_tag: '', registration_number: '', purchase_price: '', health_status: '', notes: '', treatment_entry: '' })
+ setLivestockRecordForm({ ...livestockRecordForm, name: '', ear_tag: '', registration_number: '', purchased_from: '', purchase_price: '', health_status: '', notes: '', treatment_entry: '' })
  setRecordsSectionOpen(prev => ({ ...prev, create: false }))
  alert('Record created successfully')
  } catch (err) {
@@ -3959,12 +4001,28 @@ function AppInner() {
  </div>
  <div className='row2'>
  <input className='input' type='date' placeholder='Date of birth' value={livestockRecordForm.date_of_birth} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, date_of_birth: e.target.value })} />
- <input className='input' type='date' placeholder='Acquisition date' value={livestockRecordForm.acquisition_date} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, acquisition_date: e.target.value })} />
+ <input className='input' type='date' placeholder='Date purchased' value={livestockRecordForm.acquisition_date} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, acquisition_date: e.target.value })} />
  </div>
+ <div className='row2'>
+ <input className='input' list='livestock-purchase-sources-create' placeholder='Purchased from' value={livestockRecordForm.purchased_from} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, purchased_from: e.target.value })} />
+ <select className='input' value={livestockRecordForm.purchased_from_type} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, purchased_from_type: e.target.value })}><option value='BREEDER'>Breeder</option><option value='MARKET'>Market</option><option value='OTHER'>Other</option></select>
+ </div>
+ <datalist id='livestock-purchase-sources-create'>{state.livestockPurchaseSources.filter(s => !s.species || s.species === 'ALL' || s.species === livestockRecordForm.species).map(s => <option key={`create-source-${s.id}-${s.name}`} value={s.name}>{s.source_type || ''}</option>)}</datalist>
  <div className='row2'>
  <input className='input' type='number' step='0.01' placeholder='Purchase price' value={livestockRecordForm.purchase_price} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, purchase_price: e.target.value })} />
  <select className='input' value={livestockRecordForm.currency} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, currency: e.target.value })}><option>GHS</option><option>NGN</option><option>XOF</option><option>USD</option></select>
  </div>
+ <button type='button' className='btn' onClick={async () => {
+ const name = (livestockRecordForm.purchased_from || '').trim()
+ if (!name) return alert('Enter breeder or market name first')
+ try {
+ await api.saveLivestockPurchaseSource({ user_id: Number(livestockRecordForm.user_id || me?.id || 1), species: livestockRecordForm.species, name, source_type: livestockRecordForm.purchased_from_type || 'OTHER' })
+ await loadLivestockRecords()
+ alert('Breeder/market saved')
+ } catch (err) {
+ alert(`Could not save breeder/market: ${errMsg(err)}`)
+ }
+ }}>Save breeder / market</button>
  <div className='row2'>
  <input className='input' type='number' min='0' max='5' placeholder='Stars (0-5)' value={livestockRecordForm.stars} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, stars: e.target.value })} />
  <input className='input' type='number' step='0.01' placeholder='Initial weight (kg)' value={livestockRecordForm.initial_weight_kg} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, initial_weight_kg: e.target.value })} />
@@ -4059,12 +4117,28 @@ function AppInner() {
  </div>
  <div className='row2'>
  <input className='input' type='date' value={livestockRecordEdit.date_of_birth ? String(livestockRecordEdit.date_of_birth).slice(0,10) : ''} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, date_of_birth: e.target.value })} />
- <input className='input' type='date' value={livestockRecordEdit.acquisition_date ? String(livestockRecordEdit.acquisition_date).slice(0,10) : ''} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, acquisition_date: e.target.value })} />
+ <input className='input' type='date' placeholder='Date purchased' value={livestockRecordEdit.acquisition_date ? String(livestockRecordEdit.acquisition_date).slice(0,10) : ''} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, acquisition_date: e.target.value })} />
  </div>
+ <div className='row2'>
+ <input className='input' list='livestock-purchase-sources-edit' placeholder='Purchased from' value={livestockRecordEdit.purchased_from} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, purchased_from: e.target.value })} />
+ <select className='input' value={livestockRecordEdit.purchased_from_type} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, purchased_from_type: e.target.value })}><option value='BREEDER'>Breeder</option><option value='MARKET'>Market</option><option value='OTHER'>Other</option></select>
+ </div>
+ <datalist id='livestock-purchase-sources-edit'>{state.livestockPurchaseSources.filter(s => !s.species || s.species === 'ALL' || s.species === livestockRecordEdit.species).map(s => <option key={`edit-source-${s.id}-${s.name}`} value={s.name}>{s.source_type || ''}</option>)}</datalist>
  <div className='row2'>
  <input className='input' type='number' step='0.01' placeholder='Purchase price' value={livestockRecordEdit.purchase_price} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, purchase_price: e.target.value })} />
  <select className='input' value={livestockRecordEdit.currency} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, currency: e.target.value })}><option>GHS</option><option>NGN</option><option>XOF</option><option>USD</option></select>
  </div>
+ <button type='button' className='btn' onClick={async () => {
+ const name = (livestockRecordEdit.purchased_from || '').trim()
+ if (!name) return alert('Enter breeder or market name first')
+ try {
+ await api.saveLivestockPurchaseSource({ user_id: Number(livestockRecordEdit.user_id || me?.id || 1), species: livestockRecordEdit.species, name, source_type: livestockRecordEdit.purchased_from_type || 'OTHER' })
+ await loadLivestockRecords()
+ alert('Breeder/market saved')
+ } catch (err) {
+ alert(`Could not save breeder/market: ${errMsg(err)}`)
+ }
+ }}>Save breeder / market</button>
  <div className='row2'>
  <input className='input' type='number' min='0' max='5' placeholder='Stars (0-5)' value={livestockRecordEdit.stars} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, stars: e.target.value })} />
  <input className='input' type='number' step='0.01' placeholder='Initial weight (kg)' value={livestockRecordEdit.initial_weight_kg} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, initial_weight_kg: e.target.value })} />
@@ -4219,42 +4293,16 @@ function AppInner() {
  </article>}
 
  <DataTable
- columns={['id','species','animal_type','name','acquisition_date','purchase_price','health_status','notes']}
+ columns={['id','species','animal_type','name','acquisition_date','purchased_from','purchase_price','health_status']}
  rows={livestockRecordsFiltered}
  filterKey='name'
  onRowClick={(r) => { setSelectedLivestockRecord(r); setRecordsSectionOpen(prev => ({ ...prev, details: true })) }}
- onEdit={(r) => { setSelectedLivestockRecord(r); setRecordsSectionOpen(prev => ({ ...prev, edit: true, create: false, details: true })); setLivestockRecordEdit({
- id: r.id,
- user_id: r.user_id || me?.id || 1,
- ownership: r.ownership || 'Owned by Me',
- species: r.species || 'SHEEP',
- animal_type: r.animal_type || (r.species === 'GOAT' ? 'DOE' : (r.species === 'CATTLE' ? 'COW' : (r.species === 'POULTRY' ? 'LAYER_HEN' : 'EWE'))),
- name: r.name || '',
- ear_tag: r.ear_tag || '',
- farm_id: r.farm_id || '',
- registration_number: r.registration_number || '',
- stars: r.stars || 0,
- date_of_birth: r.date_of_birth || '',
- acquisition_date: r.acquisition_date || '',
- purchase_price: r.purchase_price ?? '',
- currency: r.currency || 'GHS',
- sire_id: r.sire_id || '',
- dam_id: r.dam_id || '',
- litter_size: r.litter_size ?? 1,
- initial_weight_kg: r.initial_weight_kg ?? '',
- breeding_type: r.breeding_type || 'Natural',
- castrated: !!r.castrated,
- sale_date: r.sale_date || '',
- sale_price: r.sale_price ?? '',
- sold_to: r.sold_to || '',
- died_date: r.died_date || '',
- cull_keep_status: r.cull_keep_status || 'KEEP',
- cull_reason: r.cull_reason || '',
- health_status: r.health_status || '',
- pen_location: r.pen_location || '',
- notes: r.notes || '',
- treatment_entry: ''
- })}}
+ onEdit={(r) => {
+ const nextRecord = { ...r }
+ setSelectedLivestockRecord(nextRecord)
+ setLivestockRecordEdit(mapLivestockRecordToEditForm(nextRecord))
+ setRecordsSectionOpen(prev => ({ ...prev, edit: true, create: false, details: true }))
+ }}
  />
  </section>}
 

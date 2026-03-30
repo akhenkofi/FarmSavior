@@ -263,8 +263,8 @@ class DiseaseAnalyzeIn(BaseModel):
 class SheepGoatRecordIn(BaseModel):
     user_id: Optional[int] = None
     ownership: Optional[str] = None
-    species: Literal['SHEEP', 'GOAT'] = 'SHEEP'
-    animal_type: Literal['RAM', 'EWE', 'BUCK', 'DOE']
+    species: str = 'SHEEP'
+    animal_type: str
     name: Optional[str] = None
     ear_tag: Optional[str] = None
     farm_id: Optional[str] = None
@@ -272,6 +272,8 @@ class SheepGoatRecordIn(BaseModel):
     stars: int = 0
     date_of_birth: Optional[datetime] = None
     acquisition_date: Optional[datetime] = None
+    purchased_from: Optional[str] = None
+    purchased_from_type: Optional[Literal['BREEDER', 'MARKET', 'OTHER']] = None
     purchase_price: Optional[float] = None
     currency: str = 'GHS'
     sire_id: Optional[str] = None
@@ -289,6 +291,13 @@ class SheepGoatRecordIn(BaseModel):
     health_status: Optional[str] = None
     pen_location: Optional[str] = None
     notes: Optional[str] = ''
+
+
+class LivestockPurchaseSourceIn(BaseModel):
+    user_id: Optional[int] = None
+    species: Optional[str] = 'ALL'
+    name: str
+    source_type: Optional[Literal['BREEDER', 'MARKET', 'OTHER']] = 'OTHER'
 
 
 class SheepGoatBreedingGroupIn(BaseModel):

@@ -23,7 +23,7 @@ from app.models.models import (
     LogisticsRequest, LogisticsStatus, Payment, WeatherAlert,
     UserRole, CountryCode, IDVerification, FarmPassport,
     LivestockListing, EquipmentRental, StorageReservation, TradeContract, VerificationReview, UpdateReview,
-    DeviceToken, DiseaseScan, SheepGoatRecord, SheepGoatBreedingGroup, SheepGoatSubscription,
+    DeviceToken, DiseaseScan, SheepGoatRecord, LivestockPurchaseSource, SheepGoatBreedingGroup, SheepGoatSubscription,
     WorldChatMessage, WorldChatUserModeration,
     CommunityProfile, CommunityPost, CommunityPostLike, CommunityPostComment,
     MarketplaceOrder, SellerPayoutProfile, PayoutHistory, MarketplaceNotification
@@ -34,7 +34,7 @@ from app.schemas.schemas import (
     PaymentIn, WeatherAlertIn, IDVerificationIn, IDVerificationSelfIn, FarmPassportIn,
     LivestockListingIn, EquipmentRentalIn, StorageReservationIn, ContractIn,
     VerificationDecisionIn, DeviceTokenIn, DiseaseAnalyzeIn,
-    SheepGoatRecordIn, SheepGoatBreedingGroupIn, SheepGoatSubscriptionIn, PoultryUniversitySubscriptionIn,
+    SheepGoatRecordIn, LivestockPurchaseSourceIn, SheepGoatBreedingGroupIn, SheepGoatSubscriptionIn, PoultryUniversitySubscriptionIn,
     WorldChatMessageIn, WorldChatModerationActionIn, WorldChatUserSanctionIn,
     CommunityProfileIn, CommunityPostIn, CommunityCommentIn,
     PlantIdentifyIn, PestIdentifyIn, AccountUpdateIn, PasswordChangeIn, DeleteAccountIn,
@@ -2358,6 +2358,10 @@ def community_profile_upsert(payload: CommunityProfileIn, authorization: Optiona
     if not p.username:
         base = ''.join(ch for ch in (u.full_name or 'farmer').lower() if ch.isalnum())[:14] or 'farmer'
         p.username = f"{base}{u.id}"
+    db.query(CommunityPost).filter(CommunityPost.user_id == u.id).update({
+        CommunityPost.author_name: u.full_name,
+        CommunityPost.author_country: getattr(u, 'country', None)
+    }, synchronize_session=False)
     db.commit()
     db.refresh(p)
     _account_store_upsert_user(u)
@@ -3194,6 +3198,63 @@ def livestock_records_dashboard(db: Session = Depends(get_db)):
     return {'totalAnimals': total, 'sheep': sheep, 'goats': goats, 'ewes': ewes, 'rams': rams, 'does': does, 'bucks': bucks, 'groups': groups}
 
 
+def _upsert_purchase_source(db: Session, user_id: Optional[int], species: Optional[str], name: Optional[str], source_type: Optional[str]):
+    cleaned_name = (name or '').strip()
+    if not cleaned_name:
+        return
+    normalized_species = (species or 'ALL').upper()
+    normalized_type = (source_type or 'OTHER').upper()
+    existing = db.query(LivestockPurchaseSource).filter(
+        LivestockPurchaseSource.user_id == user_id,
+        func.lower(LivestockPurchaseSource.name) == cleaned_name.lower(),
+        func.coalesce(LivestockPurchaseSource.species, 'ALL') == normalized_species
+    ).first()
+    if existing:
+        existing.source_type = normalized_type
+    else:
+        db.add(LivestockPurchaseSource(
+            user_id=user_id,
+            species=normalized_species,
+            name=cleaned_name,
+            source_type=normalized_type
+        ))
+
+
+@router.get('/livestock-records/purchase-sources')
+def list_purchase_sources(user_id: Optional[int] = None, species: Optional[str] = None, db: Session = Depends(get_db)):
+    q = db.query(LivestockPurchaseSource)
+    if user_id is not None:
+        q = q.filter(LivestockPurchaseSource.user_id == user_id)
+    if species:
+        normalized = species.upper()
+        q = q.filter(func.coalesce(LivestockPurchaseSource.species, 'ALL').in_(['ALL', normalized]))
+    return q.order_by(LivestockPurchaseSource.name.asc()).all()
+
+
+@router.post('/livestock-records/purchase-sources')
+def create_purchase_source(payload: LivestockPurchaseSourceIn, db: Session = Depends(get_db)):
+    cleaned_name = (payload.name or '').strip()
+    if not cleaned_name:
+        raise HTTPException(status_code=400, detail='Source name is required')
+    normalized_species = (payload.species or 'ALL').upper()
+    normalized_type = (payload.source_type or 'OTHER').upper()
+    existing = db.query(LivestockPurchaseSource).filter(
+        LivestockPurchaseSource.user_id == payload.user_id,
+        func.lower(LivestockPurchaseSource.name) == cleaned_name.lower(),
+        func.coalesce(LivestockPurchaseSource.species, 'ALL') == normalized_species
+    ).first()
+    if existing:
+        existing.source_type = normalized_type
+        db.commit()
+        db.refresh(existing)
+        return existing
+    rec = LivestockPurchaseSource(user_id=payload.user_id, species=normalized_species, name=cleaned_name, source_type=normalized_type)
+    db.add(rec)
+    db.commit()
+    db.refresh(rec)
+    return rec
+
+
 @router.get('/livestock-records/animals')
 def list_livestock_records(species: Optional[str] = None, animal_type: Optional[str] = None, db: Session = Depends(get_db)):
     q = db.query(SheepGoatRecord)
@@ -3206,8 +3267,16 @@ def list_livestock_records(species: Optional[str] = None, animal_type: Optional[
 
 @router.post('/livestock-records/animals')
 def create_livestock_record(payload: SheepGoatRecordIn, db: Session = Depends(get_db)):
-    rec = SheepGoatRecord(**payload.model_dump())
+    data = payload.model_dump()
+    if data.get('species'):
+        data['species'] = str(data['species']).upper()
+    if data.get('animal_type'):
+        data['animal_type'] = str(data['animal_type']).upper()
+    if data.get('purchased_from_type'):
+        data['purchased_from_type'] = str(data['purchased_from_type']).upper()
+    rec = SheepGoatRecord(**data)
     db.add(rec)
+    _upsert_purchase_source(db, data.get('user_id'), data.get('species'), data.get('purchased_from'), data.get('purchased_from_type'))
     db.commit()
     db.refresh(rec)
     return rec
@@ -3218,8 +3287,16 @@ def update_livestock_record(record_id: int, payload: SheepGoatRecordIn, db: Sess
     rec = db.query(SheepGoatRecord).filter(SheepGoatRecord.id == record_id).first()
     if not rec:
         raise HTTPException(status_code=404, detail='Livestock record not found')
-    for k, v in payload.model_dump().items():
+    data = payload.model_dump()
+    if data.get('species'):
+        data['species'] = str(data['species']).upper()
+    if data.get('animal_type'):
+        data['animal_type'] = str(data['animal_type']).upper()
+    if data.get('purchased_from_type'):
+        data['purchased_from_type'] = str(data['purchased_from_type']).upper()
+    for k, v in data.items():
         setattr(rec, k, v)
+    _upsert_purchase_source(db, data.get('user_id') or rec.user_id, data.get('species') or rec.species, data.get('purchased_from'), data.get('purchased_from_type'))
     db.commit()
     db.refresh(rec)
     return rec

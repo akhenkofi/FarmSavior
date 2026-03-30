@@ -218,6 +218,8 @@ export const fetchPoultryUniversitySubscriptionMe = async () => fetchUniversityS
 export const checkoutPoultryUniversityPlan = async (payload) => checkoutUniversityPlan('poultry', payload)
 export const verifyPoultryUniversitySubscription = async (reference) => verifyUniversitySubscription('poultry', reference)
 export const fetchLivestockRecordsAnimals = async (params) => (await api.get('/livestock-records/animals', { params })).data
+export const fetchLivestockPurchaseSources = async (params) => (await api.get('/livestock-records/purchase-sources', { params })).data
+export const saveLivestockPurchaseSource = async (payload) => (await api.post('/livestock-records/purchase-sources', payload)).data
 export const createLivestockRecord = async (payload) => (await api.post('/livestock-records/animals', payload)).data
 export const updateLivestockRecord = async (recordId, payload) => (await api.put(`/livestock-records/animals/${recordId}`, payload)).data
 export const deleteLivestockRecord = async (recordId) => (await api.delete(`/livestock-records/animals/${recordId}`)).data

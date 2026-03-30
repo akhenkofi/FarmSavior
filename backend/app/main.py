@@ -122,6 +122,24 @@ def ensure_runtime_columns():
                     conn.execute(text('ALTER TABLE otp_codes ADD COLUMN destination VARCHAR(160)'))
                 if 'channel' not in ocols:
                     conn.execute(text("ALTER TABLE otp_codes ADD COLUMN channel VARCHAR(20) DEFAULT 'phone'"))
+
+            if 'sheep_goat_records' in tables:
+                rcols = {c['name'] for c in inspector.get_columns('sheep_goat_records')}
+                if 'purchased_from' not in rcols:
+                    conn.execute(text('ALTER TABLE sheep_goat_records ADD COLUMN purchased_from VARCHAR(160)'))
+                if 'purchased_from_type' not in rcols:
+                    conn.execute(text('ALTER TABLE sheep_goat_records ADD COLUMN purchased_from_type VARCHAR(20)'))
+
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS livestock_purchase_sources (
+                    id INTEGER PRIMARY KEY,
+                    user_id INTEGER,
+                    species VARCHAR(20),
+                    name VARCHAR(160) NOT NULL,
+                    source_type VARCHAR(20),
+                    created_at DATETIME
+                )
+            """))
     except Exception:
         pass
 
