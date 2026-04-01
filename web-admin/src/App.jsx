@@ -1536,6 +1536,8 @@ function AppInner() {
  const [popularActionsOpen, setPopularActionsOpen] = useState(true)
  const [weatherOpen, setWeatherOpen] = useState(true)
  const [newsOpen, setNewsOpen] = useState(true)
+ const [spotTradingOpen, setSpotTradingOpen] = useState(true)
+ const [governmentProgramsOpen, setGovernmentProgramsOpen] = useState(true)
  const [livestockSubscription, setLivestockSubscription] = useState({ tier: 'free', status: 'FREE', record_limit: 25, can_create_records: true, subscription: null, plans: [] })
  const [poultryTrack, setPoultryTrack] = useState('layers')
  const [poultryZone, setPoultryZone] = useState('humid')
@@ -2515,7 +2517,7 @@ function AppInner() {
  <h3 style={{margin:0}}>{t('🧠 Popular Actions','🧠 Actions populaires','🧠 热门操作')}</h3>
  <div className='helper-text' style={{marginTop:4}}>Fast entry points for the most important workflows in FarmSavior.</div>
  </div>
- <button type='button' className='btn' onClick={() => setPopularActionsOpen(v => !v)}>{popularActionsOpen ? t('Hide','Masquer','隐藏') : t('Show','Afficher','显示')}</button>
+ <button type='button' className='btn' style={{marginLeft:'auto'}} onClick={() => setPopularActionsOpen(v => !v)}>{popularActionsOpen ? t('Hide','Masquer','隐藏') : t('Show','Afficher','显示')}</button>
  </div>
  {popularActionsOpen && <div className='list'>
  <div className='list-row'><span>{t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('ai-disease', 'AI Disease Analyzer')}>{t('Open','Ouvrir')}</button></div>
@@ -2544,7 +2546,7 @@ function AppInner() {
  <h3 style={{margin:0}}>{t('🌤️ 9-City Weather Forecast (Ghana • Nigeria • Burkina Faso)','🌤️ Prévisions météo de 9 villes (Ghana • Nigeria • Burkina Faso)','🌤️ 9城天气预报（加纳 • 尼日利亚 • 布基纳法索）')}</h3>
  <p style={{fontSize:'.82rem', color:'#64748b', margin:'4px 0 0'}}>{t('Country codes: GH = Ghana, NG = Nigeria, BF = Burkina Faso.','Codes pays : GH = Ghana, NG = Nigeria, BF = Burkina Faso.','国家代码：GH=加纳，NG=尼日利亚，BF=布基纳法索。')}</p>
  </div>
- <button type='button' className='btn' onClick={() => setWeatherOpen(v => !v)}>{weatherOpen ? t('Hide','Masquer','隐藏') : t('Show','Afficher','显示')}</button>
+ <button type='button' className='btn' style={{marginLeft:'auto'}} onClick={() => setWeatherOpen(v => !v)}>{weatherOpen ? t('Hide','Masquer','隐藏') : t('Show','Afficher','显示')}</button>
  </div>
  {weatherOpen && <>
  <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
@@ -2573,7 +2575,7 @@ function AppInner() {
  <div>
  <h3 style={{margin:0}}>{t('📰 Ag News + Innovation','📰 Actualités agricoles + innovation','📰 农业新闻与创新')}</h3>
  </div>
- <button type='button' className='btn' onClick={() => setNewsOpen(v => !v)}>{newsOpen ? t('Hide','Masquer','隐藏') : t('Show','Afficher','显示')}</button>
+ <button type='button' className='btn' style={{marginLeft:'auto'}} onClick={() => setNewsOpen(v => !v)}>{newsOpen ? t('Hide','Masquer','隐藏') : t('Show','Afficher','显示')}</button>
  </div>
  {newsOpen && <>
  <div className='news-grid'>
