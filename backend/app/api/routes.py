@@ -1162,7 +1162,10 @@ def delete_account(payload: DeleteAccountIn, authorization: Optional[str] = Head
 
 
 @router.get('/users')
-def list_users(db: Session = Depends(get_db)):
+def list_users(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    user = _current_user_from_auth(authorization, db)
+    if not _is_admin_user(user):
+        raise HTTPException(status_code=403, detail='Admin access required')
     return db.query(User).filter(User.is_deleted == False).all()
 
 
@@ -1194,7 +1197,10 @@ def analytics_event(payload: dict = Body(...), authorization: Optional[str] = He
 
 
 @router.get('/analytics/users/summary')
-def analytics_users_summary():
+def analytics_users_summary(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    user = _current_user_from_auth(authorization, db)
+    if not _is_admin_user(user):
+        raise HTTPException(status_code=403, detail='Admin access required')
     p = (Path(__file__).resolve().parents[3] / 'data' / 'raw' / 'users' / 'events.jsonl')
     total = 0
     by_event = {}
