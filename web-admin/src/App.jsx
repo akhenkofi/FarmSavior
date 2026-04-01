@@ -2213,11 +2213,11 @@ function AppInner() {
  }, [selectedLivestockRecord])
 
  const kpis = useMemo(() => [
- ['Users', state.metrics.users_total || 0],
- ['Listings', state.metrics.listings_total || 0],
- ['Logistics', state.metrics.logistics_total || 0],
- ['Payments', state.metrics.payments_total || 0],
- ['Contracts', state.metrics.contracts_total || 0],
+ ['Users', state.metrics?.users_total || 0],
+ ['Listings', state.metrics?.listings_total || 0],
+ ['Logistics', state.metrics?.logistics_total || 0],
+ ['Payments', state.metrics?.payments_total || 0],
+ ['Contracts', state.metrics?.contracts_total || 0],
  ], [state.metrics])
 
  useEffect(() => {
