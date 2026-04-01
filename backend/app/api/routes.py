@@ -1852,6 +1852,84 @@ def _university_subscription_prefix(product: str) -> str:
     return prefix
 
 
+def _subscription_product_from_reference(reference: Optional[str]) -> str:
+    ref = str(reference or '').upper()
+    if ref.startswith('SGSUB-'):
+        return 'livestock-records'
+    if ref.startswith('PUSUB-'):
+        return 'poultry-university'
+    if ref.startswith('SUSUB-'):
+        return 'sheep-university'
+    if ref.startswith('GUSUB-'):
+        return 'goat-university'
+    if ref.startswith('CUSUB-'):
+        return 'cattle-university'
+    return 'subscription'
+
+
+@router.get('/account/billing-overview')
+def account_billing_overview(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    user = _current_user_from_auth(authorization, db)
+    subscriptions = db.query(SheepGoatSubscription).filter(
+        SheepGoatSubscription.user_id == user.id
+    ).order_by(SheepGoatSubscription.created_at.desc(), SheepGoatSubscription.id.desc()).limit(100).all()
+    payments = db.query(Payment).filter(
+        (Payment.payer_id == user.id) | (Payment.payee_id == user.id)
+    ).order_by(Payment.created_at.desc(), Payment.id.desc()).limit(100).all()
+
+    active_statuses = {'ACTIVE', 'TRIAL_ACTIVE'}
+    active_by_product = {}
+    for sub in subscriptions:
+        product = _subscription_product_from_reference(sub.reference)
+        if product not in active_by_product and str(sub.status or '').upper() in active_statuses:
+            active_by_product[product] = {
+                'id': sub.id,
+                'product': product,
+                'plan_code': sub.plan_code,
+                'billing_cycle': sub.billing_cycle,
+                'currency': sub.currency,
+                'amount': sub.amount,
+                'status': sub.status,
+                'reference': sub.reference,
+                'started_at': sub.started_at.isoformat() if sub.started_at else None,
+                'ends_at': sub.ends_at.isoformat() if sub.ends_at else None,
+                'created_at': sub.created_at.isoformat() if sub.created_at else None,
+                'country': sub.country,
+            }
+
+    return {
+        'subscriptions': [{
+            'id': sub.id,
+            'product': _subscription_product_from_reference(sub.reference),
+            'plan_code': sub.plan_code,
+            'billing_cycle': sub.billing_cycle,
+            'currency': sub.currency,
+            'amount': sub.amount,
+            'status': sub.status,
+            'reference': sub.reference,
+            'started_at': sub.started_at.isoformat() if sub.started_at else None,
+            'ends_at': sub.ends_at.isoformat() if sub.ends_at else None,
+            'created_at': sub.created_at.isoformat() if sub.created_at else None,
+            'country': sub.country,
+        } for sub in subscriptions],
+        'active_subscriptions': list(active_by_product.values()),
+        'payments': [{
+            'id': pay.id,
+            'payer_id': pay.payer_id,
+            'payee_id': pay.payee_id,
+            'amount': pay.amount,
+            'currency': pay.currency,
+            'country': pay.country.value if hasattr(pay.country, 'value') else str(pay.country or ''),
+            'method': pay.method,
+            'provider': pay.provider,
+            'escrow_enabled': pay.escrow_enabled,
+            'status': pay.status,
+            'reference': pay.reference,
+            'created_at': pay.created_at.isoformat() if pay.created_at else None,
+        } for pay in payments]
+    }
+
+
 @router.get('/university/{product}/plans')
 def university_product_plans(product: str):
     _university_subscription_prefix(product)

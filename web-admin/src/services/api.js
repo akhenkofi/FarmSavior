@@ -210,6 +210,8 @@ export const fetchTradeExportStats = async () => (await api.get('/trade/export-s
 export const fetchLivestockRecordsPlans = async () => (await api.get('/livestock-records/subscription/plans')).data
 export const fetchLivestockRecordsSubscriptionMe = async () => (await api.get('/livestock-records/subscription/me')).data
 export const checkoutLivestockRecordsPlan = async (payload) => (await api.post('/livestock-records/subscription/checkout', payload)).data
+export const verifyLivestockRecordsSubscription = async (reference) => (await api.get(`/livestock-records/subscription/verify/${reference}`)).data
+export const fetchAccountBillingOverview = async () => (await api.get('/account/billing-overview')).data
 export const fetchUniversityPlans = async (product) => (await api.get(`/university/${product}/plans`)).data
 export const fetchUniversitySubscriptionMe = async (product) => (await api.get(`/university/${product}/subscription/me`)).data
 export const checkoutUniversityPlan = async (product, payload) => (await api.post(`/university/${product}/subscription/checkout`, payload)).data

@@ -103,6 +103,38 @@ const openLivestockManagement = () => {
  if (target && typeof target.click === 'function') target.click()
 }
 
+const PAYMENT_RETURN_CACHE_KEY = 'farmsavior_pending_checkout'
+const paymentSectionLabel = (product) => ({
+ 'livestock-records': 'Livestock Records Premium',
+ 'poultry': 'Poultry University',
+ 'sheep': 'Sheep University',
+ 'goat': 'Goat University',
+ 'cattle': 'Cattle University',
+}[product] || 'Subscription')
+const paymentSectionRoute = (product) => ({
+ 'livestock-records': 'livestock-records',
+ 'poultry': 'poultry-university',
+ 'sheep': 'sheep-university',
+ 'goat': 'goat-university',
+ 'cattle': 'cattle-university',
+}[product] || 'onboarding')
+const formatDateTime = (value) => {
+ if (!value) return '—'
+ try {
+ return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
+ } catch {
+ return String(value).replace('T', ' ').slice(0, 16)
+ }
+}
+const formatMoney = (amount, currency='USD') => {
+ const n = Number(amount || 0)
+ try {
+ return new Intl.NumberFormat(undefined, { style: 'currency', currency: currency || 'USD', maximumFractionDigits: 2 }).format(n)
+ } catch {
+ return `${currency || 'USD'} ${n.toFixed(2)}`
+ }
+}
+
 const countries = ['GH', 'NG', 'BF']
 const countryLabels = { GH: 'Ghana (GH)', NG: 'Nigeria (NG)', BF: 'Burkina Faso (BF)' }
 const countryLabelsZh = { GH: '加纳 (GH)', NG: '尼日利亚 (NG)', BF: '布基纳法索 (BF)' }
@@ -1541,6 +1573,8 @@ function AppInner() {
  const [governmentProgramsOpen, setGovernmentProgramsOpen] = useState(true)
  const [tradeStatsOpen, setTradeStatsOpen] = useState(true)
  const [livestockSubscription, setLivestockSubscription] = useState({ tier: 'free', status: 'FREE', record_limit: 25, can_create_records: true, subscription: null, plans: [] })
+ const [billingOverview, setBillingOverview] = useState({ subscriptions: [], active_subscriptions: [], payments: [] })
+ const [paymentReturnNotice, setPaymentReturnNotice] = useState(null)
  const [poultryTrack, setPoultryTrack] = useState('layers')
  const [poultryZone, setPoultryZone] = useState('humid')
  const [openPoultryModule, setOpenPoultryModule] = useState(0)
@@ -1593,6 +1627,13 @@ function AppInner() {
  if (product === 'poultry') setPoultryBillingMsg(message || '')
  }
 
+ const cachePendingCheckout = (payload) => {
+ try { localStorage.setItem(PAYMENT_RETURN_CACHE_KEY, JSON.stringify({ ...(payload || {}), created_at: new Date().toISOString() })) } catch {}
+ }
+ const clearPendingCheckout = () => { try { localStorage.removeItem(PAYMENT_RETURN_CACHE_KEY) } catch {} }
+ const readPendingCheckout = () => {
+ try { return JSON.parse(localStorage.getItem(PAYMENT_RETURN_CACHE_KEY) || 'null') } catch { return null }
+ }
 
  const handleBreederPhotoFiles = async (fileList) => {
  const files = Array.from(fileList || []).filter(Boolean)
@@ -1635,6 +1676,7 @@ function AppInner() {
  try {
  if (!token || !me?.id) { handleProtectedAction('onboarding', label); return }
  const r = await api.checkoutUniversityPlan(product, { user_id: me.id, plan_code: planCode, billing_cycle: 'monthly', currency: 'GHS', country: me?.country || uiCountry })
+ cachePendingCheckout({ type: 'university', product, plan_code: planCode, reference: r.reference })
  setUniversityProductMessage(product, r.payment_url ? `${label} created. Redirecting to payment. Ref: ${r.reference}` : (r.payment_init_error || 'Unable to initialize payment right now.'))
  setUniversityProductState(product, { subscription: r.subscription || universitySubscriptions[product]?.subscription || null })
  if (r.payment_url) window.location.href = r.payment_url
@@ -1659,9 +1701,13 @@ function AppInner() {
  const loadLivestockSubscription = async () => {
  if (!token) {
  setLivestockSubscription({ tier: 'free', status: 'FREE', record_limit: 25, can_create_records: true, subscription: null, plans: [] })
+ setBillingOverview({ subscriptions: [], active_subscriptions: [], payments: [] })
  return
  }
- const sub = await api.fetchLivestockRecordsSubscriptionMe().catch(() => ({ tier: 'free', status: 'FREE', record_limit: 25, can_create_records: true, subscription: null, plans: [] }))
+ const [sub, overview] = await Promise.all([
+ api.fetchLivestockRecordsSubscriptionMe().catch(() => ({ tier: 'free', status: 'FREE', record_limit: 25, can_create_records: true, subscription: null, plans: [] })),
+ api.fetchAccountBillingOverview().catch(() => ({ subscriptions: [], active_subscriptions: [], payments: [] }))
+ ])
  setLivestockSubscription({
  tier: sub?.tier || 'free',
  status: sub?.status || 'NONE',
@@ -1670,6 +1716,11 @@ function AppInner() {
  subscription: sub?.subscription || null,
  plans: sub?.plans || [],
  trial: sub?.trial || null,
+ })
+ setBillingOverview({
+ subscriptions: overview?.subscriptions || [],
+ active_subscriptions: overview?.active_subscriptions || [],
+ payments: overview?.payments || [],
  })
  }
 
@@ -2441,6 +2492,49 @@ function AppInner() {
  return Number.isFinite(out) ? out : ''
  }, [unitValue, unitFrom, unitTo])
 
+ useEffect(() => {
+ if (!token) return
+ const reference = searchParams.get('reference') || searchParams.get('trxref')
+ const pending = readPendingCheckout()
+ if (!reference || !pending?.reference || pending.reference !== reference) return
+ ;(async () => {
+ try {
+ if (pending.type === 'livestock') {
+ const verified = await api.verifyLivestockRecordsSubscription(reference)
+ await load()
+ setActive('onboarding')
+ setPaymentReturnNotice({
+ title: 'Thanks — your Livestock Records upgrade is active.',
+ message: verified?.message || 'Your premium livestock workspace has been confirmed and is ready to use.',
+ reference,
+ verified_at: new Date().toISOString(),
+ section: 'livestock-records',
+ })
+ } else if (pending.type === 'university' && pending.product) {
+ const verified = await api.verifyUniversitySubscription(pending.product, reference)
+ await load()
+ setActive('onboarding')
+ setPaymentReturnNotice({
+ title: `Thanks — your ${paymentSectionLabel(pending.product)} access is ready.`,
+ message: verified?.message || 'Your university subscription has been confirmed and the full content is now available.',
+ reference,
+ verified_at: new Date().toISOString(),
+ section: paymentSectionRoute(pending.product),
+ })
+ }
+ clearPendingCheckout()
+ try {
+ const url = new URL(window.location.href)
+ url.searchParams.delete('reference')
+ url.searchParams.delete('trxref')
+ window.history.replaceState({}, '', url.toString())
+ } catch {}
+ } catch (e) {
+ console.error('Payment return verification failed', e)
+ }
+ })()
+ }, [token])
+
  const selectedCurrency = currencyByCountry[uiCountry] || 'USD'
  const formatLocalPrice = (usd) => {
  const amount = Number(usd || 0) * (fxByCurrency[selectedCurrency] || 1)
@@ -2964,6 +3058,7 @@ function AppInner() {
  currency: selectedCurrency,
  force_paid: true
  })
+ cachePendingCheckout({ type: 'livestock', product: 'livestock-records', plan_code: p.plan_code || 'premium', reference: r.reference })
  if (r.payment_url) {
  try {
  const popup = window.open(r.payment_url, '_blank', 'noopener,noreferrer')
@@ -3199,6 +3294,27 @@ function AppInner() {
  {active === 'home' && <section>
  <h2>{t('Main App Homepage','Page d’accueil de l’application')}</h2>
 
+ <article className='panel' style={{marginBottom:10, background:livestockSubscription?.tier === 'premium' ? 'linear-gradient(135deg,#0f172a 0%,#155e75 55%,#16a34a 100%)' : 'linear-gradient(135deg,#f8fafc 0%,#eff6ff 100%)', color:livestockSubscription?.tier === 'premium' ? '#fff' : '#0f172a', border:livestockSubscription?.tier === 'premium' ? '1px solid rgba(255,255,255,.12)' : '1px solid #bfdbfe'}}>
+ <div style={{display:'flex',justifyContent:'space-between',gap:16,flexWrap:'wrap',alignItems:'center'}}>
+ <div>
+ <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',opacity:.9}}>{livestockSubscription?.tier === 'premium' ? 'Premium workspace' : 'Upgrade available'}</div>
+ <h3 style={{margin:'4px 0 6px'}}>
+ {livestockSubscription?.tier === 'premium' ? 'Livestock Records Premium ✓' : 'Unlock Livestock Records Premium'}
+ </h3>
+ <div style={{maxWidth:720, color:livestockSubscription?.tier === 'premium' ? 'rgba(255,255,255,.88)' : '#334155'}}>
+ {livestockSubscription?.tier === 'premium'
+ ? `Your account is on the premium tier${livestockSubscription?.subscription?.plan_code ? ` • ${String(livestockSubscription.subscription.plan_code).toUpperCase()}` : ''}. Enjoy unlimited records, attachment-ready workflows, and a cleaner operator experience.`
+ : `You are on the free livestock tier${livestockSubscription?.record_limit ? ` with up to ${livestockSubscription.record_limit} animals` : ''}. Upgrade to unlock unlimited records and a more complete herd-management workspace.`}
+ </div>
+ </div>
+ <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
+ {livestockSubscription?.tier === 'premium' && <span className='cover-badge' style={{background:'rgba(255,255,255,.16)', color:'#fff', border:'1px solid rgba(255,255,255,.25)'}}>Premium badge</span>}
+ <button className={`btn ${livestockSubscription?.tier === 'premium' ? '' : 'btn-dark'}`} onClick={() => setActive('livestock-records')}>{livestockSubscription?.tier === 'premium' ? 'Open premium records' : 'View upgrade plans'}</button>
+ <button className='btn' onClick={() => setActive('onboarding')}>My billing</button>
+ </div>
+ </div>
+ </article>
+
  <form className='inlineForm' onSubmit={(e) => { e.preventDefault(); addRecentSearch(homeQuery) }}>
  <input className='input' placeholder={t('Search products, livestock, services…','Rechercher produits, élevage, services…')} value={homeQuery} onChange={(e)=>setHomeQuery(e.target.value)} />
  <button className='btn btn-dark' type='submit'>{t('Search','Rechercher','搜索')}</button>
@@ -3360,6 +3476,20 @@ function AppInner() {
  </section>}
 
  {active === 'onboarding' && <section className='onboarding-shell'>
+ {!!paymentReturnNotice && <article className='panel' style={{marginBottom:12, background:'linear-gradient(135deg,#ecfdf5 0%,#eff6ff 100%)', border:'1px solid #86efac'}}>
+ <div style={{display:'flex',justifyContent:'space-between',gap:12,flexWrap:'wrap',alignItems:'center'}}>
+ <div>
+ <div style={{fontSize:'.78rem',fontWeight:800,color:'#15803d',textTransform:'uppercase',letterSpacing:'.08em'}}>Payment confirmed</div>
+ <h3 style={{margin:'4px 0 6px'}}>{paymentReturnNotice.title}</h3>
+ <div style={{color:'#334155'}}>{paymentReturnNotice.message}</div>
+ <div className='helper-text' style={{marginTop:6}}>Reference: {paymentReturnNotice.reference} • Verified {formatDateTime(paymentReturnNotice.verified_at)}</div>
+ </div>
+ <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+ <button type='button' className='btn btn-dark' onClick={() => setActive(paymentReturnNotice.section || 'onboarding')}>Open access</button>
+ <button type='button' className='btn' onClick={() => setPaymentReturnNotice(null)}>Dismiss</button>
+ </div>
+ </div>
+ </article>}
  <div className='two-col' style={{marginBottom:12}}>
  <article className='panel'>
  <h3>{t('My Account','Mon compte','我的账户')}</h3>
@@ -3408,6 +3538,21 @@ function AppInner() {
  <input className='input' type='password' placeholder='Confirm current password to delete account' value={deleteAccountForm.current_password} onChange={e => setDeleteAccountForm({ current_password: e.target.value })} />
  <button className='btn' style={{background:'#7f1d1d', color:'#fff', borderColor:'#7f1d1d'}}>Delete Account</button>
  </form>
+ </article>
+
+ <article className='panel'>
+ <h3>Subscriptions & Billing</h3>
+ <div className='list'>
+ {(billingOverview.active_subscriptions || []).slice(0, 6).map((sub) => <div className='list-row' key={`active-sub-${sub.reference}`}><span>{paymentSectionLabel(sub.product)} • {String(sub.plan_code || '').toUpperCase()} • {sub.billing_cycle}</span><strong>{sub.status}</strong></div>)}
+ {!(billingOverview.active_subscriptions || []).length && <div className='list-row'><span>No active paid subscriptions yet.</span></div>}
+ </div>
+ <div className='panel' style={{marginTop:10, padding:10, background:'#f8fafc'}}>
+ <strong style={{display:'block', marginBottom:6}}>Billing history</strong>
+ <div className='list' style={{maxHeight:220, overflow:'auto'}}>
+ {[...(billingOverview.subscriptions || []).map((sub) => ({ kind: 'subscription', reference: sub.reference, title: `${paymentSectionLabel(sub.product)} • ${String(sub.plan_code || '').toUpperCase()}`, status: sub.status, amount: formatMoney(sub.amount, sub.currency), when: sub.created_at || sub.started_at })), ...(billingOverview.payments || []).map((pay) => ({ kind: 'payment', reference: pay.reference, title: `${pay.method || 'Payment'} • ${pay.provider || 'FarmSavior'}`, status: pay.status, amount: formatMoney(pay.amount, pay.currency), when: pay.created_at }))].sort((a,b) => new Date(b.when || 0) - new Date(a.when || 0)).slice(0, 12).map((row) => <div className='list-row' key={`${row.kind}-${row.reference}`}><span>{row.title}<br/><small>{formatDateTime(row.when)} • Ref: {row.reference || '—'}</small></span><strong>{row.amount} • {row.status}</strong></div>)}
+ {!((billingOverview.subscriptions || []).length || (billingOverview.payments || []).length) && <div className='list-row'><span>No billing history yet.</span></div>}
+ </div>
+ </div>
  </article>
 
  <article className='panel'>
