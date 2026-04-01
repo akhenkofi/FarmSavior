@@ -1867,6 +1867,23 @@ def _subscription_product_from_reference(reference: Optional[str]) -> str:
     return 'subscription'
 
 
+def _serialize_subscription_record(rec: Optional[SheepGoatSubscription]) -> Optional[dict]:
+    if not rec:
+        return None
+    return {
+        'id': rec.id,
+        'plan_code': rec.plan_code,
+        'billing_cycle': rec.billing_cycle,
+        'currency': rec.currency,
+        'amount': rec.amount,
+        'status': rec.status,
+        'reference': rec.reference,
+        'started_at': rec.started_at.isoformat() if rec.started_at else None,
+        'ends_at': rec.ends_at.isoformat() if rec.ends_at else None,
+        'country': rec.country,
+    }
+
+
 def _sync_subscription_record(rec: SheepGoatSubscription, db: Session) -> dict:
     product = _subscription_product_from_reference(rec.reference)
     active_statuses = {'ACTIVE', 'TRIAL_ACTIVE'}
@@ -2006,31 +2023,33 @@ def university_product_plans(product: str):
 def university_product_subscription_me(product: str, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
     prefix = _university_subscription_prefix(product)
     user = _current_user_from_auth(authorization, db)
-    rec = db.query(SheepGoatSubscription).filter(
+    records = db.query(SheepGoatSubscription).filter(
         SheepGoatSubscription.user_id == user.id,
         SheepGoatSubscription.reference.like(f'{prefix}%')
-    ).order_by(SheepGoatSubscription.id.desc()).first()
+    ).order_by(SheepGoatSubscription.created_at.desc(), SheepGoatSubscription.id.desc()).limit(20).all()
 
-    if not rec:
+    if not records:
         return {'product': product, 'tier': 'free', 'subscription': None}
 
+    pending_statuses = {'PENDING_PAYMENT', 'PENDING', 'PROCESSING'}
     active_statuses = {'ACTIVE', 'TRIAL_ACTIVE'}
-    tier = rec.plan_code if rec.status in active_statuses else 'free'
+    for rec in records:
+        if str(rec.status or '').upper() in pending_statuses:
+            _sync_subscription_record(rec, db)
+
+    refreshed = db.query(SheepGoatSubscription).filter(
+        SheepGoatSubscription.user_id == user.id,
+        SheepGoatSubscription.reference.like(f'{prefix}%')
+    ).order_by(SheepGoatSubscription.created_at.desc(), SheepGoatSubscription.id.desc()).limit(20).all()
+
+    active_rec = next((rec for rec in refreshed if str(rec.status or '').upper() in active_statuses), None)
+    latest_rec = refreshed[0] if refreshed else None
+    rec = active_rec or latest_rec
+    tier = rec.plan_code if rec and str(rec.status or '').upper() in active_statuses else 'free'
     return {
         'product': product,
         'tier': tier,
-        'subscription': {
-            'id': rec.id,
-            'plan_code': rec.plan_code,
-            'billing_cycle': rec.billing_cycle,
-            'currency': rec.currency,
-            'amount': rec.amount,
-            'status': rec.status,
-            'reference': rec.reference,
-            'started_at': rec.started_at.isoformat() if rec.started_at else None,
-            'ends_at': rec.ends_at.isoformat() if rec.ends_at else None,
-            'country': rec.country,
-        }
+        'subscription': _serialize_subscription_record(rec)
     }
 
 

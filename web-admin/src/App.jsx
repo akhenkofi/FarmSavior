@@ -1726,6 +1726,7 @@ function AppInner() {
  }
 
  const loadUniversitySubscriptions = async () => {
+ if (token) await api.syncAccountBilling().catch(() => ({ synced: [], checked_count: 0 }))
  const products = await Promise.all(universityProducts.map(async (product) => {
  const plans = await api.fetchUniversityPlans(product).catch(() => ({ plans: [] }))
  if (!token) return { product, tier: 'free', subscription: null, plans: plans.plans || [] }
@@ -3998,7 +3999,7 @@ function AppInner() {
 
  {active === 'sheep-university' && <section>
  <h3>🐑 Sheep University</h3>
- <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Executive standard:</strong> Sheep University Professional presents the breeding and operating system in a format suitable for institutional, investor, and policy review.</div>
+ <div className='panel' style={{marginBottom:10, background:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? 'linear-gradient(135deg,#0f172a 0%,#14532d 45%,#0f766e 100%)' : '#eff6ff', color:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? '#fff' : '#0f172a', border:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? '1px solid rgba(255,255,255,.12)' : '1px solid #bfdbfe', boxShadow:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? '0 18px 40px rgba(15,23,42,.24)' : 'none'}}><div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'center',flexWrap:'wrap'}}><div><div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',opacity:.9}}>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? 'Premium access confirmed' : 'Executive standard'}</div><strong style={{display:'block',fontSize:'1.05rem',marginTop:4}}>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? `Sheep University ${String(universitySubscriptions.sheep?.subscription?.plan_code || sheepTier || '').toUpperCase()} ✓` : 'Sheep University Professional'}</strong><div style={{marginTop:6,color:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? 'rgba(255,255,255,.88)' : '#1e3a8a'}}>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? `Your paid sheep subscription is active${universitySubscriptions.sheep?.subscription?.reference ? ` • Ref ${universitySubscriptions.sheep.subscription.reference}` : ''}. Full modules are unlocked${sheepTier === 'pro' ? ', executive tools are live,' : ''} and upgrade prompts are cleared.` : 'Sheep University Professional presents the breeding and operating system in a format suitable for institutional, investor, and policy review.'}</div></div>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? <span className='cover-badge' style={{background:'rgba(255,255,255,.14)', color:'#fff', border:'1px solid rgba(255,255,255,.24)'}}>{String(universitySubscriptions.sheep?.subscription?.status || 'ACTIVE').replaceAll('_',' ')}</span> : null}</div></div>
  <article className='panel' style={{marginBottom:10,border:'1px solid #ddd6fe',background:'#faf5ff'}}>
  <h4 style={{marginTop:0,color:'#6d28d9'}}>Ghana Sheep Breed Development Framework</h4>
  <div className='list'>
@@ -4015,15 +4016,15 @@ function AppInner() {
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Program overview, breed cards, KPIs, and opening pillar.</div>
  <button className='btn' onClick={(e)=>{e.stopPropagation(); setSheepTier('free'); setOpenSheepModule(0); setSheepPlanPreview('free')}}>{sheepTier==='free' ? 'Preview Active ✓' : 'Use Preview'}</button>
  </div>
- <div className='panel' style={{padding:10, border:sheepTier==='basic' || sheepPlanPreview==='basic'?'2px solid #16a34a':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setSheepPlanPreview('basic')}>
+ <div className='panel' style={{padding:10, border:sheepTier==='basic' || sheepPlanPreview==='basic'?'2px solid #16a34a':'1px solid #e2e8f0', cursor:'pointer', opacity:sheepTier==='basic' || sheepTier==='pro' ? 1 : 1}} onClick={()=>setSheepPlanPreview('basic')}>
  <strong>🌿 Basic — ₵50/mo</strong>
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Full pillar access, both operating zones, and health schedule guidance.</div>
- <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('sheep', 'basic', 'Sheep University Basic checkout')}}>Unlock Basic</button>
+ <button className={`btn ${sheepTier==='basic' || sheepTier==='pro' ? '' : 'btn-dark'}`} onClick={(e)=>{e.stopPropagation(); if (sheepTier==='basic' || sheepTier==='pro') { setOpenSheepModule(1); return } startUniversityCheckout('sheep', 'basic', 'Sheep University Basic checkout')}}>{sheepTier==='basic' ? 'Current plan ✓' : sheepTier==='pro' ? 'Included in Professional ✓' : 'Unlock Basic'}</button>
  </div>
  <div className='panel' style={{padding:10, border:sheepTier==='pro' || sheepPlanPreview==='pro'?'2px solid #7c3aed':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setSheepPlanPreview('pro')}>
  <strong>🏆 Professional — ₵120/mo</strong>
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus executive briefings, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
- <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('sheep', 'pro', 'Sheep University Professional checkout')}}>Go Professional</button>
+ <button className={`btn ${sheepTier==='pro' ? '' : 'btn-dark'}`} onClick={(e)=>{e.stopPropagation(); if (sheepTier==='pro') return; startUniversityCheckout('sheep', 'pro', 'Sheep University Professional checkout')}}>{sheepTier==='pro' ? 'Professional active ✓' : 'Go Professional'}</button>
  </div>
  </div>
  <div className='panel' style={{marginTop:8,padding:8,background:'#faf5ff',border:'1px solid #ddd6fe'}}>
@@ -4031,11 +4032,11 @@ function AppInner() {
  <div className='list' style={{marginTop:6}}>
  {universityPlanPreview[sheepPlanPreview].features.map((feature)=><div className='list-row' key={feature}><span>{feature}</span></div>)}
  </div>
- {sheepPlanPreview !== 'free' && <div style={{marginTop:8}}><button className='btn btn-dark' onClick={()=>startUniversityCheckout('sheep', sheepPlanPreview, `Sheep University ${sheepPlanPreview === 'pro' ? 'Professional' : 'Basic'} checkout`)}>{sheepPlanPreview === 'pro' ? 'Upgrade to Professional' : 'Upgrade to Basic'}</button></div>}
+ {sheepPlanPreview !== 'free' && sheepTier === 'free' && <div style={{marginTop:8}}><button className='btn btn-dark' onClick={()=>startUniversityCheckout('sheep', sheepPlanPreview, `Sheep University ${sheepPlanPreview === 'pro' ? 'Professional' : 'Basic'} checkout`)}>{sheepPlanPreview === 'pro' ? 'Upgrade to Professional' : 'Upgrade to Basic'}</button></div>}
  </div>
  </article>
- {universitySubscriptions.sheep?.subscription?.status === 'PENDING_PAYMENT' && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}><strong>Payment pending.</strong> Reference: {universitySubscriptions.sheep.subscription.reference}. <button className='btn btn-dark' style={{marginLeft:8}} onClick={()=>verifyUniversityCheckout('sheep')}>Verify Payment</button></div>}
- {universitySubscriptions.sheep?.subscription?.status === 'ACTIVE' && <div className='panel' style={{marginTop:8,padding:8,background:'#ecfeff',border:'1px solid #99f6e4'}}><strong>{String(universitySubscriptions.sheep.subscription.plan_code || '').toUpperCase()} active.</strong> Server-side subscription verified.</div>}
+ {universitySubscriptions.sheep?.subscription?.status === 'PENDING_PAYMENT' && sheepTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}><strong>Payment pending.</strong> Reference: {universitySubscriptions.sheep.subscription.reference}. <button className='btn btn-dark' style={{marginLeft:8}} onClick={()=>verifyUniversityCheckout('sheep')}>Verify Payment</button></div>}
+ {universitySubscriptions.sheep?.subscription?.status === 'ACTIVE' && <div className='panel' style={{marginTop:8,padding:10,background:'linear-gradient(180deg,#ecfeff 0%,#f0fdfa 100%)',border:'1px solid #99f6e4'}}><strong>{String(universitySubscriptions.sheep.subscription.plan_code || '').toUpperCase()} active.</strong> Payment verified, premium content unlocked, and Sheep University is now in paid mode.</div>}
  {!!universityBillingMsg.sheep && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}>{universityBillingMsg.sheep}</div>}
  {sheepTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#f5f3ff',border:'1px solid #ddd6fe'}}><strong>Preview access active.</strong> The opening pillar is available now; the full operating program unlocks with the higher plan.</div>}
 
