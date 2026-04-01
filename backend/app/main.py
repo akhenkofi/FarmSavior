@@ -15,6 +15,14 @@ Base.metadata.create_all(bind=engine)
 logger = logging.getLogger(__name__)
 
 
+def _validate_runtime_settings() -> None:
+    twilio_sid = str(getattr(settings, 'TWILIO_ACCOUNT_SID', '') or '').strip()
+    twilio_from = str(getattr(settings, 'TWILIO_FROM_NUMBER', '') or '').strip()
+    gh_sender = str(getattr(settings, 'GHANA_TWILIO_SENDER_ID', 'SheepGhana') or 'SheepGhana').strip()
+    if twilio_sid and twilio_from and twilio_from != gh_sender:
+        logger.warning('TWILIO_FROM_NUMBER=%s differs from Ghana sender ID %s; Ghana OTP delivery may fail', twilio_from, gh_sender)
+
+
 def _ts_type() -> str:
     try:
         return 'TIMESTAMP' if str(getattr(engine.dialect, 'name', '')).lower().startswith('postgres') else 'DATETIME'
@@ -160,7 +168,7 @@ def ensure_runtime_columns():
 
 
 ensure_runtime_columns()
-
+_validate_runtime_settings()
 
 
 async def _auto_release_loop():

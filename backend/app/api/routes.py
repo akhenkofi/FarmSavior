@@ -734,6 +734,26 @@ def _mark_trial_used(user: Optional[User], user_id: Optional[int]):
     _trial_ledger_write(ledger)
 
 
+def _twilio_from_for_destination(destination: str) -> str:
+    dest = str(destination or '').strip()
+    sender = str(settings.TWILIO_FROM_NUMBER or '').strip()
+    gh_sender = str(settings.GHANA_TWILIO_SENDER_ID or 'SheepGhana').strip()
+    if dest.startswith('+233'):
+        return gh_sender
+    return sender
+
+
+def _validate_twilio_sender_for_destination(destination: str) -> Optional[str]:
+    dest = str(destination or '').strip()
+    sender = _twilio_from_for_destination(dest)
+    gh_sender = str(settings.GHANA_TWILIO_SENDER_ID or 'SheepGhana').strip()
+    if dest.startswith('+233') and sender != gh_sender:
+        return f"Ghana SMS requires sender ID {gh_sender}"
+    if not sender:
+        return 'Twilio sender is not configured'
+    return None
+
+
 def _send_otp(destination: str, method: str, code: str):
     message = f"Your FarmSavior OTP is {code}. It expires soon."
     if method == 'email' and settings.SMTP_HOST and settings.SMTP_USER and settings.SMTP_PASS:
@@ -758,10 +778,14 @@ def _send_otp(destination: str, method: str, code: str):
         except Exception as e:
             return {'sent': False, 'channel': 'email', 'error': str(e)}
 
-    if method == 'phone' and settings.TWILIO_ACCOUNT_SID and settings.TWILIO_AUTH_TOKEN and settings.TWILIO_FROM_NUMBER:
+    if method == 'phone' and settings.TWILIO_ACCOUNT_SID and settings.TWILIO_AUTH_TOKEN:
+        sender_error = _validate_twilio_sender_for_destination(destination)
+        if sender_error:
+            return {'sent': False, 'channel': 'phone', 'error': sender_error}
         try:
+            twilio_from = _twilio_from_for_destination(destination)
             url = f"https://api.twilio.com/2010-04-01/Accounts/{settings.TWILIO_ACCOUNT_SID}/Messages.json"
-            body = urlencode({'To': destination, 'From': settings.TWILIO_FROM_NUMBER, 'Body': message}).encode('utf-8')
+            body = urlencode({'To': destination, 'From': twilio_from, 'Body': message}).encode('utf-8')
             req = UrlRequest(url, data=body)
             import base64
             token = base64.b64encode(f"{settings.TWILIO_ACCOUNT_SID}:{settings.TWILIO_AUTH_TOKEN}".encode()).decode()
