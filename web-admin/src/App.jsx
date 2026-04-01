@@ -3291,7 +3291,7 @@ function AppInner() {
  <button className='btn' onClick={() => setActive('products')}>{t('Products','Produits')}</button>
  <button className='btn' onClick={() => setActive('livestock')}>{t('Livestock','Élevage')}</button>
  <button className='btn' onClick={() => setActive('services')}>{t('Services','Services')}</button>
- <button className='btn' onClick={() => setActive('ai-disease')}>{t('AI Disease','IA maladies')}</button>
+ <button className='btn' onClick={() => setActive('ai-disease')}>{t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析')}</button>
  <button className='btn' onClick={() => setActive('poultry-university')}>Poultry University</button>
  <button className='btn' onClick={() => setActive('sheep-university')}>Sheep University</button>
  <button className='btn' onClick={() => setActive('goat-university')}>Goat University</button>
@@ -5215,8 +5215,43 @@ function AppInner() {
  </article>
  </section>}
 
- {active === 'ai-disease' && <section><h3>{t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析')}</h3>
- <form className='inlineForm' onSubmit={async e => {
+ {active === 'ai-disease' && <section className='disease-shell'>
+ <div className='disease-hero'>
+ <div>
+ <div className='disease-eyebrow'>AI LIVESTOCK HEALTH</div>
+ <h3>{t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析')}</h3>
+ <p>Upload a clear livestock photo, add symptoms if you have them, and get a structured first-pass assessment with prevention, treatment, and follow-up guidance.</p>
+ </div>
+ <div className='disease-hero-actions'>
+ <button className='btn' type='button' onClick={() => { setDiseaseResult(null); setDiseaseImagePreview(''); setDiseaseImageFileName(''); setDiseaseForm(prev => ({ ...prev, target: '', image_url: '', context_note: '' })) }}>Start fresh</button>
+ <button className='btn btn-dark' type='button' onClick={() => document.getElementById('disease-analyzer-form')?.scrollIntoView({ behavior:'smooth', block:'start' })}>New analysis</button>
+ </div>
+ </div>
+ <div className='disease-overview-grid'>
+ <div className='disease-stat-card disease-stat-card-primary'>
+ <span>Animal scans</span>
+ <strong>{state.diseaseScans.filter(r => !r.category || String(r.category).toLowerCase() === 'animal').length}</strong>
+ <small>Total livestock disease analyses saved in admin history.</small>
+ </div>
+ <div className='disease-stat-card'>
+ <span>Selected animal</span>
+ <strong>{diseaseForm.target ? (animalOptions.find(x => x.value === diseaseForm.target)?.label || diseaseForm.target) : 'None'}</strong>
+ <small>Choose the closest animal type before you submit a photo.</small>
+ </div>
+ <div className='disease-stat-card'>
+ <span>Evidence strength</span>
+ <strong>{diseaseResult?.analysis_signal || 'Pending'}</strong>
+ <small>{diseaseResult?.insufficient_evidence ? 'Low evidence detected. Add clearer images or more context.' : 'Clear images improve confidence and treatment guidance.'}</small>
+ </div>
+ <div className='disease-stat-card'>
+ <span>Latest confidence</span>
+ <strong>{diseaseResult ? `${Math.round((diseaseResult.confidence || 0) * 100)}%` : '—'}</strong>
+ <small>{diseaseResult?.diagnosis || 'Results will appear here after an analysis completes.'}</small>
+ </div>
+ </div>
+ <div className='disease-main-grid'>
+ <div className='disease-form-column'>
+ <form id='disease-analyzer-form' className='panel disease-panel disease-form-panel' onSubmit={async e => {
  e.preventDefault();
  try {
  setDiseaseAnalyzing(true)
@@ -5231,12 +5266,31 @@ function AppInner() {
  setDiseaseAnalyzing(false)
  }
  }}>
+ <div className='disease-panel-head'>
+ <div>
+ <div className='disease-panel-title'>Submit a livestock case</div>
+ <div className='helper-text'>Use bright, close-up photos and mention visible symptoms, duration, or recent feed and weather changes.</div>
+ </div>
+ <div className='disease-panel-pill'>Animal AI</div>
+ </div>
+ <div className='disease-form-grid'>
+ <label className='disease-field'>
+ <span>User ID</span>
  <input className='input' placeholder='User ID' value={diseaseForm.user_id} onChange={(e)=>setDiseaseForm({...diseaseForm,user_id:e.target.value,category:'animal'})} />
+ </label>
+ <label className='disease-field'>
+ <span>Animal type</span>
  <select className='input' value={diseaseForm.target} onChange={(e)=>setDiseaseForm({...diseaseForm,category:'animal',target:e.target.value})} required>
  <option value=''>Select animal</option>
  {animalOptions.map(x => <option key={x.value} value={x.value}>{x.label}</option>)}
  </select>
- <textarea className='input' placeholder='Describe animal symptoms (optional): e.g., coughing, discharge, lesions, diarrhea, fever...' value={diseaseForm.context_note || ''} onChange={(e)=>setDiseaseForm({...diseaseForm,context_note:e.target.value,category:'animal'})} rows={3} style={{minWidth:'100%'}} />
+ </label>
+ <label className='disease-field disease-field-wide'>
+ <span>Observed symptoms</span>
+ <textarea className='input disease-textarea' placeholder='Describe animal symptoms (optional): e.g., coughing, discharge, lesions, diarrhea, fever...' value={diseaseForm.context_note || ''} onChange={(e)=>setDiseaseForm({...diseaseForm,context_note:e.target.value,category:'animal'})} rows={4} />
+ </label>
+ <label className='disease-field disease-field-wide'>
+ <span>Upload photo</span>
  <input className='input' type='file' accept='image/*' onChange={async (e)=>{
  const f = e.target.files?.[0]
  if (!f) return
@@ -5250,31 +5304,96 @@ function AppInner() {
  alert(`Could not prepare image: ${err?.message || err}`)
  }
  }} />
- <button className='btn btn-dark' disabled={diseaseAnalyzing}>{diseaseAnalyzing ? 'FarmSavior is analyzing…' : 'Analyze'}</button>
+ </label>
+ <div className='disease-upload-card disease-field-wide'>
+ <div>
+ <strong>{diseaseImageFileName || 'No photo uploaded yet'}</strong>
+ <div className='helper-text'>{diseaseImageFileName ? 'Image prepared and ready for analysis.' : 'The preview appears here after you choose an image from your device or camera.'}</div>
+ </div>
+ {diseaseImagePreview ? <img src={diseaseImagePreview} alt='Disease scan preview' className='disease-preview-image' /> : <div className='disease-preview-placeholder'>Preview ready after upload</div>}
+ </div>
+ <div className='disease-form-actions'>
+ <button className='btn' type='button' onClick={() => { setDiseaseImagePreview(''); setDiseaseImageFileName(''); setDiseaseForm(prev => ({ ...prev, image_url: '' })) }}>Clear image</button>
+ <button className='btn btn-dark' disabled={diseaseAnalyzing}>{diseaseAnalyzing ? 'FarmSavior is analyzing…' : 'Analyze case'}</button>
+ </div>
+ </div>
  </form>
- {diseaseAnalyzing && <div className='panel list' style={{marginBottom:12}}><div className='list-row'><strong>🌿 FarmSavior</strong><span>Analyzing image…</span></div><div style={{fontSize:'.9rem', color:'#64748b'}}>Please wait while FarmSavior checks the image, compares likely conditions, and prepares treatment guidance.</div></div>}
- {diseaseImageFileName && <p style={{fontSize:'.82rem',color:'#475569'}}>Uploaded: {diseaseImageFileName}</p>}
- {diseaseImagePreview && <img src={diseaseImagePreview} alt='Disease scan preview' style={{maxWidth:260,borderRadius:8,border:'1px solid #e2e8f0',marginBottom:8}} />}
- {diseaseResult && <div className='panel list' style={{marginBottom:12}}>
- <div className='list-row'><strong>Primary assessment</strong><span>{diseaseResult.diagnosis} ({Math.round((diseaseResult.confidence || 0) * 100)}%)</span></div>
- <div className='list-row'><strong>Evidence strength</strong><span>{diseaseResult.analysis_signal || 'unknown'}{diseaseResult.insufficient_evidence ? ' · low evidence' : ''}</span></div>
- <div><strong>How to differentiate</strong><div style={{marginTop:6}}>{Array.isArray(diseaseResult.differentiation) ? diseaseResult.differentiation.join(' • ') : (diseaseResult.differentiation || '-')}</div></div>
- <div><strong>Prevention</strong><div style={{marginTop:6}}>{Array.isArray(diseaseResult.prevention) ? diseaseResult.prevention.join(' • ') : (diseaseResult.prevention || diseaseResult.recommendation || '-')}</div></div>
- <div><strong>Treatment</strong><div style={{marginTop:6}}>{diseaseResult.treatment || '-'}</div></div>
- <div><strong>Top 3 possible conditions</strong>
- <div style={{display:'grid',gap:10,marginTop:8}}>
- {(diseaseResult.top_matches || []).map((m, idx) => <div key={`${m.diagnosis}-${idx}`} className='panel' style={{padding:12}}>
- <div className='list-row'><strong>{idx + 1}. {m.diagnosis}</strong><span>{Math.round((m.confidence || 0) * 100)}%</span></div>
- <div style={{fontSize:'.92rem',marginTop:6}}><strong>Why it matches:</strong> {Array.isArray(m.why_it_matches) && m.why_it_matches.length ? m.why_it_matches.join(' • ') : '-'}</div>
- <div style={{fontSize:'.92rem',marginTop:6}}><strong>How to tell apart:</strong> {Array.isArray(m.how_to_tell_apart) ? m.how_to_tell_apart.join(' • ') : (m.how_to_tell_apart || '-')}</div>
- <div style={{fontSize:'.92rem',marginTop:6}}><strong>Prevention:</strong> {Array.isArray(m.prevention) ? m.prevention.join(' • ') : (m.prevention || '-')}</div>
- <div style={{fontSize:'.92rem',marginTop:6}}><strong>Treatment:</strong> {m.treatment || '-'}</div>
- </div>)}
+ <div className='panel disease-panel disease-tips-panel'>
+ <div className='disease-panel-head'>
+ <div className='disease-panel-title'>Capture tips</div>
+ <div className='disease-panel-pill disease-panel-pill-soft'>Better inputs, better outputs</div>
+ </div>
+ <div className='disease-tip-list'>
+ <div className='disease-tip-item'><strong>1. Keep the subject clear</strong><span>Fill the frame with the affected animal or body area instead of the whole pen.</span></div>
+ <div className='disease-tip-item'><strong>2. Add symptom context</strong><span>Mention appetite changes, discharge, lesions, stool changes, fever, or sudden mortality.</span></div>
+ <div className='disease-tip-item'><strong>3. Treat AI as triage</strong><span>Use the result to organize next steps, then confirm diagnosis, dosage, and withdrawal periods with a veterinarian.</span></div>
  </div>
  </div>
- <div style={{fontSize:'.9rem',color:'#7f1d1d'}}>{diseaseResult.vet_notice || 'Important: Contact a licensed veterinarian for confirmation before treatment.'}</div>
+ </div>
+ <div className='disease-results-column'>
+ {diseaseAnalyzing && <div className='panel disease-panel disease-status-card'><div className='list-row'><strong>🌿 FarmSavior</strong><span>Analyzing image…</span></div><div className='helper-text'>Please wait while FarmSavior checks the image, compares likely conditions, and prepares treatment guidance.</div></div>}
+ {!diseaseAnalyzing && !diseaseResult && <div className='panel disease-panel disease-empty-card'>
+ <div className='disease-empty-icon'>🩺</div>
+ <strong>No analysis yet</strong>
+ <p>Upload a livestock image and run a scan to see the primary assessment, differential matches, and treatment guidance here.</p>
  </div>}
+ {diseaseResult && <div className='panel disease-panel disease-results-card'>
+ <div className='disease-panel-head'>
+ <div>
+ <div className='disease-panel-title'>Primary assessment</div>
+ <div className='helper-text'>Structured result based on the uploaded livestock image and the symptom notes you provided.</div>
+ </div>
+ <div className='disease-confidence-badge'>{Math.round((diseaseResult.confidence || 0) * 100)}% confidence</div>
+ </div>
+ <div className='disease-primary-card'>
+ <div>
+ <div className='disease-primary-label'>Likely condition</div>
+ <div className='disease-primary-diagnosis'>{diseaseResult.diagnosis || 'No diagnosis returned'}</div>
+ </div>
+ <div className='disease-signal-chip'>{diseaseResult.analysis_signal || 'unknown'}{diseaseResult.insufficient_evidence ? ' · low evidence' : ''}</div>
+ </div>
+ <div className='disease-detail-grid'>
+ <div className='disease-detail-block'>
+ <span>How to differentiate</span>
+ <p>{Array.isArray(diseaseResult.differentiation) ? diseaseResult.differentiation.join(' • ') : (diseaseResult.differentiation || '-')}</p>
+ </div>
+ <div className='disease-detail-block'>
+ <span>Prevention</span>
+ <p>{Array.isArray(diseaseResult.prevention) ? diseaseResult.prevention.join(' • ') : (diseaseResult.prevention || diseaseResult.recommendation || '-')}</p>
+ </div>
+ <div className='disease-detail-block disease-detail-block-full'>
+ <span>Treatment guidance</span>
+ <p>{diseaseResult.treatment || '-'}</p>
+ </div>
+ </div>
+ <div className='disease-match-stack'>
+ <div className='disease-subsection-title'>Top possible conditions</div>
+ {(diseaseResult.top_matches || []).map((m, idx) => <div key={`${m.diagnosis}-${idx}`} className='disease-match-card'>
+ <div className='disease-match-head'>
+ <strong>{idx + 1}. {m.diagnosis}</strong>
+ <span>{Math.round((m.confidence || 0) * 100)}%</span>
+ </div>
+ <div><strong>Why it matches:</strong> {Array.isArray(m.why_it_matches) && m.why_it_matches.length ? m.why_it_matches.join(' • ') : '-'}</div>
+ <div><strong>How to tell apart:</strong> {Array.isArray(m.how_to_tell_apart) ? m.how_to_tell_apart.join(' • ') : (m.how_to_tell_apart || '-')}</div>
+ <div><strong>Prevention:</strong> {Array.isArray(m.prevention) ? m.prevention.join(' • ') : (m.prevention || '-')}</div>
+ <div><strong>Treatment:</strong> {m.treatment || '-'}</div>
+ </div>)}
+ {!(diseaseResult.top_matches || []).length && <div className='disease-match-card'><strong>No differential list returned.</strong><div>Run another scan with a clearer photo if you need more comparison detail.</div></div>}
+ </div>
+ <div className='disease-vet-notice'>{diseaseResult.vet_notice || 'Important: Contact a licensed veterinarian for confirmation before treatment.'}</div>
+ </div>}
+ <div className='panel disease-panel'>
+ <div className='disease-panel-head'>
+ <div>
+ <div className='disease-panel-title'>Recent analyzer history</div>
+ <div className='helper-text'>Animal-only disease scans already saved in the admin database.</div>
+ </div>
+ <div className='disease-panel-pill disease-panel-pill-soft'>{state.diseaseScans.filter(r => !r.category || String(r.category).toLowerCase() === 'animal').length} records</div>
+ </div>
  <DataTable columns={['id','user_id','image_url','result','created_at']} rows={state.diseaseScans.filter(r => !r.category || String(r.category).toLowerCase() === 'animal')} filterKey='result' />
+ </div>
+ </div>
+ </div>
  </section>}
 
  {active === 'plant-id' && <section>
