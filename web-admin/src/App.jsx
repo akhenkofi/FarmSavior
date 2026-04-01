@@ -1457,6 +1457,7 @@ function AppInner() {
  const [famachaDraft, setFamachaDraft] = useState({ famacha: '--', bodyScore: '', weight: '', notes: '' })
  const [customMedicineComposerOpen, setCustomMedicineComposerOpen] = useState(false)
  const [customMedicineName, setCustomMedicineName] = useState('')
+ const appScreenOpen = notesComposerOpen || weightComposerOpen || medicinesScreenOpen || medicineShotOpen || medicineChooserOpen || customMedicineComposerOpen || famachaComposerOpen || ancestorTreeOpen || ancestorPdfOpen || offspringReportOpen || offspringListOpen || markComposerOpen || flushComposerOpen || ultrasoundComposerOpen || moveHerdOpen || selectedBreederDetail || breederReportOpen || notesScreenOpen
  const [notesSearch, setNotesSearch] = useState('')
  const [draftNote, setDraftNote] = useState('')
  const [draftWeight, setDraftWeight] = useState('')
@@ -1932,12 +1933,24 @@ function AppInner() {
  }, [token])
 
  useEffect(() => {
+ document.body.style.overflow = appScreenOpen ? 'hidden' : ''
+ if (appScreenOpen) window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' })
+ return () => { document.body.style.overflow = '' }
+ }, [appScreenOpen])
+
+ useEffect(() => {
  if (!token) return
  if ((me?.role || '').toLowerCase() !== 'admin') return
  loadWorldChatQueue().catch(() => {})
  const id = setInterval(() => { loadWorldChatQueue().catch(() => {}) }, 8000)
  return () => clearInterval(id)
  }, [token, me?.role])
+
+ useEffect(() => {
+ document.body.style.overflow = appScreenOpen ? 'hidden' : ''
+ if (appScreenOpen) window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' })
+ return () => { document.body.style.overflow = '' }
+ }, [appScreenOpen])
 
  useEffect(() => {
  if (!token) return
@@ -4622,7 +4635,7 @@ function AppInner() {
  </article>
 
 
- {(selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18}}>
+ {(selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', borderRadius:0}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => { if (selectedOffspringRecord) setSelectedOffspringRecord(null); else setSelectedLivestockRecord(null) }}>‹</button>
  <strong style={{fontSize:'1.05rem'}}>{selectedOffspringRecord ? 'Offspring' : (String((selectedOffspringRecord || selectedLivestockRecord).species || 'Animal').charAt(0) + String((selectedOffspringRecord || selectedLivestockRecord).species || 'Animal').slice(1).toLowerCase())}</strong>
@@ -4828,7 +4841,7 @@ function AppInner() {
  </div>
  </article>}
 
- {offspringReportOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ {offspringReportOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', borderRadius:0}}>
  <div style={{background:'#0f172a', color:'#fff', padding:'14px 16px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setOffspringReportOpen(false)}>‹</button>
  <div>
@@ -4859,7 +4872,7 @@ function AppInner() {
  </div>
  </article>}
 
- {ancestorPdfOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ {ancestorPdfOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', borderRadius:0}}>
  <div style={{background:'#0f172a', color:'#fff', padding:'14px 16px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setAncestorPdfOpen(false)}>‹</button>
  <div>
@@ -4960,7 +4973,7 @@ function AppInner() {
  </div>
  </article>}
 
- {customMedicineComposerOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ {customMedicineComposerOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', borderRadius:0}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setCustomMedicineComposerOpen(false)}>Cancel</button>
  <strong style={{margin:'0 auto'}}>Medicines</strong>
@@ -4976,7 +4989,7 @@ function AppInner() {
  </div>
  </article>}
 
- {medicineChooserOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ {medicineChooserOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', borderRadius:0}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setMedicineChooserOpen(false)}>Cancel</button>
  <strong style={{margin:'0 auto'}}>Medicines</strong>
@@ -5001,7 +5014,7 @@ function AppInner() {
  </div>
  </article>}
 
- {medicineShotOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ {medicineShotOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', borderRadius:0}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setMedicineShotOpen(false)}>Cancel</button>
  <strong style={{margin:'0 auto'}}>Medicine Shot</strong>
@@ -5028,7 +5041,7 @@ function AppInner() {
  </div>
  </article>}
 
- {medicinesScreenOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ {medicinesScreenOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', borderRadius:0}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setMedicinesScreenOpen(false)}>‹</button>
  <strong>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</strong>
@@ -5046,7 +5059,7 @@ function AppInner() {
  </div>
  </article>}
 
- {weightComposerOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ {weightComposerOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', borderRadius:0}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setWeightComposerOpen(false)}>Cancel</button>
  <strong style={{margin:'0 auto'}}>Weight</strong>
@@ -5071,7 +5084,7 @@ function AppInner() {
  </div>
  </article>}
 
- {notesComposerOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ {notesComposerOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', borderRadius:0}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setNotesComposerOpen(false)}>Cancel</button>
  <strong style={{margin:'0 auto'}}>Notes</strong>
@@ -5088,7 +5101,7 @@ function AppInner() {
  </div>
  </article>}
 
- {notesScreenOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ {notesScreenOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', borderRadius:0}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setNotesScreenOpen(false)}>‹</button>
  <strong>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</strong>
