@@ -955,7 +955,7 @@ const livestockHistoryRows = (record) => {
  history: [
  ['Notes', `(${notesCount})`, 'notes'],
  ['Add Note', '›'],
- ['Add Weight', '›'],
+ ['Add Weight', '›', 'add-weight'],
  ['Medicines', `(${medsCount})`],
  ['Add Medicine', '›'],
  ['Add FAMACHA/Body Condition Score', '›'],
@@ -1367,8 +1367,10 @@ function AppInner() {
  const [breederReportOpen, setBreederReportOpen] = useState(false)
  const [notesScreenOpen, setNotesScreenOpen] = useState(false)
  const [notesComposerOpen, setNotesComposerOpen] = useState(false)
+ const [weightComposerOpen, setWeightComposerOpen] = useState(false)
  const [notesSearch, setNotesSearch] = useState('')
  const [draftNote, setDraftNote] = useState('')
+ const [draftWeight, setDraftWeight] = useState('')
  const [livestockRecordsFilter, setLivestockRecordsFilter] = useState('ALL')
  const [recordsSectionOpen, setRecordsSectionOpen] = useState({ create: false, edit: false, batch: false, details: false })
  const [batchMedicationForm, setBatchMedicationForm] = useState({ species:'ALL', animal_type:'ALL', health_status:'ALL', cull_keep_status:'ALL', minStars:'', pen_location:'', medication:'', dose:'', days:'' })
@@ -4549,8 +4551,11 @@ function AppInner() {
  <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>HISTORY</div>
  {livestockHistoryRows(selectedLivestockRecord).history.map((row, idx) => {
  const [label, value, action] = row
- const clickable = action === 'notes'
- return <div key={`history-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: clickable ? 'pointer' : 'default'}} onClick={() => { if (action === 'notes') setNotesScreenOpen(true) }}>
+ const clickable = action === 'notes' || action === 'add-weight'
+ return <div key={`history-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: clickable ? 'pointer' : 'default'}} onClick={() => {
+ if (action === 'notes') setNotesScreenOpen(true)
+ if (action === 'add-weight') { setDraftWeight(''); setWeightComposerOpen(true) }
+ }}>
  <span style={{color:'#111827', fontWeight:600}}>{label} {String(value).startsWith('(') ? value : ''}</span>
  <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{String(value).startsWith('(') ? '›' : value}</strong>
  </div>
@@ -4625,6 +4630,32 @@ function AppInner() {
  </article>}
 
 
+
+
+ {weightComposerOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setWeightComposerOpen(false)}>Cancel</button>
+ <strong style={{margin:'0 auto'}}>Weight</strong>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => {
+ if (String(draftWeight || '').trim()) setSelectedLivestockRecord(prev => prev ? ({ ...prev, initial_weight_kg: draftWeight }) : prev)
+ setWeightComposerOpen(false)
+ }}>Done</button>
+ </div>
+ <div style={{background:'#eef2f7', minHeight:380}}>
+ <div style={{background:'#fff', padding:'14px 16px', borderBottom:'1px solid #e5e7eb'}}>
+ <label style={{display:'grid', gridTemplateColumns:'90px 1fr', alignItems:'center', gap:12}}>
+ <span style={{color:'#1e3a8a', fontWeight:700}}>Weight</span>
+ <input className='input' placeholder='Weight' value={draftWeight} onChange={(e) => setDraftWeight(e.target.value)} style={{border:'none', boxShadow:'none', padding:'4px 0'}} />
+ </label>
+ </div>
+ <div style={{background:'#fff', padding:'14px 16px', borderBottom:'1px solid #e5e7eb'}}>
+ <div style={{display:'grid', gridTemplateColumns:'90px 1fr', alignItems:'center', gap:12}}>
+ <span style={{color:'#1e3a8a', fontWeight:700}}>Date</span>
+ <strong>{new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}</strong>
+ </div>
+ </div>
+ </div>
+ </article>}
 
  {notesComposerOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
