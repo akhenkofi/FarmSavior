@@ -992,7 +992,7 @@ const livestockDetailRows = (record) => {
  ['Registration #', record.registration_number || '--'],
  ['Reg. Name', record.name || '--'],
  ['Breed', record.breeding_type || '--'],
- ['Breeder', record.purchased_from || '--'],
+ ['Breeder', record.purchased_from || '--', 'breeder'],
  ['Stars', String(record.stars ?? '--')],
  ['Sex', record.animal_type || '--'],
  ['Born', record.date_of_birth ? String(record.date_of_birth).slice(0,10) : '--'],
@@ -1360,6 +1360,7 @@ function AppInner() {
  const [livestockRecordForm, setLivestockRecordForm] = useState({ user_id: 1, ownership: 'Owned by Me', species: 'SHEEP', animal_type: 'EWE', name: '', ear_tag: '', farm_id: '', registration_number: '', stars: 0, date_of_birth: '', acquisition_date: '', purchased_from: '', purchased_from_type: 'BREEDER', purchase_price: '', currency: 'GHS', sire_id: '', dam_id: '', litter_size: 1, initial_weight_kg: '', breeding_type: 'Natural', castrated: false, sale_date: '', sale_price: '', sold_to: '', died_date: '', cull_keep_status: 'KEEP', cull_reason: '', health_status: '', pen_location: '', notes: '', treatment_entry: '' })
  const [livestockRecordEdit, setLivestockRecordEdit] = useState({ id: '', user_id: 1, ownership: 'Owned by Me', species: 'SHEEP', animal_type: 'EWE', name: '', ear_tag: '', farm_id: '', registration_number: '', stars: 0, date_of_birth: '', acquisition_date: '', purchased_from: '', purchased_from_type: 'BREEDER', purchase_price: '', currency: 'GHS', sire_id: '', dam_id: '', litter_size: 1, initial_weight_kg: '', breeding_type: 'Natural', castrated: false, sale_date: '', sale_price: '', sold_to: '', died_date: '', cull_keep_status: 'KEEP', cull_reason: '', health_status: '', pen_location: '', notes: '', treatment_entry: '' })
  const [selectedLivestockRecord, setSelectedLivestockRecord] = useState(null)
+ const [selectedBreederDetail, setSelectedBreederDetail] = useState(null)
  const [livestockRecordsFilter, setLivestockRecordsFilter] = useState('ALL')
  const [recordsSectionOpen, setRecordsSectionOpen] = useState({ create: false, edit: false, batch: false, details: false })
  const [batchMedicationForm, setBatchMedicationForm] = useState({ species:'ALL', animal_type:'ALL', health_status:'ALL', cull_keep_status:'ALL', minStars:'', pen_location:'', medication:'', dose:'', days:'' })
@@ -4492,12 +4493,26 @@ function AppInner() {
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none'}} onClick={() => { setLivestockRecordEdit(mapLivestockRecordToEditForm(selectedLivestockRecord)); setRecordsSectionOpen(prev => ({ ...prev, edit: true, create: false, details: true })) }}>Edit</button>
  </div>
  {recordsSectionOpen.details && <div style={{background:'#fff'}}>
- {livestockDetailRows(selectedLivestockRecord).map(([label, value], idx) => (
- <div key={`detail-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}>
+ {livestockDetailRows(selectedLivestockRecord).map((row, idx) => {
+ const [label, value, action] = row
+ const clickable = action === 'breeder' && value && value !== '--'
+ return <div key={`detail-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: clickable ? 'pointer' : 'default'}} onClick={() => {
+ if (!clickable) return
+ setSelectedBreederDetail({
+ id: String(selectedLivestockRecord?.id || '0001').padStart(4,'0'),
+ name: value,
+ phone: '--',
+ email: '--',
+ address: '--',
+ scrapiePrefix: '--',
+ notes: '--',
+ })
+ }}>
  <span style={{color:'#1e3a8a', fontWeight:600}}>{label}</span>
  <strong style={{marginLeft:'auto', color:'#111827', textAlign:'right'}}>{value == null || value === '' ? '--' : String(value)}</strong>
+ {clickable && <span style={{marginLeft:10, color:'#9ca3af'}}>›</span>}
  </div>
- ))}
+ })}
  <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>HISTORY</div>
  {livestockHistoryRows(selectedLivestockRecord).history.map(([label, value], idx) => (
  <div key={`history-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}>
@@ -4534,6 +4549,28 @@ function AppInner() {
  </div>
  ))}
  </div>}
+ </article>}
+
+
+ {selectedBreederDetail && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18}}>
+ <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setSelectedBreederDetail(null)}>‹</button>
+ <strong style={{fontSize:'1.05rem'}}>{selectedBreederDetail.id}</strong>
+ <div style={{fontWeight:700}}>{selectedBreederDetail.name}</div>
+ <button type='button' className='btn' style={{marginLeft:'auto', background:'transparent', color:'#fff', border:'none'}}>Edit</button>
+ </div>
+ <div style={{background:'#fff'}}>
+ {[
+ ['Name', selectedBreederDetail.name],
+ ['Phone', selectedBreederDetail.phone],
+ ['Email', selectedBreederDetail.email],
+ ['Address', selectedBreederDetail.address],
+ ['Scrapie Tag Prefix', selectedBreederDetail.scrapiePrefix],
+ ['Notes', selectedBreederDetail.notes],
+ ].map(([label, value], idx) => <div key={`breeder-detail-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}><span style={{color:'#1e3a8a', fontWeight:600}}>{label}</span><strong style={{marginLeft:'auto', color:'#111827', textAlign:'right'}}>{value}</strong></div>)}
+ <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>PHOTOS & DOCS</div>
+ {['Add Photo','Add Doc','View Breeder Report'].map((label, idx) => <div key={`breeder-action-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}><span style={{color:'#111827', fontWeight:600}}>{label}</span><strong style={{marginLeft:'auto', color:'#9ca3af'}}>›</strong></div>)}
+ </div>
  </article>}
 
  <DataTable
