@@ -4235,7 +4235,7 @@ function AppInner() {
  <p style={{margin:'8px 0 0',fontSize:'.82rem',color:'#475569'}}>Showing: <strong>{livestockRecordsFilter}</strong> ({livestockRecordsFiltered.length} records)</p>
  </div>
 
- <article className='panel'>
+ <article className='panel' style={{width:'100%', maxWidth:'100%', overflow:'hidden'}}>
  <div className='list-row' style={{marginBottom:10}}>
  <div style={{cursor:'pointer'}} onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: !prev.create, edit: false }))}>
  <h4 style={{margin:'0 0 4px 0'}}>Create Record</h4>
@@ -5188,6 +5188,7 @@ function AppInner() {
  </div>
  </article>}
 
+ <div style={{width:'100%', overflowX:'auto', WebkitOverflowScrolling:'touch'}}>
  <DataTable
  columns={['id','species','animal_type','name','acquisition_date','purchased_from','purchase_price','health_status']}
  rows={livestockRecordsFiltered}
@@ -5200,6 +5201,7 @@ function AppInner() {
  setRecordsSectionOpen(prev => ({ ...prev, edit: true, create: false, details: true }))
  }}
  />
+ </div>
  </section>}
 
  {active === 'services' && <section>
