@@ -5169,6 +5169,10 @@ function AppInner() {
  </div>
  </section>}
 
+ <footer style={{marginTop:24, padding:'16px 0 8px', fontSize:'.92rem', color:'#64748b', borderTop:'1px solid #e2e8f0'}}>
+ FarmSavior is a digital agricultural platform operated in Ghana by Sheep Ghana Limited.
+ </footer>
+
  </main>
  </div>
  </>
