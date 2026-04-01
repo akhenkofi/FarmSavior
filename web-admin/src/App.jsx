@@ -2763,10 +2763,14 @@ function AppInner() {
  </div>
  </div>
 
- <div className='list-row' style={{marginTop:12}}>
+ <div className='section-header' style={{marginTop:12}}>
  <h3 style={{margin:0}}>{t('📈 Spot Trading (Ghana • Nigeria • Burkina Faso • World Avg)','📈 Trading Spot (Ghana • Nigeria • Burkina Faso • Moyenne mondiale)','📈 现货交易（加纳 • 尼日利亚 • 布基纳法索 • 全球均值）')}</h3>
+ <div style={{display:'flex', gap:8, marginLeft:'auto'}}>
+ <button type='button' className='btn' onClick={() => setSpotTradingOpen(v => !v)}>{spotTradingOpen ? t('Hide','Masquer','隐藏') : t('Show','Afficher','显示')}</button>
  <button className='btn' onClick={() => window.print()}>{t('Export Briefing (PDF)','Exporter le briefing (PDF)','导出简报（PDF）')}</button>
  </div>
+ </div>
+ {spotTradingOpen && <>
  <p style={{fontSize:'.8rem', color:'#64748b', margin:'6px 0 8px'}}>
  {t('Units: GH in GHS per market unit, NG in NGN per market unit, BF in XOF per market unit, World Avg in USD reference unit.','Unités : GH en GHS par unité de marché, NG en NGN par unité de marché, BF en XOF par unité de marché, moyenne mondiale en unité de référence USD.','单位：GH 以 GHS/市场单位，NG 以 NGN/市场单位，BF 以 XOF/市场单位，全球均值以 USD 参考单位。')}
  </p>
@@ -2812,12 +2816,16 @@ function AppInner() {
  </div>
  })}
  </div>
+ </>}
  </article>
  </div>
 
  <article className='panel' style={{marginTop:10}}>
- <h3>{t('🏛️ Government Programs & Subsidies (Ghana • Nigeria • Burkina Faso)','🏛️ Programmes gouvernementaux & subventions (Ghana • Nigeria • Burkina Faso)','🏛️ 政府项目与补贴（加纳・尼日利亚・布基纳法索）')}</h3>
- <div className='list'>
+ <div className='section-header'>
+ <h3 style={{margin:0}}>{t('🏛️ Government Programs & Subsidies (Ghana • Nigeria • Burkina Faso)','🏛️ Programmes gouvernementaux & subventions (Ghana • Nigeria • Burkina Faso)','🏛️ 政府项目与补贴（加纳・尼日利亚・布基纳法索）')}</h3>
+ <button type='button' className='btn' style={{marginLeft:'auto'}} onClick={() => setGovernmentProgramsOpen(v => !v)}>{governmentProgramsOpen ? t('Hide','Masquer','隐藏') : t('Show','Afficher','显示')}</button>
+ </div>
+ {governmentProgramsOpen && <div className='list'>
  {publicGovRows.slice(0, 6).map((g, i) => (
  <div className='list-row' key={`gov-${i}`}>
  <span>{g.country} • {g.agency} • {safeGovHeadline(g)} ({String(g.status || 'ok').toLowerCase().includes('error') ? t('unavailable','indisponible','不可用') : (g.status || 'ok')})</span>
@@ -2825,7 +2833,7 @@ function AppInner() {
  </div>
  ))}
  {false && <div className='list-row'><span>Loading official ministry programs…</span></div>}
- </div>
+ </div>}
  </article>
 
  <article className='panel' style={{marginTop:10}}>
