@@ -6,7 +6,7 @@ import smtplib
 from email.message import EmailMessage
 from datetime import datetime, timedelta
 from typing import Optional, Any
-from urllib.request import Request, urlopen
+from urllib.request import Request as UrlRequest, urlopen
 from urllib.parse import urlencode
 from urllib.error import HTTPError
 import xml.etree.ElementTree as ET
@@ -605,13 +605,13 @@ def _paystack_transaction_initialize(email: str, amount_major: float, reference:
         'callback_url': callback_url or settings.PAYSTACK_CALLBACK_URL,
         'metadata': metadata or {}
     }
-    req = Request('https://api.paystack.co/transaction/initialize', data=json.dumps(payload).encode('utf-8'), headers=_paystack_headers(), method='POST')
+    req = UrlRequest('https://api.paystack.co/transaction/initialize', data=json.dumps(payload).encode('utf-8'), headers=_paystack_headers(), method='POST')
     with urlopen(req, timeout=20) as resp:
         return json.loads(resp.read().decode('utf-8', errors='ignore'))
 
 
 def _paystack_transaction_verify(reference: str) -> dict:
-    req = Request(f'https://api.paystack.co/transaction/verify/{reference}', headers=_paystack_headers(), method='GET')
+    req = UrlRequest(f'https://api.paystack.co/transaction/verify/{reference}', headers=_paystack_headers(), method='GET')
     with urlopen(req, timeout=20) as resp:
         return json.loads(resp.read().decode('utf-8', errors='ignore'))
 
@@ -639,7 +639,7 @@ def _paystack_create_transfer_recipient(profile: SellerPayoutProfile) -> dict:
             'account_number': profile.account_number,
             'bank_code': profile.bank_name or 'BANK',
         })
-    req = Request('https://api.paystack.co/transferrecipient', data=json.dumps(details).encode('utf-8'), headers=_paystack_headers(), method='POST')
+    req = UrlRequest('https://api.paystack.co/transferrecipient', data=json.dumps(details).encode('utf-8'), headers=_paystack_headers(), method='POST')
     with urlopen(req, timeout=20) as resp:
         return json.loads(resp.read().decode('utf-8', errors='ignore'))
 
@@ -652,7 +652,7 @@ def _paystack_initiate_transfer(amount_major: float, recipient_code: str, reason
         'reason': reason,
         'reference': reference,
     }
-    req = Request('https://api.paystack.co/transfer', data=json.dumps(payload).encode('utf-8'), headers=_paystack_headers(), method='POST')
+    req = UrlRequest('https://api.paystack.co/transfer', data=json.dumps(payload).encode('utf-8'), headers=_paystack_headers(), method='POST')
     with urlopen(req, timeout=20) as resp:
         return json.loads(resp.read().decode('utf-8', errors='ignore'))
 
@@ -762,7 +762,7 @@ def _send_otp(destination: str, method: str, code: str):
         try:
             url = f"https://api.twilio.com/2010-04-01/Accounts/{settings.TWILIO_ACCOUNT_SID}/Messages.json"
             body = urlencode({'To': destination, 'From': settings.TWILIO_FROM_NUMBER, 'Body': message}).encode('utf-8')
-            req = Request(url, data=body)
+            req = UrlRequest(url, data=body)
             import base64
             token = base64.b64encode(f"{settings.TWILIO_ACCOUNT_SID}:{settings.TWILIO_AUTH_TOKEN}".encode()).decode()
             req.add_header('Authorization', f'Basic {token}')
@@ -1333,7 +1333,7 @@ def gov_programs():
     results = []
     for src in GOV_SOURCES:
         try:
-            req = Request(src['url'], headers={'User-Agent': 'FarmSaviorGovBot/1.0'})
+            req = UrlRequest(src['url'], headers={'User-Agent': 'FarmSaviorGovBot/1.0'})
             try:
                 with urlopen(req, timeout=8) as resp:
                     html = resp.read().decode('utf-8', errors='ignore')
@@ -1640,7 +1640,7 @@ def poultry_university_subscription_checkout(payload: PoultryUniversitySubscript
             }
         }
         try:
-            req = Request(
+            req = UrlRequest(
                 'https://api.paystack.co/transaction/initialize',
                 data=json.dumps(ps_payload).encode('utf-8'),
                 headers={
@@ -1693,7 +1693,7 @@ def poultry_university_subscription_verify(reference: str, db: Session = Depends
         return {'message': 'payment provider not configured', 'reference': reference, 'status': rec.status, 'tier': 'free'}
 
     try:
-        req = Request(
+        req = UrlRequest(
             f'https://api.paystack.co/transaction/verify/{reference}',
             headers={'Authorization': f'Bearer {paystack_secret}'},
             method='GET'
@@ -1851,7 +1851,7 @@ def university_product_subscription_checkout(product: str, payload: PoultryUnive
             }
         }
         try:
-            req = Request(
+            req = UrlRequest(
                 'https://api.paystack.co/transaction/initialize',
                 data=json.dumps(ps_payload).encode('utf-8'),
                 headers={
@@ -1909,7 +1909,7 @@ def university_product_subscription_verify(product: str, reference: str, db: Ses
         return {'message': 'payment provider not configured', 'reference': reference, 'status': rec.status, 'tier': 'free', 'product': product}
 
     try:
-        req = Request(
+        req = UrlRequest(
             f'https://api.paystack.co/transaction/verify/{reference}',
             headers={'Authorization': f'Bearer {paystack_secret}'},
             method='GET'
@@ -1947,7 +1947,7 @@ def public_main_weather():
 
             # Primary: wttr.in
             try:
-                req = Request(f'https://wttr.in/{city}?format=j1', headers={'User-Agent': 'FarmSaviorWeather/1.0'})
+                req = UrlRequest(f'https://wttr.in/{city}?format=j1', headers={'User-Agent': 'FarmSaviorWeather/1.0'})
                 with urlopen(req, timeout=6) as resp:
                     data = json.loads(resp.read().decode('utf-8', errors='ignore'))
                 current = (data.get('current_condition') or [{}])[0]
@@ -1963,7 +1963,7 @@ def public_main_weather():
                 try:
                     lat, lon = CITY_COORDS[city]
                     om = f'https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code'
-                    req2 = Request(om, headers={'User-Agent': 'FarmSaviorWeather/1.0'})
+                    req2 = UrlRequest(om, headers={'User-Agent': 'FarmSaviorWeather/1.0'})
                     with urlopen(req2, timeout=6) as resp2:
                         d2 = json.loads(resp2.read().decode('utf-8', errors='ignore'))
                     cur = d2.get('current', {})
@@ -1998,7 +1998,7 @@ def public_news(limit: int = 12):
     items = []
     for source, url in PUBLIC_NEWS_FEEDS:
         try:
-            req = Request(url, headers={'User-Agent': 'Mozilla/5.0 FarmSaviorNewsBot/1.0'})
+            req = UrlRequest(url, headers={'User-Agent': 'Mozilla/5.0 FarmSaviorNewsBot/1.0'})
             with urlopen(req, timeout=10) as resp:
                 data = resp.read()
             root = ET.fromstring(data)
@@ -2705,7 +2705,7 @@ def ai_plant_identify(payload: PlantIdentifyIn, authorization: Optional[str] = H
                 'similar_images': True,
                 'plant_details': ['common_names', 'wiki_description', 'taxonomy', 'url']
             }
-            req = Request(
+            req = UrlRequest(
                 'https://api.plant.id/v2/identify',
                 data=json.dumps(req_body).encode('utf-8'),
                 headers={
@@ -3680,7 +3680,7 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
             }
         }
         try:
-            req = Request(
+            req = UrlRequest(
                 'https://api.paystack.co/transaction/initialize',
                 data=json.dumps(ps_payload).encode('utf-8'),
                 headers={
@@ -3739,7 +3739,7 @@ def livestock_subscription_verify(reference: str, db: Session = Depends(get_db))
         return {'message': 'payment provider not configured', 'reference': reference, 'status': rec.status}
 
     try:
-        req = Request(
+        req = UrlRequest(
             f'https://api.paystack.co/transaction/verify/{reference}',
             headers={'Authorization': f'Bearer {paystack_secret}'},
             method='GET'
