@@ -983,7 +983,7 @@ const livestockHistoryRows = (record) => {
  ['View Offspring Report', '›', 'offspring-report'],
  ],
  offspring: [
- [`Offspring`, `(${offspringCount})`],
+ [`Offspring`, `(${offspringCount})`, 'offspring-list'],
  ['Add Lamb', '›'],
  ],
  marks: [
@@ -1397,6 +1397,8 @@ function AppInner() {
  const [ancestorTreeOpen, setAncestorTreeOpen] = useState(false)
  const [ancestorPdfOpen, setAncestorPdfOpen] = useState(false)
  const [offspringReportOpen, setOffspringReportOpen] = useState(false)
+ const [offspringListOpen, setOffspringListOpen] = useState(false)
+ const [offspringSearch, setOffspringSearch] = useState('')
  const [famachaDraft, setFamachaDraft] = useState({ famacha: '--', bodyScore: '', weight: '', notes: '' })
  const [customMedicineComposerOpen, setCustomMedicineComposerOpen] = useState(false)
  const [customMedicineName, setCustomMedicineName] = useState('')
@@ -4583,7 +4585,7 @@ function AppInner() {
  <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>HISTORY</div>
  {livestockHistoryRows(selectedLivestockRecord).history.map((row, idx) => {
  const [label, value, action] = row
- const clickable = action === 'notes' || action === 'add-weight' || action === 'medicines' || action === 'famacha' || action === 'ancestor-tree' || action === 'offspring-report'
+ const clickable = action === 'notes' || action === 'add-weight' || action === 'medicines' || action === 'famacha' || action === 'ancestor-tree' || action === 'offspring-report' || action === 'offspring-list'
  return <div key={`history-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: clickable ? 'pointer' : 'default'}} onClick={() => {
  if (action === 'notes') setNotesScreenOpen(true)
  if (action === 'add-weight') { setDraftWeight(''); setWeightComposerOpen(true) }
@@ -4591,6 +4593,7 @@ function AppInner() {
  if (action === 'famacha') { setFamachaDraft({ famacha: '--', bodyScore: '', weight: '', notes: '' }); setFamachaComposerOpen(true) }
  if (action === 'ancestor-tree') setAncestorTreeOpen(true)
  if (action === 'offspring-report') setOffspringReportOpen(true)
+ if (action === 'offspring-list') setOffspringListOpen(true)
  }}>
  <span style={{color:'#111827', fontWeight:600}}>{label} {String(value).startsWith('(') ? value : ''}</span>
  <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{String(value).startsWith('(') ? '›' : value}</strong>
@@ -4674,6 +4677,29 @@ function AppInner() {
 
 
 
+
+
+ {offspringListOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setOffspringListOpen(false)}>‹</button>
+ <strong>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</strong>
+ <div style={{fontWeight:700}}>Offspring</div>
+ <button type='button' className='btn' style={{marginLeft:'auto', background:'transparent', color:'#fff', border:'none', fontSize:'1.4rem'}}>+</button>
+ </div>
+ <div style={{padding:12, background:'#1d4ed8'}}>
+ <input className='input' placeholder='Search' value={offspringSearch} onChange={(e) => setOffspringSearch(e.target.value)} style={{background:'#1e3a8a', color:'#fff', border:'none', borderRadius:12}} />
+ </div>
+ <div style={{background:'#fff', minHeight:320}}>
+ {[
+ {date:'2023-02-08', id:'0040', breeder:'Sheep Ghana'},
+ {date:'2023-09-27', id:'0185', breeder:'Sheep Ghana'},
+ {date:'2024-04-13', id:'0019g', breeder:'Sheep Ghana'},
+ ].filter(item => !offspringSearch || `${item.date} ${item.id} ${item.breeder}`.toLowerCase().includes(offspringSearch.toLowerCase())).map((item, idx) => <div key={`offspring-list-${idx}`} style={{borderTop:'1px solid #eef2f7'}}>
+ <div style={{padding:'16px 16px 8px', color:'#6b7280', fontWeight:700}}>{new Date(item.date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase()}</div>
+ <div className='list-row' style={{padding:'0 16px 14px', alignItems:'center'}}><div><div style={{fontWeight:700, color:'#111827'}}>{item.id}</div><div style={{fontSize:'.9rem', color:'#111827'}}>{item.breeder}</div></div><strong style={{marginLeft:'auto', color:'#9ca3af'}}>›</strong></div>
+ </div>)}
+ </div>
+ </article>}
 
  {offspringReportOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#0f172a', color:'#fff', padding:'14px 16px', display:'flex', alignItems:'center', gap:12}}>
