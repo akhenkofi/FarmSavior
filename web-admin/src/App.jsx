@@ -325,9 +325,8 @@ const featuredTradeExportSeed = [
 ]
 
 const featuredLivestockPlansSeed = [
- { name: 'Livestock Starter', monthly_usd: 4.99, yearly_usd: 49.99, features: ['Basic records', 'Health logs'] },
- { name: 'Livestock Pro', monthly_usd: 9.99, yearly_usd: 99.99, features: ['Breeding groups', 'Performance insights'] },
- { name: 'Livestock Enterprise', monthly_usd: 24.99, yearly_usd: 249.99, features: ['Multi-farm', 'Advanced analytics'] }
+ { plan_code: 'free', name: 'Livestock Free', monthly_usd: 0, yearly_usd: 0, yearly_savings_pct: 0, record_limit: 25, features: ['Up to 25 animals total', 'No photos allowed', 'No documents allowed'] },
+ { plan_code: 'premium', name: 'Livestock Premium', monthly_usd: 9.99, yearly_usd: 102.90, yearly_savings_pct: 14.2, record_limit: null, features: ['Unlimited animals', 'All livestock features unlocked', 'Photos and documents allowed', 'Choose monthly or yearly billing'] }
 ]
 
 const poultryTracks = {
