@@ -978,7 +978,7 @@ const livestockHistoryRows = (record) => {
  ['Medicines', `(${medsCount})`, 'medicines'],
  ['Add Medicine', '›'],
  ['Add FAMACHA/Body Condition Score', '›', 'famacha'],
- ['View Ancestor Tree', '›'],
+ ['View Ancestor Tree', '›', 'ancestor-tree'],
  ['Share PDF Report', '›'],
  ['View Offspring Report', '›'],
  ],
@@ -1394,6 +1394,7 @@ function AppInner() {
  const [medicineChooserOpen, setMedicineChooserOpen] = useState(false)
  const [medicineChooserSearch, setMedicineChooserSearch] = useState('')
  const [famachaComposerOpen, setFamachaComposerOpen] = useState(false)
+ const [ancestorTreeOpen, setAncestorTreeOpen] = useState(false)
  const [famachaDraft, setFamachaDraft] = useState({ famacha: '--', bodyScore: '', weight: '', notes: '' })
  const [customMedicineComposerOpen, setCustomMedicineComposerOpen] = useState(false)
  const [customMedicineName, setCustomMedicineName] = useState('')
@@ -4580,12 +4581,13 @@ function AppInner() {
  <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>HISTORY</div>
  {livestockHistoryRows(selectedLivestockRecord).history.map((row, idx) => {
  const [label, value, action] = row
- const clickable = action === 'notes' || action === 'add-weight' || action === 'medicines' || action === 'famacha'
+ const clickable = action === 'notes' || action === 'add-weight' || action === 'medicines' || action === 'famacha' || action === 'ancestor-tree'
  return <div key={`history-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: clickable ? 'pointer' : 'default'}} onClick={() => {
  if (action === 'notes') setNotesScreenOpen(true)
  if (action === 'add-weight') { setDraftWeight(''); setWeightComposerOpen(true) }
  if (action === 'medicines') setMedicinesScreenOpen(true)
  if (action === 'famacha') { setFamachaDraft({ famacha: '--', bodyScore: '', weight: '', notes: '' }); setFamachaComposerOpen(true) }
+ if (action === 'ancestor-tree') setAncestorTreeOpen(true)
  }}>
  <span style={{color:'#111827', fontWeight:600}}>{label} {String(value).startsWith('(') ? value : ''}</span>
  <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{String(value).startsWith('(') ? '›' : value}</strong>
@@ -4666,6 +4668,31 @@ function AppInner() {
 
 
 
+
+
+ {ancestorTreeOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setAncestorTreeOpen(false)}>‹</button>
+ <strong>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</strong>
+ <div style={{fontWeight:700}}>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</div>
+ <button type='button' className='btn' style={{marginLeft:'auto', background:'transparent', color:'#fff', border:'none'}}>Share PDF</button>
+ </div>
+ <div style={{background:'#6b7280', height:140}} />
+ <div style={{background:'#f8fafc', minHeight:520, position:'relative', overflow:'hidden', backgroundImage:'linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)', backgroundSize:'16px 16px'}}>
+ <div style={{position:'absolute', left:24, top:40, width:84, minHeight:90, background:'#fff', border:'2px solid #111827', borderRadius:8, display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', fontWeight:700}}>
+ <div>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</div>
+ <div style={{fontSize:'1.1rem'}}>{String(selectedLivestockRecord.animal_type || 'Ewe').replaceAll('_',' ')}</div>
+ </div>
+ <div style={{position:'absolute', left:38, top:178, width:68, minHeight:44, background:'#fff', border:'2px solid #f0abfc', borderRadius:8, display:'flex', justifyContent:'center', alignItems:'center', fontWeight:700}}>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</div>
+ <div style={{position:'absolute', left:105, top:197, width:56, height:2, background:'#6b7280'}} />
+ <div style={{position:'absolute', left:160, top:105, width:2, height:110, background:'#6b7280'}} />
+ <div style={{position:'absolute', left:160, top:105, width:40, height:2, background:'#6b7280'}} />
+ <div style={{position:'absolute', left:160, top:215, width:40, height:2, background:'#6b7280'}} />
+ <div style={{position:'absolute', left:198, top:86, padding:'8px 16px', background:'#fff', border:'1px solid #d1d5db', borderRadius:10, color:'#9ca3af', fontSize:'1.1rem'}}>{selectedLivestockRecord.sire_id ? `Sire ${selectedLivestockRecord.sire_id}` : 'Sire Not Chosen'}</div>
+ <div style={{position:'absolute', left:198, top:196, padding:'8px 16px', background:'#fff', border:'1px solid #d1d5db', borderRadius:10, color:'#9ca3af', fontSize:'1.1rem'}}>{selectedLivestockRecord.dam_id ? `Dam ${selectedLivestockRecord.dam_id}` : 'Dam Not Chosen'}</div>
+ <div style={{position:'absolute', left:20, bottom:18, color:'#cbd5e1', fontWeight:700, opacity:.8}}>FarmSavior</div>
+ </div>
+ </article>}
 
  {famachaComposerOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
