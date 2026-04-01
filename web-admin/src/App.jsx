@@ -4218,7 +4218,7 @@ function AppInner() {
  <button type='button' className='btn' style={{marginLeft:'auto', minWidth:48, height:48, borderRadius:999, fontSize:'1.6rem', fontWeight:700, background:'#fff', color:'#1d4ed8', border:'none'}} onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: true, edit: false }))}>+</button>
  </div>
  </div>
- <div style={{width:'100%', display:'grid', gap:10, marginBottom:12}}>
+ <div style={{width:'100%', display:'grid', gap:8, marginBottom:12}}>
  <div className='inlineForm' style={{flexWrap:'wrap', width:'100%', justifyContent:'space-between', background:'transparent', border:'none', padding:0, boxShadow:'none'}}>
  <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('ALL')} style={{border:livestockRecordsFilter==='ALL'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Total records','Total registres','记录总数')}: {state.livestockRecords.length}</button>
  <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('GOAT')} style={{border:livestockRecordsFilter==='GOAT'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Goats','Chèvres','山羊')}: {state.livestockRecords.filter(r => r.species === 'GOAT').length}</button>
@@ -4226,21 +4226,10 @@ function AppInner() {
  <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('CATTLE')} style={{border:livestockRecordsFilter==='CATTLE'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Cattle','Bovins','牛')}: {state.livestockRecords.filter(r => r.species === 'CATTLE').length}</button>
  <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('POULTRY')} style={{border:livestockRecordsFilter==='POULTRY'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Poultry','Volailles','家禽')}: {state.livestockRecords.filter(r => r.species === 'POULTRY').length}</button>
  </div>
- <div className='inlineForm' style={{flexWrap:'wrap', background:'transparent', border:'none', padding:0, boxShadow:'none'}}>
- <button type='button' className='btn btn-dark' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: !prev.create, edit: false }))}>{recordsSectionOpen.create ? 'Close Create Record' : 'Create Record'}</button>
- <button type='button' className='btn' onClick={() => selectedLivestockRecord ? setRecordsSectionOpen(prev => ({ ...prev, edit: !prev.edit, create: false })) : alert('Select a record to edit first')}>{recordsSectionOpen.edit ? 'Close Edit Record' : 'Edit Selected Record'}</button>
- </div>
  <p style={{margin:'0',fontSize:'.82rem',color:'#475569'}}>Showing: <strong>{livestockRecordsFilter}</strong> ({livestockRecordsFiltered.length} records)</p>
  </div>
 
  <article className='panel' style={{width:'100%', overflow:'hidden'}}>
- <div className='list-row' style={{marginBottom:10}}>
- <div style={{cursor:'pointer'}} onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: !prev.create, edit: false }))}>
- <h4 style={{margin:'0 0 4px 0'}}>Create Record</h4>
- <div className='helper-text'>Use the + button to open the full record-creation flow.</div>
- </div>
- <button type='button' className='btn' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: !prev.create, edit: false }))}>{recordsSectionOpen.create ? 'Close Create Record' : 'Open Create Record'}</button>
- </div>
  {recordsSectionOpen.create && <form className='list' style={{gap:10, width:'100%'}} onSubmit={async e => {
  e.preventDefault()
  try {
@@ -4582,14 +4571,6 @@ function AppInner() {
  </form>}
  </article>
 
- <article className='panel'>
- <div className='list-row' style={{marginBottom:10}}>
- <div>
- <h4 style={{margin:'0 0 4px 0'}}>Batch Medication / Treatment</h4>
- <div className='helper-text'>Apply one treatment note to multiple matching records.</div>
- </div>
- <button type='button' className='btn' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, batch: !prev.batch }))}>{recordsSectionOpen.batch ? 'Hide' : 'Open'}</button>
- </div>
  {recordsSectionOpen.batch && <>
  <div className='inlineForm'>
  <select className='input' value={batchMedicationForm.species} onChange={e=>setBatchMedicationForm({ ...batchMedicationForm, species:e.target.value, animal_type:'ALL' })}>
