@@ -1015,7 +1015,7 @@ const livestockHistoryRows = (record) => {
  return {
  history: [
  ['Notes', `(${notesCount})`, 'notes'],
- ['Add Note', '›'],
+ ['Add Note', '›', 'add-note'],
  ['Add Weight', '›', 'add-weight'],
  ['Medicines', `(${medsCount})`, 'medicines'],
  ['Add Medicine', '›'],
@@ -4634,9 +4634,10 @@ function AppInner() {
  <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>HISTORY</div>
  {livestockHistoryRows(selectedLivestockRecord).history.map((row, idx) => {
  const [label, value, action] = row
- const clickable = action === 'notes' || action === 'add-weight' || action === 'medicines' || action === 'famacha' || action === 'ancestor-tree' || action === 'offspring-report' || action === 'offspring-list' || action === 'add-mark' || action === 'add-flush'
+ const clickable = action === 'notes' || action === 'add-note' || action === 'add-weight' || action === 'medicines' || action === 'famacha' || action === 'ancestor-tree' || action === 'offspring-report' || action === 'offspring-list' || action === 'add-mark' || action === 'add-flush'
  return <div key={`history-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: clickable ? 'pointer' : 'default'}} onClick={() => {
  if (action === 'notes') setNotesScreenOpen(true)
+ if (action === 'add-note') { setDraftNote(''); setNotesComposerOpen(true) }
  if (action === 'add-weight') { setDraftWeight(''); setWeightComposerOpen(true) }
  if (action === 'medicines') setMedicinesScreenOpen(true)
  if (action === 'famacha') { setFamachaDraft({ famacha: '--', bodyScore: '', weight: '', notes: '' }); setFamachaComposerOpen(true) }
