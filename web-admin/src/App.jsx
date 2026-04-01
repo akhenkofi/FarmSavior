@@ -1456,6 +1456,7 @@ function AppInner() {
  const [famachaDraft, setFamachaDraft] = useState({ famacha: '--', bodyScore: '', weight: '', notes: '' })
  const [customMedicineComposerOpen, setCustomMedicineComposerOpen] = useState(false)
  const [customMedicineName, setCustomMedicineName] = useState('')
+ const [actionBusy, setActionBusy] = useState('')
  const appScreenOpen = notesComposerOpen || weightComposerOpen || medicinesScreenOpen || medicineShotOpen || medicineChooserOpen || customMedicineComposerOpen || famachaComposerOpen || ancestorTreeOpen || ancestorPdfOpen || offspringReportOpen || offspringListOpen || markComposerOpen || flushComposerOpen || ultrasoundComposerOpen || moveHerdOpen || selectedBreederDetail || breederReportOpen || notesScreenOpen
  const [notesSearch, setNotesSearch] = useState('')
  const [draftNote, setDraftNote] = useState('')
@@ -1936,6 +1937,8 @@ function AppInner() {
  const id = setInterval(() => { loadWorldChat().catch(() => {}) }, 5000)
  return () => clearInterval(id)
  }, [token])
+
+ const busyLabel = (key, idle, loading='Working…') => actionBusy === key ? loading : idle
 
  useEffect(() => {
  document.body.style.overflow = appScreenOpen ? 'hidden' : ''
@@ -3349,6 +3352,7 @@ function AppInner() {
  <h3>{t('My Account','Mon compte','我的账户')}</h3>
  <form className='list' onSubmit={async e => {
  e.preventDefault()
+ setActionBusy('livestock-create')
  try {
  const updated = await api.updateMe(accountForm)
  setMe(updated)
@@ -4385,6 +4389,7 @@ function AppInner() {
  </label>
  </div>
  <button type='button' className='btn' onClick={async () => {
+ setActionBusy('save-breeder-create')
  const name = (livestockRecordForm.purchased_from || '').trim()
  if (!name) return alert('Enter breeder name first')
  try {
@@ -4393,8 +4398,8 @@ function AppInner() {
  alert('Breeder saved')
  } catch (err) {
  alert(`Could not save breeder: ${errMsg(err)}`)
- }
- }}>Save breeder</button>
+ } finally { setActionBusy('') }
+ }}>{busyLabel('save-breeder-create','Save breeder')}</button>
  <label style={{display:'grid', gap:4}}>
  <span className='helper-text'>Initial Notes</span>
  <textarea className='input' rows={3} placeholder='Notes' value={livestockRecordForm.notes} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, notes: e.target.value })} />

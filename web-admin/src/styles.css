@@ -41,3 +41,5 @@
 .livestock-record-card-meta span{background:#f1f5f9;border-radius:999px;padding:5px 9px}
 .livestock-record-card-status{margin-top:10px;font-size:.9rem;color:#1e3a8a;font-weight:700}
 @media(max-width:640px){.desktop-only{display:none}.mobile-only{display:block}}
+
+.btn:disabled{opacity:.7;cursor:not-allowed;filter:saturate(.7)}
