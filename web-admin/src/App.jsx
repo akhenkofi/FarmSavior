@@ -1029,7 +1029,7 @@ const livestockHistoryRows = (record) => {
  ['Add Lamb', '›'],
  ],
  marks: [
- ['Add Mark', '›'],
+ ['Add Mark', '›', 'add-mark'],
  ['Add Flush', '›'],
  ['Add Ultrasound', '›'],
  ],
@@ -1442,6 +1442,8 @@ function AppInner() {
  const [offspringListOpen, setOffspringListOpen] = useState(false)
  const [selectedOffspringRecord, setSelectedOffspringRecord] = useState(null)
  const [offspringSearch, setOffspringSearch] = useState('')
+ const [markComposerOpen, setMarkComposerOpen] = useState(false)
+ const [markDraft, setMarkDraft] = useState({ sire: '', dam: '', markDate: '', dueDate: '', fertilizationType: 'Natural' })
  const [famachaDraft, setFamachaDraft] = useState({ famacha: '--', bodyScore: '', weight: '', notes: '' })
  const [customMedicineComposerOpen, setCustomMedicineComposerOpen] = useState(false)
  const [customMedicineName, setCustomMedicineName] = useState('')
@@ -4629,7 +4631,7 @@ function AppInner() {
  <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>HISTORY</div>
  {livestockHistoryRows(selectedLivestockRecord).history.map((row, idx) => {
  const [label, value, action] = row
- const clickable = action === 'notes' || action === 'add-weight' || action === 'medicines' || action === 'famacha' || action === 'ancestor-tree' || action === 'offspring-report' || action === 'offspring-list'
+ const clickable = action === 'notes' || action === 'add-weight' || action === 'medicines' || action === 'famacha' || action === 'ancestor-tree' || action === 'offspring-report' || action === 'offspring-list' || action === 'add-mark'
  return <div key={`history-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: clickable ? 'pointer' : 'default'}} onClick={() => {
  if (action === 'notes') setNotesScreenOpen(true)
  if (action === 'add-weight') { setDraftWeight(''); setWeightComposerOpen(true) }
@@ -4638,6 +4640,7 @@ function AppInner() {
  if (action === 'ancestor-tree') setAncestorTreeOpen(true)
  if (action === 'offspring-report') setOffspringReportOpen(true)
  if (action === 'offspring-list') setOffspringListOpen(true)
+ if (action === 'add-mark') { const base=(selectedOffspringRecord || selectedLivestockRecord); setMarkDraft({ sire: base?.sire_id || '', dam: base?.dam_id || base?.id || '', markDate: new Date().toISOString().slice(0,10), dueDate: '2026-08-26', fertilizationType: 'Natural' }); setMarkComposerOpen(true) }
  }}>
  <span style={{color:'#111827', fontWeight:600}}>{label} {String(value).startsWith('(') ? value : ''}</span>
  <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{String(value).startsWith('(') ? '›' : value}</strong>
@@ -4729,6 +4732,41 @@ function AppInner() {
 
 
 
+
+
+ {markComposerOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setMarkComposerOpen(false)}>Cancel</button>
+ <strong style={{margin:'0 auto'}}>{`Mark : ${String((selectedOffspringRecord || selectedLivestockRecord)?.id || '0001').padStart(4,'0')} : ${new Date(markDraft.markDate || Date.now()).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}`}</strong>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setMarkComposerOpen(false)}>Done</button>
+ </div>
+ <div style={{background:'#eef2f7', minHeight:360}}>
+ <div style={{background:'#fff', padding:'14px 16px', borderBottom:'1px solid #e5e7eb', display:'grid', gridTemplateColumns:'90px 1fr auto', alignItems:'center', gap:12}}>
+ <span style={{color:'#1e3a8a', fontWeight:700}}>Sire</span>
+ <span style={{color: markDraft.sire ? '#111827' : '#9ca3af'}}>{markDraft.sire || 'Choose'}</span>
+ <span style={{color:'#9ca3af'}}>›</span>
+ </div>
+ <div style={{background:'#fff', padding:'14px 16px', borderBottom:'1px solid #e5e7eb', display:'grid', gridTemplateColumns:'90px 1fr auto', alignItems:'center', gap:12}}>
+ <span style={{color:'#1e3a8a', fontWeight:700}}>Dam</span>
+ <span style={{color:'#111827'}}>{markDraft.dam || '0001'}</span>
+ <span style={{color:'#9ca3af'}}>›</span>
+ </div>
+ <div style={{background:'#fff', padding:'14px 16px', borderBottom:'1px solid #e5e7eb', display:'grid', gridTemplateColumns:'90px 1fr', alignItems:'center', gap:12}}>
+ <span style={{color:'#1e3a8a', fontWeight:700}}>Mark Date</span>
+ <strong>{new Date(markDraft.markDate || Date.now()).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}</strong>
+ </div>
+ <div style={{background:'#fff', padding:'14px 16px', borderBottom:'1px solid #e5e7eb', display:'grid', gridTemplateColumns:'90px 1fr', alignItems:'center', gap:12}}>
+ <span style={{color:'#1e3a8a', fontWeight:700}}>Due Date</span>
+ <strong>{new Date(markDraft.dueDate || Date.now()).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}</strong>
+ </div>
+ <div style={{padding:'14px 16px', color:'#6b7280', fontWeight:700}}>FERTILIZATION TYPE</div>
+ <div style={{padding:'0 12px 18px'}}>
+ <div style={{display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:8, background:'#e5e7eb', borderRadius:12, padding:4}}>
+ {['Natural','AI Fresh','AI Frozen'].map(opt => <button key={`fert-${opt}`} type='button' className='btn' style={{background: markDraft.fertilizationType===opt ? '#fff' : 'transparent', border:'none', boxShadow:'none', fontWeight:700}} onClick={() => setMarkDraft(prev => ({ ...prev, fertilizationType: opt }))}>{opt}</button>)}
+ </div>
+ </div>
+ </div>
+ </article>}
 
  {offspringListOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
