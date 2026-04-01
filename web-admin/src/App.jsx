@@ -4132,33 +4132,65 @@ function AppInner() {
  alert(`Could not save breeder: ${errMsg(err)}`)
  }
  }}>Save breeder</button>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Initial Notes</span>
+ <textarea className='input' rows={3} placeholder='Notes' value={livestockRecordForm.notes} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, notes: e.target.value })} />
+ </label>
+ <div className='panel' style={{padding:12, background:'#f8fafc', border:'1px solid #e2e8f0'}}>
+ <div className='helper-text' style={{fontWeight:700, color:'#475569', marginBottom:8}}>Breeding Type</div>
+ <div className='inlineForm' style={{gap:8, flexWrap:'wrap'}}>
+ {['Natural','AI Fresh','AI Frozen','ET'].map(opt => (
+ <button type='button' key={`breedtype-${opt}`} className={`btn ${livestockRecordForm.health_status===opt ? 'btn-dark' : ''}`} onClick={() => setLivestockRecordForm({ ...livestockRecordForm, health_status: opt })}>{opt}</button>
+ ))}
+ </div>
+ </div>
  <div className='row2'>
- <input className='input' placeholder='Health status' value={livestockRecordForm.health_status} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, health_status: e.target.value })} />
- <input className='input' placeholder='Pen location' value={livestockRecordForm.pen_location} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, pen_location: e.target.value })} />
- </div>
- {livestockRecordForm.species !== 'POULTRY' && <label><input type='checkbox' checked={livestockRecordForm.castrated} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, castrated: e.target.checked })} /> Castrated</label>}
- <div className='row2'>
- <input className='input' placeholder='Cull/keep status' value={livestockRecordForm.cull_keep_status} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, cull_keep_status: e.target.value })} />
- <input className='input' placeholder='Cull reason' value={livestockRecordForm.cull_reason} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, cull_reason: e.target.value })} />
- </div>
- <div className='row2'>
- <input className='input' type='date' placeholder='Sale date' value={livestockRecordForm.sale_date} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, sale_date: e.target.value })} />
- <input className='input' type='number' step='0.01' placeholder='Sale price' value={livestockRecordForm.sale_price} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, sale_price: e.target.value })} />
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Castrated</span>
+ <select className='input' value={livestockRecordForm.castrated ? 'Yes' : 'No'} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, castrated: e.target.value === 'Yes' })}><option>No</option><option>Yes</option></select>
+ </label>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Sale Date</span>
+ <input className='input' type='date' value={livestockRecordForm.sale_date} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, sale_date: e.target.value })} />
+ </label>
  </div>
  <div className='row2'>
- <input className='input' placeholder='Sold to' value={livestockRecordForm.sold_to} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, sold_to: e.target.value })} />
- <input className='input' type='date' placeholder='Died date' value={livestockRecordForm.died_date} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, died_date: e.target.value })} />
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Sold To</span>
+ <input className='input' placeholder='Choose' value={livestockRecordForm.sold_to} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, sold_to: e.target.value })} />
+ </label>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Sale Price</span>
+ <input className='input' type='number' step='0.01' placeholder='$ Amount' value={livestockRecordForm.sale_price} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, sale_price: e.target.value })} />
+ </label>
  </div>
- <div className='inlineForm'>
- <input className='input' placeholder='Medication / treatment record (single entry)' value={livestockRecordForm.treatment_entry} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, treatment_entry: e.target.value })} />
- <button type='button' className='btn' onClick={() => {
- if (!livestockRecordForm.treatment_entry?.trim()) return
- const stamp = new Date().toISOString().slice(0,10)
- const line = `[Treatment ${stamp}] ${livestockRecordForm.treatment_entry.trim()}`
- setLivestockRecordForm({ ...livestockRecordForm, notes: [livestockRecordForm.notes, line].filter(Boolean).join('\n'), treatment_entry: '' })
- }}>Add Treatment</button>
+ <div className='row2'>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Sale Desc</span>
+ <input className='input' placeholder='Sale Desc (Optional)' value={livestockRecordForm.pen_location} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, pen_location: e.target.value })} />
+ </label>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Winnings</span>
+ <input className='input' placeholder='Winnings' value={livestockRecordForm.treatment_entry} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, treatment_entry: e.target.value })} />
+ </label>
  </div>
- <input className='input' placeholder='Notes (includes treatment history)' value={livestockRecordForm.notes} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, notes: e.target.value })} />
+ <div className='row2'>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Died</span>
+ <input className='input' type='date' value={livestockRecordForm.died_date} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, died_date: e.target.value })} />
+ </label>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Breed With</span>
+ <input className='input' placeholder='Choose' value={livestockRecordForm.cull_reason} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, cull_reason: e.target.value })} />
+ </label>
+ </div>
+ <div className='panel' style={{padding:12, background:'#f8fafc', border:'1px solid #e2e8f0'}}>
+ <div className='helper-text' style={{fontWeight:700, color:'#475569', marginBottom:8}}>Should Be Culled</div>
+ <div className='inlineForm' style={{gap:8}}>
+ <button type='button' className={`btn ${livestockRecordForm.cull_keep_status==='CULL' ? 'btn-dark' : ''}`} onClick={() => setLivestockRecordForm({ ...livestockRecordForm, cull_keep_status: 'CULL' })}>Cull</button>
+ <button type='button' className={`btn ${livestockRecordForm.cull_keep_status==='KEEP' ? 'btn-dark' : ''}`} onClick={() => setLivestockRecordForm({ ...livestockRecordForm, cull_keep_status: 'KEEP' })}>Keep</button>
+ </div>
+ </div>
  <button className='btn btn-dark'>Create Record</button>
  </form>}
  </article>
