@@ -1574,6 +1574,19 @@ function AppInner() {
  const [tradeStatsOpen, setTradeStatsOpen] = useState(true)
  const [livestockSubscription, setLivestockSubscription] = useState({ tier: 'free', status: 'FREE', record_limit: 25, can_create_records: true, subscription: null, plans: [] })
  const [billingOverview, setBillingOverview] = useState({ subscriptions: [], active_subscriptions: [], payments: [] })
+ const recordsBillingSubscription = useMemo(() => {
+ return (billingOverview?.active_subscriptions || []).find((sub) => String(sub?.product || '') === 'livestock-records' && ['ACTIVE', 'TRIAL_ACTIVE'].includes(String(sub?.status || '').toUpperCase())) || null
+ }, [billingOverview])
+ const livestockPremiumResolved = livestockSubscription?.tier === 'premium' || !!recordsBillingSubscription
+ const effectiveLivestockSubscription = livestockPremiumResolved
+ ? {
+ ...livestockSubscription,
+ tier: 'premium',
+ status: String(livestockSubscription?.status || recordsBillingSubscription?.status || 'ACTIVE').toUpperCase(),
+ can_create_records: true,
+ subscription: livestockSubscription?.subscription || recordsBillingSubscription || null,
+ }
+ : livestockSubscription
  const [paymentReturnNotice, setPaymentReturnNotice] = useState(null)
  const [poultryTrack, setPoultryTrack] = useState('layers')
  const [poultryZone, setPoultryZone] = useState('humid')
@@ -3023,8 +3036,8 @@ function AppInner() {
  <p style={{fontSize:'.82rem',color:'#64748b',marginTop:4}}>{t('Pricing auto-displays in your selected country currency. Settlement can route to Ghana Mobile Money or US bank account once payout details are configured.','Les prix s’affichent automatiquement dans la devise du pays sélectionné. Le règlement peut être acheminé vers Mobile Money Ghana ou un compte bancaire US une fois les détails de paiement configurés.','价格会按你选择的国家货币自动显示。配置收款后，可结算到加纳移动支付或美国银行账户。')}</p>
  <p style={{fontSize:'.85rem',color:'#0f766e',marginTop:6,fontWeight:700}}>Free version allows up to 25 animals total. No photos allowed. No documents allowed.</p>
  <h4 style={{margin:'8px 0'}}>{t('Select Your Subscription Plan','Sélectionnez votre plan d’abonnement','选择你的订阅方案')}</h4>
- <div className='panel' style={{marginBottom:12,padding:12,background:livestockSubscription?.tier==='premium'?'linear-gradient(180deg,#ecfeff 0%,#f0fdfa 100%)':'linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%)',border:'1px solid #cbd5e1', boxShadow:'0 10px 30px rgba(15,23,42,.05)'}}>
- <strong>Current livestock tier:</strong> {livestockSubscription?.tier==='premium' ? 'PREMIUM' : 'FREE'} • {livestockSubscription?.tier==='premium' ? 'Unlimited animals' : 'Limit 25 animals'}{livestockSubscription?.subscription?.status ? ` • ${livestockSubscription.subscription.status}` : ''}
+ <div className='panel' style={{marginBottom:12,padding:12,background:effectiveLivestockSubscription?.tier==='premium'?'linear-gradient(180deg,#ecfeff 0%,#f0fdfa 100%)':'linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%)',border:'1px solid #cbd5e1', boxShadow:'0 10px 30px rgba(15,23,42,.05)'}}>
+ <strong>Current livestock tier:</strong> {effectiveLivestockSubscription?.tier==='premium' ? 'PREMIUM' : 'FREE'} • {effectiveLivestockSubscription?.tier==='premium' ? 'Unlimited animals' : 'Limit 25 animals'}{effectiveLivestockSubscription?.subscription?.status ? ` • ${effectiveLivestockSubscription.subscription.status}` : ''}
  </div>
  <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
  {publicLivestockPlans.map((p, i) => {
@@ -3296,22 +3309,22 @@ function AppInner() {
  {active === 'home' && <section>
  <h2>{t('Main App Homepage','Page d’accueil de l’application')}</h2>
 
- <article className='panel' style={{marginBottom:10, background:livestockSubscription?.tier === 'premium' ? 'linear-gradient(135deg,#0f172a 0%,#155e75 55%,#16a34a 100%)' : 'linear-gradient(135deg,#f8fafc 0%,#eff6ff 100%)', color:livestockSubscription?.tier === 'premium' ? '#fff' : '#0f172a', border:livestockSubscription?.tier === 'premium' ? '1px solid rgba(255,255,255,.12)' : '1px solid #bfdbfe'}}>
+ <article className='panel' style={{marginBottom:10, background:effectiveLivestockSubscription?.tier === 'premium' ? 'linear-gradient(135deg,#0f172a 0%,#155e75 55%,#16a34a 100%)' : 'linear-gradient(135deg,#f8fafc 0%,#eff6ff 100%)', color:effectiveLivestockSubscription?.tier === 'premium' ? '#fff' : '#0f172a', border:effectiveLivestockSubscription?.tier === 'premium' ? '1px solid rgba(255,255,255,.12)' : '1px solid #bfdbfe'}}>
  <div style={{display:'flex',justifyContent:'space-between',gap:16,flexWrap:'wrap',alignItems:'center'}}>
  <div>
- <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',opacity:.9}}>{livestockSubscription?.tier === 'premium' ? 'Premium workspace' : 'Upgrade available'}</div>
+ <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',opacity:.9}}>{effectiveLivestockSubscription?.tier === 'premium' ? 'Premium workspace' : 'Upgrade available'}</div>
  <h3 style={{margin:'4px 0 6px'}}>
- {livestockSubscription?.tier === 'premium' ? 'Livestock Records Premium ✓' : 'Unlock Livestock Records Premium'}
+ {effectiveLivestockSubscription?.tier === 'premium' ? 'Livestock Records Premium ✓' : 'Unlock Livestock Records Premium'}
  </h3>
- <div style={{maxWidth:720, color:livestockSubscription?.tier === 'premium' ? 'rgba(255,255,255,.88)' : '#334155'}}>
- {livestockSubscription?.tier === 'premium'
- ? `Your account is on the premium tier${livestockSubscription?.subscription?.plan_code ? ` • ${String(livestockSubscription.subscription.plan_code).toUpperCase()}` : ''}. Enjoy unlimited records, attachment-ready workflows, and a cleaner operator experience.`
- : `You are on the free livestock tier${livestockSubscription?.record_limit ? ` with up to ${livestockSubscription.record_limit} animals` : ''}. Upgrade to unlock unlimited records and a more complete herd-management workspace.`}
+ <div style={{maxWidth:720, color:effectiveLivestockSubscription?.tier === 'premium' ? 'rgba(255,255,255,.88)' : '#334155'}}>
+ {effectiveLivestockSubscription?.tier === 'premium'
+ ? `Your account is on the premium tier${effectiveLivestockSubscription?.subscription?.plan_code ? ` • ${String(effectiveLivestockSubscription.subscription.plan_code).toUpperCase()}` : ''}. Enjoy unlimited records, attachment-ready workflows, and a cleaner operator experience.`
+ : `You are on the free livestock tier${effectiveLivestockSubscription?.record_limit ? ` with up to ${effectiveLivestockSubscription.record_limit} animals` : ''}. Upgrade to unlock unlimited records and a more complete herd-management workspace.`}
  </div>
  </div>
  <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
- {livestockSubscription?.tier === 'premium' && <span className='cover-badge' style={{background:'rgba(255,255,255,.16)', color:'#fff', border:'1px solid rgba(255,255,255,.25)'}}>Premium badge</span>}
- <button className={`btn ${livestockSubscription?.tier === 'premium' ? '' : 'btn-dark'}`} onClick={() => setActive('livestock-records')}>{livestockSubscription?.tier === 'premium' ? 'Open premium records' : 'View upgrade plans'}</button>
+ {effectiveLivestockSubscription?.tier === 'premium' && <span className='cover-badge' style={{background:'rgba(255,255,255,.16)', color:'#fff', border:'1px solid rgba(255,255,255,.25)'}}>Premium badge</span>}
+ <button className={`btn ${effectiveLivestockSubscription?.tier === 'premium' ? '' : 'btn-dark'}`} onClick={() => setActive('livestock-records')}>{effectiveLivestockSubscription?.tier === 'premium' ? 'Open premium records' : 'View upgrade plans'}</button>
  <button className='btn' onClick={() => setActive('onboarding')}>My billing</button>
  </div>
  </div>
@@ -4386,7 +4399,7 @@ function AppInner() {
    <article className='records-stat-card records-stat-card-primary'>
     <span>Total records</span>
     <strong>{livestockRecordsCounts.ALL}</strong>
-    <small>{livestockSubscription?.tier === 'premium' ? 'Premium tier active' : `Free tier${livestockSubscription?.record_limit ? ` · limit ${livestockSubscription.record_limit}` : ''}`}</small>
+    <small>{effectiveLivestockSubscription?.tier === 'premium' ? 'Premium tier active' : `Free tier${effectiveLivestockSubscription?.record_limit ? ` · limit ${effectiveLivestockSubscription.record_limit}` : ''}`}</small>
    </article>
    <article className='records-stat-card'>
     <span>Active animals</span>

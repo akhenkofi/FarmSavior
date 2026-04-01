@@ -774,13 +774,45 @@ def _livestock_plan_snapshot(plan_code: str) -> dict:
     return plan
 
 
+def _subscription_status_upper(value: Optional[str]) -> str:
+    return str(value or '').upper()
+
+
+def _select_best_subscription_record(records: list[SheepGoatSubscription]) -> Optional[SheepGoatSubscription]:
+    active_statuses = {'ACTIVE', 'TRIAL_ACTIVE'}
+    active_records = [rec for rec in records if _subscription_status_upper(rec.status) in active_statuses]
+    if active_records:
+        return active_records[0]
+    return records[0] if records else None
+
+
 def _livestock_active_subscription_for_user(user_id: Optional[int], db: Session):
     if not user_id:
         return None
-    return db.query(SheepGoatSubscription).filter(
+
+    records = db.query(SheepGoatSubscription).filter(
         SheepGoatSubscription.user_id == int(user_id),
-        SheepGoatSubscription.status.in_(['ACTIVE', 'TRIAL_ACTIVE', 'PENDING_PAYMENT'])
-    ).order_by(SheepGoatSubscription.id.desc()).first()
+        SheepGoatSubscription.reference.like('SGSUB-%')
+    ).order_by(SheepGoatSubscription.created_at.desc(), SheepGoatSubscription.id.desc()).limit(50).all()
+
+    if not records:
+        return None
+
+    pending_statuses = {'PENDING_PAYMENT', 'PENDING', 'PROCESSING'}
+    synced_any = False
+    for rec in records:
+        if _subscription_status_upper(rec.status) in pending_statuses:
+            _sync_subscription_record(rec, db)
+            synced_any = True
+
+    if synced_any:
+        records = db.query(SheepGoatSubscription).filter(
+            SheepGoatSubscription.user_id == int(user_id),
+            SheepGoatSubscription.reference.like('SGSUB-%')
+        ).order_by(SheepGoatSubscription.created_at.desc(), SheepGoatSubscription.id.desc()).limit(50).all()
+
+    return _select_best_subscription_record(records)
+
 
 
 def _livestock_access_context(user_id: Optional[int], db: Session) -> dict:
@@ -794,13 +826,14 @@ def _livestock_access_context(user_id: Optional[int], db: Session) -> dict:
             'plan': _livestock_plan_snapshot('free'),
             'subscription': None,
         }
-    tier = str(sub.plan_code or 'premium') if str(sub.status) == 'ACTIVE' else 'free'
+    status = _subscription_status_upper(sub.status)
+    tier = str(sub.plan_code or 'premium') if status in ['ACTIVE', 'TRIAL_ACTIVE'] else 'free'
     plan = _livestock_plan_snapshot(tier)
     return {
         'tier': tier,
-        'status': str(sub.status),
+        'status': status,
         'record_limit': plan.get('record_limit'),
-        'can_create_records': str(sub.status) in ['ACTIVE'],
+        'can_create_records': status in ['ACTIVE', 'TRIAL_ACTIVE'] or tier == 'free',
         'plan': plan,
         'subscription': sub,
     }
@@ -1935,6 +1968,18 @@ def account_billing_overview(authorization: Optional[str] = Header(None), db: Se
     subscriptions = db.query(SheepGoatSubscription).filter(
         SheepGoatSubscription.user_id == user.id
     ).order_by(SheepGoatSubscription.created_at.desc(), SheepGoatSubscription.id.desc()).limit(100).all()
+
+    pending_statuses = {'PENDING_PAYMENT', 'PENDING', 'PROCESSING'}
+    synced_any = False
+    for sub in subscriptions:
+        if _subscription_status_upper(sub.status) in pending_statuses:
+            _sync_subscription_record(sub, db)
+            synced_any = True
+    if synced_any:
+        subscriptions = db.query(SheepGoatSubscription).filter(
+            SheepGoatSubscription.user_id == user.id
+        ).order_by(SheepGoatSubscription.created_at.desc(), SheepGoatSubscription.id.desc()).limit(100).all()
+
     payments = db.query(Payment).filter(
         (Payment.payer_id == user.id) | (Payment.payee_id == user.id)
     ).order_by(Payment.created_at.desc(), Payment.id.desc()).limit(100).all()
