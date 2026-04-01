@@ -966,6 +966,18 @@ const livestockHistoryRows = (record) => {
  offspring: [
  [`Offspring`, `(${offspringCount})`],
  ['Add Lamb', '›'],
+ ],
+ marks: [
+ ['Add Mark', '›'],
+ ['Add Flush', '›'],
+ ['Add Ultrasound', '›'],
+ ],
+ photosDocs: [
+ ['Add Photo', '›'],
+ ['Add Doc', '›'],
+ ],
+ herd: [
+ ['Move to Different Herd', '›'],
  ]
  }
 }
@@ -4498,6 +4510,27 @@ function AppInner() {
  <div key={`offspring-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}>
  <span style={{color:'#111827', fontWeight:600}}>{label} {String(value).startsWith('(') ? value : ''}</span>
  <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{String(value).startsWith('(') ? '›' : value}</strong>
+ </div>
+ ))}
+ <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>MARKS</div>
+ {livestockHistoryRows(selectedLivestockRecord).marks.map(([label, value], idx) => (
+ <div key={`marks-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}>
+ <span style={{color:'#111827', fontWeight:600}}>{label}</span>
+ <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{value}</strong>
+ </div>
+ ))}
+ <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>PHOTOS & DOCS</div>
+ {livestockHistoryRows(selectedLivestockRecord).photosDocs.map(([label, value], idx) => (
+ <div key={`photosdocs-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}>
+ <span style={{color:'#111827', fontWeight:600}}>{label}</span>
+ <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{value}</strong>
+ </div>
+ ))}
+ <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>HERD</div>
+ {livestockHistoryRows(selectedLivestockRecord).herd.map(([label, value], idx) => (
+ <div key={`herd-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}>
+ <span style={{color:'#111827', fontWeight:600}}>{label}</span>
+ <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{value}</strong>
  </div>
  ))}
  </div>}
