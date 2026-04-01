@@ -2473,7 +2473,11 @@ function AppInner() {
  </>}
  <p>{authMsg}</p>
 
-
+ <div className='panel' style={{marginTop:10,padding:12,background:'#f8fafc', border:'1px solid #e2e8f0'}}>
+ <div style={{fontSize:'.9rem', color:'#334155', lineHeight:1.5}}>
+ FarmSavior is a digital agricultural platform operated in Ghana by Sheep Ghana Limited.
+ </div>
+ </div>
 
  <div className='panel' style={{marginTop:10,padding:10,background:'#f8fafc'}}>
  <h4 style={{margin:'0 0 6px'}}>{isZh ? '📲 下载到手机' : t('📲 Download App to Phone','📲 Télécharger l’application sur le téléphone','📲 下载到手机')}</h4>
