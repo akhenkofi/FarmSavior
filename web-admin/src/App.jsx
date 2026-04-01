@@ -4208,1011 +4208,150 @@ function AppInner() {
  </article>}
  </section>}
 
- {active === 'livestock-records' && <section>
- <div className='panel' style={{marginBottom:12, padding:'12px 14px', background:'#1d4ed8', color:'#fff'}}>
- <div className='list-row' style={{alignItems:'center', gap:12}}>
- <div>
- <h3 style={{margin:0, color:'#fff'}}>{t('Livestock Records Management (Sheep • Goats • Cattle • Poultry)','Gestion des registres élevage (ovins • caprins • bovins • volailles)','牲畜档案管理（羊•山羊•牛•家禽）')}</h3>
- <div style={{fontSize:'.82rem', opacity:.9}}>{livestockRecordsFiltered.length} visible</div>
- </div>
- <button type='button' className='btn' style={{marginLeft:'auto', minWidth:48, height:48, borderRadius:999, fontSize:'1.6rem', fontWeight:700, background:'#fff', color:'#1d4ed8', border:'none'}} onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: true, edit: false }))}>+</button>
- </div>
- </div>
- <div className='panel' style={{marginBottom:12, background:'linear-gradient(135deg,#0f172a 0%,#1d4ed8 55%,#0ea5e9 100%)', color:'#fff', border:'1px solid rgba(255,255,255,.08)'}}>
- <div className='list-row' style={{background:'transparent', border:'none', padding:'0 0 10px', color:'#fff'}}>
- <div>
- <div style={{fontSize:'.78rem', fontWeight:800, letterSpacing:'.08em', opacity:.82}}>FARMSAVIOR RECORDS</div>
- <h3 style={{margin:'4px 0 0', color:'#fff'}}>Livestock Records</h3>
- <div style={{fontSize:'.92rem', opacity:.9, marginTop:4}}>A clean mobile-first records home for animals, health, lineage, and reports.</div>
- </div>
- <button type='button' className='btn' style={{marginLeft:'auto', minWidth:52, height:52, borderRadius:999, fontSize:'1.6rem', fontWeight:800, background:'#fff', color:'#1d4ed8', border:'none'}} onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: true, edit: false }))}>+</button>
- </div>
- <div className='livestock-filter-chips'>
- <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('ALL')} style={{border:livestockRecordsFilter==='ALL'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('All','Tous','全部')} · {state.livestockRecords.length}</button>
- <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('GOAT')} style={{border:livestockRecordsFilter==='GOAT'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Goats','Chèvres','山羊')} · {state.livestockRecords.filter(r => r.species === 'GOAT').length}</button>
- <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('SHEEP')} style={{border:livestockRecordsFilter==='SHEEP'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Sheep','Moutons','绵羊')} · {state.livestockRecords.filter(r => r.species === 'SHEEP').length}</button>
- <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('CATTLE')} style={{border:livestockRecordsFilter==='CATTLE'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Cattle','Bovins','牛')} · {state.livestockRecords.filter(r => r.species === 'CATTLE').length}</button>
- <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('POULTRY')} style={{border:livestockRecordsFilter==='POULTRY'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Poultry','Volailles','家禽')} · {state.livestockRecords.filter(r => r.species === 'POULTRY').length}</button>
- </div>
- <p style={{margin:'10px 0 0',fontSize:'.84rem',opacity:.88}}>Showing <strong>{livestockRecordsFiltered.length}</strong> records in <strong>{livestockRecordsFilter}</strong></p>
+ {active === 'livestock-records' && <section className='records-home-screen'>
+ <div className='records-hero'>
+  <div>
+   <div className='records-eyebrow'>FARMSAVIOR RECORDS</div>
+   <h3>Livestock Records</h3>
+   <p>Manage animals, health, lineage, reports, and history in one clean mobile-first workspace.</p>
+  </div>
+  <button type='button' className='records-add-fab' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: true, edit: false, details: false }))}>+</button>
  </div>
 
- <article className='panel' style={{width:'100%', overflow:'hidden'}}>
- {recordsSectionOpen.create && <form className='list' style={{gap:10, width:'100%'}} onSubmit={async e => {
- e.preventDefault()
- try {
- const { treatment_entry, ...createPayload } = livestockRecordForm
- await api.createLivestockRecord({
- ...createPayload,
- user_id: Number(me?.id || 0),
- stars: Number(livestockRecordForm.stars || 0),
- purchase_price: livestockRecordForm.purchase_price === '' ? null : Number(livestockRecordForm.purchase_price),
- litter_size: livestockRecordForm.litter_size === '' ? null : Number(livestockRecordForm.litter_size),
- initial_weight_kg: livestockRecordForm.initial_weight_kg === '' ? null : Number(livestockRecordForm.initial_weight_kg),
- sale_price: livestockRecordForm.sale_price === '' ? null : Number(livestockRecordForm.sale_price),
- date_of_birth: livestockRecordForm.date_of_birth || null,
- acquisition_date: livestockRecordForm.acquisition_date || null,
- sale_date: livestockRecordForm.sale_date || null,
- died_date: livestockRecordForm.died_date || null,
- })
- await load()
- setLivestockRecordForm({ ...livestockRecordForm, name: '', ear_tag: '', registration_number: '', purchased_from: '', purchase_price: '', health_status: '', notes: '', treatment_entry: '' })
- setRecordsSectionOpen(prev => ({ ...prev, create: false }))
- alert('Record created successfully')
- } catch (err) {
- alert(`Create failed: ${errMsg(err)}`)
- }
- }}>
- <div className='panel' style={{padding:'10px 12px', background:'#ffffff', border:'1px solid #dbeafe', borderRadius:16, boxShadow:'0 8px 24px rgba(15,23,42,.06)'}}>
- <div className='list-row' style={{alignItems:'center', gap:12}}>
- <button type='button' className='btn' style={{borderRadius:999}} onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: false }))}>Cancel</button>
- <strong style={{fontSize:'1.05rem', marginLeft:'auto', marginRight:'auto'}}>{`Add ${String(livestockRecordForm.species || 'Record').charAt(0)}${String(livestockRecordForm.species || 'Record').slice(1).toLowerCase()}`}</strong>
- <button type='submit' className='btn btn-dark' style={{borderRadius:999}}>Done</button>
+ <div className='records-filter-strip'>
+  <button type='button' className={`records-chip ${livestockRecordsFilter==='ALL' ? 'active' : ''}`} onClick={() => setLivestockRecordsFilter('ALL')}>All · {state.livestockRecords.length}</button>
+  <button type='button' className={`records-chip ${livestockRecordsFilter==='SHEEP' ? 'active' : ''}`} onClick={() => setLivestockRecordsFilter('SHEEP')}>Sheep · {state.livestockRecords.filter(r => r.species === 'SHEEP').length}</button>
+  <button type='button' className={`records-chip ${livestockRecordsFilter==='GOAT' ? 'active' : ''}`} onClick={() => setLivestockRecordsFilter('GOAT')}>Goats · {state.livestockRecords.filter(r => r.species === 'GOAT').length}</button>
+  <button type='button' className={`records-chip ${livestockRecordsFilter==='CATTLE' ? 'active' : ''}`} onClick={() => setLivestockRecordsFilter('CATTLE')}>Cattle · {state.livestockRecords.filter(r => r.species === 'CATTLE').length}</button>
+  <button type='button' className={`records-chip ${livestockRecordsFilter==='POULTRY' ? 'active' : ''}`} onClick={() => setLivestockRecordsFilter('POULTRY')}>Poultry · {state.livestockRecords.filter(r => r.species === 'POULTRY').length}</button>
  </div>
- </div>
- <div className='panel' style={{padding:12, background:'#ffffff', border:'1px solid #e2e8f0', borderRadius:16, boxShadow:'0 6px 18px rgba(15,23,42,.04)'}}>
- <div className='helper-text' style={{fontWeight:700, color:'#1e3a8a', marginBottom:6}}>Quick identity and ownership</div>
- </div>
- <div className='row2' style={{gap:10}}>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text' style={{fontWeight:700, color:'#334155'}}>Ownership</span>
- <select className='input' value={livestockRecordForm.ownership} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, ownership: e.target.value })}><option value='OWNED'>Owned by me</option><option value='THIRD_PARTY'>Owned by someone else</option></select>
- </label>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text' style={{fontWeight:700, color:'#334155'}}>Animal type</span>
- <select className='input' value={livestockRecordForm.species} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, species: e.target.value, animal_type: e.target.value === 'GOAT' ? 'DOE' : (e.target.value === 'CATTLE' ? 'COW' : (e.target.value === 'POULTRY' ? 'LAYER_HEN' : 'EWE')) })}><option value='SHEEP'>Sheep</option><option value='GOAT'>Goat</option><option value='CATTLE'>Cattle</option><option value='POULTRY'>Poultry</option></select>
- </label>
- </div>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text' style={{fontWeight:700, color:'#334155'}}>{livestockRecordForm.species === 'POULTRY' ? 'Sex / category' : 'Sex'}</span>
- <select className='input' value={livestockRecordForm.animal_type} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, animal_type: e.target.value })}>{livestockRecordForm.species === 'GOAT' ? <><option value='DOE'>Doe</option><option value='BUCK'>Buck</option></> : (livestockRecordForm.species === 'CATTLE' ? <><option value='COW'>Cow</option><option value='BULL'>Bull</option><option value='HEIFER'>Heifer</option><option value='STEER'>Steer</option></> : (livestockRecordForm.species === 'POULTRY' ? <><option value='LAYER_HEN'>Layer hen</option><option value='BROILER'>Broiler</option><option value='PULLET'>Pullet</option><option value='COCKEREL'>Cockerel</option><option value='CHICK'>Chick</option><option value='BREEDER'>Breeder</option></> : <><option value='EWE'>Ewe</option><option value='RAM'>Ram</option></>))}</select>
- </label>
- <div className='row2' style={{gap:10}}>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Reg. Name</span>
- <input className='input' placeholder='Registration name' value={livestockRecordForm.name} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, name: e.target.value })} />
- </label>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Breed</span>
- <select className='input' value={livestockRecordForm.breeding_type || ''} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, breeding_type: e.target.value })}>
- <option value=''>Choose breed</option>
- {(livestockBreedOptions[livestockRecordForm.species] || []).map(b => <option key={`breed-${b}`} value={b}>{b}</option>)}
- </select>
- </label>
- </div>
- <div className='row2' style={{gap:10}}>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Breeder</span>
- <input className='input' list='livestock-purchase-sources-create' placeholder='Choose or enter breeder' value={livestockRecordForm.purchased_from} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, purchased_from: e.target.value, purchased_from_type: 'BREEDER' })} />
- </label>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Stars</span>
- <select className='input' value={livestockRecordForm.stars} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, stars: e.target.value })}>
- <option value='0'>0 stars</option><option value='1'>1 star</option><option value='2'>2 stars</option><option value='3'>3 stars</option><option value='4'>4 stars</option><option value='5'>5 stars</option>
- </select>
- </label>
- </div>
- <datalist id='livestock-purchase-sources-create'>{state.livestockPurchaseSources.filter(s => !s.species || s.species === 'ALL' || s.species === livestockRecordForm.species).map(s => <option key={`create-source-${s.id}-${s.name}`} value={s.name}>{s.source_type || ''}</option>)}</datalist>
- <div className='row2' style={{gap:10}}>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Born</span>
- <input className='input' type='date' value={livestockRecordForm.date_of_birth} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, date_of_birth: e.target.value })} />
- </label>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Acquired</span>
- <input className='input' type='date' value={livestockRecordForm.acquisition_date} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, acquisition_date: e.target.value })} />
- </label>
- </div>
- <div className='row2' style={{gap:10}}>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Purchase Cost</span>
- <input className='input' type='number' step='0.01' placeholder='0.00' value={livestockRecordForm.purchase_price} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, purchase_price: e.target.value })} />
- </label>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Purchase Desc</span>
- <input className='input' placeholder='Market / private treaty / gifted' value={livestockRecordForm.notes} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, notes: e.target.value })} />
- </label>
- </div>
- <div className='row2' style={{gap:10}}>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Sire</span>
- <input className='input' placeholder='Choose or enter sire' value={livestockRecordForm.sire_id} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, sire_id: e.target.value })} />
- </label>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Dam</span>
- <input className='input' placeholder='Choose or enter dam' value={livestockRecordForm.dam_id} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, dam_id: e.target.value })} />
- </label>
- </div>
- <div className='row2' style={{gap:10}}>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Dam-Sire</span>
- <input className='input' placeholder='Dam sire / maternal grandsire' value={livestockRecordForm.farm_id} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, farm_id: e.target.value })} />
- </label>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Raised by Dam</span>
- <select className='input' value={livestockRecordForm.cull_keep_status || ''} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, cull_keep_status: e.target.value })}>
- <option value=''>Choose</option>
- {livestockRaisedByDamOptions.map(opt => <option key={`raised-${opt}`} value={opt}>{opt}</option>)}
- </select>
- </label>
- </div>
- <div className='row2' style={{gap:10}}>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Litter Size</span>
- <input className='input' type='number' min='0' placeholder='0' value={livestockRecordForm.litter_size} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, litter_size: e.target.value })} />
- </label>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>DNA</span>
- <select className='input' value={livestockRecordForm.registration_number || ''} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, registration_number: e.target.value })}>
- <option value=''>Choose DNA status</option>
- {livestockDnaOptions.map(opt => <option key={`dna-${opt}`} value={opt}>{opt}</option>)}
- </select>
- </label>
- </div>
- <div className='row2' style={{gap:10}}>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Initial Weight</span>
- <input className='input' type='number' step='0.01' placeholder='kg' value={livestockRecordForm.initial_weight_kg} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, initial_weight_kg: e.target.value })} />
- </label>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Currency</span>
- <select className='input' value={livestockRecordForm.currency} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, currency: e.target.value })}><option>GHS</option><option>NGN</option><option>XOF</option><option>USD</option></select>
- </label>
- </div>
- <button type='button' className='btn' onClick={async () => {
- setActionBusy('save-breeder-create')
- const name = (livestockRecordForm.purchased_from || '').trim()
- if (!name) return alert('Enter breeder name first')
- try {
- await api.saveLivestockPurchaseSource({ user_id: Number(me?.id || 0), species: livestockRecordForm.species, name, source_type: 'BREEDER' })
- await loadLivestockRecords()
- alert('Breeder saved')
- } catch (err) {
- alert(`Could not save breeder: ${errMsg(err)}`)
- } finally { setActionBusy('') }
- }}>{busyLabel('save-breeder-create','Save breeder')}</button>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Initial Notes</span>
- <textarea className='input' rows={3} placeholder='Notes' value={livestockRecordForm.notes} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, notes: e.target.value })} />
- </label>
- <div className='panel' style={{padding:12, background:'#ffffff', border:'1px solid #e2e8f0', borderRadius:16, boxShadow:'0 6px 18px rgba(15,23,42,.04)'}}>
- <div className='helper-text' style={{fontWeight:700, color:'#475569', marginBottom:8}}>Breeding Type</div>
- <div className='inlineForm' style={{gap:8, flexWrap:'wrap'}}>
- {['Natural','AI Fresh','AI Frozen','ET'].map(opt => (
- <button type='button' key={`breedtype-${opt}`} className={`btn ${livestockRecordForm.health_status===opt ? 'btn-dark' : ''}`} onClick={() => setLivestockRecordForm({ ...livestockRecordForm, health_status: opt })}>{opt}</button>
- ))}
- </div>
- </div>
- <div className='row2' style={{gap:10}}>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Castrated</span>
- <select className='input' value={livestockRecordForm.castrated ? 'Yes' : 'No'} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, castrated: e.target.value === 'Yes' })}><option>No</option><option>Yes</option></select>
- </label>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Sale Date</span>
- <input className='input' type='date' value={livestockRecordForm.sale_date} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, sale_date: e.target.value })} />
- </label>
- </div>
- <div className='row2' style={{gap:10}}>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Sold To</span>
- <input className='input' placeholder='Choose' value={livestockRecordForm.sold_to} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, sold_to: e.target.value })} />
- </label>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Sale Price</span>
- <input className='input' type='number' step='0.01' placeholder='$ Amount' value={livestockRecordForm.sale_price} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, sale_price: e.target.value })} />
- </label>
- </div>
- <div className='row2' style={{gap:10}}>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Sale Desc</span>
- <input className='input' placeholder='Sale Desc (Optional)' value={livestockRecordForm.pen_location} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, pen_location: e.target.value })} />
- </label>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Winnings</span>
- <input className='input' placeholder='Winnings' value={livestockRecordForm.treatment_entry} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, treatment_entry: e.target.value })} />
- </label>
- </div>
- <div className='row2' style={{gap:10}}>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Died</span>
- <input className='input' type='date' value={livestockRecordForm.died_date} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, died_date: e.target.value })} />
- </label>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Breed With</span>
- <input className='input' placeholder='Choose' value={livestockRecordForm.cull_reason} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, cull_reason: e.target.value })} />
- </label>
- </div>
- <div className='panel' style={{padding:12, background:'#ffffff', border:'1px solid #e2e8f0', borderRadius:16, boxShadow:'0 6px 18px rgba(15,23,42,.04)'}}>
- <div className='helper-text' style={{fontWeight:700, color:'#475569', marginBottom:8}}>Should Be Culled</div>
- <div className='inlineForm' style={{gap:8}}>
- <button type='button' className={`btn ${livestockRecordForm.cull_keep_status==='CULL' ? 'btn-dark' : ''}`} onClick={() => setLivestockRecordForm({ ...livestockRecordForm, cull_keep_status: 'CULL' })}>Cull</button>
- <button type='button' className={`btn ${livestockRecordForm.cull_keep_status==='KEEP' ? 'btn-dark' : ''}`} onClick={() => setLivestockRecordForm({ ...livestockRecordForm, cull_keep_status: 'KEEP' })}>Keep</button>
- </div>
- </div>
- <button className='btn btn-dark' style={{borderRadius:999, padding:'12px 18px'}}>Create Record</button>
- </form>}
- </article>
 
- <article className='panel'>
- <div className='list-row' style={{marginBottom:10}}>
- <div style={{cursor:(selectedLivestockRecord || livestockRecordEdit.id) ? 'pointer' : 'default'}} onClick={() => {
- if (!(selectedLivestockRecord || livestockRecordEdit.id)) return
- setRecordsSectionOpen(prev => ({ ...prev, edit: !prev.edit, create: false }))
- }}>
- <h4 style={{margin:'0 0 4px 0'}}>Edit Record</h4>
- <div className='helper-text'>{selectedLivestockRecord ? 'Tap Edit from the table below to prefill this form automatically.' : 'Select a record from the table first.'}</div>
+ <div className='records-summary-bar'>
+  <span>Showing <strong>{livestockRecordsFiltered.length}</strong> records</span>
+  <span>Tap a card to open details</span>
  </div>
- <button type='button' className='btn' disabled={!selectedLivestockRecord && !livestockRecordEdit.id} onClick={() => setRecordsSectionOpen(prev => ({ ...prev, edit: !prev.edit, create: false }))}>{recordsSectionOpen.edit ? 'Hide' : 'Open'}</button>
- </div>
- {(recordsSectionOpen.edit && (selectedLivestockRecord || livestockRecordEdit.id)) && <form className='list' onSubmit={async e => {
- e.preventDefault()
- if (!livestockRecordEdit.id) return
- try {
- const { treatment_entry, ...editPayload } = livestockRecordEdit
- await api.updateLivestockRecord(Number(livestockRecordEdit.id), {
- ...editPayload,
- user_id: Number(livestockRecordEdit.user_id || me?.id || 1),
- stars: Number(livestockRecordEdit.stars || 0),
- purchase_price: livestockRecordEdit.purchase_price === '' ? null : Number(livestockRecordEdit.purchase_price),
- litter_size: livestockRecordEdit.litter_size === '' ? null : Number(livestockRecordEdit.litter_size),
- initial_weight_kg: livestockRecordEdit.initial_weight_kg === '' ? null : Number(livestockRecordEdit.initial_weight_kg),
- sale_price: livestockRecordEdit.sale_price === '' ? null : Number(livestockRecordEdit.sale_price),
- date_of_birth: livestockRecordEdit.date_of_birth || null,
- acquisition_date: livestockRecordEdit.acquisition_date || null,
- sale_date: livestockRecordEdit.sale_date || null,
- died_date: livestockRecordEdit.died_date || null,
- })
- await load()
- setRecordsSectionOpen(prev => ({ ...prev, edit: false }))
- alert('Record updated successfully')
- } catch (err) {
- alert(`Update failed: ${errMsg(err)}`)
- }
- }}>
- <input className='input' placeholder='Record ID' value={livestockRecordEdit.id} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, id: e.target.value })} required />
- <div className='row2' style={{gap:10}}>
- <select className='input' value={livestockRecordEdit.species} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, species: e.target.value, animal_type: e.target.value === 'GOAT' ? 'DOE' : (e.target.value === 'CATTLE' ? 'COW' : (e.target.value === 'POULTRY' ? 'LAYER_HEN' : 'EWE')) })}><option value='SHEEP'>SHEEP</option><option value='GOAT'>GOAT</option><option value='CATTLE'>CATTLE</option><option value='POULTRY'>POULTRY</option></select>
- <select className='input' value={livestockRecordEdit.animal_type} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, animal_type: e.target.value })}>{livestockRecordEdit.species === 'GOAT' ? <><option value='DOE'>DOE</option><option value='BUCK'>BUCK</option></> : (livestockRecordEdit.species === 'CATTLE' ? <><option value='COW'>COW</option><option value='BULL'>BULL</option><option value='HEIFER'>HEIFER</option><option value='STEER'>STEER</option></> : (livestockRecordEdit.species === 'POULTRY' ? <><option value='LAYER_HEN'>LAYER_HEN</option><option value='BROILER'>BROILER</option><option value='PULLET'>PULLET</option><option value='COCKEREL'>COCKEREL</option><option value='CHICK'>CHICK</option><option value='BREEDER'>BREEDER</option></> : <><option value='EWE'>EWE</option><option value='RAM'>RAM</option></>))}</select>
- </div>
- <div className='row2' style={{gap:10}}>
- <input className='input' placeholder='Name' value={livestockRecordEdit.name} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, name: e.target.value })} />
- <input className='input' placeholder='Ear tag' value={livestockRecordEdit.ear_tag} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, ear_tag: e.target.value })} />
- </div>
- <div className='row2' style={{gap:10}}>
- <input className='input' placeholder='Farm ID' value={livestockRecordEdit.farm_id} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, farm_id: e.target.value })} />
- <input className='input' placeholder='Registration number' value={livestockRecordEdit.registration_number} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, registration_number: e.target.value })} />
- </div>
- <div className='row2' style={{gap:10}}>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Date of birth</span>
- <input className='input' type='date' value={livestockRecordEdit.date_of_birth ? String(livestockRecordEdit.date_of_birth).slice(0,10) : ''} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, date_of_birth: e.target.value })} />
- </label>
- <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Date purchased</span>
- <input className='input' type='date' value={livestockRecordEdit.acquisition_date ? String(livestockRecordEdit.acquisition_date).slice(0,10) : ''} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, acquisition_date: e.target.value })} />
- </label>
- </div>
- <div className='row2' style={{gap:10}}>
- <input className='input' list='livestock-purchase-sources-edit' placeholder='Purchased from' value={livestockRecordEdit.purchased_from} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, purchased_from: e.target.value })} />
- <select className='input' value={livestockRecordEdit.purchased_from_type} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, purchased_from_type: e.target.value })}><option value='BREEDER'>Breeder</option><option value='MARKET'>Market</option><option value='OTHER'>Other</option></select>
- </div>
- <datalist id='livestock-purchase-sources-edit'>{state.livestockPurchaseSources.filter(s => !s.species || s.species === 'ALL' || s.species === livestockRecordEdit.species).map(s => <option key={`edit-source-${s.id}-${s.name}`} value={s.name}>{s.source_type || ''}</option>)}</datalist>
- <div className='row2' style={{gap:10}}>
- <input className='input' type='number' step='0.01' placeholder='Purchase price' value={livestockRecordEdit.purchase_price} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, purchase_price: e.target.value })} />
- <select className='input' value={livestockRecordEdit.currency} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, currency: e.target.value })}><option>GHS</option><option>NGN</option><option>XOF</option><option>USD</option></select>
- </div>
- <button type='button' className='btn' onClick={async () => {
- const name = (livestockRecordEdit.purchased_from || '').trim()
- if (!name) return alert('Enter breeder or market name first')
- try {
- await api.saveLivestockPurchaseSource({ user_id: Number(me?.id || 0), species: livestockRecordEdit.species, name, source_type: livestockRecordEdit.purchased_from_type || 'OTHER' })
- await loadLivestockRecords()
- alert('Breeder/market saved')
- } catch (err) {
- alert(`Could not save breeder/market: ${errMsg(err)}`)
- }
- }}>Save breeder / market</button>
- <div className='row2' style={{gap:10}}>
- <input className='input' type='number' min='0' max='5' placeholder='Stars (0-5)' value={livestockRecordEdit.stars} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, stars: e.target.value })} />
- <input className='input' type='number' step='0.01' placeholder='Initial weight (kg)' value={livestockRecordEdit.initial_weight_kg} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, initial_weight_kg: e.target.value })} />
- </div>
- <div className='row2' style={{gap:10}}>
- <input className='input' placeholder={livestockRecordEdit.species === 'POULTRY' ? 'Breeder line / rooster ID' : 'Sire ID'} value={livestockRecordEdit.sire_id} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, sire_id: e.target.value })} />
- <input className='input' placeholder={livestockRecordEdit.species === 'POULTRY' ? 'Hatchery batch / hen line' : 'Dam ID'} value={livestockRecordEdit.dam_id} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, dam_id: e.target.value })} />
- </div>
- <div className='row2' style={{gap:10}}>
- <input className='input' type='number' min='0' placeholder={livestockRecordEdit.species === 'POULTRY' ? 'Flock/batch size' : 'Litter size'} value={livestockRecordEdit.litter_size} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, litter_size: e.target.value })} />
- <input className='input' placeholder={livestockRecordEdit.species === 'POULTRY' ? 'Production type (layer/broiler/breeder)' : 'Breeding type'} value={livestockRecordEdit.breeding_type} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, breeding_type: e.target.value })} />
- </div>
- <div className='row2' style={{gap:10}}>
- <input className='input' placeholder='Health status' value={livestockRecordEdit.health_status} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, health_status: e.target.value })} />
- <input className='input' placeholder='Pen location' value={livestockRecordEdit.pen_location} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, pen_location: e.target.value })} />
- </div>
- {livestockRecordEdit.species !== 'POULTRY' && <label><input type='checkbox' checked={livestockRecordEdit.castrated} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, castrated: e.target.checked })} /> Castrated</label>}
- <div className='row2' style={{gap:10}}>
- <input className='input' placeholder='Cull/keep status' value={livestockRecordEdit.cull_keep_status} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, cull_keep_status: e.target.value })} />
- <input className='input' placeholder='Cull reason' value={livestockRecordEdit.cull_reason} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, cull_reason: e.target.value })} />
- </div>
- <div className='row2' style={{gap:10}}>
- <input className='input' type='date' placeholder='Sale date' value={livestockRecordEdit.sale_date ? String(livestockRecordEdit.sale_date).slice(0,10) : ''} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, sale_date: e.target.value })} />
- <input className='input' type='number' step='0.01' placeholder='Sale price' value={livestockRecordEdit.sale_price} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, sale_price: e.target.value })} />
- </div>
- <div className='row2' style={{gap:10}}>
- <input className='input' placeholder='Sold to' value={livestockRecordEdit.sold_to} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, sold_to: e.target.value })} />
- <input className='input' type='date' placeholder='Died date' value={livestockRecordEdit.died_date ? String(livestockRecordEdit.died_date).slice(0,10) : ''} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, died_date: e.target.value })} />
- </div>
- <div className='inlineForm'>
- <input className='input' placeholder='Medication / treatment record (single entry)' value={livestockRecordEdit.treatment_entry} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, treatment_entry: e.target.value })} />
- <button type='button' className='btn' onClick={() => {
- if (!livestockRecordEdit.treatment_entry?.trim()) return
- const stamp = new Date().toISOString().slice(0,10)
- const line = `[Treatment ${stamp}] ${livestockRecordEdit.treatment_entry.trim()}`
- setLivestockRecordEdit({ ...livestockRecordEdit, notes: [livestockRecordEdit.notes, line].filter(Boolean).join('\n'), treatment_entry: '' })
- }}>Add Treatment</button>
- </div>
- <input className='input' placeholder='Notes (includes treatment history)' value={livestockRecordEdit.notes} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, notes: e.target.value })} />
- <div className='inlineForm'>
- <button className='btn btn-dark'>Save Edit</button>
- <button type='button' className='btn' onClick={async () => { try { if (!livestockRecordEdit.id) return; await api.deleteLivestockRecord(Number(livestockRecordEdit.id)); await load(); setLivestockRecordEdit({ ...livestockRecordEdit, id: '' }); setSelectedLivestockRecord(null); setRecordsSectionOpen(prev => ({ ...prev, edit: false, details: false })); alert('Record deleted successfully') } catch (err) { alert(`Delete failed: ${errMsg(err)}`) } }}>Delete Record</button>
- </div>
- </form>}
- </article>
 
- {recordsSectionOpen.batch && <>
- <div className='inlineForm'>
- <select className='input' value={batchMedicationForm.species} onChange={e=>setBatchMedicationForm({ ...batchMedicationForm, species:e.target.value, animal_type:'ALL' })}>
- <option value='ALL'>All species</option>
- <option value='SHEEP'>SHEEP</option>
- <option value='GOAT'>GOAT</option>
- <option value='CATTLE'>CATTLE</option>
- </select>
- <select className='input' value={batchMedicationForm.animal_type} onChange={e=>setBatchMedicationForm({ ...batchMedicationForm, animal_type:e.target.value })}>
- <option value='ALL'>All animal types</option>
- {(batchMedicationForm.species === 'ALL' || batchMedicationForm.species === 'SHEEP') && <><option value='EWE'>EWE</option><option value='RAM'>RAM</option></>}
- {(batchMedicationForm.species === 'ALL' || batchMedicationForm.species === 'GOAT') && <><option value='DOE'>DOE</option><option value='BUCK'>BUCK</option></>}
- {(batchMedicationForm.species === 'ALL' || batchMedicationForm.species === 'CATTLE') && <><option value='COW'>COW</option><option value='BULL'>BULL</option><option value='HEIFER'>HEIFER</option><option value='STEER'>STEER</option></>}
- {(batchMedicationForm.species === 'ALL' || batchMedicationForm.species === 'POULTRY') && <><option value='LAYER_HEN'>LAYER_HEN</option><option value='BROILER'>BROILER</option><option value='PULLET'>PULLET</option><option value='COCKEREL'>COCKEREL</option><option value='CHICK'>CHICK</option><option value='BREEDER'>BREEDER</option></>}
- </select>
- <select className='input' value={batchMedicationForm.health_status} onChange={e=>setBatchMedicationForm({ ...batchMedicationForm, health_status:e.target.value })}>
- <option value='ALL'>All health statuses</option>
- <option value='Healthy'>Healthy</option>
- <option value='Monitor'>Monitor</option>
- <option value='Sick'>Sick</option>
- </select>
- <select className='input' value={batchMedicationForm.cull_keep_status} onChange={e=>setBatchMedicationForm({ ...batchMedicationForm, cull_keep_status:e.target.value })}>
- <option value='ALL'>All cull/keep statuses</option>
- <option value='KEEP'>KEEP</option>
- <option value='CULL'>CULL</option>
- </select>
+ <div className='records-card-feed'>
+  {livestockRecordsFiltered.map((r) => <button type='button' key={`record-card-${r.id}`} className='records-card' onClick={() => { setSelectedLivestockRecord(r); setRecordsSectionOpen(prev => ({ ...prev, details: true, edit: false, create: false })) }}>
+   <div className='records-card-top'>
+    <div>
+     <div className='records-card-id'>{r.id || '—'}</div>
+     <div className='records-card-name'>{r.name || 'Unnamed animal'}</div>
+    </div>
+    <div className='records-card-arrow'>›</div>
+   </div>
+   <div className='records-card-tags'>
+    <span>{r.species || '—'}</span>
+    <span>{r.animal_type || '—'}</span>
+    <span>{r.date_of_birth || r.acquisition_date || '—'}</span>
+   </div>
+   <div className='records-card-meta'>{r.purchased_from || 'No breeder/source recorded'}</div>
+   <div className='records-card-status'>{r.health_status || 'No health status yet'}</div>
+  </button>)}
+  {livestockRecordsFiltered.length === 0 && <div className='panel'><div className='helper-text'>No records yet for this filter. Tap + to create your first record.</div></div>}
  </div>
- <div className='inlineForm'>
- <input className='input' type='number' min='0' max='5' placeholder='Min stars (optional)' value={batchMedicationForm.minStars} onChange={e=>setBatchMedicationForm({ ...batchMedicationForm, minStars:e.target.value })} />
- <input className='input' placeholder='Pen/location contains (optional)' value={batchMedicationForm.pen_location} onChange={e=>setBatchMedicationForm({ ...batchMedicationForm, pen_location:e.target.value })} />
- <input className='input' placeholder='Medication name' value={batchMedicationForm.medication} onChange={e=>setBatchMedicationForm({ ...batchMedicationForm, medication:e.target.value })} />
- <input className='input' placeholder='Dose (optional)' value={batchMedicationForm.dose} onChange={e=>setBatchMedicationForm({ ...batchMedicationForm, dose:e.target.value })} />
- <input className='input' placeholder='Duration days (optional)' value={batchMedicationForm.days} onChange={e=>setBatchMedicationForm({ ...batchMedicationForm, days:e.target.value })} />
- </div>
- <div className='inlineForm'>
- <button type='button' className='btn btn-dark' onClick={async () => {
- try {
- if (!batchMedicationForm.medication?.trim()) return alert('Medication name is required')
- const minStars = batchMedicationForm.minStars === '' ? null : Number(batchMedicationForm.minStars)
- const matches = state.livestockRecords.filter(r => {
- if (batchMedicationForm.species !== 'ALL' && r.species !== batchMedicationForm.species) return false
- if (batchMedicationForm.animal_type !== 'ALL' && r.animal_type !== batchMedicationForm.animal_type) return false
- if (batchMedicationForm.health_status !== 'ALL' && String(r.health_status || '') !== batchMedicationForm.health_status) return false
- if (batchMedicationForm.cull_keep_status !== 'ALL' && String(r.cull_keep_status || '') !== batchMedicationForm.cull_keep_status) return false
- if (minStars != null && Number(r.stars || 0) < minStars) return false
- if (batchMedicationForm.pen_location?.trim() && !String(r.pen_location || '').toLowerCase().includes(batchMedicationForm.pen_location.trim().toLowerCase())) return false
- return true
- })
- if (!matches.length) return alert('No matching records for current filters')
- const stamp = new Date().toISOString().slice(0,10)
- const line = `[Batch Treatment ${stamp}] ${batchMedicationForm.medication}${batchMedicationForm.dose ? ` | Dose: ${batchMedicationForm.dose}` : ''}${batchMedicationForm.days ? ` | Days: ${batchMedicationForm.days}` : ''}`
- let ok = 0, fail = 0
- for (const r of matches) {
- try {
- await api.updateLivestockRecord(Number(r.id), { ...r, notes: [r.notes, line].filter(Boolean).join('\\n') })
- ok += 1
- } catch {
- fail += 1
- }
- }
- await load()
- alert(`Batch treatment applied. Success: ${ok}, Failed: ${fail}`)
- } catch (err) {
- alert(`Batch update failed: ${errMsg(err)}`)
- }
- }}>Apply Batch Treatment</button>
- <div className='list-row' style={{padding:'6px 10px'}}>
- <span>Matching records (preview)</span>
- <strong>{state.livestockRecords.filter(r => {
- const minStars = batchMedicationForm.minStars === '' ? null : Number(batchMedicationForm.minStars)
- if (batchMedicationForm.species !== 'ALL' && r.species !== batchMedicationForm.species) return false
- if (batchMedicationForm.animal_type !== 'ALL' && r.animal_type !== batchMedicationForm.animal_type) return false
- if (batchMedicationForm.health_status !== 'ALL' && String(r.health_status || '') !== batchMedicationForm.health_status) return false
- if (batchMedicationForm.cull_keep_status !== 'ALL' && String(r.cull_keep_status || '') !== batchMedicationForm.cull_keep_status) return false
- if (minStars != null && Number(r.stars || 0) < minStars) return false
- if (batchMedicationForm.pen_location?.trim() && !String(r.pen_location || '').toLowerCase().includes(batchMedicationForm.pen_location.trim().toLowerCase())) return false
- return true
- }).length}</strong>
- </div>
- </div>
- </>}
- </article>
 
-
- {(selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', borderRadius:0}}>
- <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => { if (selectedOffspringRecord) setSelectedOffspringRecord(null); else setSelectedLivestockRecord(null) }}>‹</button>
- <strong style={{fontSize:'1.05rem'}}>{selectedOffspringRecord ? 'Offspring' : (String((selectedOffspringRecord || selectedLivestockRecord).species || 'Animal').charAt(0) + String((selectedOffspringRecord || selectedLivestockRecord).species || 'Animal').slice(1).toLowerCase())}</strong>
- <div style={{marginLeft:'auto', fontWeight:700}}>{(selectedOffspringRecord || selectedLivestockRecord)?.name || (selectedOffspringRecord || selectedLivestockRecord)?.id || '0001'}</div>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none'}} onClick={() => { const baseRecord = selectedOffspringRecord || selectedLivestockRecord; setLivestockRecordEdit(mapLivestockRecordToEditForm(baseRecord)); setRecordsSectionOpen(prev => ({ ...prev, edit: true, create: false, details: true })) }}>Edit</button>
- </div>
- {recordsSectionOpen.details && <div style={{background:'#fff'}}>
- {livestockDetailRows(selectedOffspringRecord || selectedLivestockRecord).map((row, idx) => {
- const [label, value, action] = row
- const clickable = action === 'breeder' && value && value !== '--'
- return <div key={`detail-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: clickable ? 'pointer' : 'default'}} onClick={() => {
- if (!clickable) return
- const baseRecord = selectedOffspringRecord || selectedLivestockRecord
- setBreederUploads({ photos: [], docs: [] })
- setSelectedBreederDetail({
- id: String(baseRecord?.id || '0001').padStart(4,'0'),
- name: value,
- phone: '--',
- email: '--',
- address: '--',
- scrapiePrefix: '--',
- notes: '--',
- })
- }}>
- <span style={{color:'#1e3a8a', fontWeight:600}}>{label}</span>
- <strong style={{marginLeft:'auto', color:'#111827', textAlign:'right'}}>{value == null || value === '' ? '--' : String(value)}</strong>
- {clickable && <span style={{marginLeft:10, color:'#9ca3af'}}>›</span>}
- </div>
- })}
- <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>HISTORY</div>
- {livestockHistoryRows(selectedLivestockRecord).history.map((row, idx) => {
- const [label, value, action] = row
- const clickable = action === 'notes' || action === 'add-note' || action === 'add-weight' || action === 'medicines' || action === 'add-medicine' || action === 'famacha' || action === 'ancestor-tree' || action === 'share-pdf' || action === 'offspring-report' || action === 'offspring-list' || action === 'add-mark' || action === 'add-flush'
- return <div key={`history-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: clickable ? 'pointer' : 'default'}} onClick={() => {
- if (action === 'notes') setNotesScreenOpen(true)
- if (action === 'add-note') { setDraftNote(''); setNotesComposerOpen(true) }
- if (action === 'add-weight') { setDraftWeight(''); setWeightComposerOpen(true) }
- if (action === 'medicines') setMedicinesScreenOpen(true)
- if (action === 'add-medicine') { setMedicineShotDraft({ medicine: '', dosage: '', notes: '' }); setMedicineShotOpen(true) }
- if (action === 'share-pdf') setAncestorPdfOpen(true)
- if (action === 'famacha') { setFamachaDraft({ famacha: '--', bodyScore: '', weight: '', notes: '' }); setFamachaComposerOpen(true) }
- if (action === 'ancestor-tree') setAncestorTreeOpen(true)
- if (action === 'offspring-report') setOffspringReportOpen(true)
- if (action === 'offspring-list') setOffspringListOpen(true)
- if (action === 'add-mark') { const base=(selectedOffspringRecord || selectedLivestockRecord); setMarkDraft({ sire: base?.sire_id || '', dam: base?.dam_id || base?.id || '', markDate: new Date().toISOString().slice(0,10), dueDate: '2026-08-26', fertilizationType: 'Natural' }); setMarkComposerOpen(true) }
- if (action === 'add-flush') { const base=(selectedOffspringRecord || selectedLivestockRecord); setFlushDraft({ ram: base?.sire_id || '', date: new Date().toISOString().slice(0,10), cidrIn: '', cidrOut: '', notes: '' }); setFlushComposerOpen(true) }
- }}>
- <span style={{color:'#111827', fontWeight:600}}>{label} {String(value).startsWith('(') ? value : ''}</span>
- <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{String(value).startsWith('(') ? '›' : value}</strong>
- </div>
- })}
- <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>OFFSPRING</div>
- {livestockHistoryRows(selectedOffspringRecord || selectedLivestockRecord).offspring.map(([label, value], idx) => {
- const action = value === 'add-lamb'
- return <div key={`offspring-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: action ? 'pointer' : 'default'}} onClick={() => {
- if (!action) return
- const parent = selectedOffspringRecord || selectedLivestockRecord
- const draft = buildOffspringDraftFromParent(parent)
- if (draft) setLivestockRecordForm(draft)
- setRecordsSectionOpen(prev => ({ ...prev, create: true, edit: false, details: false }))
- }}>
- <span style={{color:'#111827', fontWeight:600}}>{label} {String(value).startsWith('(') ? value : ''}</span>
- <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{String(value).startsWith('(') ? '›' : value}</strong>
- </div>
- })}
- <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>MARKS</div>
- {livestockHistoryRows(selectedLivestockRecord).marks.map(([label, value], idx) => <div key={`marks-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor:'pointer'}} onClick={() => { if (value === 'add-mark') { const base=(selectedOffspringRecord || selectedLivestockRecord); setMarkDraft({ sire: base?.sire_id || '', dam: base?.dam_id || base?.id || '', markDate: new Date().toISOString().slice(0,10), dueDate: '2026-08-26', fertilizationType: 'Natural' }); setMarkComposerOpen(true) } if (value === 'add-flush') { const base=(selectedOffspringRecord || selectedLivestockRecord); setFlushDraft({ ram: base?.sire_id || '', date: new Date().toISOString().slice(0,10), cidrIn: '', cidrOut: '', notes: '' }); setFlushComposerOpen(true) } if (value === 'add-ultrasound') { setUltrasoundDraft({ date: new Date().toISOString().slice(0,10), result: '', notes: '' }); setUltrasoundComposerOpen(true) } }}><span style={{color:'#111827', fontWeight:600}}>{label}</span><strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>›</strong></div>)}
- <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>PHOTOS & DOCS</div>
- <input ref={animalPhotoInputRef} type='file' accept='image/*' capture='environment' multiple style={{display:'none'}} onChange={(e) => handleAnimalPhotoFiles(e.target.files)} />
- <input ref={animalDocInputRef} type='file' accept='.pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,application/pdf,text/plain' multiple style={{display:'none'}} onChange={(e) => handleAnimalDocFiles(e.target.files)} />
- {livestockHistoryRows(selectedLivestockRecord).photosDocs.map(([label, value], idx) => <div key={`photosdocs-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor:'pointer'}} onClick={() => { if (value === 'add-photo') animalPhotoInputRef.current?.click(); if (value === 'add-doc') animalDocInputRef.current?.click() }}><span style={{color:'#111827', fontWeight:600}}>{label}</span><strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>›</strong></div>)}
- {(animalUploads.photos || []).map((file, idx) => <div key={`animal-photo-${idx}`} className='list-row' style={{padding:'10px 16px', borderBottom:'1px solid #eef2f7'}}><span>📷 {file.name}</span><strong style={{marginLeft:'auto', color:'#94a3b8'}}>{Math.round((file.size||0)/1024)} KB</strong></div>)}
- {(animalUploads.docs || []).map((file, idx) => <div key={`animal-doc-${idx}`} className='list-row' style={{padding:'10px 16px', borderBottom:'1px solid #eef2f7'}}><span>📄 {file.name}</span><strong style={{marginLeft:'auto', color:'#94a3b8'}}>{Math.round((file.size||0)/1024)} KB</strong></div>)}
- <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>HERD</div>
- {livestockHistoryRows(selectedLivestockRecord).herd.map(([label, value], idx) => <div key={`herd-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor:'pointer'}} onClick={() => { if (value === 'move-herd') { setMoveHerdDraft({ herd: '', notes: '' }); setMoveHerdOpen(true) } }}><span style={{color:'#111827', fontWeight:600}}>{label}</span><strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>›</strong></div>)}
- </div>}
+ {recordsSectionOpen.create && <article className='panel records-inline-panel'>
+  <div className='list-row' style={{marginBottom:10}}>
+   <div>
+    <h4 style={{margin:'0 0 4px 0'}}>Create Record</h4>
+    <div className='helper-text'>Use the full flow below to add a new animal.</div>
+   </div>
+   <button type='button' className='btn' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: false }))}>Close</button>
+  </div>
+  <form className='list' style={{gap:10, width:'100%'}} onSubmit={async e => {
+   e.preventDefault()
+   setActionBusy('livestock-create')
+   try {
+    const { treatment_entry, ...createPayload } = livestockRecordForm
+    await api.createLivestockRecord({ ...createPayload, user_id: Number(me?.id || 0) })
+    await loadLivestockRecords()
+    setLivestockRecordForm({ user_id: '', ownership: 'Owned by Me', species: 'SHEEP', animal_type: 'EWE', name: '', ear_tag: '', farm_id: '', registration_number: '', date_of_birth: '', acquisition_date: '', purchased_from: '', purchased_from_type: 'BREEDER', purchase_price: '', currency: 'GHS', stars: '0', initial_weight_kg: '', sire_id: '', dam_id: '', litter_size: '', breeding_type: '', health_status: '', pen_location: '', castrated: false, cull_keep_status: '', cull_reason: '', sale_date: '', sale_price: '', sold_to: '', died_date: '', treatment_entry: '', notes: '' })
+    setRecordsSectionOpen(prev => ({ ...prev, create: false }))
+   } catch (err) {
+    alert(`Create failed: ${errMsg(err)}`)
+   } finally { setActionBusy('') }
+  }}>
+   <div className='panel' style={{padding:'10px 12px', background:'#ffffff', border:'1px solid #dbeafe', borderRadius:16}}>
+    <div className='list-row' style={{alignItems:'center', gap:12}}>
+     <button type='button' className='btn' style={{borderRadius:999}} onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: false }))}>Cancel</button>
+     <strong style={{fontSize:'1.05rem', marginLeft:'auto', marginRight:'auto'}}>{`Add ${String(livestockRecordForm.species || 'Record').charAt(0)}${String(livestockRecordForm.species || 'Record').slice(1).toLowerCase()}`}</strong>
+     <button type='submit' className='btn btn-dark' style={{borderRadius:999}}>{busyLabel('livestock-create','Done')}</button>
+    </div>
+   </div>
+   <div className='panel' style={{padding:12, background:'#ffffff', border:'1px solid #e2e8f0', borderRadius:16}}>
+    <div className='helper-text' style={{fontWeight:700, color:'#1e3a8a', marginBottom:6}}>Quick identity and ownership</div>
+    <div className='row2' style={{gap:10}}>
+     <label style={{display:'grid', gap:4}}><span className='helper-text' style={{fontWeight:700, color:'#334155'}}>Ownership</span><select className='input' value={livestockRecordForm.ownership} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, ownership: e.target.value })}><option value='OWNED'>Owned by me</option><option value='THIRD_PARTY'>Owned by someone else</option></select></label>
+     <label style={{display:'grid', gap:4}}><span className='helper-text' style={{fontWeight:700, color:'#334155'}}>Animal type</span><select className='input' value={livestockRecordForm.species} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, species: e.target.value, animal_type: e.target.value === 'GOAT' ? 'DOE' : (e.target.value === 'CATTLE' ? 'COW' : (e.target.value === 'POULTRY' ? 'LAYER_HEN' : 'EWE')) })}><option value='SHEEP'>Sheep</option><option value='GOAT'>Goat</option><option value='CATTLE'>Cattle</option><option value='POULTRY'>Poultry</option></select></label>
+    </div>
+    <label style={{display:'grid', gap:4}}><span className='helper-text' style={{fontWeight:700, color:'#334155'}}>{livestockRecordForm.species === 'POULTRY' ? 'Sex / category' : 'Sex'}</span><select className='input' value={livestockRecordForm.animal_type} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, animal_type: e.target.value })}>{livestockRecordForm.species === 'GOAT' ? <><option value='DOE'>Doe</option><option value='BUCK'>Buck</option></> : (livestockRecordForm.species === 'CATTLE' ? <><option value='COW'>Cow</option><option value='BULL'>Bull</option><option value='HEIFER'>Heifer</option><option value='STEER'>Steer</option></> : (livestockRecordForm.species === 'POULTRY' ? <><option value='LAYER_HEN'>Layer hen</option><option value='BROILER'>Broiler</option><option value='PULLET'>Pullet</option><option value='COCKEREL'>Cockerel</option><option value='CHICK'>Chick</option><option value='BREEDER'>Breeder</option></> : <><option value='EWE'>Ewe</option><option value='RAM'>Ram</option></>))}</select></label>
+   </div>
+   <button className='btn btn-dark'>{busyLabel('livestock-create','Create Record')}</button>
+  </form>
  </article>}
 
-
-
- {breederReportOpen && selectedBreederDetail && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', boxShadow:'0 20px 60px rgba(15,23,42,.28)', borderRadius:0}}>
- <div style={{background:'#0f172a', color:'#fff', padding:'14px 16px', display:'flex', alignItems:'center', gap:12}}>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setBreederReportOpen(false)}>‹</button>
- <div>
- <div style={{fontSize:'1.05rem', fontWeight:700}}>Breeder Performance Report</div>
- <div style={{fontSize:'.82rem', opacity:.85}}>FarmSavior report for {selectedBreederDetail.name}</div>
- </div>
- <button type='button' className='btn' style={{marginLeft:'auto', background:'#fff', color:'#0f172a', border:'none'}}>Share PDF</button>
- </div>
- <div style={{padding:16, background:'#fff'}}>
- <div className='row2' style={{gap:12}}>
- <div className='panel' style={{padding:12, borderRadius:14, background:'#f8fafc'}}><div className='helper-text'>Breeder</div><strong>{selectedBreederDetail.name}</strong></div>
- <div className='panel' style={{padding:12, borderRadius:14, background:'#f8fafc'}}><div className='helper-text'>Species focus</div><strong>{selectedLivestockRecord?.species || 'Sheep'}</strong></div>
- </div>
- <div className='row2' style={{gap:12, marginTop:12}}>
- <div className='panel' style={{padding:12, borderRadius:14, background:'#ecfeff', border:'1px solid #a5f3fc'}}><div className='helper-text'>Animals recorded</div><strong>7</strong></div>
- <div className='panel' style={{padding:12, borderRadius:14, background:'#f0fdf4', border:'1px solid #86efac'}}><div className='helper-text'>Average stars</div><strong>4.2 / 5</strong></div>
- </div>
- <article className='panel' style={{marginTop:12, padding:0, overflow:'hidden', borderRadius:16}}>
- <div style={{padding:'12px 14px', borderBottom:'1px solid #e5e7eb', fontWeight:700}}>Breeder animals summary</div>
- <div className='list-row' style={{padding:'12px 14px', fontWeight:700, background:'#f8fafc'}}><span>Name / Tag #</span><span>Sire</span><span>Dam</span><span>Birth Date</span><span>Sex</span><span>Breed</span><span>Stars</span></div>
- {[
- [selectedLivestockRecord?.name || '0001', selectedLivestockRecord?.sire_id || '--', selectedLivestockRecord?.dam_id || '--', selectedLivestockRecord?.date_of_birth ? String((selectedOffspringRecord || selectedLivestockRecord).date_of_birth).slice(0,10) : '--', selectedLivestockRecord?.animal_type || '--', selectedLivestockRecord?.breeding_type || '--', selectedLivestockRecord?.stars ?? '--'],
- ['0005','--','--','--','F','Baloji','4'],
- ['0007Y','--','--','--','F','Baloji','4'],
- ['0020 old 06','--','--','--','F','Baloji','3'],
- ['0112','--','--','--','M','Balami','5'],
- ].map((row, idx) => <div key={`breeder-report-row-${idx}`} className='list-row' style={{padding:'12px 14px', borderTop:'1px solid #eef2f7', display:'grid', gridTemplateColumns:'1.5fr 1fr 1fr 1fr .7fr 1fr .7fr', gap:8}}>{row.map((cell, cidx) => <span key={`cell-${idx}-${cidx}`} style={{color:'#111827'}}>{cell}</span>)}</div>)}
- </article>
- <article className='panel' style={{marginTop:12, padding:12, borderRadius:16, background:'#fff7ed', border:'1px solid #fdba74'}}>
- <div style={{fontWeight:700, marginBottom:6}}>FarmSavior summary</div>
- <div style={{fontSize:'.92rem', color:'#475569'}}>This breeder report is designed to be cleaner and more useful than a raw export. It highlights breeder quality, recorded offspring, and quick lineage review in a mobile-friendly layout.</div>
- </article>
- </div>
+ {selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18}}>
+  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
+   <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => { if (selectedOffspringRecord) setSelectedOffspringRecord(null); else setSelectedLivestockRecord(null) }}>‹</button>
+   <strong style={{fontSize:'1.05rem'}}>{selectedOffspringRecord ? 'Offspring' : (String(selectedLivestockRecord.species || 'Animal').charAt(0) + String(selectedLivestockRecord.species || 'Animal').slice(1).toLowerCase())}</strong>
+   <div style={{marginLeft:'auto', fontWeight:700}}>{(selectedOffspringRecord || selectedLivestockRecord)?.name || (selectedOffspringRecord || selectedLivestockRecord)?.id || '0001'}</div>
+   <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none'}} onClick={() => { const baseRecord = selectedOffspringRecord || selectedLivestockRecord; setLivestockRecordEdit(mapLivestockRecordToEditForm(baseRecord)); setRecordsSectionOpen(prev => ({ ...prev, edit: true, create: false, details: true })) }}>Edit</button>
+  </div>
+  {recordsSectionOpen.details && <div style={{background:'#fff'}}>
+   {livestockDetailRows(selectedOffspringRecord || selectedLivestockRecord).map((row, idx) => {
+    const [label, value, action] = row
+    const clickable = action === 'breeder' && value && value !== '--'
+    return <div key={`detail-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: clickable ? 'pointer' : 'default'}} onClick={() => {
+     if (!clickable) return
+     const baseRecord = selectedOffspringRecord || selectedLivestockRecord
+     setBreederUploads({ photos: [], docs: [] })
+     setSelectedBreederDetail({ id: String(baseRecord?.id || '0001').padStart(4,'0'), name: value, phone: '--', email: '--', address: '--', scrapiePrefix: '--', notes: '--' })
+    }}>
+     <span style={{color:'#1e3a8a', fontWeight:600}}>{label}</span>
+     <strong style={{marginLeft:'auto', color:'#111827', textAlign:'right'}}>{value == null || value === '' ? '--' : String(value)}</strong>
+     {clickable && <span style={{marginLeft:10, color:'#9ca3af'}}>›</span>}
+    </div>
+   })}
+   <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>HISTORY</div>
+   {livestockHistoryRows(selectedOffspringRecord || selectedLivestockRecord).history.map((row, idx) => {
+    const [label, value, action] = row
+    const clickable = action === 'notes' || action === 'add-note' || action === 'add-weight' || action === 'medicines' || action === 'add-medicine' || action === 'famacha' || action === 'ancestor-tree' || action === 'share-pdf' || action === 'offspring-report' || action === 'offspring-list' || action === 'add-mark' || action === 'add-flush'
+    return <div key={`history-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: clickable ? 'pointer' : 'default'}} onClick={() => {
+     if (action === 'notes') setNotesScreenOpen(true)
+     if (action === 'add-note') { setDraftNote(''); setNotesComposerOpen(true) }
+     if (action === 'add-weight') { setDraftWeight(''); setWeightComposerOpen(true) }
+     if (action === 'medicines') setMedicinesScreenOpen(true)
+     if (action === 'add-medicine') { setMedicineShotDraft({ medicine: '', dosage: '', notes: '' }); setMedicineShotOpen(true) }
+     if (action === 'share-pdf') setAncestorPdfOpen(true)
+     if (action === 'famacha') { setFamachaDraft({ famacha: '--', bodyScore: '', weight: '', notes: '' }); setFamachaComposerOpen(true) }
+     if (action === 'ancestor-tree') setAncestorTreeOpen(true)
+     if (action === 'offspring-report') setOffspringReportOpen(true)
+     if (action === 'offspring-list') setOffspringListOpen(true)
+     if (action === 'add-mark') { const base=(selectedOffspringRecord || selectedLivestockRecord); setMarkDraft({ sire: base?.sire_id || '', dam: base?.dam_id || base?.id || '', markDate: new Date().toISOString().slice(0,10), dueDate: '2026-08-26', fertilizationType: 'Natural' }); setMarkComposerOpen(true) }
+     if (action === 'add-flush') { const base=(selectedOffspringRecord || selectedLivestockRecord); setFlushDraft({ ram: base?.sire_id || '', date: new Date().toISOString().slice(0,10), cidrIn: '', cidrOut: '', notes: '' }); setFlushComposerOpen(true) }
+    }}>
+     <span style={{color:'#111827', fontWeight:600}}>{label} {String(value).startsWith('(') ? value : ''}</span>
+     <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{String(value).startsWith('(') ? '›' : value}</strong>
+    </div>
+   })}
+   <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>OFFSPRING</div>
+   {livestockHistoryRows(selectedOffspringRecord || selectedLivestockRecord).offspring.map(([label, value], idx) => {
+    const action = value === 'add-lamb'
+    return <div key={`offspring-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: action ? 'pointer' : 'default'}} onClick={() => {
+     if (!action) return
+     const parent = selectedOffspringRecord || selectedLivestockRecord
+     const draft = buildOffspringDraftFromParent(parent)
+     if (draft) setLivestockRecordForm(draft)
+     setRecordsSectionOpen(prev => ({ ...prev, create: true, edit: false, details: false }))
+    }}>
+     <span style={{color:'#111827', fontWeight:600}}>{label} {String(value).startsWith('(') ? value : ''}</span>
+     <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{String(value).startsWith('(') ? '›' : value}</strong>
+    </div>
+   })}
+  </div>}
  </article>}
-
-
-
-
-
-
-
-
-
-
-
-
-
- {markComposerOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', boxShadow:'0 20px 60px rgba(15,23,42,.28)', borderRadius:0}}>
- <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setMarkComposerOpen(false)}>Cancel</button>
- <strong style={{margin:'0 auto'}}>{`Mark : ${String((selectedOffspringRecord || selectedLivestockRecord)?.id || '0001').padStart(4,'0')} : ${new Date(markDraft.markDate || Date.now()).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}`}</strong>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setMarkComposerOpen(false)}>Done</button>
- </div>
- <div style={{background:'#eef2f7', minHeight:360}}>
- <div style={{background:'#fff', padding:'14px 16px', borderBottom:'1px solid #e5e7eb', display:'grid', gridTemplateColumns:'90px 1fr auto', alignItems:'center', gap:12}}>
- <span style={{color:'#1e3a8a', fontWeight:700}}>Sire</span>
- <span style={{color: markDraft.sire ? '#111827' : '#9ca3af'}}>{markDraft.sire || 'Choose'}</span>
- <span style={{color:'#9ca3af'}}>›</span>
- </div>
- <div style={{background:'#fff', padding:'14px 16px', borderBottom:'1px solid #e5e7eb', display:'grid', gridTemplateColumns:'90px 1fr auto', alignItems:'center', gap:12}}>
- <span style={{color:'#1e3a8a', fontWeight:700}}>Dam</span>
- <span style={{color:'#111827'}}>{markDraft.dam || '0001'}</span>
- <span style={{color:'#9ca3af'}}>›</span>
- </div>
- <div style={{background:'#fff', padding:'14px 16px', borderBottom:'1px solid #e5e7eb', display:'grid', gridTemplateColumns:'90px 1fr', alignItems:'center', gap:12}}>
- <span style={{color:'#1e3a8a', fontWeight:700}}>Mark Date</span>
- <strong>{new Date(markDraft.markDate || Date.now()).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}</strong>
- </div>
- <div style={{background:'#fff', padding:'14px 16px', borderBottom:'1px solid #e5e7eb', display:'grid', gridTemplateColumns:'90px 1fr', alignItems:'center', gap:12}}>
- <span style={{color:'#1e3a8a', fontWeight:700}}>Due Date</span>
- <strong>{new Date(markDraft.dueDate || Date.now()).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}</strong>
- </div>
- <div style={{padding:'14px 16px', color:'#6b7280', fontWeight:700}}>FERTILIZATION TYPE</div>
- <div style={{padding:'0 12px 18px'}}>
- <div style={{display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:8, background:'#e5e7eb', borderRadius:12, padding:4}}>
- {['Natural','AI Fresh','AI Frozen'].map(opt => <button key={`fert-${opt}`} type='button' className='btn' style={{background: markDraft.fertilizationType===opt ? '#fff' : 'transparent', border:'none', boxShadow:'none', fontWeight:700}} onClick={() => setMarkDraft(prev => ({ ...prev, fertilizationType: opt }))}>{opt}</button>)}
- </div>
- </div>
- </div>
- </article>}
-
- {offspringListOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', boxShadow:'0 20px 60px rgba(15,23,42,.28)', borderRadius:0}}>
- <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setOffspringListOpen(false)}>‹</button>
- <strong>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</strong>
- <div style={{fontWeight:700}}>Offspring</div>
- <button type='button' className='btn' style={{marginLeft:'auto', background:'transparent', color:'#fff', border:'none', fontSize:'1.4rem'}}>+</button>
- </div>
- <div style={{padding:12, background:'#1d4ed8'}}>
- <input className='input' placeholder='Search' value={offspringSearch} onChange={(e) => setOffspringSearch(e.target.value)} style={{background:'#1e3a8a', color:'#fff', border:'none', borderRadius:12}} />
- </div>
- <div style={{background:'#fff', minHeight:320}}>
- {[
- {date:'2023-02-08', id:'0040', breeder:'Sheep Ghana'},
- {date:'2023-09-27', id:'0185', breeder:'Sheep Ghana'},
- {date:'2024-04-13', id:'0019g', breeder:'Sheep Ghana'},
- ].filter(item => !offspringSearch || `${item.date} ${item.id} ${item.breeder}`.toLowerCase().includes(offspringSearch.toLowerCase())).map((item, idx) => <div key={`offspring-list-${idx}`} style={{borderTop:'1px solid #eef2f7', cursor:'pointer'}} onClick={() => {
- setSelectedOffspringRecord({
- id: item.id,
- name: item.id,
- species: (selectedLivestockRecord?.species || 'SHEEP'),
- animal_type: idx === 0 ? 'Ewe' : (idx === 1 ? 'W' : 'Ewe'),
- purchased_from: item.breeder,
- breeding_type: idx === 2 ? 'Boboji' : ((selectedLivestockRecord?.breeding_type) || 'Boboji'),
- date_of_birth: item.date,
- sold_to: idx === 0 ? 'Myroc' : '--',
- sale_date: idx === 0 ? '2024-02-27' : '',
- sire_id: '--',
- dam_id: '0001',
- farm_id: '--',
- litter_size: 1,
- registration_number: '--',
- notes: '--',
- health_status: 'Natural',
- cull_keep_status: '',
- })
- setRecordsSectionOpen(prev => ({ ...prev, details: true }))
- }}>
- <div style={{padding:'16px 16px 8px', color:'#6b7280', fontWeight:700}}>{new Date(item.date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase()}</div>
- <div className='list-row' style={{padding:'0 16px 14px', alignItems:'center'}}><div><div style={{fontWeight:700, color:'#111827'}}>{item.id}</div><div style={{fontSize:'.9rem', color:'#111827'}}>{item.breeder}</div></div><strong style={{marginLeft:'auto', color:'#9ca3af'}}>›</strong></div>
- </div>)}
- </div>
- </article>}
-
- {offspringReportOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', borderRadius:0}}>
- <div style={{background:'#0f172a', color:'#fff', padding:'14px 16px', display:'flex', alignItems:'center', gap:12}}>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setOffspringReportOpen(false)}>‹</button>
- <div>
- <div style={{fontSize:'1.05rem', fontWeight:700}}>FarmSavior Offspring Report</div>
- <div style={{fontSize:'.82rem', opacity:.85}}>Offspring summary for {String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</div>
- </div>
- <button type='button' className='btn' style={{marginLeft:'auto', background:'#fff', color:'#0f172a', border:'none'}} onClick={() => window.print()}>Print / Save PDF</button>
- </div>
- <div style={{background:'#fff', padding:16}}>
- <div className='row2' style={{gap:12}}>
- <div className='panel' style={{padding:12, borderRadius:14, background:'#eff6ff', border:'1px solid #bfdbfe'}}><div className='helper-text'>Parent animal</div><strong>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</strong></div>
- <div className='panel' style={{padding:12, borderRadius:14, background:'#f8fafc', border:'1px solid #e5e7eb'}}><div className='helper-text'>Recorded offspring</div><strong>{Number((selectedOffspringRecord || selectedLivestockRecord).litter_size || 0)}</strong></div>
- </div>
- <article className='panel' style={{marginTop:12, padding:0, overflow:'hidden', borderRadius:16}}>
- <div style={{padding:'12px 14px', borderBottom:'1px solid #e5e7eb', fontWeight:700}}>Offspring table</div>
- <div className='list-row' style={{padding:'12px 14px', fontWeight:700, background:'#f8fafc', display:'grid', gridTemplateColumns:'1.2fr 1fr 1fr .8fr 1fr 1fr 1fr 1fr', gap:8}}><span>Name / Tag #</span><span>Birth Date</span><span>Sire</span><span>Sex</span><span>Buyer</span><span>Sale Price</span><span>Sale Desc</span><span>Winnings</span></div>
- {[
- [(selectedOffspringRecord || selectedLivestockRecord).name || '00199', (selectedOffspringRecord || selectedLivestockRecord).date_of_birth ? String((selectedOffspringRecord || selectedLivestockRecord).date_of_birth).slice(0,10) : '--', (selectedOffspringRecord || selectedLivestockRecord).sire_id || '--', (selectedOffspringRecord || selectedLivestockRecord).animal_type || '--', (selectedOffspringRecord || selectedLivestockRecord).sold_to || '--', (selectedOffspringRecord || selectedLivestockRecord).sale_price || '--', (selectedOffspringRecord || selectedLivestockRecord).pen_location || '--', (selectedOffspringRecord || selectedLivestockRecord).treatment_entry || '--'],
- ['0185','2023-09-27','--','W','--','$0','--','--'],
- ['0040','2020-02-05','--','Ewe','--','$0','--','--'],
- ].map((row, idx) => <div key={`offspring-report-row-${idx}`} className='list-row' style={{padding:'12px 14px', borderTop:'1px solid #eef2f7', display:'grid', gridTemplateColumns:'1.2fr 1fr 1fr .8fr 1fr 1fr 1fr 1fr', gap:8}}>{row.map((cell, cidx) => <span key={`offspring-cell-${idx}-${cidx}`} style={{color:'#111827'}}>{cell}</span>)}</div>)}
- </article>
- <div className='row2' style={{gap:12, marginTop:12}}>
- <div className='panel' style={{padding:12, borderRadius:14, background:'#f0fdf4', border:'1px solid #86efac'}}><div className='helper-text'>Total animals sold</div><strong>0</strong></div>
- <div className='panel' style={{padding:12, borderRadius:14, background:'#fff7ed', border:'1px solid #fdba74'}}><div className='helper-text'>Average offspring sold</div><strong>0</strong></div>
- </div>
- <div style={{marginTop:18, fontSize:'.8rem', color:'#94a3b8'}}>FarmSavior • Generated offspring report</div>
- </div>
- </article>}
-
- {ancestorPdfOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', borderRadius:0}}>
- <div style={{background:'#0f172a', color:'#fff', padding:'14px 16px', display:'flex', alignItems:'center', gap:12}}>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setAncestorPdfOpen(false)}>‹</button>
- <div>
- <div style={{fontSize:'1.05rem', fontWeight:700}}>FarmSavior Animal Lineage Report</div>
- <div style={{fontSize:'.82rem', opacity:.85}}>Printable pedigree report</div>
- </div>
- <button type='button' className='btn' style={{marginLeft:'auto', background:'#fff', color:'#0f172a', border:'none'}} onClick={() => window.print()}>Print / Save PDF</button>
- </div>
- <div style={{background:'#fff', padding:16}}>
- <div className='row2' style={{gap:12}}>
- <div className='panel' style={{padding:12, borderRadius:14, background:'#eff6ff', border:'1px solid #bfdbfe'}}>
- <div className='helper-text'>Animal ID</div><strong>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</strong>
- </div>
- <div className='panel' style={{padding:12, borderRadius:14, background:'#f8fafc', border:'1px solid #e5e7eb'}}>
- <div className='helper-text'>Species / Sex</div><strong>{(selectedOffspringRecord || selectedLivestockRecord).species || '--'} • {(selectedOffspringRecord || selectedLivestockRecord).animal_type || '--'}</strong>
- </div>
- </div>
- <div className='row2' style={{gap:12, marginTop:12}}>
- <div className='panel' style={{padding:12, borderRadius:14, background:'#f0fdf4', border:'1px solid #86efac'}}><div className='helper-text'>Breed</div><strong>{(selectedOffspringRecord || selectedLivestockRecord).breeding_type || '--'}</strong></div>
- <div className='panel' style={{padding:12, borderRadius:14, background:'#fff7ed', border:'1px solid #fdba74'}}><div className='helper-text'>Breeder</div><strong>{(selectedOffspringRecord || selectedLivestockRecord).purchased_from || '--'}</strong></div>
- </div>
- <article className='panel' style={{marginTop:12, padding:16, borderRadius:16}}>
- <div style={{fontWeight:700, marginBottom:12}}>Pedigree Overview</div>
- <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:12}}>
- <div style={{padding:12, border:'1px solid #e5e7eb', borderRadius:12}}><div className='helper-text'>Sire</div><strong>{(selectedOffspringRecord || selectedLivestockRecord).sire_id || 'Not chosen'}</strong></div>
- <div style={{padding:12, border:'1px solid #e5e7eb', borderRadius:12}}><div className='helper-text'>Dam</div><strong>{(selectedOffspringRecord || selectedLivestockRecord).dam_id || 'Not chosen'}</strong></div>
- <div style={{padding:12, border:'1px solid #e5e7eb', borderRadius:12}}><div className='helper-text'>Dam-Sire</div><strong>{(selectedOffspringRecord || selectedLivestockRecord).farm_id || 'Not chosen'}</strong></div>
- <div style={{padding:12, border:'1px solid #e5e7eb', borderRadius:12}}><div className='helper-text'>DNA</div><strong>{(selectedOffspringRecord || selectedLivestockRecord).registration_number || 'Not tested'}</strong></div>
- </div>
- </article>
- <article className='panel' style={{marginTop:12, padding:16, borderRadius:16}}>
- <div style={{fontWeight:700, marginBottom:12}}>FarmSavior Summary</div>
- <div style={{fontSize:'.94rem', color:'#475569', lineHeight:1.6}}>This report is designed to be clearer and more useful than a raw export. It gives farmers a cleaner lineage record, animal identity snapshot, and breeder context in a format that works for mobile viewing, printing, and PDF sharing.</div>
- </article>
- <div style={{marginTop:18, fontSize:'.8rem', color:'#94a3b8'}}>FarmSavior • Generated lineage report</div>
- </div>
- </article>}
-
- {ancestorTreeOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', boxShadow:'0 20px 60px rgba(15,23,42,.28)', borderRadius:0}}>
- <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setAncestorTreeOpen(false)}>‹</button>
- <strong>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</strong>
- <div style={{fontWeight:700}}>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</div>
- <button type='button' className='btn' style={{marginLeft:'auto', background:'transparent', color:'#fff', border:'none'}} onClick={() => setAncestorPdfOpen(true)}>Share PDF</button>
- </div>
- <div style={{background:'#6b7280', height:140}} />
- <div style={{background:'#f8fafc', minHeight:520, position:'relative', overflow:'hidden', backgroundImage:'linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)', backgroundSize:'16px 16px'}}>
- <div style={{position:'absolute', left:24, top:40, width:84, minHeight:90, background:'#fff', border:'2px solid #111827', borderRadius:8, display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', fontWeight:700}}>
- <div>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</div>
- <div style={{fontSize:'1.1rem'}}>{String((selectedOffspringRecord || selectedLivestockRecord).animal_type || 'Ewe').replaceAll('_',' ')}</div>
- </div>
- <div style={{position:'absolute', left:38, top:178, width:68, minHeight:44, background:'#fff', border:'2px solid #f0abfc', borderRadius:8, display:'flex', justifyContent:'center', alignItems:'center', fontWeight:700}}>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</div>
- <div style={{position:'absolute', left:105, top:197, width:56, height:2, background:'#6b7280'}} />
- <div style={{position:'absolute', left:160, top:105, width:2, height:110, background:'#6b7280'}} />
- <div style={{position:'absolute', left:160, top:105, width:40, height:2, background:'#6b7280'}} />
- <div style={{position:'absolute', left:160, top:215, width:40, height:2, background:'#6b7280'}} />
- <div style={{position:'absolute', left:198, top:86, padding:'8px 16px', background:'#fff', border:'1px solid #d1d5db', borderRadius:10, color:'#9ca3af', fontSize:'1.1rem'}}>{(selectedOffspringRecord || selectedLivestockRecord).sire_id ? `Sire ${(selectedOffspringRecord || selectedLivestockRecord).sire_id}` : 'Sire Not Chosen'}</div>
- <div style={{position:'absolute', left:198, top:196, padding:'8px 16px', background:'#fff', border:'1px solid #d1d5db', borderRadius:10, color:'#9ca3af', fontSize:'1.1rem'}}>{(selectedOffspringRecord || selectedLivestockRecord).dam_id ? `Dam ${(selectedOffspringRecord || selectedLivestockRecord).dam_id}` : 'Dam Not Chosen'}</div>
- <div style={{position:'absolute', left:20, bottom:18, color:'#cbd5e1', fontWeight:700, opacity:.8}}>FarmSavior</div>
- </div>
- </article>}
-
- {famachaComposerOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', boxShadow:'0 20px 60px rgba(15,23,42,.28)', borderRadius:0}}>
- <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setFamachaComposerOpen(false)}>Cancel</button>
- <strong style={{margin:'0 auto'}}>FAMACHA / BCS</strong>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setFamachaComposerOpen(false)}>Done</button>
- </div>
- <div style={{background:'#eef2f7', minHeight:420}}>
- <div style={{padding:'14px 16px', color:'#6b7280', fontWeight:700}}>FAMACHA SCORE</div>
- <div style={{background:'#fff', padding:'10px 16px', borderBottom:'1px solid #e5e7eb'}}>
- <div style={{display:'grid', gridTemplateColumns:'repeat(6, 1fr)', gap:8}}>
- {['--','1','2','3','4','5'].map(score => <button key={`famacha-${score}`} type='button' className={`btn ${famachaDraft.famacha===score ? 'btn-dark' : ''}`} onClick={() => setFamachaDraft(prev => ({ ...prev, famacha: score }))}>{score}</button>)}
- </div>
- </div>
- <div style={{padding:'14px 16px', color:'#6b7280', fontWeight:700}}>BODY CONDITION SCORE</div>
- <div style={{background:'#fff', padding:'14px 16px', borderBottom:'1px solid #e5e7eb'}}>
- <label style={{display:'grid', gridTemplateColumns:'140px 1fr', alignItems:'center', gap:12}}>
- <span style={{color:'#1e3a8a', fontWeight:700}}>Body Score</span>
- <input className='input' placeholder='Score' value={famachaDraft.bodyScore} onChange={(e) => setFamachaDraft(prev => ({ ...prev, bodyScore: e.target.value }))} style={{border:'none', boxShadow:'none', padding:'4px 0'}} />
- </label>
- </div>
- <div style={{padding:'14px 16px', color:'#6b7280', fontWeight:700}}>WEIGHT</div>
- <div style={{background:'#fff', padding:'14px 16px', borderBottom:'1px solid #e5e7eb'}}>
- <label style={{display:'grid', gridTemplateColumns:'140px 1fr', alignItems:'center', gap:12}}>
- <span style={{color:'#1e3a8a', fontWeight:700}}>Weight</span>
- <input className='input' placeholder='Weight' value={famachaDraft.weight} onChange={(e) => setFamachaDraft(prev => ({ ...prev, weight: e.target.value }))} style={{border:'none', boxShadow:'none', padding:'4px 0'}} />
- </label>
- </div>
- <div style={{background:'#fff', padding:'14px 16px', borderBottom:'1px solid #e5e7eb', display:'grid', gridTemplateColumns:'140px 1fr', alignItems:'center', gap:12}}>
- <span style={{color:'#1e3a8a', fontWeight:700}}>Score Date</span>
- <strong>{new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}</strong>
- </div>
- <div style={{padding:'14px 16px', color:'#6b7280', fontWeight:700}}>NOTES</div>
- <div style={{background:'#fff', minHeight:120, padding:'12px 16px'}}>
- <textarea className='input' rows={4} placeholder='Notes' value={famachaDraft.notes} onChange={(e) => setFamachaDraft(prev => ({ ...prev, notes: e.target.value }))} style={{width:'100%', border:'none', boxShadow:'none', padding:0}} />
- </div>
- </div>
- </article>}
-
- {customMedicineComposerOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', borderRadius:0}}>
- <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setCustomMedicineComposerOpen(false)}>Cancel</button>
- <strong style={{margin:'0 auto'}}>Medicines</strong>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => {
- const cleaned = String(customMedicineName || '').trim()
- if (cleaned) setMedicineShotDraft(prev => ({ ...prev, medicine: cleaned }))
- setCustomMedicineComposerOpen(false)
- setMedicineChooserOpen(false)
- }}>Done</button>
- </div>
- <div style={{background:'#fff', minHeight:220, padding:'16px'}}>
- <input className='input' placeholder='Medicine name' value={customMedicineName} onChange={(e) => setCustomMedicineName(e.target.value)} />
- </div>
- </article>}
-
- {medicineChooserOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', borderRadius:0}}>
- <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setMedicineChooserOpen(false)}>Cancel</button>
- <strong style={{margin:'0 auto'}}>Medicines</strong>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', fontSize:'1.4rem'}} onClick={() => { setCustomMedicineName(''); setCustomMedicineComposerOpen(true) }}>+</button>
- </div>
- <div style={{padding:12, background:'#1d4ed8'}}>
- <input className='input' placeholder='Search' value={medicineChooserSearch} onChange={(e) => setMedicineChooserSearch(e.target.value)} style={{background:'#1e3a8a', color:'#fff', border:'none', borderRadius:12}} />
- </div>
- <div style={{background:'#fff', minHeight:320}}>
- {(() => {
- const species = String((selectedOffspringRecord || selectedLivestockRecord).species || 'SHEEP').toUpperCase()
- const catalog = livestockMedicineOptions[species] || livestockMedicineOptions.SHEEP
- const match = (name) => !medicineChooserSearch || name.toLowerCase().includes(medicineChooserSearch.toLowerCase())
- return <>
- <div className='list-row' style={{padding:'18px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor:'pointer'}} onClick={() => { setMedicineShotDraft(prev => ({ ...prev, medicine: '' })); setMedicineChooserOpen(false) }}><span style={{fontWeight:600}}>None</span></div>
- <div style={{padding:'12px 16px', background:'#eef2f7', color:'#6b7280', fontWeight:700}}>{species} MEDICINES</div>
- {catalog.species.filter(match).map((item, idx) => <div key={`med-species-${idx}`} className='list-row' style={{padding:'18px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor:'pointer'}} onClick={() => { setMedicineShotDraft(prev => ({ ...prev, medicine: item })); setMedicineChooserOpen(false) }}><span style={{fontWeight:600, color:'#111827'}}>{item}</span></div>)}
- <div style={{padding:'12px 16px', background:'#eef2f7', color:'#6b7280', fontWeight:700}}>OTHER MEDICINES</div>
- {catalog.other.filter(match).map((item, idx) => <div key={`med-other-${idx}`} className='list-row' style={{padding:'18px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor:'pointer'}} onClick={() => { setMedicineShotDraft(prev => ({ ...prev, medicine: item })); setMedicineChooserOpen(false) }}><span style={{fontWeight:600, color:'#111827'}}>{item}</span></div>)}
- </>
- })()}
- </div>
- </article>}
-
- {medicineShotOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', borderRadius:0}}>
- <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setMedicineShotOpen(false)}>Cancel</button>
- <strong style={{margin:'0 auto'}}>Medicine Shot</strong>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setMedicineShotOpen(false)}>Done</button>
- </div>
- <div style={{background:'#eef2f7', minHeight:360}}>
- <div style={{background:'#fff', borderBottom:'1px solid #e5e7eb', padding:'14px 16px', display:'grid', gridTemplateColumns:'100px 1fr auto', alignItems:'center', gap:12}}>
- <span style={{color:'#1e3a8a', fontWeight:700}}>Medicine</span>
- <span style={{color: medicineShotDraft.medicine ? '#111827' : '#9ca3af'}} onClick={() => { setMedicineChooserSearch(''); setMedicineChooserOpen(true) }}>{medicineShotDraft.medicine || 'Choose'}</span>
- <span style={{color:'#9ca3af', cursor:'pointer'}} onClick={() => { setMedicineChooserSearch(''); setMedicineChooserOpen(true) }}>›</span>
- </div>
- <div style={{background:'#fff', borderBottom:'1px solid #e5e7eb', padding:'14px 16px', display:'grid', gridTemplateColumns:'100px 1fr', alignItems:'center', gap:12}}>
- <span style={{color:'#1e3a8a', fontWeight:700}}>Date</span>
- <strong>{new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}</strong>
- </div>
- <div style={{background:'#fff', borderBottom:'1px solid #e5e7eb', padding:'14px 16px', display:'grid', gridTemplateColumns:'100px 1fr', alignItems:'center', gap:12}}>
- <span style={{color:'#1e3a8a', fontWeight:700}}>Dosage</span>
- <input className='input' placeholder='Dosage' value={medicineShotDraft.dosage} onChange={(e) => setMedicineShotDraft(prev => ({ ...prev, dosage: e.target.value }))} style={{border:'none', boxShadow:'none', padding:'4px 0'}} />
- </div>
- <div style={{padding:'12px 16px', color:'#6b7280', fontWeight:700}}>NOTES</div>
- <div style={{background:'#fff', minHeight:120, padding:'12px 16px'}}>
- <textarea className='input' rows={4} placeholder='Notes' value={medicineShotDraft.notes} onChange={(e) => setMedicineShotDraft(prev => ({ ...prev, notes: e.target.value }))} style={{width:'100%', border:'none', boxShadow:'none', padding:0}} />
- </div>
- </div>
- </article>}
-
- {medicinesScreenOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', borderRadius:0}}>
- <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setMedicinesScreenOpen(false)}>‹</button>
- <strong>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</strong>
- <div style={{fontWeight:700}}>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</div>
- <button type='button' className='btn' style={{marginLeft:'auto', background:'transparent', color:'#fff', border:'none', fontSize:'1.4rem'}} onClick={() => { setMedicineShotDraft({ medicine: '', dosage: '', notes: '' }); setMedicineShotOpen(true) }}>+</button>
- </div>
- <div style={{padding:12, background:'#f8fafc'}}>
- <input className='input' placeholder='Search' value={medicinesSearch} onChange={(e) => setMedicinesSearch(e.target.value)} style={{background:'#1e3a8a', color:'#fff', border:'none', borderRadius:12}} />
- </div>
- <div style={{background:'#fff', minHeight:320}}>
- {[
- {name: 'Tsetsefly Shot', date: '2023-09-13'},
- {name: 'PPR vax', date: '2023-03-01'},
- ].filter(item => !medicinesSearch || `${item.name} ${item.date}`.toLowerCase().includes(medicinesSearch.toLowerCase())).map((item, idx) => <div key={`medicine-row-${idx}`} className='list-row' style={{padding:'18px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}><span style={{fontWeight:600, color:'#111827'}}>{item.name}</span><strong style={{marginLeft:'auto', color:'#111827'}}>{new Date(item.date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}</strong><span style={{marginLeft:10, color:'#9ca3af'}}>›</span></div>)}
- </div>
- </article>}
-
- {weightComposerOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', borderRadius:0}}>
- <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setWeightComposerOpen(false)}>Cancel</button>
- <strong style={{margin:'0 auto'}}>Weight</strong>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => {
- if (String(draftWeight || '').trim()) setSelectedLivestockRecord(prev => prev ? ({ ...prev, initial_weight_kg: draftWeight }) : prev)
- setWeightComposerOpen(false)
- }}>Done</button>
- </div>
- <div style={{background:'#eef2f7', minHeight:380}}>
- <div style={{background:'#fff', padding:'14px 16px', borderBottom:'1px solid #e5e7eb'}}>
- <label style={{display:'grid', gridTemplateColumns:'90px 1fr', alignItems:'center', gap:12}}>
- <span style={{color:'#1e3a8a', fontWeight:700}}>Weight</span>
- <input className='input' placeholder='Weight' value={draftWeight} onChange={(e) => setDraftWeight(e.target.value)} style={{border:'none', boxShadow:'none', padding:'4px 0'}} />
- </label>
- </div>
- <div style={{background:'#fff', padding:'14px 16px', borderBottom:'1px solid #e5e7eb'}}>
- <div style={{display:'grid', gridTemplateColumns:'90px 1fr', alignItems:'center', gap:12}}>
- <span style={{color:'#1e3a8a', fontWeight:700}}>Date</span>
- <strong>{new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}</strong>
- </div>
- </div>
- </div>
- </article>}
-
- {notesComposerOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', borderRadius:0}}>
- <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setNotesComposerOpen(false)}>Cancel</button>
- <strong style={{margin:'0 auto'}}>Notes</strong>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => {
- const cleaned = String(draftNote || '').trim()
- if (!cleaned) return setNotesComposerOpen(false)
- setSelectedLivestockRecord(prev => prev ? ({ ...prev, notes: cleaned }) : prev)
- setNotesComposerOpen(false)
- setNotesScreenOpen(true)
- }}>Done</button>
- </div>
- <div style={{background:'#fff', minHeight:420}}>
- <textarea autoFocus className='input' rows={14} placeholder='' value={draftNote} onChange={(e) => setDraftNote(e.target.value)} style={{width:'100%', minHeight:420, border:'none', borderRadius:0, padding:'16px', fontSize:'1rem', outline:'none', boxShadow:'none'}} />
- </div>
- </article>}
-
- {notesScreenOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', borderRadius:0}}>
- <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setNotesScreenOpen(false)}>‹</button>
- <strong>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</strong>
- <div style={{fontWeight:700}}>Notes</div>
- <button type='button' className='btn' style={{marginLeft:'auto', background:'transparent', color:'#fff', border:'none', fontSize:'1.4rem'}} onClick={() => { setDraftNote(''); setNotesComposerOpen(true) }}>+</button>
- </div>
- <div style={{padding:12, background:'#f8fafc'}}>
- <input className='input' placeholder='Search' value={notesSearch} onChange={(e) => setNotesSearch(e.target.value)} style={{background:'#1e3a8a', color:'#fff', border:'none', borderRadius:12}} />
- </div>
- <div style={{background:'#fff', minHeight:320}}>
- {[{date: (selectedOffspringRecord || selectedLivestockRecord).date_of_birth || '2023-07-08', text: (selectedOffspringRecord || selectedLivestockRecord).notes || 'Brown local boboji with black ewe'}]
- .filter(note => !notesSearch || `${note.date} ${note.text}`.toLowerCase().includes(notesSearch.toLowerCase()))
- .map((note, idx) => <div key={`note-row-${idx}`} style={{borderTop:'1px solid #eef2f7'}}>
- <div style={{padding:'16px 16px 8px', color:'#6b7280', fontWeight:700}}>{new Date(note.date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase()}</div>
- <div className='list-row' style={{padding:'0 16px 14px', alignItems:'center'}}><span style={{fontWeight:700, color:'#111827'}}>{note.text}</span><strong style={{marginLeft:'auto', color:'#9ca3af'}}>›</strong></div>
- </div>)}
- </div>
- </article>}
-
- {breederReportOpen && selectedBreederDetail && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', boxShadow:'0 20px 60px rgba(15,23,42,.28)', borderRadius:0}}>
- <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setSelectedBreederDetail(null)}>‹</button>
- <strong style={{fontSize:'1.05rem'}}>{selectedBreederDetail.id}</strong>
- <div style={{fontWeight:700}}>{selectedBreederDetail.name}</div>
- <button type='button' className='btn' style={{marginLeft:'auto', background:'transparent', color:'#fff', border:'none'}}>Edit</button>
- </div>
- <div style={{background:'#fff'}}>
- {[
- ['Name', selectedBreederDetail.name],
- ['Phone', selectedBreederDetail.phone],
- ['Email', selectedBreederDetail.email],
- ['Address', selectedBreederDetail.address],
- ['Scrapie Tag Prefix', selectedBreederDetail.scrapiePrefix],
- ['Notes', selectedBreederDetail.notes],
- ].map(([label, value], idx) => <div key={`breeder-detail-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}><span style={{color:'#1e3a8a', fontWeight:600}}>{label}</span><strong style={{marginLeft:'auto', color:'#111827', textAlign:'right'}}>{value}</strong></div>)}
- <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>PHOTOS & DOCS</div>
- <input ref={breederPhotoInputRef} type='file' accept='image/*' capture='environment' multiple style={{display:'none'}} onChange={(e) => handleBreederPhotoFiles(e.target.files)} />
- <input ref={breederDocInputRef} type='file' accept='.pdf,.doc,.docx,.txt,.rtf,.csv,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain' multiple style={{display:'none'}} onChange={(e) => handleBreederDocFiles(e.target.files)} />
- <div className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor:'pointer'}} onClick={() => breederPhotoInputRef.current?.click()}><span style={{color:'#111827', fontWeight:600}}>Add Photo</span><strong style={{marginLeft:'auto', color:'#9ca3af'}}>›</strong></div>
- <div className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor:'pointer'}} onClick={() => breederDocInputRef.current?.click()}><span style={{color:'#111827', fontWeight:600}}>Add Doc</span><strong style={{marginLeft:'auto', color:'#9ca3af'}}>›</strong></div>
- {(breederUploads.photos || []).map((file, idx) => <div key={`breeder-photo-${idx}`} className='list-row' style={{padding:'10px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}><span style={{color:'#475569'}}>📷 {file.name}</span><strong style={{marginLeft:'auto', color:'#94a3b8'}}>{Math.round((file.size || 0)/1024)} KB</strong></div>)}
- {(breederUploads.docs || []).map((file, idx) => <div key={`breeder-doc-${idx}`} className='list-row' style={{padding:'10px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}><span style={{color:'#475569'}}>📄 {file.name}</span><strong style={{marginLeft:'auto', color:'#94a3b8'}}>{Math.round((file.size || 0)/1024)} KB</strong></div>)}
- <div className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor:'pointer'}} onClick={() => setBreederReportOpen(true)}><span style={{color:'#111827', fontWeight:600}}>View Breeder Report</span><strong style={{marginLeft:'auto', color:'#9ca3af'}}>›</strong></div>
- </div>
- </article>}
-
- <div className='desktop-only' style={{width:'100%', overflowX:'auto', WebkitOverflowScrolling:'touch'}}>
- <DataTable
- columns={['id','species','animal_type','name','acquisition_date','purchased_from','purchase_price','health_status']}
- rows={livestockRecordsFiltered}
- filterKey='name'
- onRowClick={(r) => { setSelectedLivestockRecord(r); setRecordsSectionOpen(prev => ({ ...prev, details: true })) }}
- onEdit={(r) => {
- const nextRecord = { ...r }
- setSelectedLivestockRecord(nextRecord)
- setLivestockRecordEdit(mapLivestockRecordToEditForm(nextRecord))
- setRecordsSectionOpen(prev => ({ ...prev, edit: true, create: false, details: true }))
- }}
- />
- </div>
- <div className='mobile-only livestock-record-cards'>
- {livestockRecordsFiltered.map((r) => <button type='button' key={`livestock-card-${r.id}`} className='livestock-record-card' onClick={() => { setSelectedLivestockRecord(r); setRecordsSectionOpen(prev => ({ ...prev, details: true })) }}>
- <div className='livestock-record-card-top'>
- <div>
- <div className='livestock-record-card-id'>{r.id || '—'}</div>
- <div className='livestock-record-card-name'>{r.name || 'Unnamed animal'}</div>
- </div>
- <div className='livestock-record-card-arrow'>›</div>
- </div>
- <div className='livestock-record-card-meta'>
- <span>{r.species || '—'}</span>
- <span>{r.animal_type || '—'}</span>
- <span>{r.acquisition_date || r.date_of_birth || '—'}</span>
- </div>
- <div className='livestock-record-card-meta'>
- <span>{r.purchased_from || 'No breeder/source'}</span>
- <span>{r.purchase_price ? `${r.purchase_price} ${r.currency || ''}`.trim() : 'No price'}</span>
- </div>
- <div className='livestock-record-card-status'>{r.health_status || 'No health status'}</div>
- </button>)}
- {livestockRecordsFiltered.length === 0 && <div className='panel'><div className='helper-text'>No records yet for this filter.</div></div>}
- </div>
- </section>}
+</section>}
 
  {active === 'services' && <section>
  <div className='section-header'>
