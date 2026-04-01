@@ -2209,6 +2209,19 @@ function AppInner() {
  if (livestockRecordsFilter === 'POULTRY') return state.livestockRecords.filter(r => r.species === 'POULTRY')
  return state.livestockRecords
  }, [state.livestockRecords, livestockRecordsFilter])
+ const livestockRecordsCounts = useMemo(() => ({
+ ALL: state.livestockRecords.length,
+ SHEEP: state.livestockRecords.filter(r => r.species === 'SHEEP').length,
+ GOAT: state.livestockRecords.filter(r => r.species === 'GOAT').length,
+ CATTLE: state.livestockRecords.filter(r => r.species === 'CATTLE').length,
+ POULTRY: state.livestockRecords.filter(r => r.species === 'POULTRY').length,
+ }), [state.livestockRecords])
+ const livestockRecordsSummary = useMemo(() => ({
+ active: state.livestockRecords.filter(r => !r.sale_date && !r.died_date).length,
+ needsAttention: state.livestockRecords.filter(r => String(r.health_status || '').trim() && !String(r.health_status || '').toLowerCase().includes('healthy')).length,
+ bred: state.livestockRecords.filter(r => r.sire_id || r.dam_id || r.litter_size > 1).length,
+ }), [state.livestockRecords])
+ const currentLivestockRecord = selectedOffspringRecord || selectedLivestockRecord
 
  useEffect(() => {
  if (!selectedLivestockRecord?.id) return
@@ -4209,148 +4222,230 @@ function AppInner() {
  </section>}
 
  {active === 'livestock-records' && <section className='records-home-screen'>
- <div className='records-hero'>
-  <div>
-   <div className='records-eyebrow'>FARMSAVIOR RECORDS</div>
-   <h3>Livestock Records</h3>
-   <p>Manage animals, health, lineage, reports, and history in one clean mobile-first workspace.</p>
-  </div>
-  <button type='button' className='records-add-fab' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: true, edit: false, details: false }))}>+</button>
- </div>
-
- <div className='records-filter-strip'>
-  <button type='button' className={`records-chip ${livestockRecordsFilter==='ALL' ? 'active' : ''}`} onClick={() => setLivestockRecordsFilter('ALL')}>All · {state.livestockRecords.length}</button>
-  <button type='button' className={`records-chip ${livestockRecordsFilter==='SHEEP' ? 'active' : ''}`} onClick={() => setLivestockRecordsFilter('SHEEP')}>Sheep · {state.livestockRecords.filter(r => r.species === 'SHEEP').length}</button>
-  <button type='button' className={`records-chip ${livestockRecordsFilter==='GOAT' ? 'active' : ''}`} onClick={() => setLivestockRecordsFilter('GOAT')}>Goats · {state.livestockRecords.filter(r => r.species === 'GOAT').length}</button>
-  <button type='button' className={`records-chip ${livestockRecordsFilter==='CATTLE' ? 'active' : ''}`} onClick={() => setLivestockRecordsFilter('CATTLE')}>Cattle · {state.livestockRecords.filter(r => r.species === 'CATTLE').length}</button>
-  <button type='button' className={`records-chip ${livestockRecordsFilter==='POULTRY' ? 'active' : ''}`} onClick={() => setLivestockRecordsFilter('POULTRY')}>Poultry · {state.livestockRecords.filter(r => r.species === 'POULTRY').length}</button>
- </div>
-
- <div className='records-summary-bar'>
-  <span>Showing <strong>{livestockRecordsFiltered.length}</strong> records</span>
-  <span>Tap a card to open details</span>
- </div>
-
- <div className='records-card-feed'>
-  {livestockRecordsFiltered.map((r) => <button type='button' key={`record-card-${r.id}`} className='records-card' onClick={() => { setSelectedLivestockRecord(r); setRecordsSectionOpen(prev => ({ ...prev, details: true, edit: false, create: false })) }}>
-   <div className='records-card-top'>
-    <div>
-     <div className='records-card-id'>{r.id || '—'}</div>
-     <div className='records-card-name'>{r.name || 'Unnamed animal'}</div>
-    </div>
-    <div className='records-card-arrow'>›</div>
-   </div>
-   <div className='records-card-tags'>
-    <span>{r.species || '—'}</span>
-    <span>{r.animal_type || '—'}</span>
-    <span>{r.date_of_birth || r.acquisition_date || '—'}</span>
-   </div>
-   <div className='records-card-meta'>{r.purchased_from || 'No breeder/source recorded'}</div>
-   <div className='records-card-status'>{r.health_status || 'No health status yet'}</div>
-  </button>)}
-  {livestockRecordsFiltered.length === 0 && <div className='panel'><div className='helper-text'>No records yet for this filter. Tap + to create your first record.</div></div>}
- </div>
-
- {recordsSectionOpen.create && <article className='panel records-inline-panel'>
-  <div className='list-row' style={{marginBottom:10}}>
+ <div className='records-shell'>
+  <div className='records-hero-card'>
    <div>
-    <h4 style={{margin:'0 0 4px 0'}}>Create Record</h4>
-    <div className='helper-text'>Use the full flow below to add a new animal.</div>
+    <div className='records-eyebrow'>FARMSAVIOR RECORDS</div>
+    <h3>Livestock Records</h3>
+    <p>Run your flock or herd from one premium mobile-first workspace with quick counts, sane record capture, and a clear path from summary to details to edit.</p>
    </div>
-   <button type='button' className='btn' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: false }))}>Close</button>
+   <div className='records-hero-actions'>
+    <button type='button' className='btn' onClick={() => { setSelectedLivestockRecord(null); setSelectedOffspringRecord(null); setRecordsSectionOpen(prev => ({ ...prev, create: false, edit: false, details: false })) }}>Reset view</button>
+    <button type='button' className='btn btn-dark' onClick={() => { setSelectedLivestockRecord(null); setSelectedOffspringRecord(null); setRecordsSectionOpen(prev => ({ ...prev, create: true, edit: false, details: false })) }}>Add animal</button>
+   </div>
   </div>
-  <form className='list' style={{gap:10, width:'100%'}} onSubmit={async e => {
-   e.preventDefault()
-   setActionBusy('livestock-create')
-   try {
-    const { treatment_entry, ...createPayload } = livestockRecordForm
-    await api.createLivestockRecord({ ...createPayload, user_id: Number(me?.id || 0) })
-    await loadLivestockRecords()
-    setLivestockRecordForm({ user_id: '', ownership: 'Owned by Me', species: 'SHEEP', animal_type: 'EWE', name: '', ear_tag: '', farm_id: '', registration_number: '', date_of_birth: '', acquisition_date: '', purchased_from: '', purchased_from_type: 'BREEDER', purchase_price: '', currency: 'GHS', stars: '0', initial_weight_kg: '', sire_id: '', dam_id: '', litter_size: '', breeding_type: '', health_status: '', pen_location: '', castrated: false, cull_keep_status: '', cull_reason: '', sale_date: '', sale_price: '', sold_to: '', died_date: '', treatment_entry: '', notes: '' })
-    setRecordsSectionOpen(prev => ({ ...prev, create: false }))
-   } catch (err) {
-    alert(`Create failed: ${errMsg(err)}`)
-   } finally { setActionBusy('') }
-  }}>
-   <div className='panel' style={{padding:'10px 12px', background:'#ffffff', border:'1px solid #dbeafe', borderRadius:16}}>
-    <div className='list-row' style={{alignItems:'center', gap:12}}>
-     <button type='button' className='btn' style={{borderRadius:999}} onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: false }))}>Cancel</button>
-     <strong style={{fontSize:'1.05rem', marginLeft:'auto', marginRight:'auto'}}>{`Add ${String(livestockRecordForm.species || 'Record').charAt(0)}${String(livestockRecordForm.species || 'Record').slice(1).toLowerCase()}`}</strong>
-     <button type='submit' className='btn btn-dark' style={{borderRadius:999}}>{busyLabel('livestock-create','Done')}</button>
-    </div>
-   </div>
-   <div className='panel' style={{padding:12, background:'#ffffff', border:'1px solid #e2e8f0', borderRadius:16}}>
-    <div className='helper-text' style={{fontWeight:700, color:'#1e3a8a', marginBottom:6}}>Quick identity and ownership</div>
-    <div className='row2' style={{gap:10}}>
-     <label style={{display:'grid', gap:4}}><span className='helper-text' style={{fontWeight:700, color:'#334155'}}>Ownership</span><select className='input' value={livestockRecordForm.ownership} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, ownership: e.target.value })}><option value='OWNED'>Owned by me</option><option value='THIRD_PARTY'>Owned by someone else</option></select></label>
-     <label style={{display:'grid', gap:4}}><span className='helper-text' style={{fontWeight:700, color:'#334155'}}>Animal type</span><select className='input' value={livestockRecordForm.species} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, species: e.target.value, animal_type: e.target.value === 'GOAT' ? 'DOE' : (e.target.value === 'CATTLE' ? 'COW' : (e.target.value === 'POULTRY' ? 'LAYER_HEN' : 'EWE')) })}><option value='SHEEP'>Sheep</option><option value='GOAT'>Goat</option><option value='CATTLE'>Cattle</option><option value='POULTRY'>Poultry</option></select></label>
-    </div>
-    <label style={{display:'grid', gap:4}}><span className='helper-text' style={{fontWeight:700, color:'#334155'}}>{livestockRecordForm.species === 'POULTRY' ? 'Sex / category' : 'Sex'}</span><select className='input' value={livestockRecordForm.animal_type} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, animal_type: e.target.value })}>{livestockRecordForm.species === 'GOAT' ? <><option value='DOE'>Doe</option><option value='BUCK'>Buck</option></> : (livestockRecordForm.species === 'CATTLE' ? <><option value='COW'>Cow</option><option value='BULL'>Bull</option><option value='HEIFER'>Heifer</option><option value='STEER'>Steer</option></> : (livestockRecordForm.species === 'POULTRY' ? <><option value='LAYER_HEN'>Layer hen</option><option value='BROILER'>Broiler</option><option value='PULLET'>Pullet</option><option value='COCKEREL'>Cockerel</option><option value='CHICK'>Chick</option><option value='BREEDER'>Breeder</option></> : <><option value='EWE'>Ewe</option><option value='RAM'>Ram</option></>))}</select></label>
-   </div>
-   <button className='btn btn-dark'>{busyLabel('livestock-create','Create Record')}</button>
-  </form>
- </article>}
 
- {selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18}}>
-  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
-   <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => { if (selectedOffspringRecord) setSelectedOffspringRecord(null); else setSelectedLivestockRecord(null) }}>‹</button>
-   <strong style={{fontSize:'1.05rem'}}>{selectedOffspringRecord ? 'Offspring' : (String(selectedLivestockRecord.species || 'Animal').charAt(0) + String(selectedLivestockRecord.species || 'Animal').slice(1).toLowerCase())}</strong>
-   <div style={{marginLeft:'auto', fontWeight:700}}>{(selectedOffspringRecord || selectedLivestockRecord)?.name || (selectedOffspringRecord || selectedLivestockRecord)?.id || '0001'}</div>
-   <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none'}} onClick={() => { const baseRecord = selectedOffspringRecord || selectedLivestockRecord; setLivestockRecordEdit(mapLivestockRecordToEditForm(baseRecord)); setRecordsSectionOpen(prev => ({ ...prev, edit: true, create: false, details: true })) }}>Edit</button>
+  <div className='records-overview-grid'>
+   <article className='records-stat-card records-stat-card-primary'>
+    <span>Total records</span>
+    <strong>{livestockRecordsCounts.ALL}</strong>
+    <small>{livestockSubscription?.tier === 'premium' ? 'Premium tier active' : `Free tier${livestockSubscription?.record_limit ? ` · limit ${livestockSubscription.record_limit}` : ''}`}</small>
+   </article>
+   <article className='records-stat-card'>
+    <span>Active animals</span>
+    <strong>{livestockRecordsSummary.active}</strong>
+    <small>Not sold or marked deceased</small>
+   </article>
+   <article className='records-stat-card'>
+    <span>Need attention</span>
+    <strong>{livestockRecordsSummary.needsAttention}</strong>
+    <small>Health status flagged</small>
+   </article>
+   <article className='records-stat-card'>
+    <span>Breeding-linked</span>
+    <strong>{livestockRecordsSummary.bred}</strong>
+    <small>Lineage or litter data present</small>
+   </article>
   </div>
-  {recordsSectionOpen.details && <div style={{background:'#fff'}}>
-   {livestockDetailRows(selectedOffspringRecord || selectedLivestockRecord).map((row, idx) => {
-    const [label, value, action] = row
-    const clickable = action === 'breeder' && value && value !== '--'
-    return <div key={`detail-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: clickable ? 'pointer' : 'default'}} onClick={() => {
-     if (!clickable) return
-     const baseRecord = selectedOffspringRecord || selectedLivestockRecord
-     setBreederUploads({ photos: [], docs: [] })
-     setSelectedBreederDetail({ id: String(baseRecord?.id || '0001').padStart(4,'0'), name: value, phone: '--', email: '--', address: '--', scrapiePrefix: '--', notes: '--' })
-    }}>
-     <span style={{color:'#1e3a8a', fontWeight:600}}>{label}</span>
-     <strong style={{marginLeft:'auto', color:'#111827', textAlign:'right'}}>{value == null || value === '' ? '--' : String(value)}</strong>
-     {clickable && <span style={{marginLeft:10, color:'#9ca3af'}}>›</span>}
-    </div>
-   })}
-   <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>HISTORY</div>
-   {livestockHistoryRows(selectedOffspringRecord || selectedLivestockRecord).history.map((row, idx) => {
-    const [label, value, action] = row
-    const clickable = action === 'notes' || action === 'add-note' || action === 'add-weight' || action === 'medicines' || action === 'add-medicine' || action === 'famacha' || action === 'ancestor-tree' || action === 'share-pdf' || action === 'offspring-report' || action === 'offspring-list' || action === 'add-mark' || action === 'add-flush'
-    return <div key={`history-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: clickable ? 'pointer' : 'default'}} onClick={() => {
-     if (action === 'notes') setNotesScreenOpen(true)
-     if (action === 'add-note') { setDraftNote(''); setNotesComposerOpen(true) }
-     if (action === 'add-weight') { setDraftWeight(''); setWeightComposerOpen(true) }
-     if (action === 'medicines') setMedicinesScreenOpen(true)
-     if (action === 'add-medicine') { setMedicineShotDraft({ medicine: '', dosage: '', notes: '' }); setMedicineShotOpen(true) }
-     if (action === 'share-pdf') setAncestorPdfOpen(true)
-     if (action === 'famacha') { setFamachaDraft({ famacha: '--', bodyScore: '', weight: '', notes: '' }); setFamachaComposerOpen(true) }
-     if (action === 'ancestor-tree') setAncestorTreeOpen(true)
-     if (action === 'offspring-report') setOffspringReportOpen(true)
-     if (action === 'offspring-list') setOffspringListOpen(true)
-     if (action === 'add-mark') { const base=(selectedOffspringRecord || selectedLivestockRecord); setMarkDraft({ sire: base?.sire_id || '', dam: base?.dam_id || base?.id || '', markDate: new Date().toISOString().slice(0,10), dueDate: '2026-08-26', fertilizationType: 'Natural' }); setMarkComposerOpen(true) }
-     if (action === 'add-flush') { const base=(selectedOffspringRecord || selectedLivestockRecord); setFlushDraft({ ram: base?.sire_id || '', date: new Date().toISOString().slice(0,10), cidrIn: '', cidrOut: '', notes: '' }); setFlushComposerOpen(true) }
-    }}>
-     <span style={{color:'#111827', fontWeight:600}}>{label} {String(value).startsWith('(') ? value : ''}</span>
-     <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{String(value).startsWith('(') ? '›' : value}</strong>
-    </div>
-   })}
-   <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>OFFSPRING</div>
-   {livestockHistoryRows(selectedOffspringRecord || selectedLivestockRecord).offspring.map(([label, value], idx) => {
-    const action = value === 'add-lamb'
-    return <div key={`offspring-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: action ? 'pointer' : 'default'}} onClick={() => {
-     if (!action) return
-     const parent = selectedOffspringRecord || selectedLivestockRecord
-     const draft = buildOffspringDraftFromParent(parent)
-     if (draft) setLivestockRecordForm(draft)
-     setRecordsSectionOpen(prev => ({ ...prev, create: true, edit: false, details: false }))
-    }}>
-     <span style={{color:'#111827', fontWeight:600}}>{label} {String(value).startsWith('(') ? value : ''}</span>
-     <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{String(value).startsWith('(') ? '›' : value}</strong>
-    </div>
-   })}
-  </div>}
- </article>}
+
+  <div className='records-main-grid'>
+   <div className='records-home-column'>
+    <article className='panel records-panel records-list-panel'>
+     <div className='records-panel-head'>
+      <div>
+       <div className='records-panel-title'>Record home</div>
+       <div className='helper-text'>Filter by species, then open any card for details or edit.</div>
+      </div>
+      <div className='records-panel-pill'>{livestockRecordsFiltered.length} showing</div>
+     </div>
+     <div className='records-filter-strip'>
+      <button type='button' className={`records-chip ${livestockRecordsFilter==='ALL' ? 'active' : ''}`} onClick={() => setLivestockRecordsFilter('ALL')}>All · {livestockRecordsCounts.ALL}</button>
+      <button type='button' className={`records-chip ${livestockRecordsFilter==='SHEEP' ? 'active' : ''}`} onClick={() => setLivestockRecordsFilter('SHEEP')}>Sheep · {livestockRecordsCounts.SHEEP}</button>
+      <button type='button' className={`records-chip ${livestockRecordsFilter==='GOAT' ? 'active' : ''}`} onClick={() => setLivestockRecordsFilter('GOAT')}>Goats · {livestockRecordsCounts.GOAT}</button>
+      <button type='button' className={`records-chip ${livestockRecordsFilter==='CATTLE' ? 'active' : ''}`} onClick={() => setLivestockRecordsFilter('CATTLE')}>Cattle · {livestockRecordsCounts.CATTLE}</button>
+      <button type='button' className={`records-chip ${livestockRecordsFilter==='POULTRY' ? 'active' : ''}`} onClick={() => setLivestockRecordsFilter('POULTRY')}>Poultry · {livestockRecordsCounts.POULTRY}</button>
+     </div>
+     <div className='records-card-feed'>
+      {livestockRecordsFiltered.map((r) => <button type='button' key={`record-card-${r.id}`} className={`records-card ${currentLivestockRecord?.id === r.id ? 'active' : ''}`} onClick={() => { setSelectedOffspringRecord(null); setSelectedLivestockRecord(r); setRecordsSectionOpen(prev => ({ ...prev, details: true, edit: false, create: false })) }}>
+       <div className='records-card-top'>
+        <div>
+         <div className='records-card-id'>{r.id || '—'}</div>
+         <div className='records-card-name'>{r.name || 'Unnamed animal'}</div>
+        </div>
+        <div className='records-card-arrow'>›</div>
+       </div>
+       <div className='records-card-tags'>
+        <span>{r.species || '—'}</span>
+        <span>{r.animal_type || '—'}</span>
+        <span>{r.ear_tag || 'No ear tag'}</span>
+       </div>
+       <div className='records-card-meta'>{r.pen_location || r.purchased_from || 'No location or breeder recorded'}</div>
+       <div className='records-card-status'>{r.health_status || 'No health status yet'}</div>
+      </button>)}
+      {livestockRecordsFiltered.length === 0 && <div className='records-empty-state'>
+       <strong>No records yet for this filter.</strong>
+       <span>Start with a clean animal profile, then use details to manage health, offspring, and edits.</span>
+       <button type='button' className='btn btn-dark' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: true, edit: false, details: false }))}>Create first record</button>
+      </div>}
+     </div>
+    </article>
+   </div>
+
+   <div className='records-detail-column'>
+    {(recordsSectionOpen.create || recordsSectionOpen.edit) && <article className='panel records-panel records-form-panel'>
+     <div className='records-panel-head'>
+      <div>
+       <div className='records-panel-title'>{recordsSectionOpen.edit ? 'Edit animal record' : 'Create animal record'}</div>
+       <div className='helper-text'>{recordsSectionOpen.edit ? 'Update the selected record without leaving the records home.' : 'Capture the core identity, purchase, and health fields in one clean pass.'}</div>
+      </div>
+      <button type='button' className='btn' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: false, edit: false, details: !!currentLivestockRecord }))}>Close</button>
+     </div>
+     <form className='records-form-grid' onSubmit={async e => {
+      e.preventDefault()
+      const form = recordsSectionOpen.edit ? livestockRecordEdit : livestockRecordForm
+      const busyKey = recordsSectionOpen.edit ? 'livestock-edit' : 'livestock-create'
+      setActionBusy(busyKey)
+      try {
+       const { treatment_entry, ...payload } = form
+       if (recordsSectionOpen.edit) await api.updateLivestockRecord(Number(form.id), { ...payload, user_id: Number(form.user_id || me?.id || 0) })
+       else await api.createLivestockRecord({ ...payload, user_id: Number(me?.id || form.user_id || 0) })
+       await loadLivestockRecords()
+       if (recordsSectionOpen.edit) {
+        const fresh = state.livestockRecords.find(x => Number(x.id) === Number(form.id))
+        if (fresh) setSelectedLivestockRecord(fresh)
+       } else {
+        setLivestockRecordForm({ user_id: '', ownership: 'Owned by Me', species: 'SHEEP', animal_type: 'EWE', name: '', ear_tag: '', farm_id: '', registration_number: '', stars: 0, date_of_birth: '', acquisition_date: '', purchased_from: '', purchased_from_type: 'BREEDER', purchase_price: '', currency: 'GHS', sire_id: '', dam_id: '', litter_size: 1, initial_weight_kg: '', breeding_type: 'Natural', castrated: false, sale_date: '', sale_price: '', sold_to: '', died_date: '', cull_keep_status: 'KEEP', cull_reason: '', health_status: '', pen_location: '', notes: '', treatment_entry: '' })
+       }
+       setRecordsSectionOpen(prev => ({ ...prev, create: false, edit: false, details: true }))
+      } catch (err) {
+       alert(`${recordsSectionOpen.edit ? 'Update' : 'Create'} failed: ${errMsg(err)}`)
+      } finally { setActionBusy('') }
+     }}>
+      {(() => {
+       const form = recordsSectionOpen.edit ? livestockRecordEdit : livestockRecordForm
+       const setForm = recordsSectionOpen.edit ? setLivestockRecordEdit : setLivestockRecordForm
+       return <>
+        <label className='records-field records-field-wide'><span>Name</span><input className='input' placeholder='Animal name' value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label>
+        <label className='records-field'><span>Species</span><select className='input' value={form.species} onChange={e => setForm({ ...form, species: e.target.value, animal_type: e.target.value === 'GOAT' ? 'DOE' : (e.target.value === 'CATTLE' ? 'COW' : (e.target.value === 'POULTRY' ? 'LAYER_HEN' : 'EWE')) })}><option value='SHEEP'>Sheep</option><option value='GOAT'>Goat</option><option value='CATTLE'>Cattle</option><option value='POULTRY'>Poultry</option></select></label>
+        <label className='records-field'><span>{form.species === 'POULTRY' ? 'Sex / category' : 'Sex'}</span><select className='input' value={form.animal_type} onChange={e => setForm({ ...form, animal_type: e.target.value })}>{form.species === 'GOAT' ? <><option value='DOE'>Doe</option><option value='BUCK'>Buck</option></> : (form.species === 'CATTLE' ? <><option value='COW'>Cow</option><option value='BULL'>Bull</option><option value='HEIFER'>Heifer</option><option value='STEER'>Steer</option></> : (form.species === 'POULTRY' ? <><option value='LAYER_HEN'>Layer hen</option><option value='BROILER'>Broiler</option><option value='PULLET'>Pullet</option><option value='COCKEREL'>Cockerel</option><option value='CHICK'>Chick</option><option value='BREEDER'>Breeder</option></> : <><option value='EWE'>Ewe</option><option value='RAM'>Ram</option></>))}</select></label>
+        <label className='records-field'><span>Ear tag</span><input className='input' placeholder='Ear tag / ID' value={form.ear_tag} onChange={e => setForm({ ...form, ear_tag: e.target.value })} /></label>
+        <label className='records-field'><span>Registration no.</span><input className='input' placeholder='Registration number' value={form.registration_number} onChange={e => setForm({ ...form, registration_number: e.target.value })} /></label>
+        <label className='records-field'><span>Ownership</span><select className='input' value={form.ownership} onChange={e => setForm({ ...form, ownership: e.target.value })}><option value='OWNED'>Owned by me</option><option value='THIRD_PARTY'>Owned by someone else</option></select></label>
+        <label className='records-field'><span>Date of birth</span><input className='input' type='date' value={form.date_of_birth} onChange={e => setForm({ ...form, date_of_birth: e.target.value })} /></label>
+        <label className='records-field'><span>Acquisition date</span><input className='input' type='date' value={form.acquisition_date} onChange={e => setForm({ ...form, acquisition_date: e.target.value })} /></label>
+        <label className='records-field'><span>Purchased from</span><input className='input' placeholder='Breeder / market / seller' value={form.purchased_from} onChange={e => setForm({ ...form, purchased_from: e.target.value })} /></label>
+        <label className='records-field'><span>Source type</span><select className='input' value={form.purchased_from_type} onChange={e => setForm({ ...form, purchased_from_type: e.target.value })}><option value='BREEDER'>Breeder</option><option value='MARKET'>Market</option><option value='FARM'>Farm</option><option value='OTHER'>Other</option></select></label>
+        <label className='records-field'><span>Purchase price</span><input className='input' inputMode='decimal' placeholder='0.00' value={form.purchase_price} onChange={e => setForm({ ...form, purchase_price: e.target.value })} /></label>
+        <label className='records-field'><span>Currency</span><input className='input' placeholder='GHS' value={form.currency} onChange={e => setForm({ ...form, currency: e.target.value })} /></label>
+        <label className='records-field'><span>Initial weight (kg)</span><input className='input' inputMode='decimal' placeholder='0' value={form.initial_weight_kg} onChange={e => setForm({ ...form, initial_weight_kg: e.target.value })} /></label>
+        <label className='records-field'><span>Litter size</span><input className='input' inputMode='numeric' placeholder='1' value={form.litter_size} onChange={e => setForm({ ...form, litter_size: e.target.value })} /></label>
+        <label className='records-field'><span>Breeding type</span><input className='input' placeholder='Natural / AI / Embryo' value={form.breeding_type} onChange={e => setForm({ ...form, breeding_type: e.target.value })} /></label>
+        <label className='records-field'><span>Health status</span><input className='input' placeholder='Healthy / Monitor / Treated' value={form.health_status} onChange={e => setForm({ ...form, health_status: e.target.value })} /></label>
+        <label className='records-field'><span>Pen / location</span><input className='input' placeholder='Pen A / Pasture 3' value={form.pen_location} onChange={e => setForm({ ...form, pen_location: e.target.value })} /></label>
+        <label className='records-field'><span>Sire ID</span><input className='input' placeholder='Sire record ID' value={form.sire_id} onChange={e => setForm({ ...form, sire_id: e.target.value })} /></label>
+        <label className='records-field'><span>Dam ID</span><input className='input' placeholder='Dam record ID' value={form.dam_id} onChange={e => setForm({ ...form, dam_id: e.target.value })} /></label>
+        <label className='records-field'><span>Cull / keep</span><select className='input' value={form.cull_keep_status} onChange={e => setForm({ ...form, cull_keep_status: e.target.value })}><option value='KEEP'>Keep</option><option value='CULL'>Cull</option><option value='SOLD'>Sold</option><option value='DIED'>Died</option></select></label>
+        <label className='records-field records-field-wide'><span>Notes</span><textarea className='input' rows='4' placeholder='Anything useful about lineage, treatment, temperament, or special handling.' value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></label>
+       </>
+      })()}
+      <div className='records-form-actions'>
+       <button type='button' className='btn' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: false, edit: false, details: !!currentLivestockRecord }))}>Cancel</button>
+       <button type='submit' className='btn btn-dark'>{busyLabel(recordsSectionOpen.edit ? 'livestock-edit' : 'livestock-create', recordsSectionOpen.edit ? 'Save changes' : 'Create record')}</button>
+      </div>
+     </form>
+    </article>}
+
+    {!recordsSectionOpen.create && !recordsSectionOpen.edit && currentLivestockRecord && <article className='panel records-panel records-detail-panel'>
+     <div className='records-detail-hero'>
+      <div>
+       <div className='records-detail-kicker'>{currentLivestockRecord.species || 'Animal'} · {currentLivestockRecord.animal_type || 'Profile'}</div>
+       <h4>{currentLivestockRecord.name || `Animal ${currentLivestockRecord.id || ''}`}</h4>
+       <p>{currentLivestockRecord.pen_location || currentLivestockRecord.purchased_from || 'No pen or source recorded yet'}</p>
+      </div>
+      <div className='records-detail-actions'>
+       <button type='button' className='btn' onClick={() => { if (selectedOffspringRecord) setSelectedOffspringRecord(null); else { setSelectedLivestockRecord(null); setRecordsSectionOpen(prev => ({ ...prev, details: false })) } }}>Back</button>
+       <button type='button' className='btn btn-dark' onClick={() => { setLivestockRecordEdit(mapLivestockRecordToEditForm(currentLivestockRecord)); setRecordsSectionOpen(prev => ({ ...prev, edit: true, create: false, details: false })) }}>Edit</button>
+      </div>
+     </div>
+
+     <div className='records-detail-grid'>
+      {livestockDetailRows(currentLivestockRecord).map((row, idx) => {
+       const [label, value, action] = row
+       const clickable = action === 'breeder' && value && value !== '--'
+       return <button type='button' key={`detail-${label}-${idx}`} className={`records-detail-row ${clickable ? 'clickable' : ''}`} onClick={() => {
+        if (!clickable) return
+        setBreederUploads({ photos: [], docs: [] })
+        setSelectedBreederDetail({ id: String(currentLivestockRecord?.id || '0001').padStart(4,'0'), name: value, phone: '--', email: '--', address: '--', scrapiePrefix: '--', notes: '--' })
+       }}>
+        <span>{label}</span>
+        <strong>{value == null || value === '' ? '--' : String(value)}</strong>
+       </button>
+      })}
+     </div>
+
+     <div className='records-detail-section'>History</div>
+     <div className='records-detail-grid'>
+      {livestockHistoryRows(currentLivestockRecord).history.map((row, idx) => {
+       const [label, value, action] = row
+       const clickable = action === 'notes' || action === 'add-note' || action === 'add-weight' || action === 'medicines' || action === 'add-medicine' || action === 'famacha' || action === 'ancestor-tree' || action === 'share-pdf' || action === 'offspring-report' || action === 'offspring-list' || action === 'add-mark' || action === 'add-flush'
+       return <button type='button' key={`history-${label}-${idx}`} className={`records-detail-row ${clickable ? 'clickable' : ''}`} onClick={() => {
+        if (action === 'notes') setNotesScreenOpen(true)
+        if (action === 'add-note') { setDraftNote(''); setNotesComposerOpen(true) }
+        if (action === 'add-weight') { setDraftWeight(''); setWeightComposerOpen(true) }
+        if (action === 'medicines') setMedicinesScreenOpen(true)
+        if (action === 'add-medicine') { setMedicineShotDraft({ medicine: '', dosage: '', notes: '' }); setMedicineShotOpen(true) }
+        if (action === 'share-pdf') setAncestorPdfOpen(true)
+        if (action === 'famacha') { setFamachaDraft({ famacha: '--', bodyScore: '', weight: '', notes: '' }); setFamachaComposerOpen(true) }
+        if (action === 'ancestor-tree') setAncestorTreeOpen(true)
+        if (action === 'offspring-report') setOffspringReportOpen(true)
+        if (action === 'offspring-list') setOffspringListOpen(true)
+        if (action === 'add-mark') setMarkDraft({ sire: currentLivestockRecord?.sire_id || '', dam: currentLivestockRecord?.dam_id || currentLivestockRecord?.id || '', markDate: new Date().toISOString().slice(0,10), dueDate: '2026-08-26', fertilizationType: 'Natural' })
+        if (action === 'add-mark') setMarkComposerOpen(true)
+        if (action === 'add-flush') setFlushDraft({ ram: currentLivestockRecord?.sire_id || '', date: new Date().toISOString().slice(0,10), cidrIn: '', cidrOut: '', notes: '' })
+        if (action === 'add-flush') setFlushComposerOpen(true)
+       }}>
+        <span>{label}</span>
+        <strong>{String(value).startsWith('(') ? '›' : value}</strong>
+       </button>
+      })}
+     </div>
+
+     <div className='records-detail-section'>Offspring</div>
+     <div className='records-detail-grid'>
+      {livestockHistoryRows(currentLivestockRecord).offspring.map(([label, value], idx) => {
+       const action = value === 'add-lamb'
+       return <button type='button' key={`offspring-${label}-${idx}`} className={`records-detail-row ${action ? 'clickable' : ''}`} onClick={() => {
+        if (!action) return
+        const draft = buildOffspringDraftFromParent(currentLivestockRecord)
+        if (draft) setLivestockRecordForm(draft)
+        setRecordsSectionOpen(prev => ({ ...prev, create: true, edit: false, details: false }))
+       }}>
+        <span>{label}</span>
+        <strong>{String(value).startsWith('(') ? '›' : value}</strong>
+       </button>
+      })}
+     </div>
+    </article>}
+
+    {!recordsSectionOpen.create && !recordsSectionOpen.edit && !currentLivestockRecord && <article className='panel records-panel records-empty-detail'>
+     <div className='records-empty-icon'>🐑</div>
+     <h4>Select a record</h4>
+     <p>Pick any animal from the record home to view its details, health history, offspring shortcuts, and edit actions.</p>
+     <button type='button' className='btn btn-dark' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: true, edit: false, details: false }))}>Create new animal</button>
+    </article>}
+   </div>
+  </div>
+ </div>
 </section>}
 
  {active === 'services' && <section>
