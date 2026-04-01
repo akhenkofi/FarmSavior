@@ -2538,77 +2538,7 @@ function AppInner() {
  </div>}
  <p style={{fontSize:'.82rem', color:'#64748b'}}>{t('You can browse publicly; posting, renting, contacting providers, and transactions require sign-in.','Vous pouvez parcourir publiquement ; publier, louer, contacter des prestataires et effectuer des transactions nécessite une connexion.','你可以公开浏览；发布、租赁、联系服务商和交易需要登录。')}</p>
  </article>
- </div>
 
- <div className='two-col' style={{marginTop:10}}>
- <article className='panel'>
- <div className='section-header'>
- <div>
- <h3 style={{margin:0}}>{t('🌤️ 9-City Weather Forecast (Ghana • Nigeria • Burkina Faso)','🌤️ Prévisions météo de 9 villes (Ghana • Nigeria • Burkina Faso)','🌤️ 9城天气预报（加纳 • 尼日利亚 • 布基纳法索）')}</h3>
- <p style={{fontSize:'.82rem', color:'#64748b', margin:'4px 0 0'}}>{t('Country codes: GH = Ghana, NG = Nigeria, BF = Burkina Faso.','Codes pays : GH = Ghana, NG = Nigeria, BF = Burkina Faso.','国家代码：GH=加纳，NG=尼日利亚，BF=布基纳法索。')}</p>
- </div>
- <button type='button' className='btn' style={{marginLeft:'auto'}} onClick={() => setWeatherOpen(v => !v)}>{weatherOpen ? t('Hide','Masquer','隐藏') : t('Show','Afficher','显示')}</button>
- </div>
- {weatherOpen && <>
- <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
- {['GH','NG','BF'].map((c) => (
- <button key={`wx-${c}`} className={`tab ${expandedWeatherCountry === c ? 'active' : ''}`} onClick={() => setExpandedWeatherCountry(c)}>
- {displayCountryLabel(c)}
- </button>
- ))}
- </div>
- <div className='news-grid'>
- {(weatherByCountry[expandedWeatherCountry] || []).map((w,i)=>(
- <div className='news-card' key={`w-${expandedWeatherCountry}-${i}`}>
- <div className='news-body'>
- <div className='news-title'>{w.city}, {w.country}</div>
- <div className='news-meta'>{t('Condition','Condition','天气状况')}: {displayWeatherCondition(w.condition || '-')}</div>
- <div className='news-meta'>{t('Temp','Temp','气温')}: {w.temperature_c}°C • {t('Humidity','Humidité','湿度')}: {w.humidity_pct}% • {t('Rainfall','Pluie','降雨量')}: {w.rainfall_mm} mm</div>
- </div>
- </div>
- ))}
- </div>
-
- <p style={{fontSize:'.85rem', color:'#0f766e', marginTop:8}}>{t('Free forecast preview for farmers. Sign up to unlock personalized alerts and farm-level recommendations.','Aperçu météo gratuit pour les agriculteurs. Inscrivez-vous pour débloquer des alertes personnalisées et des recommandations au niveau de l’exploitation.','面向农户的免费天气预览。注册即可解锁个性化预警和农场级建议。')}</p>
- </>}
-
- <div className='section-header' style={{marginTop:12}}>
- <div>
- <h3 style={{margin:0}}>{t('📰 Ag News + Innovation','📰 Actualités agricoles + innovation','📰 农业新闻与创新')}</h3>
- </div>
- <button type='button' className='btn' style={{marginLeft:'auto'}} onClick={() => setNewsOpen(v => !v)}>{newsOpen ? t('Hide','Masquer','隐藏') : t('Show','Afficher','显示')}</button>
- </div>
- {newsOpen && <>
- <div className='news-grid'>
- {publicNewsRows.slice(0,8).map((n,i)=>(
- <div
- className='news-card'
- key={`n-${i}`}
- role='button'
- tabIndex={0}
- onClick={() => { if (n.url) window.open(n.url, '_blank', 'noopener,noreferrer') }}
- onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && n.url) { e.preventDefault(); window.open(n.url, '_blank', 'noopener,noreferrer') } }}
- style={{cursor: n.url ? 'pointer' : 'default'}}
- >
- {(String(n.image_url || '').startsWith('http://') || String(n.image_url || '').startsWith('https://') || isUserImage(n.image_url))
- ? <img src={n.image_url} alt={n.title} className='news-img' />
- : <div className='news-img' style={{display:'grid',placeItems:'center',color:'#64748b',background:'#f1f5f9'}}>No image available</div>}
- <div className='news-body'>
- <a href={n.url} target='_blank' rel='noreferrer' className='news-title' onClick={(e)=>e.stopPropagation()}>{displayNewsTitle(n.title)}</a>
- <div className='news-meta'>{uiLang === 'zh' ? ({
- 'FarmSavior News Desk': 'FarmSavior 新闻台',
- 'FarmSavior Wire': 'FarmSavior 快讯',
- 'FarmSavior Weather Desk': 'FarmSavior 天气台',
- 'FarmSavior Markets': 'FarmSavior 市场台'
- }[n.source] || 'FarmSavior 新闻') : n.source} {n.published ? `• ${uiLang === 'fr' && n.published === 'Live' ? 'En direct' : (uiLang === 'zh' && n.published === 'Live' ? '实时' : n.published)}` : ''}</div>
- <div className='news-credit'>{n.image_credit || t('Image credit: source / Unsplash','Crédit image : source / Unsplash','图片来源：source / Unsplash')}</div>
- </div>
- </div>
- ))}
- </div>
- <p style={{fontSize:'.82rem', color:'#64748b'}}>{t('Sources and image credits are shown on each story.','Les sources et crédits image sont affichés sur chaque article.','每条资讯都显示来源与图片署名。')}</p>
- </>}
- </article>
 
  <article className='panel' id='access-portal'>
  <h3>{t('Access Portal','Portail d’accès','访问入口')}</h3>
@@ -2818,7 +2748,79 @@ function AppInner() {
  })}
  </div>
  </>}
+ </article> </div>
+
+ <div className='two-col' style={{marginTop:10}}>
+ <article className='panel'>
+ <div className='section-header'>
+ <div>
+ <h3 style={{margin:0}}>{t('🌤️ 9-City Weather Forecast (Ghana • Nigeria • Burkina Faso)','🌤️ Prévisions météo de 9 villes (Ghana • Nigeria • Burkina Faso)','🌤️ 9城天气预报（加纳 • 尼日利亚 • 布基纳法索）')}</h3>
+ <p style={{fontSize:'.82rem', color:'#64748b', margin:'4px 0 0'}}>{t('Country codes: GH = Ghana, NG = Nigeria, BF = Burkina Faso.','Codes pays : GH = Ghana, NG = Nigeria, BF = Burkina Faso.','国家代码：GH=加纳，NG=尼日利亚，BF=布基纳法索。')}</p>
+ </div>
+ <button type='button' className='btn' style={{marginLeft:'auto'}} onClick={() => setWeatherOpen(v => !v)}>{weatherOpen ? t('Hide','Masquer','隐藏') : t('Show','Afficher','显示')}</button>
+ </div>
+ {weatherOpen && <>
+ <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
+ {['GH','NG','BF'].map((c) => (
+ <button key={`wx-${c}`} className={`tab ${expandedWeatherCountry === c ? 'active' : ''}`} onClick={() => setExpandedWeatherCountry(c)}>
+ {displayCountryLabel(c)}
+ </button>
+ ))}
+ </div>
+ <div className='news-grid'>
+ {(weatherByCountry[expandedWeatherCountry] || []).map((w,i)=>(
+ <div className='news-card' key={`w-${expandedWeatherCountry}-${i}`}>
+ <div className='news-body'>
+ <div className='news-title'>{w.city}, {w.country}</div>
+ <div className='news-meta'>{t('Condition','Condition','天气状况')}: {displayWeatherCondition(w.condition || '-')}</div>
+ <div className='news-meta'>{t('Temp','Temp','气温')}: {w.temperature_c}°C • {t('Humidity','Humidité','湿度')}: {w.humidity_pct}% • {t('Rainfall','Pluie','降雨量')}: {w.rainfall_mm} mm</div>
+ </div>
+ </div>
+ ))}
+ </div>
+
+ <p style={{fontSize:'.85rem', color:'#0f766e', marginTop:8}}>{t('Free forecast preview for farmers. Sign up to unlock personalized alerts and farm-level recommendations.','Aperçu météo gratuit pour les agriculteurs. Inscrivez-vous pour débloquer des alertes personnalisées et des recommandations au niveau de l’exploitation.','面向农户的免费天气预览。注册即可解锁个性化预警和农场级建议。')}</p>
+ </>}
+
+ <div className='section-header' style={{marginTop:12}}>
+ <div>
+ <h3 style={{margin:0}}>{t('📰 Ag News + Innovation','📰 Actualités agricoles + innovation','📰 农业新闻与创新')}</h3>
+ </div>
+ <button type='button' className='btn' style={{marginLeft:'auto'}} onClick={() => setNewsOpen(v => !v)}>{newsOpen ? t('Hide','Masquer','隐藏') : t('Show','Afficher','显示')}</button>
+ </div>
+ {newsOpen && <>
+ <div className='news-grid'>
+ {publicNewsRows.slice(0,8).map((n,i)=>(
+ <div
+ className='news-card'
+ key={`n-${i}`}
+ role='button'
+ tabIndex={0}
+ onClick={() => { if (n.url) window.open(n.url, '_blank', 'noopener,noreferrer') }}
+ onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && n.url) { e.preventDefault(); window.open(n.url, '_blank', 'noopener,noreferrer') } }}
+ style={{cursor: n.url ? 'pointer' : 'default'}}
+ >
+ {(String(n.image_url || '').startsWith('http://') || String(n.image_url || '').startsWith('https://') || isUserImage(n.image_url))
+ ? <img src={n.image_url} alt={n.title} className='news-img' />
+ : <div className='news-img' style={{display:'grid',placeItems:'center',color:'#64748b',background:'#f1f5f9'}}>No image available</div>}
+ <div className='news-body'>
+ <a href={n.url} target='_blank' rel='noreferrer' className='news-title' onClick={(e)=>e.stopPropagation()}>{displayNewsTitle(n.title)}</a>
+ <div className='news-meta'>{uiLang === 'zh' ? ({
+ 'FarmSavior News Desk': 'FarmSavior 新闻台',
+ 'FarmSavior Wire': 'FarmSavior 快讯',
+ 'FarmSavior Weather Desk': 'FarmSavior 天气台',
+ 'FarmSavior Markets': 'FarmSavior 市场台'
+ }[n.source] || 'FarmSavior 新闻') : n.source} {n.published ? `• ${uiLang === 'fr' && n.published === 'Live' ? 'En direct' : (uiLang === 'zh' && n.published === 'Live' ? '实时' : n.published)}` : ''}</div>
+ <div className='news-credit'>{n.image_credit || t('Image credit: source / Unsplash','Crédit image : source / Unsplash','图片来源：source / Unsplash')}</div>
+ </div>
+ </div>
+ ))}
+ </div>
+ <p style={{fontSize:'.82rem', color:'#64748b'}}>{t('Sources and image credits are shown on each story.','Les sources et crédits image sont affichés sur chaque article.','每条资讯都显示来源与图片署名。')}</p>
+ </>}
  </article>
+
+
  </div>
 
  <article className='panel' style={{marginTop:10}}>
