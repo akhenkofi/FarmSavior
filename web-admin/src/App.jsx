@@ -1538,6 +1538,7 @@ function AppInner() {
  const [newsOpen, setNewsOpen] = useState(true)
  const [spotTradingOpen, setSpotTradingOpen] = useState(true)
  const [governmentProgramsOpen, setGovernmentProgramsOpen] = useState(true)
+ const [tradeStatsOpen, setTradeStatsOpen] = useState(true)
  const [livestockSubscription, setLivestockSubscription] = useState({ tier: 'free', status: 'FREE', record_limit: 25, can_create_records: true, subscription: null, plans: [] })
  const [poultryTrack, setPoultryTrack] = useState('layers')
  const [poultryZone, setPoultryZone] = useState('humid')
@@ -2837,9 +2838,14 @@ function AppInner() {
  </article>
 
  <article className='panel' style={{marginTop:10}}>
- <h3>{t('🌍 Current Export/Import Statistics (Top 10 + Volumes)','🌍 Statistiques actuelles export/import (Top 10 + volumes)','🌍 当前进出口统计（前10名+总量）')}</h3>
- <p style={{fontSize:'.85rem',color:'#475569'}}>{t('Select a commodity below to expand its export/import rankings.','Sélectionnez une marchandise ci-dessous pour afficher ses classements export/import.','请选择下方商品以展开查看其进出口排名。')}</p>
-
+ <div className='section-header'>
+ <div>
+ <h3 style={{margin:0}}>{t('🌍 Current Export/Import Statistics (Top 10 + Volumes)','🌍 Statistiques actuelles export/import (Top 10 + volumes)','🌍 当前进出口统计（前10名+总量）')}</h3>
+ <p style={{fontSize:'.85rem',color:'#475569', margin:'4px 0 0'}}>{t('Select a commodity below to expand its export/import rankings.','Sélectionnez une marchandise ci-dessous pour afficher ses classements export/import.','请选择下方商品以展开查看其进出口排名。')}</p>
+ </div>
+ <button type='button' className='btn' style={{marginLeft:'auto'}} onClick={() => setTradeStatsOpen(v => !v)}>{tradeStatsOpen ? t('Hide','Masquer','隐藏') : t('Show','Afficher','显示')}</button>
+ </div>
+ {tradeStatsOpen && <>
  <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
  {publicTradeRows.map((c, i) => {
  const key = c.commodity_key || c.commodity || `c-${i}`
@@ -2894,6 +2900,7 @@ function AppInner() {
  ))}
 
  {false && <div className='list-row'><span>Loading current export/import statistics…</span></div>}
+ </>}
  </article>
 
  <article className='panel' style={{marginTop:10}}>
