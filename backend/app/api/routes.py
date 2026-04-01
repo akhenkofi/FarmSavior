@@ -1232,6 +1232,7 @@ def analytics_users_summary(authorization: Optional[str] = Header(None), db: Ses
 @router.post('/onboarding/id-verification')
 def create_id_verification(payload: IDVerificationIn, db: Session = Depends(get_db)):
     data = payload.model_dump()
+    data['user_id'] = user.id
     if not data.get('id_front_photo_url'):
         data['id_front_photo_url'] = data.get('id_photo_url')
 
@@ -3506,7 +3507,7 @@ def create_purchase_source(payload: LivestockPurchaseSourceIn, db: Session = Dep
     normalized_species = (payload.species or 'ALL').upper()
     normalized_type = (payload.source_type or 'OTHER').upper()
     existing = db.query(LivestockPurchaseSource).filter(
-        LivestockPurchaseSource.user_id == payload.user_id,
+        LivestockPurchaseSource.user_id == user.id,
         func.lower(LivestockPurchaseSource.name) == cleaned_name.lower(),
         func.coalesce(LivestockPurchaseSource.species, 'ALL') == normalized_species
     ).first()
@@ -3523,9 +3524,10 @@ def create_purchase_source(payload: LivestockPurchaseSourceIn, db: Session = Dep
 
 
 @router.get('/livestock-records/animals')
-def list_livestock_records(species: Optional[str] = None, animal_type: Optional[str] = None, db: Session = Depends(get_db)):
+def list_livestock_records(species: Optional[str] = None, animal_type: Optional[str] = None, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    user = _current_user_from_auth(authorization, db)
     try:
-        q = db.query(SheepGoatRecord)
+        q = db.query(SheepGoatRecord).filter(SheepGoatRecord.user_id == user.id)
         if species:
             q = q.filter(SheepGoatRecord.species == species.upper())
         if animal_type:
@@ -3545,8 +3547,8 @@ def list_livestock_records(species: Optional[str] = None, animal_type: Optional[
         if not select_cols:
             return []
         sql = f"SELECT {', '.join(select_cols)} FROM sheep_goat_records"
-        clauses = []
-        params = {}
+        clauses = ['user_id = :user_id']
+        params = {'user_id': user.id}
         if species:
             clauses.append('species = :species')
             params['species'] = species.upper()
@@ -3561,9 +3563,11 @@ def list_livestock_records(species: Optional[str] = None, animal_type: Optional[
 
 
 @router.post('/livestock-records/animals')
-def create_livestock_record(payload: SheepGoatRecordIn, db: Session = Depends(get_db)):
+def create_livestock_record(payload: SheepGoatRecordIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    user = _current_user_from_auth(authorization, db)
     data = payload.model_dump()
-    _enforce_livestock_record_limit(data.get('user_id'), db)
+    data['user_id'] = user.id
+    _enforce_livestock_record_limit(user.id, db)
     if data.get('species'):
         data['species'] = str(data['species']).upper()
     if data.get('animal_type'):
@@ -3579,8 +3583,9 @@ def create_livestock_record(payload: SheepGoatRecordIn, db: Session = Depends(ge
 
 
 @router.put('/livestock-records/animals/{record_id}')
-def update_livestock_record(record_id: int, payload: SheepGoatRecordIn, db: Session = Depends(get_db)):
-    rec = db.query(SheepGoatRecord).filter(SheepGoatRecord.id == record_id).first()
+def update_livestock_record(record_id: int, payload: SheepGoatRecordIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    user = _current_user_from_auth(authorization, db)
+    rec = db.query(SheepGoatRecord).filter(SheepGoatRecord.id == record_id, SheepGoatRecord.user_id == user.id).first()
     if not rec:
         raise HTTPException(status_code=404, detail='Livestock record not found')
     data = payload.model_dump()
@@ -3599,8 +3604,9 @@ def update_livestock_record(record_id: int, payload: SheepGoatRecordIn, db: Sess
 
 
 @router.delete('/livestock-records/animals/{record_id}')
-def delete_livestock_record(record_id: int, db: Session = Depends(get_db)):
-    rec = db.query(SheepGoatRecord).filter(SheepGoatRecord.id == record_id).first()
+def delete_livestock_record(record_id: int, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    user = _current_user_from_auth(authorization, db)
+    rec = db.query(SheepGoatRecord).filter(SheepGoatRecord.id == record_id, SheepGoatRecord.user_id == user.id).first()
     if not rec:
         raise HTTPException(status_code=404, detail='Livestock record not found')
     db.delete(rec)

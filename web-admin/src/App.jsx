@@ -1418,7 +1418,7 @@ function AppInner() {
  const [livestockQuickEdit, setLivestockQuickEdit] = useState({ id: '', quantity: '', unit_price: '' })
  const [livestockImages, setLivestockImages] = useState([])
  const [livestockEditImages, setLivestockEditImages] = useState([])
- const [livestockRecordForm, setLivestockRecordForm] = useState({ user_id: 1, ownership: 'Owned by Me', species: 'SHEEP', animal_type: 'EWE', name: '', ear_tag: '', farm_id: '', registration_number: '', stars: 0, date_of_birth: '', acquisition_date: '', purchased_from: '', purchased_from_type: 'BREEDER', purchase_price: '', currency: 'GHS', sire_id: '', dam_id: '', litter_size: 1, initial_weight_kg: '', breeding_type: 'Natural', castrated: false, sale_date: '', sale_price: '', sold_to: '', died_date: '', cull_keep_status: 'KEEP', cull_reason: '', health_status: '', pen_location: '', notes: '', treatment_entry: '' })
+ const [livestockRecordForm, setLivestockRecordForm] = useState({ user_id: '', ownership: 'Owned by Me', species: 'SHEEP', animal_type: 'EWE', name: '', ear_tag: '', farm_id: '', registration_number: '', stars: 0, date_of_birth: '', acquisition_date: '', purchased_from: '', purchased_from_type: 'BREEDER', purchase_price: '', currency: 'GHS', sire_id: '', dam_id: '', litter_size: 1, initial_weight_kg: '', breeding_type: 'Natural', castrated: false, sale_date: '', sale_price: '', sold_to: '', died_date: '', cull_keep_status: 'KEEP', cull_reason: '', health_status: '', pen_location: '', notes: '', treatment_entry: '' })
  const [livestockRecordEdit, setLivestockRecordEdit] = useState({ id: '', user_id: 1, ownership: 'Owned by Me', species: 'SHEEP', animal_type: 'EWE', name: '', ear_tag: '', farm_id: '', registration_number: '', stars: 0, date_of_birth: '', acquisition_date: '', purchased_from: '', purchased_from_type: 'BREEDER', purchase_price: '', currency: 'GHS', sire_id: '', dam_id: '', litter_size: 1, initial_weight_kg: '', breeding_type: 'Natural', castrated: false, sale_date: '', sale_price: '', sold_to: '', died_date: '', cull_keep_status: 'KEEP', cull_reason: '', health_status: '', pen_location: '', notes: '', treatment_entry: '' })
  const [selectedLivestockRecord, setSelectedLivestockRecord] = useState(null)
  const [selectedBreederDetail, setSelectedBreederDetail] = useState(null)
@@ -4249,7 +4249,7 @@ function AppInner() {
  const { treatment_entry, ...createPayload } = livestockRecordForm
  await api.createLivestockRecord({
  ...createPayload,
- user_id: Number(livestockRecordForm.user_id || me?.id || 1),
+ user_id: Number(me?.id || 0),
  stars: Number(livestockRecordForm.stars || 0),
  purchase_price: livestockRecordForm.purchase_price === '' ? null : Number(livestockRecordForm.purchase_price),
  litter_size: livestockRecordForm.litter_size === '' ? null : Number(livestockRecordForm.litter_size),
@@ -4388,7 +4388,7 @@ function AppInner() {
  const name = (livestockRecordForm.purchased_from || '').trim()
  if (!name) return alert('Enter breeder name first')
  try {
- await api.saveLivestockPurchaseSource({ user_id: Number(livestockRecordForm.user_id || me?.id || 1), species: livestockRecordForm.species, name, source_type: 'BREEDER' })
+ await api.saveLivestockPurchaseSource({ user_id: Number(me?.id || 0), species: livestockRecordForm.species, name, source_type: 'BREEDER' })
  await loadLivestockRecords()
  alert('Breeder saved')
  } catch (err) {
@@ -4530,7 +4530,7 @@ function AppInner() {
  const name = (livestockRecordEdit.purchased_from || '').trim()
  if (!name) return alert('Enter breeder or market name first')
  try {
- await api.saveLivestockPurchaseSource({ user_id: Number(livestockRecordEdit.user_id || me?.id || 1), species: livestockRecordEdit.species, name, source_type: livestockRecordEdit.purchased_from_type || 'OTHER' })
+ await api.saveLivestockPurchaseSource({ user_id: Number(me?.id || 0), species: livestockRecordEdit.species, name, source_type: livestockRecordEdit.purchased_from_type || 'OTHER' })
  await loadLivestockRecords()
  alert('Breeder/market saved')
  } catch (err) {
