@@ -1369,7 +1369,9 @@ function AppInner() {
  const [notesComposerOpen, setNotesComposerOpen] = useState(false)
  const [weightComposerOpen, setWeightComposerOpen] = useState(false)
  const [medicinesScreenOpen, setMedicinesScreenOpen] = useState(false)
+ const [medicineShotOpen, setMedicineShotOpen] = useState(false)
  const [medicinesSearch, setMedicinesSearch] = useState('')
+ const [medicineShotDraft, setMedicineShotDraft] = useState({ medicine: '', dosage: '', notes: '' })
  const [notesSearch, setNotesSearch] = useState('')
  const [draftNote, setDraftNote] = useState('')
  const [draftWeight, setDraftWeight] = useState('')
@@ -4636,12 +4638,40 @@ function AppInner() {
 
 
 
+
+ {medicineShotOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setMedicineShotOpen(false)}>Cancel</button>
+ <strong style={{margin:'0 auto'}}>Medicine Shot</strong>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setMedicineShotOpen(false)}>Done</button>
+ </div>
+ <div style={{background:'#eef2f7', minHeight:360}}>
+ <div style={{background:'#fff', borderBottom:'1px solid #e5e7eb', padding:'14px 16px', display:'grid', gridTemplateColumns:'100px 1fr auto', alignItems:'center', gap:12}}>
+ <span style={{color:'#1e3a8a', fontWeight:700}}>Medicine</span>
+ <span style={{color: medicineShotDraft.medicine ? '#111827' : '#9ca3af'}}>{medicineShotDraft.medicine || 'Choose'}</span>
+ <span style={{color:'#9ca3af'}}>›</span>
+ </div>
+ <div style={{background:'#fff', borderBottom:'1px solid #e5e7eb', padding:'14px 16px', display:'grid', gridTemplateColumns:'100px 1fr', alignItems:'center', gap:12}}>
+ <span style={{color:'#1e3a8a', fontWeight:700}}>Date</span>
+ <strong>{new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}</strong>
+ </div>
+ <div style={{background:'#fff', borderBottom:'1px solid #e5e7eb', padding:'14px 16px', display:'grid', gridTemplateColumns:'100px 1fr', alignItems:'center', gap:12}}>
+ <span style={{color:'#1e3a8a', fontWeight:700}}>Dosage</span>
+ <input className='input' placeholder='Dosage' value={medicineShotDraft.dosage} onChange={(e) => setMedicineShotDraft(prev => ({ ...prev, dosage: e.target.value }))} style={{border:'none', boxShadow:'none', padding:'4px 0'}} />
+ </div>
+ <div style={{padding:'12px 16px', color:'#6b7280', fontWeight:700}}>NOTES</div>
+ <div style={{background:'#fff', minHeight:120, padding:'12px 16px'}}>
+ <textarea className='input' rows={4} placeholder='Notes' value={medicineShotDraft.notes} onChange={(e) => setMedicineShotDraft(prev => ({ ...prev, notes: e.target.value }))} style={{width:'100%', border:'none', boxShadow:'none', padding:0}} />
+ </div>
+ </div>
+ </article>}
+
  {medicinesScreenOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setMedicinesScreenOpen(false)}>‹</button>
  <strong>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</strong>
  <div style={{fontWeight:700}}>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</div>
- <button type='button' className='btn' style={{marginLeft:'auto', background:'transparent', color:'#fff', border:'none', fontSize:'1.4rem'}}>+</button>
+ <button type='button' className='btn' style={{marginLeft:'auto', background:'transparent', color:'#fff', border:'none', fontSize:'1.4rem'}} onClick={() => { setMedicineShotDraft({ medicine: '', dosage: '', notes: '' }); setMedicineShotOpen(true) }}>+</button>
  </div>
  <div style={{padding:12, background:'#f8fafc'}}>
  <input className='input' placeholder='Search' value={medicinesSearch} onChange={(e) => setMedicinesSearch(e.target.value)} style={{background:'#1e3a8a', color:'#fff', border:'none', borderRadius:12}} />
