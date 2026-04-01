@@ -1364,6 +1364,7 @@ function AppInner() {
  const breederPhotoInputRef = useRef(null)
  const breederDocInputRef = useRef(null)
  const [breederUploads, setBreederUploads] = useState({ photos: [], docs: [] })
+ const [breederReportOpen, setBreederReportOpen] = useState(false)
  const [livestockRecordsFilter, setLivestockRecordsFilter] = useState('ALL')
  const [recordsSectionOpen, setRecordsSectionOpen] = useState({ create: false, edit: false, batch: false, details: false })
  const [batchMedicationForm, setBatchMedicationForm] = useState({ species:'ALL', animal_type:'ALL', health_status:'ALL', cull_keep_status:'ALL', minStars:'', pen_location:'', medication:'', dose:'', days:'' })
@@ -4580,6 +4581,43 @@ function AppInner() {
  </article>}
 
 
+
+ {breederReportOpen && selectedBreederDetail && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ <div style={{background:'#0f172a', color:'#fff', padding:'14px 16px', display:'flex', alignItems:'center', gap:12}}>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setBreederReportOpen(false)}>‹</button>
+ <div>
+ <div style={{fontSize:'1.05rem', fontWeight:700}}>Breeder Performance Report</div>
+ <div style={{fontSize:'.82rem', opacity:.85}}>FarmSavior report for {selectedBreederDetail.name}</div>
+ </div>
+ <button type='button' className='btn' style={{marginLeft:'auto', background:'#fff', color:'#0f172a', border:'none'}}>Share PDF</button>
+ </div>
+ <div style={{padding:16, background:'#fff'}}>
+ <div className='row2' style={{gap:12}}>
+ <div className='panel' style={{padding:12, borderRadius:14, background:'#f8fafc'}}><div className='helper-text'>Breeder</div><strong>{selectedBreederDetail.name}</strong></div>
+ <div className='panel' style={{padding:12, borderRadius:14, background:'#f8fafc'}}><div className='helper-text'>Species focus</div><strong>{selectedLivestockRecord?.species || 'Sheep'}</strong></div>
+ </div>
+ <div className='row2' style={{gap:12, marginTop:12}}>
+ <div className='panel' style={{padding:12, borderRadius:14, background:'#ecfeff', border:'1px solid #a5f3fc'}}><div className='helper-text'>Animals recorded</div><strong>7</strong></div>
+ <div className='panel' style={{padding:12, borderRadius:14, background:'#f0fdf4', border:'1px solid #86efac'}}><div className='helper-text'>Average stars</div><strong>4.2 / 5</strong></div>
+ </div>
+ <article className='panel' style={{marginTop:12, padding:0, overflow:'hidden', borderRadius:16}}>
+ <div style={{padding:'12px 14px', borderBottom:'1px solid #e5e7eb', fontWeight:700}}>Breeder animals summary</div>
+ <div className='list-row' style={{padding:'12px 14px', fontWeight:700, background:'#f8fafc'}}><span>Name / Tag #</span><span>Sire</span><span>Dam</span><span>Birth Date</span><span>Sex</span><span>Breed</span><span>Stars</span></div>
+ {[
+ [selectedLivestockRecord?.name || '0001', selectedLivestockRecord?.sire_id || '--', selectedLivestockRecord?.dam_id || '--', selectedLivestockRecord?.date_of_birth ? String(selectedLivestockRecord.date_of_birth).slice(0,10) : '--', selectedLivestockRecord?.animal_type || '--', selectedLivestockRecord?.breeding_type || '--', selectedLivestockRecord?.stars ?? '--'],
+ ['0005','--','--','--','F','Baloji','4'],
+ ['0007Y','--','--','--','F','Baloji','4'],
+ ['0020 old 06','--','--','--','F','Baloji','3'],
+ ['0112','--','--','--','M','Balami','5'],
+ ].map((row, idx) => <div key={`breeder-report-row-${idx}`} className='list-row' style={{padding:'12px 14px', borderTop:'1px solid #eef2f7', display:'grid', gridTemplateColumns:'1.5fr 1fr 1fr 1fr .7fr 1fr .7fr', gap:8}}>{row.map((cell, cidx) => <span key={`cell-${idx}-${cidx}`} style={{color:'#111827'}}>{cell}</span>)}</div>)}
+ </article>
+ <article className='panel' style={{marginTop:12, padding:12, borderRadius:16, background:'#fff7ed', border:'1px solid #fdba74'}}>
+ <div style={{fontWeight:700, marginBottom:6}}>FarmSavior summary</div>
+ <div style={{fontSize:'.92rem', color:'#475569'}}>This breeder report is designed to be cleaner and more useful than a raw export. It highlights breeder quality, recorded offspring, and quick lineage review in a mobile-friendly layout.</div>
+ </article>
+ </div>
+ </article>}
+
  {selectedBreederDetail && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setSelectedBreederDetail(null)}>‹</button>
@@ -4603,7 +4641,7 @@ function AppInner() {
  <div className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor:'pointer'}} onClick={() => breederDocInputRef.current?.click()}><span style={{color:'#111827', fontWeight:600}}>Add Doc</span><strong style={{marginLeft:'auto', color:'#9ca3af'}}>›</strong></div>
  {(breederUploads.photos || []).map((file, idx) => <div key={`breeder-photo-${idx}`} className='list-row' style={{padding:'10px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}><span style={{color:'#475569'}}>📷 {file.name}</span><strong style={{marginLeft:'auto', color:'#94a3b8'}}>{Math.round((file.size || 0)/1024)} KB</strong></div>)}
  {(breederUploads.docs || []).map((file, idx) => <div key={`breeder-doc-${idx}`} className='list-row' style={{padding:'10px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}><span style={{color:'#475569'}}>📄 {file.name}</span><strong style={{marginLeft:'auto', color:'#94a3b8'}}>{Math.round((file.size || 0)/1024)} KB</strong></div>)}
- <div className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}><span style={{color:'#111827', fontWeight:600}}>View Breeder Report</span><strong style={{marginLeft:'auto', color:'#9ca3af'}}>›</strong></div>
+ <div className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor:'pointer'}} onClick={() => setBreederReportOpen(true)}><span style={{color:'#111827', fontWeight:600}}>View Breeder Report</span><strong style={{marginLeft:'auto', color:'#9ca3af'}}>›</strong></div>
  </div>
  </article>}
 
