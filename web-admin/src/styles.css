@@ -43,3 +43,5 @@
 @media(max-width:640px){.desktop-only{display:none}.mobile-only{display:block}}
 
 .btn:disabled{opacity:.7;cursor:not-allowed;filter:saturate(.7)}
+
+.livestock-records-mobile .panel h4{font-size:1rem}.livestock-records-mobile .helper-text{line-height:1.45}.livestock-records-mobile .inlineForm{border-radius:18px}.livestock-records-mobile .btn{box-shadow:0 10px 24px rgba(15,23,42,.12)}

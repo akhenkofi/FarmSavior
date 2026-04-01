@@ -4224,8 +4224,8 @@ function AppInner() {
  <div className='helper-text'>{livestockRecordsFiltered.length} visible</div>
  </div>
  </div>
- <div className='panel' style={{width:'100%'}}>
- <div className='inlineForm' style={{flexWrap:'wrap', width:'100%'}}>
+ <div className='panel' style={{width:'100%', background:'linear-gradient(180deg,#ffffff 0%,#f8fafc 100%)'}}>
+ <div className='inlineForm' style={{flexWrap:'wrap', width:'100%', justifyContent:'space-between'}}>
  <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('ALL')} style={{border:livestockRecordsFilter==='ALL'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Total records','Total registres','记录总数')}: {state.livestockRecords.length}</button>
  <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('GOAT')} style={{border:livestockRecordsFilter==='GOAT'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Goats','Chèvres','山羊')}: {state.livestockRecords.filter(r => r.species === 'GOAT').length}</button>
  <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('SHEEP')} style={{border:livestockRecordsFilter==='SHEEP'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Sheep','Moutons','绵羊')}: {state.livestockRecords.filter(r => r.species === 'SHEEP').length}</button>
@@ -4243,9 +4243,9 @@ function AppInner() {
  <div className='list-row' style={{marginBottom:10}}>
  <div style={{cursor:'pointer'}} onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: !prev.create, edit: false }))}>
  <h4 style={{margin:'0 0 4px 0'}}>Create Record</h4>
- <div className='helper-text'>Tap the + button to open this add-record flow immediately.</div>
+ <div className='helper-text'>Use the + button to open the full record-creation flow.</div>
  </div>
- <button type='button' className='btn' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: !prev.create, edit: false }))}>{recordsSectionOpen.create ? 'Hide' : 'Open'}</button>
+ <button type='button' className='btn' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: !prev.create, edit: false }))}>{recordsSectionOpen.create ? 'Close Create Record' : 'Open Create Record'}</button>
  </div>
  {recordsSectionOpen.create && <form className='list' style={{gap:10, width:'100%'}} onSubmit={async e => {
  e.preventDefault()
