@@ -977,7 +977,7 @@ const livestockHistoryRows = (record) => {
  ['Add Weight', '›', 'add-weight'],
  ['Medicines', `(${medsCount})`, 'medicines'],
  ['Add Medicine', '›'],
- ['Add FAMACHA/Body Condition Score', '›'],
+ ['Add FAMACHA/Body Condition Score', '›', 'famacha'],
  ['View Ancestor Tree', '›'],
  ['Share PDF Report', '›'],
  ['View Offspring Report', '›'],
@@ -1393,6 +1393,8 @@ function AppInner() {
  const [medicineShotDraft, setMedicineShotDraft] = useState({ medicine: '', dosage: '', notes: '' })
  const [medicineChooserOpen, setMedicineChooserOpen] = useState(false)
  const [medicineChooserSearch, setMedicineChooserSearch] = useState('')
+ const [famachaComposerOpen, setFamachaComposerOpen] = useState(false)
+ const [famachaDraft, setFamachaDraft] = useState({ famacha: '--', bodyScore: '', weight: '', notes: '' })
  const [customMedicineComposerOpen, setCustomMedicineComposerOpen] = useState(false)
  const [customMedicineName, setCustomMedicineName] = useState('')
  const [notesSearch, setNotesSearch] = useState('')
@@ -4578,11 +4580,12 @@ function AppInner() {
  <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>HISTORY</div>
  {livestockHistoryRows(selectedLivestockRecord).history.map((row, idx) => {
  const [label, value, action] = row
- const clickable = action === 'notes' || action === 'add-weight' || action === 'medicines'
+ const clickable = action === 'notes' || action === 'add-weight' || action === 'medicines' || action === 'famacha'
  return <div key={`history-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: clickable ? 'pointer' : 'default'}} onClick={() => {
  if (action === 'notes') setNotesScreenOpen(true)
  if (action === 'add-weight') { setDraftWeight(''); setWeightComposerOpen(true) }
  if (action === 'medicines') setMedicinesScreenOpen(true)
+ if (action === 'famacha') { setFamachaDraft({ famacha: '--', bodyScore: '', weight: '', notes: '' }); setFamachaComposerOpen(true) }
  }}>
  <span style={{color:'#111827', fontWeight:600}}>{label} {String(value).startsWith('(') ? value : ''}</span>
  <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{String(value).startsWith('(') ? '›' : value}</strong>
@@ -4662,6 +4665,45 @@ function AppInner() {
 
 
 
+
+
+ {famachaComposerOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setFamachaComposerOpen(false)}>Cancel</button>
+ <strong style={{margin:'0 auto'}}>FAMACHA / BCS</strong>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setFamachaComposerOpen(false)}>Done</button>
+ </div>
+ <div style={{background:'#eef2f7', minHeight:420}}>
+ <div style={{padding:'14px 16px', color:'#6b7280', fontWeight:700}}>FAMACHA SCORE</div>
+ <div style={{background:'#fff', padding:'10px 16px', borderBottom:'1px solid #e5e7eb'}}>
+ <div style={{display:'grid', gridTemplateColumns:'repeat(6, 1fr)', gap:8}}>
+ {['--','1','2','3','4','5'].map(score => <button key={`famacha-${score}`} type='button' className={`btn ${famachaDraft.famacha===score ? 'btn-dark' : ''}`} onClick={() => setFamachaDraft(prev => ({ ...prev, famacha: score }))}>{score}</button>)}
+ </div>
+ </div>
+ <div style={{padding:'14px 16px', color:'#6b7280', fontWeight:700}}>BODY CONDITION SCORE</div>
+ <div style={{background:'#fff', padding:'14px 16px', borderBottom:'1px solid #e5e7eb'}}>
+ <label style={{display:'grid', gridTemplateColumns:'140px 1fr', alignItems:'center', gap:12}}>
+ <span style={{color:'#1e3a8a', fontWeight:700}}>Body Score</span>
+ <input className='input' placeholder='Score' value={famachaDraft.bodyScore} onChange={(e) => setFamachaDraft(prev => ({ ...prev, bodyScore: e.target.value }))} style={{border:'none', boxShadow:'none', padding:'4px 0'}} />
+ </label>
+ </div>
+ <div style={{padding:'14px 16px', color:'#6b7280', fontWeight:700}}>WEIGHT</div>
+ <div style={{background:'#fff', padding:'14px 16px', borderBottom:'1px solid #e5e7eb'}}>
+ <label style={{display:'grid', gridTemplateColumns:'140px 1fr', alignItems:'center', gap:12}}>
+ <span style={{color:'#1e3a8a', fontWeight:700}}>Weight</span>
+ <input className='input' placeholder='Weight' value={famachaDraft.weight} onChange={(e) => setFamachaDraft(prev => ({ ...prev, weight: e.target.value }))} style={{border:'none', boxShadow:'none', padding:'4px 0'}} />
+ </label>
+ </div>
+ <div style={{background:'#fff', padding:'14px 16px', borderBottom:'1px solid #e5e7eb', display:'grid', gridTemplateColumns:'140px 1fr', alignItems:'center', gap:12}}>
+ <span style={{color:'#1e3a8a', fontWeight:700}}>Score Date</span>
+ <strong>{new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}</strong>
+ </div>
+ <div style={{padding:'14px 16px', color:'#6b7280', fontWeight:700}}>NOTES</div>
+ <div style={{background:'#fff', minHeight:120, padding:'12px 16px'}}>
+ <textarea className='input' rows={4} placeholder='Notes' value={famachaDraft.notes} onChange={(e) => setFamachaDraft(prev => ({ ...prev, notes: e.target.value }))} style={{width:'100%', border:'none', boxShadow:'none', padding:0}} />
+ </div>
+ </div>
+ </article>}
 
  {customMedicineComposerOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
