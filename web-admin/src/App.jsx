@@ -4703,7 +4703,7 @@ function AppInner() {
 
 
 
- {breederReportOpen && selectedBreederDetail && <article className='panel' style={{padding:0, overflow:'auto', borderRadius:18, position:'fixed', inset:'12px 12px 24px', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', boxShadow:'0 20px 60px rgba(15,23,42,.28)'}}>
+ {breederReportOpen && selectedBreederDetail && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', boxShadow:'0 20px 60px rgba(15,23,42,.28)', borderRadius:0}}>
  <div style={{background:'#0f172a', color:'#fff', padding:'14px 16px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setBreederReportOpen(false)}>‹</button>
  <div>
@@ -4751,7 +4751,7 @@ function AppInner() {
 
 
 
- {markComposerOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', borderRadius:18, position:'fixed', inset:'12px 12px 24px', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', boxShadow:'0 20px 60px rgba(15,23,42,.28)'}}>
+ {markComposerOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', boxShadow:'0 20px 60px rgba(15,23,42,.28)', borderRadius:0}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setMarkComposerOpen(false)}>Cancel</button>
  <strong style={{margin:'0 auto'}}>{`Mark : ${String((selectedOffspringRecord || selectedLivestockRecord)?.id || '0001').padStart(4,'0')} : ${new Date(markDraft.markDate || Date.now()).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}`}</strong>
@@ -4785,7 +4785,7 @@ function AppInner() {
  </div>
  </article>}
 
- {offspringListOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', borderRadius:18, position:'fixed', inset:'12px 12px 24px', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', boxShadow:'0 20px 60px rgba(15,23,42,.28)'}}>
+ {offspringListOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', boxShadow:'0 20px 60px rgba(15,23,42,.28)', borderRadius:0}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setOffspringListOpen(false)}>‹</button>
  <strong>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</strong>
@@ -4898,7 +4898,7 @@ function AppInner() {
  </div>
  </article>}
 
- {ancestorTreeOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', borderRadius:18, position:'fixed', inset:'12px 12px 24px', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', boxShadow:'0 20px 60px rgba(15,23,42,.28)'}}>
+ {ancestorTreeOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', boxShadow:'0 20px 60px rgba(15,23,42,.28)', borderRadius:0}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setAncestorTreeOpen(false)}>‹</button>
  <strong>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</strong>
@@ -4922,7 +4922,7 @@ function AppInner() {
  </div>
  </article>}
 
- {famachaComposerOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', borderRadius:18, position:'fixed', inset:'12px 12px 24px', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', boxShadow:'0 20px 60px rgba(15,23,42,.28)'}}>
+ {famachaComposerOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', boxShadow:'0 20px 60px rgba(15,23,42,.28)', borderRadius:0}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setFamachaComposerOpen(false)}>Cancel</button>
  <strong style={{margin:'0 auto'}}>FAMACHA / BCS</strong>
@@ -5108,7 +5108,7 @@ function AppInner() {
  </div>
  </article>}
 
- {breederReportOpen && selectedBreederDetail && <article className='panel' style={{padding:0, overflow:'auto', borderRadius:18, position:'fixed', inset:'12px 12px 24px', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', boxShadow:'0 20px 60px rgba(15,23,42,.28)'}}>
+ {breederReportOpen && selectedBreederDetail && <article className='panel' style={{padding:0, overflow:'auto', position:'fixed', inset:'0', zIndex:9999, maxWidth:560, margin:'0 auto', left:0, right:0, background:'#fff', boxShadow:'0 20px 60px rgba(15,23,42,.28)', borderRadius:0}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setSelectedBreederDetail(null)}>‹</button>
  <strong style={{fontSize:'1.05rem'}}>{selectedBreederDetail.id}</strong>
