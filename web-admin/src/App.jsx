@@ -4214,14 +4214,14 @@ function AppInner() {
  <button type='button' className='btn' style={{marginLeft:'auto', minWidth:48, height:48, borderRadius:999, fontSize:'1.6rem', fontWeight:700, background:'#fff', color:'#1d4ed8', border:'none'}} onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: true, edit: false }))}>+</button>
  </div>
  </div>
- <div className='panel' style={{marginBottom:12}}>
+ <div className='panel' style={{marginBottom:12, width:'100%'}}>
  <div className='list-row' style={{alignItems:'center', gap:12}}>
  <strong>{t('Records overview','Aperçu des registres','记录概览')}</strong>
  <div className='helper-text'>{livestockRecordsFiltered.length} visible</div>
  </div>
  </div>
- <div className='panel'>
- <div className='inlineForm' style={{flexWrap:'wrap'}}>
+ <div className='panel' style={{width:'100%'}}>
+ <div className='inlineForm' style={{flexWrap:'wrap', width:'100%'}}>
  <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('ALL')} style={{border:livestockRecordsFilter==='ALL'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Total records','Total registres','记录总数')}: {state.livestockRecords.length}</button>
  <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('GOAT')} style={{border:livestockRecordsFilter==='GOAT'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Goats','Chèvres','山羊')}: {state.livestockRecords.filter(r => r.species === 'GOAT').length}</button>
  <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('SHEEP')} style={{border:livestockRecordsFilter==='SHEEP'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Sheep','Moutons','绵羊')}: {state.livestockRecords.filter(r => r.species === 'SHEEP').length}</button>
@@ -4235,7 +4235,7 @@ function AppInner() {
  <p style={{margin:'8px 0 0',fontSize:'.82rem',color:'#475569'}}>Showing: <strong>{livestockRecordsFilter}</strong> ({livestockRecordsFiltered.length} records)</p>
  </div>
 
- <article className='panel' style={{width:'100%', maxWidth:'100%', overflow:'hidden'}}>
+ <article className='panel' style={{width:'100%', overflow:'hidden'}}>
  <div className='list-row' style={{marginBottom:10}}>
  <div style={{cursor:'pointer'}} onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: !prev.create, edit: false }))}>
  <h4 style={{margin:'0 0 4px 0'}}>Create Record</h4>
@@ -4243,7 +4243,7 @@ function AppInner() {
  </div>
  <button type='button' className='btn' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: !prev.create, edit: false }))}>{recordsSectionOpen.create ? 'Hide' : 'Open'}</button>
  </div>
- {recordsSectionOpen.create && <form className='list' style={{gap:10, maxWidth:560, margin:'0 auto'}} onSubmit={async e => {
+ {recordsSectionOpen.create && <form className='list' style={{gap:10, width:'100%'}} onSubmit={async e => {
  e.preventDefault()
  try {
  const { treatment_entry, ...createPayload } = livestockRecordForm

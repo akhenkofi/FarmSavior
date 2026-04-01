@@ -16,3 +16,15 @@
 @media(max-width:640px){body{background:linear-gradient(180deg,#eff6ff 0%,#f8fafc 52%,#eefbf3 100%)}.main{padding:10px 0 28px;max-width:100%}.panel{padding:12px;border-radius:20px;margin-left:0;margin-right:0}.input{padding:15px 14px;min-height:54px}.btn{min-height:50px;border-radius:16px}.section-header{gap:10px}.authCard{width:min(100%,96vw);border-radius:24px}.mobileTopBar{position:sticky;top:0;z-index:5;background:rgba(248,250,252,.88);backdrop-filter:blur(12px);padding:10px 10px 8px}.table{width:100%;min-width:720px}.livestock-records-shell,.livestock-records-shell>*{width:100%}}
 
 .livestock-records-shell{display:grid;grid-template-columns:1fr;gap:12px;width:100%}.livestock-records-shell > *{min-width:0;width:100%}@media(max-width:860px){.livestock-records-shell{grid-template-columns:1fr}.livestock-records-shell .table{width:100%;display:block;overflow-x:auto;border-radius:18px}}
+
+
+.livestock-records-mobile{display:grid;grid-template-columns:1fr;gap:12px;width:100%}
+.livestock-records-mobile > *{width:100%;min-width:0}
+@media(max-width:640px){
+  .main{padding:10px 0 24px;max-width:100%}
+  .livestock-records-mobile{gap:10px;padding:0 0 8px}
+  .livestock-records-mobile .panel{border-radius:18px}
+  .livestock-records-mobile .inlineForm{padding:10px}
+  .livestock-records-mobile .list-row{padding:12px}
+  .livestock-records-mobile .table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;min-width:720px;border-radius:16px}
+}
