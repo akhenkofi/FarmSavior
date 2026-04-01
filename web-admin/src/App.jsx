@@ -3932,7 +3932,15 @@ function AppInner() {
  </section>}
 
  {active === 'livestock-records' && <section>
- <h3>{t('Livestock Records Management (Sheep • Goats • Cattle • Poultry)','Gestion des registres élevage (ovins • caprins • bovins • volailles)','牲畜档案管理（羊•山羊•牛•家禽）')}</h3>
+ <div className='panel' style={{marginBottom:12, padding:'12px 14px', background:'#1d4ed8', color:'#fff'}}>
+ <div className='list-row' style={{alignItems:'center', gap:12}}>
+ <div>
+ <h3 style={{margin:0, color:'#fff'}}>{t('Livestock Records Management (Sheep • Goats • Cattle • Poultry)','Gestion des registres élevage (ovins • caprins • bovins • volailles)','牲畜档案管理（羊•山羊•牛•家禽）')}</h3>
+ <div style={{fontSize:'.82rem', opacity:.9}}>{livestockRecordsFiltered.length} visible</div>
+ </div>
+ <button type='button' className='btn' style={{marginLeft:'auto', minWidth:48, height:48, borderRadius:999, fontSize:'1.6rem', fontWeight:700, background:'#fff', color:'#1d4ed8', border:'none'}} onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: true, edit: false }))}>+</button>
+ </div>
+ </div>
  <div className='panel' style={{marginBottom:12}}>
  <div className='list-row' style={{alignItems:'center', gap:12}}>
  <strong>{t('Records overview','Aperçu des registres','记录概览')}</strong>
@@ -3958,11 +3966,11 @@ function AppInner() {
  <div className='list-row' style={{marginBottom:10}}>
  <div style={{cursor:'pointer'}} onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: !prev.create, edit: false }))}>
  <h4 style={{margin:'0 0 4px 0'}}>Create Record</h4>
- <div className='helper-text'>Add a new animal or batch record without exposing every field at once.</div>
+ <div className='helper-text'>Tap the + button to open this add-record flow immediately.</div>
  </div>
  <button type='button' className='btn' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: !prev.create, edit: false }))}>{recordsSectionOpen.create ? 'Hide' : 'Open'}</button>
  </div>
- {recordsSectionOpen.create && <form className='list' onSubmit={async e => {
+ {recordsSectionOpen.create && <form className='list' style={{gap:12}} onSubmit={async e => {
  e.preventDefault()
  try {
  const { treatment_entry, ...createPayload } = livestockRecordForm
@@ -3987,17 +3995,28 @@ function AppInner() {
  alert(`Create failed: ${errMsg(err)}`)
  }
  }}>
+ <div className='panel' style={{padding:'10px 12px', background:'#eff6ff', border:'1px solid #bfdbfe'}}>
+ <div className='list-row' style={{alignItems:'center', gap:12}}>
+ <button type='button' className='btn' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: false }))}>Cancel</button>
+ <strong style={{fontSize:'1.05rem', marginLeft:'auto', marginRight:'auto'}}>{`Add ${String(livestockRecordForm.species || 'Record').charAt(0)}${String(livestockRecordForm.species || 'Record').slice(1).toLowerCase()}`}</strong>
+ <button type='submit' className='btn btn-dark'>Done</button>
+ </div>
+ </div>
+ <div className='panel' style={{padding:12, background:'#f8fafc', border:'1px solid #e2e8f0'}}>
+ <div className='helper-text' style={{fontWeight:700, color:'#1e3a8a', marginBottom:6}}>Quick identity and ownership</div>
+ </div>
  <div className='row2'>
+ <select className='input' value={livestockRecordForm.ownership} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, ownership: e.target.value })}><option value='OWNED'>Owned by Me</option><option value='THIRD_PARTY'>Someone Else</option></select>
  <select className='input' value={livestockRecordForm.species} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, species: e.target.value, animal_type: e.target.value === 'GOAT' ? 'DOE' : (e.target.value === 'CATTLE' ? 'COW' : (e.target.value === 'POULTRY' ? 'LAYER_HEN' : 'EWE')) })}><option value='SHEEP'>SHEEP</option><option value='GOAT'>GOAT</option><option value='CATTLE'>CATTLE</option><option value='POULTRY'>POULTRY</option></select>
  <select className='input' value={livestockRecordForm.animal_type} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, animal_type: e.target.value })}>{livestockRecordForm.species === 'GOAT' ? <><option value='DOE'>DOE</option><option value='BUCK'>BUCK</option></> : (livestockRecordForm.species === 'CATTLE' ? <><option value='COW'>COW</option><option value='BULL'>BULL</option><option value='HEIFER'>HEIFER</option><option value='STEER'>STEER</option></> : (livestockRecordForm.species === 'POULTRY' ? <><option value='LAYER_HEN'>LAYER_HEN</option><option value='BROILER'>BROILER</option><option value='PULLET'>PULLET</option><option value='COCKEREL'>COCKEREL</option><option value='CHICK'>CHICK</option><option value='BREEDER'>BREEDER</option></> : <><option value='EWE'>EWE</option><option value='RAM'>RAM</option></>))}</select>
  </div>
  <div className='row2'>
- <input className='input' placeholder='Name' value={livestockRecordForm.name} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, name: e.target.value })} />
- <input className='input' placeholder='Ear tag' value={livestockRecordForm.ear_tag} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, ear_tag: e.target.value })} />
+ <input className='input' placeholder='Name / Tag #' value={livestockRecordForm.name} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, name: e.target.value })} />
+ <input className='input' placeholder='EID / RFID / Ear tag' value={livestockRecordForm.ear_tag} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, ear_tag: e.target.value })} />
  </div>
  <div className='row2'>
- <input className='input' placeholder='Farm ID' value={livestockRecordForm.farm_id} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, farm_id: e.target.value })} />
- <input className='input' placeholder='Registration number' value={livestockRecordForm.registration_number} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, registration_number: e.target.value })} />
+ <input className='input' placeholder='Scrapie tag / Farm ID' value={livestockRecordForm.farm_id} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, farm_id: e.target.value })} />
+ <input className='input' placeholder='Registration #' value={livestockRecordForm.registration_number} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, registration_number: e.target.value })} />
  </div>
  <div className='row2'>
  <label style={{display:'grid', gap:4}}>
