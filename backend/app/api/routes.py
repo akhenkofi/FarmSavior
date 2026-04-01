@@ -761,7 +761,7 @@ LIVESTOCK_PLAN_CATALOG = {
 
 
 def _livestock_plan_snapshot(plan_code: str) -> dict:
-    plan = dict(LIVESTOCK_PLAN_CATALOG.get(plan_code, LIVESTOCK_PLAN_CATALOG['starter']))
+    plan = dict(LIVESTOCK_PLAN_CATALOG.get(plan_code, LIVESTOCK_PLAN_CATALOG['free']))
     plan['record_limit_label'] = 'Unlimited animals' if plan.get('record_limit') in (None, 0) else f"Up to {int(plan['record_limit'])} animals total"
     plan['team_limit_label'] = 'Unlimited team users' if plan.get('team_limit') in (None, 0) else f"Up to {int(plan['team_limit'])} team user{'s' if int(plan['team_limit']) != 1 else ''}"
     yearly = float(plan.get('yearly_usd') or 0)
