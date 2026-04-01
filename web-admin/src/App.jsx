@@ -935,6 +935,16 @@ const currencyByCountry = { GH: 'GHS', NG: 'NGN', BF: 'XOF' }
 const fxByCurrency = { USD: 1, GHS: 15, NGN: 1600, XOF: 610 }
 const universityProducts = ['poultry', 'sheep', 'goat', 'cattle']
 const emptyUniversitySubscription = { tier: 'free', subscription: null, plans: [] }
+const livestockBreedOptions = {
+ SHEEP: ['Dorper', 'Merino', 'Sahel', 'Djallonké', 'West African Dwarf', 'Cross'],
+ GOAT: ['Boer', 'Saanen', 'Anglo-Nubian', 'Sahelian', 'West African Dwarf', 'Cross'],
+ CATTLE: ['Holstein', 'Jersey', 'Boran', "N'Dama", 'White Fulani', 'Cross'],
+ POULTRY: ['Broiler', 'Layer', 'Noiler', 'Kuroiler', 'Local', 'Cross'],
+}
+
+const livestockRaisedByDamOptions = ['Yes', 'No', 'Unknown']
+const livestockDnaOptions = ['Not tested', 'Parentage verified', 'Genomics available']
+
 
 const professionalOutcomeBenchmarks = {
  poultry: ['Flock readiness score', 'Health-compliance score', 'Feed-efficiency watchpoints', 'Market margin review'],
@@ -4020,55 +4030,108 @@ function AppInner() {
  <select className='input' value={livestockRecordForm.animal_type} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, animal_type: e.target.value })}>{livestockRecordForm.species === 'GOAT' ? <><option value='DOE'>Doe</option><option value='BUCK'>Buck</option></> : (livestockRecordForm.species === 'CATTLE' ? <><option value='COW'>Cow</option><option value='BULL'>Bull</option><option value='HEIFER'>Heifer</option><option value='STEER'>Steer</option></> : (livestockRecordForm.species === 'POULTRY' ? <><option value='LAYER_HEN'>Layer hen</option><option value='BROILER'>Broiler</option><option value='PULLET'>Pullet</option><option value='COCKEREL'>Cockerel</option><option value='CHICK'>Chick</option><option value='BREEDER'>Breeder</option></> : <><option value='EWE'>Ewe</option><option value='RAM'>Ram</option></>))}</select>
  </label>
  <div className='row2'>
- <input className='input' placeholder='Name / Tag #' value={livestockRecordForm.name} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, name: e.target.value })} />
- <input className='input' placeholder='EID / RFID / Ear tag' value={livestockRecordForm.ear_tag} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, ear_tag: e.target.value })} />
- </div>
- <div className='row2'>
- <input className='input' placeholder='Scrapie tag / Farm ID' value={livestockRecordForm.farm_id} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, farm_id: e.target.value })} />
- <input className='input' placeholder='Registration #' value={livestockRecordForm.registration_number} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, registration_number: e.target.value })} />
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Reg. Name</span>
+ <input className='input' placeholder='Registration name' value={livestockRecordForm.name} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, name: e.target.value })} />
+ </label>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Breed</span>
+ <select className='input' value={livestockRecordForm.breeding_type || ''} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, breeding_type: e.target.value })}>
+ <option value=''>Choose breed</option>
+ {(livestockBreedOptions[livestockRecordForm.species] || []).map(b => <option key={`breed-${b}`} value={b}>{b}</option>)}
+ </select>
+ </label>
  </div>
  <div className='row2'>
  <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Date of birth</span>
+ <span className='helper-text'>Breeder</span>
+ <input className='input' list='livestock-purchase-sources-create' placeholder='Choose or enter breeder' value={livestockRecordForm.purchased_from} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, purchased_from: e.target.value, purchased_from_type: 'BREEDER' })} />
+ </label>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Stars</span>
+ <select className='input' value={livestockRecordForm.stars} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, stars: e.target.value })}>
+ <option value='0'>0 stars</option><option value='1'>1 star</option><option value='2'>2 stars</option><option value='3'>3 stars</option><option value='4'>4 stars</option><option value='5'>5 stars</option>
+ </select>
+ </label>
+ </div>
+ <datalist id='livestock-purchase-sources-create'>{state.livestockPurchaseSources.filter(s => !s.species || s.species === 'ALL' || s.species === livestockRecordForm.species).map(s => <option key={`create-source-${s.id}-${s.name}`} value={s.name}>{s.source_type || ''}</option>)}</datalist>
+ <div className='row2'>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Born</span>
  <input className='input' type='date' value={livestockRecordForm.date_of_birth} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, date_of_birth: e.target.value })} />
  </label>
  <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Date purchased</span>
+ <span className='helper-text'>Acquired</span>
  <input className='input' type='date' value={livestockRecordForm.acquisition_date} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, acquisition_date: e.target.value })} />
  </label>
  </div>
  <div className='row2'>
- <input className='input' list='livestock-purchase-sources-create' placeholder='Purchased from' value={livestockRecordForm.purchased_from} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, purchased_from: e.target.value })} />
- <select className='input' value={livestockRecordForm.purchased_from_type} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, purchased_from_type: e.target.value })}><option value='BREEDER'>Breeder</option><option value='MARKET'>Market</option><option value='OTHER'>Other</option></select>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Purchase Cost</span>
+ <input className='input' type='number' step='0.01' placeholder='0.00' value={livestockRecordForm.purchase_price} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, purchase_price: e.target.value })} />
+ </label>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Purchase Desc</span>
+ <input className='input' placeholder='Market / private treaty / gifted' value={livestockRecordForm.notes} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, notes: e.target.value })} />
+ </label>
  </div>
- <datalist id='livestock-purchase-sources-create'>{state.livestockPurchaseSources.filter(s => !s.species || s.species === 'ALL' || s.species === livestockRecordForm.species).map(s => <option key={`create-source-${s.id}-${s.name}`} value={s.name}>{s.source_type || ''}</option>)}</datalist>
  <div className='row2'>
- <input className='input' type='number' step='0.01' placeholder='Purchase price' value={livestockRecordForm.purchase_price} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, purchase_price: e.target.value })} />
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Sire</span>
+ <input className='input' placeholder='Choose or enter sire' value={livestockRecordForm.sire_id} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, sire_id: e.target.value })} />
+ </label>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Dam</span>
+ <input className='input' placeholder='Choose or enter dam' value={livestockRecordForm.dam_id} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, dam_id: e.target.value })} />
+ </label>
+ </div>
+ <div className='row2'>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Dam-Sire</span>
+ <input className='input' placeholder='Dam sire / maternal grandsire' value={livestockRecordForm.farm_id} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, farm_id: e.target.value })} />
+ </label>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Raised by Dam</span>
+ <select className='input' value={livestockRecordForm.cull_keep_status || ''} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, cull_keep_status: e.target.value })}>
+ <option value=''>Choose</option>
+ {livestockRaisedByDamOptions.map(opt => <option key={`raised-${opt}`} value={opt}>{opt}</option>)}
+ </select>
+ </label>
+ </div>
+ <div className='row2'>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Litter Size</span>
+ <input className='input' type='number' min='0' placeholder='0' value={livestockRecordForm.litter_size} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, litter_size: e.target.value })} />
+ </label>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>DNA</span>
+ <select className='input' value={livestockRecordForm.registration_number || ''} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, registration_number: e.target.value })}>
+ <option value=''>Choose DNA status</option>
+ {livestockDnaOptions.map(opt => <option key={`dna-${opt}`} value={opt}>{opt}</option>)}
+ </select>
+ </label>
+ </div>
+ <div className='row2'>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Initial Weight</span>
+ <input className='input' type='number' step='0.01' placeholder='kg' value={livestockRecordForm.initial_weight_kg} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, initial_weight_kg: e.target.value })} />
+ </label>
+ <label style={{display:'grid', gap:4}}>
+ <span className='helper-text'>Currency</span>
  <select className='input' value={livestockRecordForm.currency} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, currency: e.target.value })}><option>GHS</option><option>NGN</option><option>XOF</option><option>USD</option></select>
+ </label>
  </div>
  <button type='button' className='btn' onClick={async () => {
  const name = (livestockRecordForm.purchased_from || '').trim()
- if (!name) return alert('Enter breeder or market name first')
+ if (!name) return alert('Enter breeder name first')
  try {
- await api.saveLivestockPurchaseSource({ user_id: Number(livestockRecordForm.user_id || me?.id || 1), species: livestockRecordForm.species, name, source_type: livestockRecordForm.purchased_from_type || 'OTHER' })
+ await api.saveLivestockPurchaseSource({ user_id: Number(livestockRecordForm.user_id || me?.id || 1), species: livestockRecordForm.species, name, source_type: 'BREEDER' })
  await loadLivestockRecords()
- alert('Breeder/market saved')
+ alert('Breeder saved')
  } catch (err) {
- alert(`Could not save breeder/market: ${errMsg(err)}`)
+ alert(`Could not save breeder: ${errMsg(err)}`)
  }
- }}>Save breeder / market</button>
- <div className='row2'>
- <input className='input' type='number' min='0' max='5' placeholder='Stars (0-5)' value={livestockRecordForm.stars} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, stars: e.target.value })} />
- <input className='input' type='number' step='0.01' placeholder='Initial weight (kg)' value={livestockRecordForm.initial_weight_kg} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, initial_weight_kg: e.target.value })} />
- </div>
- <div className='row2'>
- <input className='input' placeholder={livestockRecordForm.species === 'POULTRY' ? 'Breeder line / rooster ID' : 'Sire ID'} value={livestockRecordForm.sire_id} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, sire_id: e.target.value })} />
- <input className='input' placeholder={livestockRecordForm.species === 'POULTRY' ? 'Hatchery batch / hen line' : 'Dam ID'} value={livestockRecordForm.dam_id} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, dam_id: e.target.value })} />
- </div>
- <div className='row2'>
- <input className='input' type='number' min='0' placeholder={livestockRecordForm.species === 'POULTRY' ? 'Flock/batch size' : 'Litter size'} value={livestockRecordForm.litter_size} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, litter_size: e.target.value })} />
- <input className='input' placeholder={livestockRecordForm.species === 'POULTRY' ? 'Production type (layer/broiler/breeder)' : 'Breeding type'} value={livestockRecordForm.breeding_type} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, breeding_type: e.target.value })} />
- </div>
+ }}>Save breeder</button>
  <div className='row2'>
  <input className='input' placeholder='Health status' value={livestockRecordForm.health_status} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, health_status: e.target.value })} />
  <input className='input' placeholder='Pen location' value={livestockRecordForm.pen_location} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, pen_location: e.target.value })} />
