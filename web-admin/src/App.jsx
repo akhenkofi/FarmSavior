@@ -945,6 +945,25 @@ const livestockBreedOptions = {
 const livestockRaisedByDamOptions = ['Yes', 'No', 'Unknown']
 const livestockDnaOptions = ['Not tested', 'Parentage verified', 'Genomics available']
 
+const livestockMedicineOptions = {
+ SHEEP: {
+  species: ['Albenor 2.5% suspension - Albendazole dewormer', 'PPR vax', 'Tsetsefly Shot', 'Vitamin And Antibiotic & Flea Treatment'],
+  other: ['5-Way', 'Blackleg 7-Way', 'BO-SE', 'Brucellosis', 'CDT', 'Dexamethasone', 'Excenel', 'LA-200/Oxytetracycline', 'Nuflor', 'Penicillin', 'Pinkeye', 'Trichomoniasis'],
+ },
+ GOAT: {
+  species: ['Albendazole drench', 'PPR vax', 'CCPP treatment', 'Vitamin and antibiotic support'],
+  other: ['CDT', 'Ivermectin', 'Oxytetracycline', 'Penicillin', 'Sulfa treatment', 'Dewormer'],
+ },
+ CATTLE: {
+  species: ['Blackleg vaccine', 'Lumpy Skin support', 'Tick fever treatment', 'Vitamin and mineral support'],
+  other: ['5-Way', 'BO-SE', 'Brucellosis', 'Dexamethasone', 'Excenel', 'LA-200/Oxytetracycline', 'Nuflor', 'Penicillin', 'Pinkeye', 'Trichomoniasis'],
+ },
+ POULTRY: {
+  species: ['Newcastle vaccine', 'Gumboro vaccine', 'Coccidiosis treatment', 'Vitamin stress pack'],
+  other: ['Amprolium', 'Enrofloxacin', 'Multivitamins', 'Oxytetracycline soluble', 'Probiotics', 'Tylosin'],
+ },
+}
+
 
 const livestockHistoryRows = (record) => {
  if (!record) return []
@@ -1372,6 +1391,10 @@ function AppInner() {
  const [medicineShotOpen, setMedicineShotOpen] = useState(false)
  const [medicinesSearch, setMedicinesSearch] = useState('')
  const [medicineShotDraft, setMedicineShotDraft] = useState({ medicine: '', dosage: '', notes: '' })
+ const [medicineChooserOpen, setMedicineChooserOpen] = useState(false)
+ const [medicineChooserSearch, setMedicineChooserSearch] = useState('')
+ const [customMedicineComposerOpen, setCustomMedicineComposerOpen] = useState(false)
+ const [customMedicineName, setCustomMedicineName] = useState('')
  const [notesSearch, setNotesSearch] = useState('')
  const [draftNote, setDraftNote] = useState('')
  const [draftWeight, setDraftWeight] = useState('')
@@ -4639,6 +4662,48 @@ function AppInner() {
 
 
 
+
+ {customMedicineComposerOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setCustomMedicineComposerOpen(false)}>Cancel</button>
+ <strong style={{margin:'0 auto'}}>Medicines</strong>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => {
+ const cleaned = String(customMedicineName || '').trim()
+ if (cleaned) setMedicineShotDraft(prev => ({ ...prev, medicine: cleaned }))
+ setCustomMedicineComposerOpen(false)
+ setMedicineChooserOpen(false)
+ }}>Done</button>
+ </div>
+ <div style={{background:'#fff', minHeight:220, padding:'16px'}}>
+ <input className='input' placeholder='Medicine name' value={customMedicineName} onChange={(e) => setCustomMedicineName(e.target.value)} />
+ </div>
+ </article>}
+
+ {medicineChooserOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setMedicineChooserOpen(false)}>Cancel</button>
+ <strong style={{margin:'0 auto'}}>Medicines</strong>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', fontSize:'1.4rem'}} onClick={() => { setCustomMedicineName(''); setCustomMedicineComposerOpen(true) }}>+</button>
+ </div>
+ <div style={{padding:12, background:'#1d4ed8'}}>
+ <input className='input' placeholder='Search' value={medicineChooserSearch} onChange={(e) => setMedicineChooserSearch(e.target.value)} style={{background:'#1e3a8a', color:'#fff', border:'none', borderRadius:12}} />
+ </div>
+ <div style={{background:'#fff', minHeight:320}}>
+ {(() => {
+ const species = String(selectedLivestockRecord.species || 'SHEEP').toUpperCase()
+ const catalog = livestockMedicineOptions[species] || livestockMedicineOptions.SHEEP
+ const match = (name) => !medicineChooserSearch || name.toLowerCase().includes(medicineChooserSearch.toLowerCase())
+ return <>
+ <div className='list-row' style={{padding:'18px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor:'pointer'}} onClick={() => { setMedicineShotDraft(prev => ({ ...prev, medicine: '' })); setMedicineChooserOpen(false) }}><span style={{fontWeight:600}}>None</span></div>
+ <div style={{padding:'12px 16px', background:'#eef2f7', color:'#6b7280', fontWeight:700}}>{species} MEDICINES</div>
+ {catalog.species.filter(match).map((item, idx) => <div key={`med-species-${idx}`} className='list-row' style={{padding:'18px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor:'pointer'}} onClick={() => { setMedicineShotDraft(prev => ({ ...prev, medicine: item })); setMedicineChooserOpen(false) }}><span style={{fontWeight:600, color:'#111827'}}>{item}</span></div>)}
+ <div style={{padding:'12px 16px', background:'#eef2f7', color:'#6b7280', fontWeight:700}}>OTHER MEDICINES</div>
+ {catalog.other.filter(match).map((item, idx) => <div key={`med-other-${idx}`} className='list-row' style={{padding:'18px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor:'pointer'}} onClick={() => { setMedicineShotDraft(prev => ({ ...prev, medicine: item })); setMedicineChooserOpen(false) }}><span style={{fontWeight:600, color:'#111827'}}>{item}</span></div>)}
+ </>
+ })()}
+ </div>
+ </article>}
+
  {medicineShotOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setMedicineShotOpen(false)}>Cancel</button>
@@ -4648,8 +4713,8 @@ function AppInner() {
  <div style={{background:'#eef2f7', minHeight:360}}>
  <div style={{background:'#fff', borderBottom:'1px solid #e5e7eb', padding:'14px 16px', display:'grid', gridTemplateColumns:'100px 1fr auto', alignItems:'center', gap:12}}>
  <span style={{color:'#1e3a8a', fontWeight:700}}>Medicine</span>
- <span style={{color: medicineShotDraft.medicine ? '#111827' : '#9ca3af'}}>{medicineShotDraft.medicine || 'Choose'}</span>
- <span style={{color:'#9ca3af'}}>›</span>
+ <span style={{color: medicineShotDraft.medicine ? '#111827' : '#9ca3af'}} onClick={() => { setMedicineChooserSearch(''); setMedicineChooserOpen(true) }}>{medicineShotDraft.medicine || 'Choose'}</span>
+ <span style={{color:'#9ca3af', cursor:'pointer'}} onClick={() => { setMedicineChooserSearch(''); setMedicineChooserOpen(true) }}>›</span>
  </div>
  <div style={{background:'#fff', borderBottom:'1px solid #e5e7eb', padding:'14px 16px', display:'grid', gridTemplateColumns:'100px 1fr', alignItems:'center', gap:12}}>
  <span style={{color:'#1e3a8a', fontWeight:700}}>Date</span>
