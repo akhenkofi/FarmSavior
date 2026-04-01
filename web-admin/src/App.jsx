@@ -5188,7 +5188,7 @@ function AppInner() {
  </div>
  </article>}
 
- <div style={{width:'100%', overflowX:'auto', WebkitOverflowScrolling:'touch'}}>
+ <div className='desktop-only' style={{width:'100%', overflowX:'auto', WebkitOverflowScrolling:'touch'}}>
  <DataTable
  columns={['id','species','animal_type','name','acquisition_date','purchased_from','purchase_price','health_status']}
  rows={livestockRecordsFiltered}
@@ -5201,6 +5201,28 @@ function AppInner() {
  setRecordsSectionOpen(prev => ({ ...prev, edit: true, create: false, details: true }))
  }}
  />
+ </div>
+ <div className='mobile-only livestock-record-cards'>
+ {livestockRecordsFiltered.map((r) => <button type='button' key={`livestock-card-${r.id}`} className='livestock-record-card' onClick={() => { setSelectedLivestockRecord(r); setRecordsSectionOpen(prev => ({ ...prev, details: true })) }}>
+ <div className='livestock-record-card-top'>
+ <div>
+ <div className='livestock-record-card-id'>{r.id || '—'}</div>
+ <div className='livestock-record-card-name'>{r.name || 'Unnamed animal'}</div>
+ </div>
+ <div className='livestock-record-card-arrow'>›</div>
+ </div>
+ <div className='livestock-record-card-meta'>
+ <span>{r.species || '—'}</span>
+ <span>{r.animal_type || '—'}</span>
+ <span>{r.acquisition_date || r.date_of_birth || '—'}</span>
+ </div>
+ <div className='livestock-record-card-meta'>
+ <span>{r.purchased_from || 'No breeder/source'}</span>
+ <span>{r.purchase_price ? `${r.purchase_price} ${r.currency || ''}`.trim() : 'No price'}</span>
+ </div>
+ <div className='livestock-record-card-status'>{r.health_status || 'No health status'}</div>
+ </button>)}
+ {livestockRecordsFiltered.length === 0 && <div className='panel'><div className='helper-text'>No records yet for this filter.</div></div>}
  </div>
  </section>}
 
