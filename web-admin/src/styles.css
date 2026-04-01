@@ -45,3 +45,5 @@
 .btn:disabled{opacity:.7;cursor:not-allowed;filter:saturate(.7)}
 
 .livestock-records-mobile .panel h4{font-size:1rem}.livestock-records-mobile .helper-text{line-height:1.45}.livestock-records-mobile .inlineForm{border-radius:18px}.livestock-records-mobile .btn{box-shadow:0 10px 24px rgba(15,23,42,.12)}
+
+.livestock-filter-chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}.livestock-filter-chips .btn{white-space:nowrap;box-shadow:none}@media(max-width:640px){.livestock-filter-chips{margin-top:2px}.livestock-filter-chips .btn{min-height:42px;padding:10px 12px}}

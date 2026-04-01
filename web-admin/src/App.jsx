@@ -4218,15 +4218,23 @@ function AppInner() {
  <button type='button' className='btn' style={{marginLeft:'auto', minWidth:48, height:48, borderRadius:999, fontSize:'1.6rem', fontWeight:700, background:'#fff', color:'#1d4ed8', border:'none'}} onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: true, edit: false }))}>+</button>
  </div>
  </div>
- <div style={{width:'100%', display:'grid', gap:8, marginBottom:12}}>
- <div className='inlineForm' style={{flexWrap:'wrap', width:'100%', justifyContent:'space-between', background:'transparent', border:'none', padding:0, boxShadow:'none'}}>
- <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('ALL')} style={{border:livestockRecordsFilter==='ALL'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Total records','Total registres','记录总数')}: {state.livestockRecords.length}</button>
- <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('GOAT')} style={{border:livestockRecordsFilter==='GOAT'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Goats','Chèvres','山羊')}: {state.livestockRecords.filter(r => r.species === 'GOAT').length}</button>
- <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('SHEEP')} style={{border:livestockRecordsFilter==='SHEEP'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Sheep','Moutons','绵羊')}: {state.livestockRecords.filter(r => r.species === 'SHEEP').length}</button>
- <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('CATTLE')} style={{border:livestockRecordsFilter==='CATTLE'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Cattle','Bovins','牛')}: {state.livestockRecords.filter(r => r.species === 'CATTLE').length}</button>
- <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('POULTRY')} style={{border:livestockRecordsFilter==='POULTRY'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Poultry','Volailles','家禽')}: {state.livestockRecords.filter(r => r.species === 'POULTRY').length}</button>
+ <div className='panel' style={{marginBottom:12, background:'linear-gradient(135deg,#0f172a 0%,#1d4ed8 55%,#0ea5e9 100%)', color:'#fff', border:'1px solid rgba(255,255,255,.08)'}}>
+ <div className='list-row' style={{background:'transparent', border:'none', padding:'0 0 10px', color:'#fff'}}>
+ <div>
+ <div style={{fontSize:'.78rem', fontWeight:800, letterSpacing:'.08em', opacity:.82}}>FARMSAVIOR RECORDS</div>
+ <h3 style={{margin:'4px 0 0', color:'#fff'}}>Livestock Records</h3>
+ <div style={{fontSize:'.92rem', opacity:.9, marginTop:4}}>A clean mobile-first records home for animals, health, lineage, and reports.</div>
  </div>
- <p style={{margin:'0',fontSize:'.82rem',color:'#475569'}}>Showing: <strong>{livestockRecordsFilter}</strong> ({livestockRecordsFiltered.length} records)</p>
+ <button type='button' className='btn' style={{marginLeft:'auto', minWidth:52, height:52, borderRadius:999, fontSize:'1.6rem', fontWeight:800, background:'#fff', color:'#1d4ed8', border:'none'}} onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: true, edit: false }))}>+</button>
+ </div>
+ <div className='livestock-filter-chips'>
+ <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('ALL')} style={{border:livestockRecordsFilter==='ALL'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('All','Tous','全部')} · {state.livestockRecords.length}</button>
+ <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('GOAT')} style={{border:livestockRecordsFilter==='GOAT'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Goats','Chèvres','山羊')} · {state.livestockRecords.filter(r => r.species === 'GOAT').length}</button>
+ <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('SHEEP')} style={{border:livestockRecordsFilter==='SHEEP'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Sheep','Moutons','绵羊')} · {state.livestockRecords.filter(r => r.species === 'SHEEP').length}</button>
+ <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('CATTLE')} style={{border:livestockRecordsFilter==='CATTLE'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Cattle','Bovins','牛')} · {state.livestockRecords.filter(r => r.species === 'CATTLE').length}</button>
+ <button type='button' className='btn' onClick={() => setLivestockRecordsFilter('POULTRY')} style={{border:livestockRecordsFilter==='POULTRY'?'2px solid #0f766e':'1px solid #cbd5e1'}}>{t('Poultry','Volailles','家禽')} · {state.livestockRecords.filter(r => r.species === 'POULTRY').length}</button>
+ </div>
+ <p style={{margin:'10px 0 0',fontSize:'.84rem',opacity:.88}}>Showing <strong>{livestockRecordsFiltered.length}</strong> records in <strong>{livestockRecordsFilter}</strong></p>
  </div>
 
  <article className='panel' style={{width:'100%', overflow:'hidden'}}>
