@@ -1704,6 +1704,7 @@ function AppInner() {
  setBillingOverview({ subscriptions: [], active_subscriptions: [], payments: [] })
  return
  }
+ await api.syncAccountBilling().catch(() => ({ synced: [], checked_count: 0 }))
  const [sub, overview] = await Promise.all([
  api.fetchLivestockRecordsSubscriptionMe().catch(() => ({ tier: 'free', status: 'FREE', record_limit: 25, can_create_records: true, subscription: null, plans: [] })),
  api.fetchAccountBillingOverview().catch(() => ({ subscriptions: [], active_subscriptions: [], payments: [] }))

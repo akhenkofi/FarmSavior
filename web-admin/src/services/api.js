@@ -211,6 +211,7 @@ export const fetchLivestockRecordsPlans = async () => (await api.get('/livestock
 export const fetchLivestockRecordsSubscriptionMe = async () => (await api.get('/livestock-records/subscription/me')).data
 export const checkoutLivestockRecordsPlan = async (payload) => (await api.post('/livestock-records/subscription/checkout', payload)).data
 export const verifyLivestockRecordsSubscription = async (reference) => (await api.get(`/livestock-records/subscription/verify/${reference}`)).data
+export const syncAccountBilling = async () => (await api.post('/account/billing-sync')).data
 export const fetchAccountBillingOverview = async () => (await api.get('/account/billing-overview')).data
 export const fetchUniversityPlans = async (product) => (await api.get(`/university/${product}/plans`)).data
 export const fetchUniversitySubscriptionMe = async (product) => (await api.get(`/university/${product}/subscription/me`)).data

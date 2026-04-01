@@ -1867,6 +1867,51 @@ def _subscription_product_from_reference(reference: Optional[str]) -> str:
     return 'subscription'
 
 
+def _sync_subscription_record(rec: SheepGoatSubscription, db: Session) -> dict:
+    product = _subscription_product_from_reference(rec.reference)
+    active_statuses = {'ACTIVE', 'TRIAL_ACTIVE'}
+    if str(rec.status or '').upper() in active_statuses:
+        return {'reference': rec.reference, 'product': product, 'status': rec.status, 'message': 'already active'}
+
+    paystack_secret = _paystack_secret_clean()
+    if not paystack_secret:
+        return {'reference': rec.reference, 'product': product, 'status': rec.status, 'message': 'payment provider not configured'}
+
+    try:
+        v = _paystack_transaction_verify(rec.reference)
+        data = (v or {}).get('data') or {}
+        provider_status = str(data.get('status', '')).lower()
+        amount_minor = int(data.get('amount', 0) or 0)
+        amount = float(amount_minor) / 100.0
+        currency = str(data.get('currency', '') or '').upper()
+        tx_ref = str(data.get('reference', '') or '')
+        if provider_status == 'success' and tx_ref == (rec.reference or '') and currency == str(rec.currency or '').upper() and amount >= float(rec.amount or 0):
+            rec.status = 'ACTIVE'
+            if not rec.started_at:
+                rec.started_at = datetime.utcnow()
+            if not rec.ends_at:
+                rec.ends_at = datetime.utcnow() + timedelta(days=30 if rec.billing_cycle == 'monthly' else 365)
+            db.commit()
+            db.refresh(rec)
+            return {'reference': rec.reference, 'product': product, 'status': rec.status, 'message': 'payment verified and subscription activated'}
+        return {'reference': rec.reference, 'product': product, 'status': rec.status, 'message': 'payment not verified yet', 'provider_status': provider_status}
+    except Exception as e:
+        return {'reference': rec.reference, 'product': product, 'status': rec.status, 'message': 'verification failed', 'error': str(e)}
+
+
+@router.post('/account/billing-sync')
+def account_billing_sync(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    user = _current_user_from_auth(authorization, db)
+    candidates = db.query(SheepGoatSubscription).filter(
+        SheepGoatSubscription.user_id == user.id,
+        SheepGoatSubscription.status.in_(['PENDING_PAYMENT', 'PENDING', 'PROCESSING'])
+    ).order_by(SheepGoatSubscription.created_at.desc(), SheepGoatSubscription.id.desc()).limit(50).all()
+    return {
+        'synced': [_sync_subscription_record(rec, db) for rec in candidates],
+        'checked_count': len(candidates)
+    }
+
+
 @router.get('/account/billing-overview')
 def account_billing_overview(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
     user = _current_user_from_auth(authorization, db)
@@ -2096,40 +2141,9 @@ def university_product_subscription_verify(product: str, reference: str, db: Ses
     if not rec:
         raise HTTPException(status_code=404, detail='subscription reference not found')
 
-    if rec.status == 'ACTIVE':
-        return {'message': 'already active', 'reference': reference, 'status': rec.status, 'tier': rec.plan_code, 'product': product}
-
-    paystack_secret = _paystack_secret_clean()
-    if not paystack_secret:
-        return {'message': 'payment provider not configured', 'reference': reference, 'status': rec.status, 'tier': 'free', 'product': product}
-
-    try:
-        req = UrlRequest(
-            f'https://api.paystack.co/transaction/verify/{reference}',
-            headers={'Authorization': f'Bearer {paystack_secret}'},
-            method='GET'
-        )
-        with urlopen(req, timeout=15) as resp:
-            v = json.loads(resp.read().decode('utf-8', errors='ignore'))
-
-        data = (v or {}).get('data') or {}
-        status = str(data.get('status', '')).lower()
-        amount_minor = int(data.get('amount', 0) or 0)
-        amount = float(amount_minor) / 100.0
-        currency = str(data.get('currency', '') or '').upper()
-        tx_ref = str(data.get('reference', '') or '')
-
-        if status == 'success' and tx_ref == reference and currency == (rec.currency or '').upper() and amount >= float(rec.amount or 0):
-            rec.status = 'ACTIVE'
-            rec.started_at = datetime.utcnow()
-            rec.ends_at = datetime.utcnow() + timedelta(days=30 if rec.billing_cycle == 'monthly' else 365)
-            db.commit()
-            db.refresh(rec)
-            return {'message': 'payment verified and subscription activated', 'reference': reference, 'status': rec.status, 'tier': rec.plan_code, 'product': product}
-
-        return {'message': 'payment not verified yet', 'reference': reference, 'status': rec.status, 'tier': 'free', 'product': product, 'provider_status': status}
-    except Exception as e:
-        return {'message': 'verification failed', 'reference': reference, 'status': rec.status, 'tier': 'free', 'product': product, 'error': str(e)}
+    result = _sync_subscription_record(rec, db)
+    tier = rec.plan_code if str(result.get('status') or '').upper() in {'ACTIVE', 'TRIAL_ACTIVE'} else 'free'
+    return {**result, 'tier': tier, 'product': product}
 
 
 @router.get('/weather/public-main')
@@ -3881,39 +3895,7 @@ def livestock_subscription_verify(reference: str, db: Session = Depends(get_db))
     rec = db.query(SheepGoatSubscription).filter(SheepGoatSubscription.reference == reference).first()
     if not rec:
         raise HTTPException(status_code=404, detail='subscription reference not found')
-
-    if rec.status == 'ACTIVE':
-        return {'message': 'already active', 'reference': reference, 'status': rec.status}
-
-    paystack_secret = _paystack_secret_clean()
-    if not paystack_secret:
-        return {'message': 'payment provider not configured', 'reference': reference, 'status': rec.status}
-
-    try:
-        req = UrlRequest(
-            f'https://api.paystack.co/transaction/verify/{reference}',
-            headers={'Authorization': f'Bearer {paystack_secret}'},
-            method='GET'
-        )
-        with urlopen(req, timeout=15) as resp:
-            v = json.loads(resp.read().decode('utf-8', errors='ignore'))
-
-        data = (v or {}).get('data') or {}
-        status = str(data.get('status', '')).lower()
-        amount_minor = int(data.get('amount', 0) or 0)
-        amount = float(amount_minor) / 100.0
-        currency = str(data.get('currency', '') or '').upper()
-        tx_ref = str(data.get('reference', '') or '')
-
-        if status == 'success' and tx_ref == reference and currency == (rec.currency or '').upper() and amount >= float(rec.amount or 0):
-            rec.status = 'ACTIVE'
-            db.commit()
-            db.refresh(rec)
-            return {'message': 'payment verified and subscription activated', 'reference': reference, 'status': rec.status}
-
-        return {'message': 'payment not verified yet', 'reference': reference, 'status': rec.status, 'provider_status': status}
-    except Exception as e:
-        return {'message': 'verification failed', 'reference': reference, 'status': rec.status, 'error': str(e)}
+    return _sync_subscription_record(rec, db)
 
 
 @router.post('/livestock-records/subscription/cancel/{reference}')
