@@ -1395,6 +1395,7 @@ function AppInner() {
  const [medicineChooserSearch, setMedicineChooserSearch] = useState('')
  const [famachaComposerOpen, setFamachaComposerOpen] = useState(false)
  const [ancestorTreeOpen, setAncestorTreeOpen] = useState(false)
+ const [ancestorPdfOpen, setAncestorPdfOpen] = useState(false)
  const [famachaDraft, setFamachaDraft] = useState({ famacha: '--', bodyScore: '', weight: '', notes: '' })
  const [customMedicineComposerOpen, setCustomMedicineComposerOpen] = useState(false)
  const [customMedicineName, setCustomMedicineName] = useState('')
@@ -4670,12 +4671,52 @@ function AppInner() {
 
 
 
+
+ {ancestorPdfOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ <div style={{background:'#0f172a', color:'#fff', padding:'14px 16px', display:'flex', alignItems:'center', gap:12}}>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setAncestorPdfOpen(false)}>‹</button>
+ <div>
+ <div style={{fontSize:'1.05rem', fontWeight:700}}>FarmSavior Animal Lineage Report</div>
+ <div style={{fontSize:'.82rem', opacity:.85}}>Printable pedigree report</div>
+ </div>
+ <button type='button' className='btn' style={{marginLeft:'auto', background:'#fff', color:'#0f172a', border:'none'}} onClick={() => window.print()}>Print / Save PDF</button>
+ </div>
+ <div style={{background:'#fff', padding:16}}>
+ <div className='row2' style={{gap:12}}>
+ <div className='panel' style={{padding:12, borderRadius:14, background:'#eff6ff', border:'1px solid #bfdbfe'}}>
+ <div className='helper-text'>Animal ID</div><strong>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</strong>
+ </div>
+ <div className='panel' style={{padding:12, borderRadius:14, background:'#f8fafc', border:'1px solid #e5e7eb'}}>
+ <div className='helper-text'>Species / Sex</div><strong>{selectedLivestockRecord.species || '--'} • {selectedLivestockRecord.animal_type || '--'}</strong>
+ </div>
+ </div>
+ <div className='row2' style={{gap:12, marginTop:12}}>
+ <div className='panel' style={{padding:12, borderRadius:14, background:'#f0fdf4', border:'1px solid #86efac'}}><div className='helper-text'>Breed</div><strong>{selectedLivestockRecord.breeding_type || '--'}</strong></div>
+ <div className='panel' style={{padding:12, borderRadius:14, background:'#fff7ed', border:'1px solid #fdba74'}}><div className='helper-text'>Breeder</div><strong>{selectedLivestockRecord.purchased_from || '--'}</strong></div>
+ </div>
+ <article className='panel' style={{marginTop:12, padding:16, borderRadius:16}}>
+ <div style={{fontWeight:700, marginBottom:12}}>Pedigree Overview</div>
+ <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:12}}>
+ <div style={{padding:12, border:'1px solid #e5e7eb', borderRadius:12}}><div className='helper-text'>Sire</div><strong>{selectedLivestockRecord.sire_id || 'Not chosen'}</strong></div>
+ <div style={{padding:12, border:'1px solid #e5e7eb', borderRadius:12}}><div className='helper-text'>Dam</div><strong>{selectedLivestockRecord.dam_id || 'Not chosen'}</strong></div>
+ <div style={{padding:12, border:'1px solid #e5e7eb', borderRadius:12}}><div className='helper-text'>Dam-Sire</div><strong>{selectedLivestockRecord.farm_id || 'Not chosen'}</strong></div>
+ <div style={{padding:12, border:'1px solid #e5e7eb', borderRadius:12}}><div className='helper-text'>DNA</div><strong>{selectedLivestockRecord.registration_number || 'Not tested'}</strong></div>
+ </div>
+ </article>
+ <article className='panel' style={{marginTop:12, padding:16, borderRadius:16}}>
+ <div style={{fontWeight:700, marginBottom:12}}>FarmSavior Summary</div>
+ <div style={{fontSize:'.94rem', color:'#475569', lineHeight:1.6}}>This report is designed to be clearer and more useful than a raw export. It gives farmers a cleaner lineage record, animal identity snapshot, and breeder context in a format that works for mobile viewing, printing, and PDF sharing.</div>
+ </article>
+ <div style={{marginTop:18, fontSize:'.8rem', color:'#94a3b8'}}>FarmSavior • Generated lineage report</div>
+ </div>
+ </article>}
+
  {ancestorTreeOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setAncestorTreeOpen(false)}>‹</button>
  <strong>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</strong>
  <div style={{fontWeight:700}}>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</div>
- <button type='button' className='btn' style={{marginLeft:'auto', background:'transparent', color:'#fff', border:'none'}}>Share PDF</button>
+ <button type='button' className='btn' style={{marginLeft:'auto', background:'transparent', color:'#fff', border:'none'}} onClick={() => setAncestorPdfOpen(true)}>Share PDF</button>
  </div>
  <div style={{background:'#6b7280', height:140}} />
  <div style={{background:'#f8fafc', minHeight:520, position:'relative', overflow:'hidden', backgroundImage:'linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)', backgroundSize:'16px 16px'}}>
