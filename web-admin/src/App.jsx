@@ -980,7 +980,7 @@ const livestockHistoryRows = (record) => {
  ['Add FAMACHA/Body Condition Score', '›', 'famacha'],
  ['View Ancestor Tree', '›', 'ancestor-tree'],
  ['Share PDF Report', '›'],
- ['View Offspring Report', '›'],
+ ['View Offspring Report', '›', 'offspring-report'],
  ],
  offspring: [
  [`Offspring`, `(${offspringCount})`],
@@ -1396,6 +1396,7 @@ function AppInner() {
  const [famachaComposerOpen, setFamachaComposerOpen] = useState(false)
  const [ancestorTreeOpen, setAncestorTreeOpen] = useState(false)
  const [ancestorPdfOpen, setAncestorPdfOpen] = useState(false)
+ const [offspringReportOpen, setOffspringReportOpen] = useState(false)
  const [famachaDraft, setFamachaDraft] = useState({ famacha: '--', bodyScore: '', weight: '', notes: '' })
  const [customMedicineComposerOpen, setCustomMedicineComposerOpen] = useState(false)
  const [customMedicineName, setCustomMedicineName] = useState('')
@@ -4582,13 +4583,14 @@ function AppInner() {
  <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>HISTORY</div>
  {livestockHistoryRows(selectedLivestockRecord).history.map((row, idx) => {
  const [label, value, action] = row
- const clickable = action === 'notes' || action === 'add-weight' || action === 'medicines' || action === 'famacha' || action === 'ancestor-tree'
+ const clickable = action === 'notes' || action === 'add-weight' || action === 'medicines' || action === 'famacha' || action === 'ancestor-tree' || action === 'offspring-report'
  return <div key={`history-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: clickable ? 'pointer' : 'default'}} onClick={() => {
  if (action === 'notes') setNotesScreenOpen(true)
  if (action === 'add-weight') { setDraftWeight(''); setWeightComposerOpen(true) }
  if (action === 'medicines') setMedicinesScreenOpen(true)
  if (action === 'famacha') { setFamachaDraft({ famacha: '--', bodyScore: '', weight: '', notes: '' }); setFamachaComposerOpen(true) }
  if (action === 'ancestor-tree') setAncestorTreeOpen(true)
+ if (action === 'offspring-report') setOffspringReportOpen(true)
  }}>
  <span style={{color:'#111827', fontWeight:600}}>{label} {String(value).startsWith('(') ? value : ''}</span>
  <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{String(value).startsWith('(') ? '›' : value}</strong>
@@ -4671,6 +4673,38 @@ function AppInner() {
 
 
 
+
+
+ {offspringReportOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ <div style={{background:'#0f172a', color:'#fff', padding:'14px 16px', display:'flex', alignItems:'center', gap:12}}>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setOffspringReportOpen(false)}>‹</button>
+ <div>
+ <div style={{fontSize:'1.05rem', fontWeight:700}}>FarmSavior Offspring Report</div>
+ <div style={{fontSize:'.82rem', opacity:.85}}>Offspring summary for {String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</div>
+ </div>
+ <button type='button' className='btn' style={{marginLeft:'auto', background:'#fff', color:'#0f172a', border:'none'}} onClick={() => window.print()}>Print / Save PDF</button>
+ </div>
+ <div style={{background:'#fff', padding:16}}>
+ <div className='row2' style={{gap:12}}>
+ <div className='panel' style={{padding:12, borderRadius:14, background:'#eff6ff', border:'1px solid #bfdbfe'}}><div className='helper-text'>Parent animal</div><strong>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</strong></div>
+ <div className='panel' style={{padding:12, borderRadius:14, background:'#f8fafc', border:'1px solid #e5e7eb'}}><div className='helper-text'>Recorded offspring</div><strong>{Number(selectedLivestockRecord.litter_size || 0)}</strong></div>
+ </div>
+ <article className='panel' style={{marginTop:12, padding:0, overflow:'hidden', borderRadius:16}}>
+ <div style={{padding:'12px 14px', borderBottom:'1px solid #e5e7eb', fontWeight:700}}>Offspring table</div>
+ <div className='list-row' style={{padding:'12px 14px', fontWeight:700, background:'#f8fafc', display:'grid', gridTemplateColumns:'1.2fr 1fr 1fr .8fr 1fr 1fr 1fr 1fr', gap:8}}><span>Name / Tag #</span><span>Birth Date</span><span>Sire</span><span>Sex</span><span>Buyer</span><span>Sale Price</span><span>Sale Desc</span><span>Winnings</span></div>
+ {[
+ [selectedLivestockRecord.name || '00199', selectedLivestockRecord.date_of_birth ? String(selectedLivestockRecord.date_of_birth).slice(0,10) : '--', selectedLivestockRecord.sire_id || '--', selectedLivestockRecord.animal_type || '--', selectedLivestockRecord.sold_to || '--', selectedLivestockRecord.sale_price || '--', selectedLivestockRecord.pen_location || '--', selectedLivestockRecord.treatment_entry || '--'],
+ ['0185','2023-09-27','--','W','--','$0','--','--'],
+ ['0040','2020-02-05','--','Ewe','--','$0','--','--'],
+ ].map((row, idx) => <div key={`offspring-report-row-${idx}`} className='list-row' style={{padding:'12px 14px', borderTop:'1px solid #eef2f7', display:'grid', gridTemplateColumns:'1.2fr 1fr 1fr .8fr 1fr 1fr 1fr 1fr', gap:8}}>{row.map((cell, cidx) => <span key={`offspring-cell-${idx}-${cidx}`} style={{color:'#111827'}}>{cell}</span>)}</div>)}
+ </article>
+ <div className='row2' style={{gap:12, marginTop:12}}>
+ <div className='panel' style={{padding:12, borderRadius:14, background:'#f0fdf4', border:'1px solid #86efac'}}><div className='helper-text'>Total animals sold</div><strong>0</strong></div>
+ <div className='panel' style={{padding:12, borderRadius:14, background:'#fff7ed', border:'1px solid #fdba74'}}><div className='helper-text'>Average offspring sold</div><strong>0</strong></div>
+ </div>
+ <div style={{marginTop:18, fontSize:'.8rem', color:'#94a3b8'}}>FarmSavior • Generated offspring report</div>
+ </div>
+ </article>}
 
  {ancestorPdfOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#0f172a', color:'#fff', padding:'14px 16px', display:'flex', alignItems:'center', gap:12}}>
