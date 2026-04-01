@@ -2195,11 +2195,15 @@ def list_device_tokens(db: Session = Depends(get_db)):
     return db.query(DeviceToken).order_by(DeviceToken.id.desc()).all()
 
 
+ADMIN_PHONE_ALLOWLIST = ['+233536761831', '+17026666690']
+
+
 def _is_admin_user(user: User) -> bool:
     role = user.role.value if hasattr(user.role, 'value') else str(user.role)
     if str(role).lower() != 'admin':
         return False
-    return _normalize_phone(getattr(user, 'phone', '')) in _phone_variants('+233536761831')
+    normalized_phone = _normalize_phone(getattr(user, 'phone', ''))
+    return any(normalized_phone in _phone_variants(phone) for phone in ADMIN_PHONE_ALLOWLIST)
 
 
 def _world_chat_store_path() -> Path:
