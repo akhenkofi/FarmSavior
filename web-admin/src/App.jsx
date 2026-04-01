@@ -1366,7 +1366,9 @@ function AppInner() {
  const [breederUploads, setBreederUploads] = useState({ photos: [], docs: [] })
  const [breederReportOpen, setBreederReportOpen] = useState(false)
  const [notesScreenOpen, setNotesScreenOpen] = useState(false)
+ const [notesComposerOpen, setNotesComposerOpen] = useState(false)
  const [notesSearch, setNotesSearch] = useState('')
+ const [draftNote, setDraftNote] = useState('')
  const [livestockRecordsFilter, setLivestockRecordsFilter] = useState('ALL')
  const [recordsSectionOpen, setRecordsSectionOpen] = useState({ create: false, edit: false, batch: false, details: false })
  const [batchMedicationForm, setBatchMedicationForm] = useState({ species:'ALL', animal_type:'ALL', health_status:'ALL', cull_keep_status:'ALL', minStars:'', pen_location:'', medication:'', dose:'', days:'' })
@@ -4623,12 +4625,30 @@ function AppInner() {
  </article>}
 
 
+
+ {notesComposerOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setNotesComposerOpen(false)}>Cancel</button>
+ <strong style={{margin:'0 auto'}}>Notes</strong>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => {
+ const cleaned = String(draftNote || '').trim()
+ if (!cleaned) return setNotesComposerOpen(false)
+ setSelectedLivestockRecord(prev => prev ? ({ ...prev, notes: cleaned }) : prev)
+ setNotesComposerOpen(false)
+ setNotesScreenOpen(true)
+ }}>Done</button>
+ </div>
+ <div style={{background:'#fff', minHeight:420}}>
+ <textarea autoFocus className='input' rows={14} placeholder='' value={draftNote} onChange={(e) => setDraftNote(e.target.value)} style={{width:'100%', minHeight:420, border:'none', borderRadius:0, padding:'16px', fontSize:'1rem', outline:'none', boxShadow:'none'}} />
+ </div>
+ </article>}
+
  {notesScreenOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setNotesScreenOpen(false)}>‹</button>
  <strong>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</strong>
  <div style={{fontWeight:700}}>Notes</div>
- <button type='button' className='btn' style={{marginLeft:'auto', background:'transparent', color:'#fff', border:'none', fontSize:'1.4rem'}} onClick={() => alert('Add Note flow next')}>+</button>
+ <button type='button' className='btn' style={{marginLeft:'auto', background:'transparent', color:'#fff', border:'none', fontSize:'1.4rem'}} onClick={() => { setDraftNote(''); setNotesComposerOpen(true) }}>+</button>
  </div>
  <div style={{padding:12, background:'#f8fafc'}}>
  <input className='input' placeholder='Search' value={notesSearch} onChange={(e) => setNotesSearch(e.target.value)} style={{background:'#1e3a8a', color:'#fff', border:'none', borderRadius:12}} />
