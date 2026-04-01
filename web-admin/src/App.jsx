@@ -1131,7 +1131,7 @@ function ProfessionalAssets({ product, progress, setProgress, trackKey, openModu
  <button className='btn' type='button' onClick={() => setProgress((s) => ({ ...s, completed: Array.from(new Set([...(s.completed || []), `${trackKey}:${openModule}`, `${product}:brief`])) }))}>Mark Brief Reviewed</button>
  </div>
  </article>
- <article className='panel' style={{marginTop:10}}>
+ <article className='panel' style={{marginTop:12, background:'linear-gradient(180deg,#ffffff 0%,#f8fafc 100%)'}}>
  <h4 style={{marginTop:0}}>📊 Professional Benchmark Scorecard</h4>
  <div className='list'>
  {(professionalOutcomeBenchmarks[product] || []).map((item) => <div className='list-row' key={item}><span>{item}</span><strong>Track weekly</strong></div>)}
@@ -2431,12 +2431,12 @@ function AppInner() {
 
  if (showPublicLanding) return <div className='authWrap'>
  <div className='authCard' style={{width:'min(1180px,98vw)'}}>
- <div className='panel' style={{background:'linear-gradient(120deg,#0b3b2e,#0e7490)', color:'#fff'}}>
+ <div className='panel' style={{background:'linear-gradient(135deg,#0f172a 0%,#0e7490 42%,#16a34a 100%)', color:'#fff', border:'1px solid rgba(255,255,255,.08)', boxShadow:'0 28px 70px rgba(15,23,42,.22)', overflow:'hidden', position:'relative'}}>
  <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:8}}>
  <img src='/assets/farmsavior-logo.jpg' alt='FarmSavior logo' style={{width:72,height:72,borderRadius:12,objectFit:'cover',border:'2px solid rgba(255,255,255,.3)'}} />
  <h2 style={{margin:0}}>{isZh ? 'FarmSavior 市场实时' : t('FarmSavior Marketplace Live','Marché FarmSavior en direct')}</h2>
  </div>
- <p style={{opacity:.95}}>{isZh ? '覆盖加纳、尼日利亚和布基纳法索的高需求产品与服务。可自由浏览；联系服务商或使用工具请注册/登录。' : t('High-demand products and services across Ghana, Nigeria, and Burkina Faso. Browse freely. To contact providers or use tools, sign up/sign in.','Produits et services à forte demande au Ghana, au Nigeria et au Burkina Faso. Parcourez librement. Pour contacter les fournisseurs ou utiliser les outils, inscrivez-vous/connectez-vous.')}</p>
+ <p style={{opacity:.95, fontSize:'1rem', lineHeight:1.6, maxWidth:760}}>{isZh ? '覆盖加纳、尼日利亚和布基纳法索的高需求产品与服务。可自由浏览；联系服务商或使用工具请注册/登录。' : t('High-demand products and services across Ghana, Nigeria, and Burkina Faso. Browse freely. To contact providers or use tools, sign up/sign in.','Produits et services à forte demande au Ghana, au Nigeria et au Burkina Faso. Parcourez librement. Pour contacter les fournisseurs ou utiliser les outils, inscrivez-vous/connectez-vous.')}</p>
  <div className='inlineForm' style={{background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.25)', marginBottom:8}}>
  <select className='input' value={uiCountry} onChange={(e)=>setUiCountry(e.target.value)}>
  <option value='GH'>Ghana</option><option value='NG'>Nigeria</option><option value='BF'>Burkina Faso</option>
@@ -2474,8 +2474,8 @@ function AppInner() {
  </div>
  </div>}
 
- <div className='three-col' style={{marginTop:10}}>
- <article className='panel' style={{minHeight: showHighDemandProducts ? 430 : 'auto'}}>
+ <div className='three-col' style={{marginTop:14, alignItems:'stretch'}}>
+ <article className='panel' style={{minHeight: showHighDemandProducts ? 430 : 'auto', background:'linear-gradient(180deg,#ffffff 0%,#f8fafc 100%)'}}>
  <div className='list-row' style={{marginBottom:8}}>
  <h3 style={{margin:0}}>{t('🔥 High Demand Products','🔥 Produits à forte demande','🔥 高需求产品')}</h3>
  <button className='btn' onClick={()=>setShowHighDemandProducts(v=>!v)}>{showHighDemandProducts ? t('Hide','Masquer') : t('Show','Afficher')}</button>
@@ -2491,7 +2491,7 @@ function AppInner() {
  </div>}
  </article>
 
- <article className='panel' style={{minHeight: showHighDemandServices ? 430 : 'auto'}}>
+ <article className='panel' style={{minHeight: showHighDemandServices ? 430 : 'auto', background:'linear-gradient(180deg,#ffffff 0%,#f8fafc 100%)'}}>
  <div className='list-row' style={{marginBottom:8}}>
  <h3 style={{margin:0}}>{t('🚚 High Demand Services','🚚 Services à forte demande','🚚 高需求服务')}</h3>
  <button className='btn' onClick={()=>setShowHighDemandServices(v=>!v)}>{showHighDemandServices ? t('Hide','Masquer') : t('Show','Afficher')}</button>
@@ -2507,10 +2507,11 @@ function AppInner() {
  </div>}
  </article>
 
- <article className='panel'>
+ <article className='panel' style={{background:'linear-gradient(180deg,#ffffff 0%,#f8fafc 100%)'}}>
  <div className='section-header'>
  <div>
  <h3 style={{margin:0}}>{t('🧠 Popular Actions','🧠 Actions populaires','🧠 热门操作')}</h3>
+ <div className='helper-text' style={{marginTop:4}}>Fast entry points for the most important workflows in FarmSavior.</div>
  </div>
  <button type='button' className='btn' onClick={() => setPopularActionsOpen(v => !v)}>{popularActionsOpen ? t('Hide','Masquer','隐藏') : t('Show','Afficher','显示')}</button>
  </div>
@@ -2876,7 +2877,7 @@ function AppInner() {
  <p style={{fontSize:'.82rem',color:'#64748b',marginTop:4}}>{t('Pricing auto-displays in your selected country currency. Settlement can route to Ghana Mobile Money or US bank account once payout details are configured.','Les prix s’affichent automatiquement dans la devise du pays sélectionné. Le règlement peut être acheminé vers Mobile Money Ghana ou un compte bancaire US une fois les détails de paiement configurés.','价格会按你选择的国家货币自动显示。配置收款后，可结算到加纳移动支付或美国银行账户。')}</p>
  <p style={{fontSize:'.85rem',color:'#0f766e',marginTop:6,fontWeight:700}}>Free version allows up to 25 animals total. No photos allowed. No documents allowed.</p>
  <h4 style={{margin:'8px 0'}}>{t('Select Your Subscription Plan','Sélectionnez votre plan d’abonnement','选择你的订阅方案')}</h4>
- <div className='panel' style={{marginBottom:10,padding:10,background:livestockSubscription?.tier==='premium'?'#ecfeff':'#f8fafc',border:'1px solid #cbd5e1'}}>
+ <div className='panel' style={{marginBottom:12,padding:12,background:livestockSubscription?.tier==='premium'?'linear-gradient(180deg,#ecfeff 0%,#f0fdfa 100%)':'linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%)',border:'1px solid #cbd5e1', boxShadow:'0 10px 30px rgba(15,23,42,.05)'}}>
  <strong>Current livestock tier:</strong> {livestockSubscription?.tier==='premium' ? 'PREMIUM' : 'FREE'} • {livestockSubscription?.tier==='premium' ? 'Unlimited animals' : 'Limit 25 animals'}{livestockSubscription?.subscription?.status ? ` • ${livestockSubscription.subscription.status}` : ''}
  </div>
  <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
@@ -2890,10 +2891,10 @@ function AppInner() {
  {publicLivestockPlans
  .filter((p, i) => (p.plan_code || p.name || `plan-${i}`) === expandedLivestockPlan)
  .map((p, i) => (
- <div className='panel' key={`plan-${i}`} style={{padding:10}}>
- <h4 style={{marginTop:0}}>{displayPlanName(p.name)}</h4>
- <div className='list-row'><span>{t('Monthly','Mensuel','月付')}</span><strong>{formatLocalPrice(p.monthly_usd)}</strong></div>
- <div className='list-row'><span>{t('Yearly','Annuel','年付')}</span><strong>{formatLocalPrice(p.yearly_usd)}</strong></div>
+ <div className='panel' key={`plan-${i}`} style={{padding:14, background:'linear-gradient(180deg,#ffffff 0%,#f8fafc 100%)', boxShadow:'0 16px 40px rgba(15,23,42,.08)'}}>
+ <h4 style={{marginTop:0, fontSize:'1.05rem'}}>{displayPlanName(p.name)}</h4><div className='helper-text' style={{marginBottom:8}}>{p.plan_code === 'free' ? 'Essential entry plan for small holders.' : 'Unlimited premium access for serious operators.'}</div>
+ <div className='list-row'><span>{t('Monthly','Mensuel','月付')}</span><strong style={{fontSize:'1.02rem'}}>{formatLocalPrice(p.monthly_usd)}</strong></div>
+ <div className='list-row'><span>{t('Yearly','Annuel','年付')}</span><strong style={{fontSize:'1.02rem'}}>{formatLocalPrice(p.yearly_usd)}</strong></div>
  <div className='list'>
  <div className='list-row'><span>{p.record_limit ? `Up to ${p.record_limit} animals total` : 'Unlimited animals'}</span></div>
  {(p.features || []).map((f, j) => <div className='list-row' key={`pf-${i}-${j}`}><span>{displayFeature(f)}</span></div>)}
