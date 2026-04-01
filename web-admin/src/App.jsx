@@ -945,6 +945,48 @@ const livestockBreedOptions = {
 const livestockRaisedByDamOptions = ['Yes', 'No', 'Unknown']
 const livestockDnaOptions = ['Not tested', 'Parentage verified', 'Genomics available']
 
+
+const buildOffspringDraftFromParent = (parent) => {
+ if (!parent) return null
+ const species = String(parent.species || 'SHEEP').toUpperCase()
+ const childType = species === 'GOAT' ? 'DOE' : (species === 'CATTLE' ? 'HEIFER' : (species === 'POULTRY' ? 'CHICK' : 'EWE'))
+ const parentType = String(parent.animal_type || '').toUpperCase()
+ const isMaleParent = ['RAM','BUCK','BULL','COCKEREL','ROOSTER'].includes(parentType)
+ return {
+  ownership: parent.ownership || 'OWNED',
+  species,
+  animal_type: childType,
+  name: '',
+  ear_tag: '',
+  farm_id: '',
+  registration_number: '',
+  date_of_birth: '',
+  acquisition_date: '',
+  purchased_from: parent.purchased_from || '',
+  purchased_from_type: 'BREEDER',
+  purchase_price: '',
+  currency: parent.currency || 'GHS',
+  stars: '0',
+  initial_weight_kg: '',
+  sire_id: isMaleParent ? (parent.id || parent.name || '') : (parent.sire_id || ''),
+  dam_id: isMaleParent ? (parent.dam_id || '') : (parent.id || parent.name || ''),
+  litter_size: '1',
+  breeding_type: parent.breeding_type || '',
+  health_status: parent.health_status || '',
+  pen_location: parent.pen_location || '',
+  castrated: false,
+  cull_keep_status: '',
+  cull_reason: '',
+  sale_date: '',
+  sale_price: '',
+  sold_to: '',
+  died_date: '',
+  treatment_entry: '',
+  notes: parent.id ? `Offspring record linked to parent ${parent.id}` : 'Offspring record linked to current parent',
+  user_id: parent.user_id || '',
+ }
+}
+
 const livestockMedicineOptions = {
  SHEEP: {
   species: ['Albenor 2.5% suspension - Albendazole dewormer', 'PPR vax', 'Tsetsefly Shot', 'Vitamin And Antibiotic & Flea Treatment'],
@@ -4602,12 +4644,19 @@ function AppInner() {
  </div>
  })}
  <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>OFFSPRING</div>
- {livestockHistoryRows(selectedLivestockRecord).offspring.map(([label, value], idx) => (
- <div key={`offspring-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}>
+ {livestockHistoryRows(selectedOffspringRecord || selectedLivestockRecord).offspring.map(([label, value], idx) => {
+ const action = label === 'Add Lamb'
+ return <div key={`offspring-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: action ? 'pointer' : 'default'}} onClick={() => {
+ if (!action) return
+ const parent = selectedOffspringRecord || selectedLivestockRecord
+ const draft = buildOffspringDraftFromParent(parent)
+ if (draft) setLivestockRecordForm(draft)
+ setRecordsSectionOpen(prev => ({ ...prev, create: true, edit: false, details: false }))
+ }}>
  <span style={{color:'#111827', fontWeight:600}}>{label} {String(value).startsWith('(') ? value : ''}</span>
  <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{String(value).startsWith('(') ? '›' : value}</strong>
  </div>
- ))}
+ })}
  <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>MARKS</div>
  {livestockHistoryRows(selectedLivestockRecord).marks.map(([label, value], idx) => (
  <div key={`marks-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}>
