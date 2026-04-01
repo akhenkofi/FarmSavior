@@ -945,6 +945,31 @@ const livestockBreedOptions = {
 const livestockRaisedByDamOptions = ['Yes', 'No', 'Unknown']
 const livestockDnaOptions = ['Not tested', 'Parentage verified', 'Genomics available']
 
+
+const livestockHistoryRows = (record) => {
+ if (!record) return []
+ const notesCount = record.notes ? 1 : 0
+ const medsCount = record.treatment_entry ? 1 : 0
+ const offspringCount = Number(record.litter_size || 0)
+ return {
+ history: [
+ ['Notes', `(${notesCount})`],
+ ['Add Note', '›'],
+ ['Add Weight', '›'],
+ ['Medicines', `(${medsCount})`],
+ ['Add Medicine', '›'],
+ ['Add FAMACHA/Body Condition Score', '›'],
+ ['View Ancestor Tree', '›'],
+ ['Share PDF Report', '›'],
+ ['View Offspring Report', '›'],
+ ],
+ offspring: [
+ [`Offspring`, `(${offspringCount})`],
+ ['Add Lamb', '›'],
+ ]
+ }
+}
+
 const livestockDetailRows = (record) => {
  if (!record) return []
  return [
@@ -4459,6 +4484,20 @@ function AppInner() {
  <div key={`detail-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}>
  <span style={{color:'#1e3a8a', fontWeight:600}}>{label}</span>
  <strong style={{marginLeft:'auto', color:'#111827', textAlign:'right'}}>{value == null || value === '' ? '--' : String(value)}</strong>
+ </div>
+ ))}
+ <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>HISTORY</div>
+ {livestockHistoryRows(selectedLivestockRecord).history.map(([label, value], idx) => (
+ <div key={`history-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}>
+ <span style={{color:'#111827', fontWeight:600}}>{label} {String(value).startsWith('(') ? value : ''}</span>
+ <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{String(value).startsWith('(') ? '›' : value}</strong>
+ </div>
+ ))}
+ <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>OFFSPRING</div>
+ {livestockHistoryRows(selectedLivestockRecord).offspring.map(([label, value], idx) => (
+ <div key={`offspring-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}>
+ <span style={{color:'#111827', fontWeight:600}}>{label} {String(value).startsWith('(') ? value : ''}</span>
+ <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{String(value).startsWith('(') ? '›' : value}</strong>
  </div>
  ))}
  </div>}
