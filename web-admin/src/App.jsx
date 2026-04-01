@@ -2448,7 +2448,7 @@ function AppInner() {
  finally { setAuthLoading(false) }
  }}>
  <input className='input' name='full_name' autoComplete='name' placeholder='Full name' value={signup.full_name} onChange={e => setSignup({ ...signup, full_name: e.target.value })} onInput={e => setSignup({ ...signup, full_name: e.target.value })} required />
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <button type='button' className={`btn ${signup.signup_method === 'phone' ? 'btn-dark' : ''}`} onClick={() => setSignup({ ...signup, signup_method: 'phone' })}>Phone OTP</button>
  <button type='button' className={`btn ${signup.signup_method === 'email' ? 'btn-dark' : ''}`} onClick={() => setSignup({ ...signup, signup_method: 'email' })}>Email OTP</button>
  </div>
@@ -2456,7 +2456,7 @@ function AppInner() {
  ? <input className='input' name='phone' autoComplete='tel' placeholder='Phone' value={signup.phone} onChange={e => setSignup({ ...signup, phone: e.target.value })} onInput={e => setSignup({ ...signup, phone: e.target.value })} required />
  : <input className='input' name='email' autoComplete='email' type='email' placeholder='Email' value={signup.email} onChange={e => setSignup({ ...signup, email: e.target.value })} onInput={e => setSignup({ ...signup, email: e.target.value })} required />}
  <div style={{fontSize:'.76rem', color:'#64748b'}}>{signup.signup_method === 'email' ? 'OTP will be sent to the email address you enter.' : 'OTP will be sent to the phone number you enter.'}</div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' name='country' autoComplete='country-name' placeholder='Country (any code or name, e.g. US, KE, Brazil)' value={signup.country} onChange={e => setSignup({ ...signup, country: e.target.value })} onInput={e => setSignup({ ...signup, country: e.target.value })} required />
  <input className='input' name='region' autoComplete='address-level1' placeholder='Region' value={signup.region} onChange={e => setSignup({ ...signup, region: e.target.value })} onInput={e => setSignup({ ...signup, region: e.target.value })} required />
  </div>
@@ -3194,7 +3194,7 @@ function AppInner() {
  <button className='btn btn-dark' onClick={async () => { await api.analyzeAllVerifications(); await load(); }}>AI Analyze & Decide All</button>
  </div>
  <DataTable columns={['id_verification_id','full_name','phone','country','id_type','status','ai_score','ai_reason']} rows={state.verificationApps} filterKey='full_name' />
- <div className='list' style={{marginTop:12}}>{state.verificationApps.slice(0, 12).map((app) => <div key={`verify-preview-${app.id_verification_id}`} className='panel' style={{padding:12}}><div style={{fontWeight:700, marginBottom:8}}>{app.full_name} — {verificationStatusLabel(app.status)}{app.status === 'APPROVED' ? ' 🔵' : ''}</div><div className='row2'>{app.id_front_photo_view_url ? <a className='btn' href={api.withAuthToken(app.id_front_photo_view_url)} target='_blank' rel='noreferrer'>View ID Front</a> : <span className='helper-text'>No front image</span>}{app.id_back_photo_view_url ? <a className='btn' href={api.withAuthToken(app.id_back_photo_view_url)} target='_blank' rel='noreferrer'>View ID Back</a> : <span className='helper-text'>No back image</span>}</div></div>)}</div>
+ <div className='list' style={{marginTop:12}}>{state.verificationApps.slice(0, 12).map((app) => <div key={`verify-preview-${app.id_verification_id}`} className='panel' style={{padding:12}}><div style={{fontWeight:700, marginBottom:8}}>{app.full_name} — {verificationStatusLabel(app.status)}{app.status === 'APPROVED' ? ' 🔵' : ''}</div><div className='row2' style={{gap:10}}>{app.id_front_photo_view_url ? <a className='btn' href={api.withAuthToken(app.id_front_photo_view_url)} target='_blank' rel='noreferrer'>View ID Front</a> : <span className='helper-text'>No front image</span>}{app.id_back_photo_view_url ? <a className='btn' href={api.withAuthToken(app.id_back_photo_view_url)} target='_blank' rel='noreferrer'>View ID Back</a> : <span className='helper-text'>No back image</span>}</div></div>)}</div>
  <div className='inlineForm'>
  <input id='verifyAppId' className='input' placeholder='Application ID' />
  <button className='btn btn-dark' onClick={async ()=>{ const id=Number(document.getElementById('verifyAppId').value); if(id){ await api.analyzeVerification(id); await load(); }}}>Analyze One</button>
@@ -3231,11 +3231,11 @@ function AppInner() {
  await load();
  setProductsView('list')
  }}>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' placeholder='Product name' value={cropForm.crop_name} onChange={e => setCropForm({ ...cropForm, crop_name: e.target.value })} required />
  <input className='input' placeholder='Location' value={cropForm.location} onChange={e => setCropForm({ ...cropForm, location: e.target.value })} />
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' placeholder='Qty kg' value={cropForm.quantity_kg} onChange={e => setCropForm({ ...cropForm, quantity_kg: e.target.value })} required />
  <input className='input' placeholder='Unit price' value={cropForm.unit_price} onChange={e => setCropForm({ ...cropForm, unit_price: e.target.value })} required />
  </div>
@@ -3251,11 +3251,11 @@ function AppInner() {
  await load();
  setProductsView('list')
  }}>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' placeholder='Listing ID' value={cropEdit.id} onChange={e => setCropEdit({ ...cropEdit, id: e.target.value })} required />
  <input className='input' placeholder='Product name' value={cropEdit.crop_name} onChange={e => setCropEdit({ ...cropEdit, crop_name: e.target.value })} required />
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' placeholder='Qty kg' value={cropEdit.quantity_kg} onChange={e => setCropEdit({ ...cropEdit, quantity_kg: e.target.value })} required />
  <input className='input' placeholder='Unit price' value={cropEdit.unit_price} onChange={e => setCropEdit({ ...cropEdit, unit_price: e.target.value })} required />
  </div>
@@ -3315,11 +3315,11 @@ function AppInner() {
  await load();
  setLivestockView('list')
  }}>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' placeholder='Livestock type' value={livestockForm.livestock_type} onChange={e => setLivestockForm({ ...livestockForm, livestock_type: e.target.value })} required />
  <input className='input' placeholder='Location' value={livestockForm.location} onChange={e => setLivestockForm({ ...livestockForm, location: e.target.value })} />
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' placeholder='Quantity' value={livestockForm.quantity} onChange={e => setLivestockForm({ ...livestockForm, quantity: e.target.value })} required />
  <input className='input' placeholder='Unit price' value={livestockForm.unit_price} onChange={e => setLivestockForm({ ...livestockForm, unit_price: e.target.value })} required />
  </div>
@@ -3335,11 +3335,11 @@ function AppInner() {
  await load();
  setLivestockView('list')
  }}>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' placeholder='Listing ID' value={livestockEdit.id} onChange={e => setLivestockEdit({ ...livestockEdit, id: e.target.value })} required />
  <input className='input' placeholder='Type' value={livestockEdit.livestock_type} onChange={e => setLivestockEdit({ ...livestockEdit, livestock_type: e.target.value })} required />
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' placeholder='Quantity' value={livestockEdit.quantity} onChange={e => setLivestockEdit({ ...livestockEdit, quantity: e.target.value })} required />
  <input className='input' placeholder='Unit price' value={livestockEdit.unit_price} onChange={e => setLivestockEdit({ ...livestockEdit, unit_price: e.target.value })} required />
  </div>
@@ -3980,7 +3980,7 @@ function AppInner() {
  </div>
  <button type='button' className='btn' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: !prev.create, edit: false }))}>{recordsSectionOpen.create ? 'Hide' : 'Open'}</button>
  </div>
- {recordsSectionOpen.create && <form className='list' style={{gap:12}} onSubmit={async e => {
+ {recordsSectionOpen.create && <form className='list' style={{gap:10, maxWidth:560, margin:'0 auto'}} onSubmit={async e => {
  e.preventDefault()
  try {
  const { treatment_entry, ...createPayload } = livestockRecordForm
@@ -4005,31 +4005,31 @@ function AppInner() {
  alert(`Create failed: ${errMsg(err)}`)
  }
  }}>
- <div className='panel' style={{padding:'10px 12px', background:'#eff6ff', border:'1px solid #bfdbfe'}}>
+ <div className='panel' style={{padding:'10px 12px', background:'#ffffff', border:'1px solid #dbeafe', borderRadius:16, boxShadow:'0 8px 24px rgba(15,23,42,.06)'}}>
  <div className='list-row' style={{alignItems:'center', gap:12}}>
- <button type='button' className='btn' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: false }))}>Cancel</button>
+ <button type='button' className='btn' style={{borderRadius:999}} onClick={() => setRecordsSectionOpen(prev => ({ ...prev, create: false }))}>Cancel</button>
  <strong style={{fontSize:'1.05rem', marginLeft:'auto', marginRight:'auto'}}>{`Add ${String(livestockRecordForm.species || 'Record').charAt(0)}${String(livestockRecordForm.species || 'Record').slice(1).toLowerCase()}`}</strong>
- <button type='submit' className='btn btn-dark'>Done</button>
+ <button type='submit' className='btn btn-dark' style={{borderRadius:999}}>Done</button>
  </div>
  </div>
- <div className='panel' style={{padding:12, background:'#f8fafc', border:'1px solid #e2e8f0'}}>
+ <div className='panel' style={{padding:12, background:'#ffffff', border:'1px solid #e2e8f0', borderRadius:16, boxShadow:'0 6px 18px rgba(15,23,42,.04)'}}>
  <div className='helper-text' style={{fontWeight:700, color:'#1e3a8a', marginBottom:6}}>Quick identity and ownership</div>
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Ownership</span>
+ <span className='helper-text' style={{fontWeight:700, color:'#334155'}}>Ownership</span>
  <select className='input' value={livestockRecordForm.ownership} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, ownership: e.target.value })}><option value='OWNED'>Owned by me</option><option value='THIRD_PARTY'>Owned by someone else</option></select>
  </label>
  <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>Animal type</span>
+ <span className='helper-text' style={{fontWeight:700, color:'#334155'}}>Animal type</span>
  <select className='input' value={livestockRecordForm.species} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, species: e.target.value, animal_type: e.target.value === 'GOAT' ? 'DOE' : (e.target.value === 'CATTLE' ? 'COW' : (e.target.value === 'POULTRY' ? 'LAYER_HEN' : 'EWE')) })}><option value='SHEEP'>Sheep</option><option value='GOAT'>Goat</option><option value='CATTLE'>Cattle</option><option value='POULTRY'>Poultry</option></select>
  </label>
  </div>
  <label style={{display:'grid', gap:4}}>
- <span className='helper-text'>{livestockRecordForm.species === 'POULTRY' ? 'Sex / category' : 'Sex'}</span>
+ <span className='helper-text' style={{fontWeight:700, color:'#334155'}}>{livestockRecordForm.species === 'POULTRY' ? 'Sex / category' : 'Sex'}</span>
  <select className='input' value={livestockRecordForm.animal_type} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, animal_type: e.target.value })}>{livestockRecordForm.species === 'GOAT' ? <><option value='DOE'>Doe</option><option value='BUCK'>Buck</option></> : (livestockRecordForm.species === 'CATTLE' ? <><option value='COW'>Cow</option><option value='BULL'>Bull</option><option value='HEIFER'>Heifer</option><option value='STEER'>Steer</option></> : (livestockRecordForm.species === 'POULTRY' ? <><option value='LAYER_HEN'>Layer hen</option><option value='BROILER'>Broiler</option><option value='PULLET'>Pullet</option><option value='COCKEREL'>Cockerel</option><option value='CHICK'>Chick</option><option value='BREEDER'>Breeder</option></> : <><option value='EWE'>Ewe</option><option value='RAM'>Ram</option></>))}</select>
  </label>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <label style={{display:'grid', gap:4}}>
  <span className='helper-text'>Reg. Name</span>
  <input className='input' placeholder='Registration name' value={livestockRecordForm.name} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, name: e.target.value })} />
@@ -4042,7 +4042,7 @@ function AppInner() {
  </select>
  </label>
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <label style={{display:'grid', gap:4}}>
  <span className='helper-text'>Breeder</span>
  <input className='input' list='livestock-purchase-sources-create' placeholder='Choose or enter breeder' value={livestockRecordForm.purchased_from} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, purchased_from: e.target.value, purchased_from_type: 'BREEDER' })} />
@@ -4055,7 +4055,7 @@ function AppInner() {
  </label>
  </div>
  <datalist id='livestock-purchase-sources-create'>{state.livestockPurchaseSources.filter(s => !s.species || s.species === 'ALL' || s.species === livestockRecordForm.species).map(s => <option key={`create-source-${s.id}-${s.name}`} value={s.name}>{s.source_type || ''}</option>)}</datalist>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <label style={{display:'grid', gap:4}}>
  <span className='helper-text'>Born</span>
  <input className='input' type='date' value={livestockRecordForm.date_of_birth} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, date_of_birth: e.target.value })} />
@@ -4065,7 +4065,7 @@ function AppInner() {
  <input className='input' type='date' value={livestockRecordForm.acquisition_date} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, acquisition_date: e.target.value })} />
  </label>
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <label style={{display:'grid', gap:4}}>
  <span className='helper-text'>Purchase Cost</span>
  <input className='input' type='number' step='0.01' placeholder='0.00' value={livestockRecordForm.purchase_price} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, purchase_price: e.target.value })} />
@@ -4075,7 +4075,7 @@ function AppInner() {
  <input className='input' placeholder='Market / private treaty / gifted' value={livestockRecordForm.notes} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, notes: e.target.value })} />
  </label>
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <label style={{display:'grid', gap:4}}>
  <span className='helper-text'>Sire</span>
  <input className='input' placeholder='Choose or enter sire' value={livestockRecordForm.sire_id} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, sire_id: e.target.value })} />
@@ -4085,7 +4085,7 @@ function AppInner() {
  <input className='input' placeholder='Choose or enter dam' value={livestockRecordForm.dam_id} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, dam_id: e.target.value })} />
  </label>
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <label style={{display:'grid', gap:4}}>
  <span className='helper-text'>Dam-Sire</span>
  <input className='input' placeholder='Dam sire / maternal grandsire' value={livestockRecordForm.farm_id} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, farm_id: e.target.value })} />
@@ -4098,7 +4098,7 @@ function AppInner() {
  </select>
  </label>
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <label style={{display:'grid', gap:4}}>
  <span className='helper-text'>Litter Size</span>
  <input className='input' type='number' min='0' placeholder='0' value={livestockRecordForm.litter_size} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, litter_size: e.target.value })} />
@@ -4111,7 +4111,7 @@ function AppInner() {
  </select>
  </label>
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <label style={{display:'grid', gap:4}}>
  <span className='helper-text'>Initial Weight</span>
  <input className='input' type='number' step='0.01' placeholder='kg' value={livestockRecordForm.initial_weight_kg} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, initial_weight_kg: e.target.value })} />
@@ -4136,7 +4136,7 @@ function AppInner() {
  <span className='helper-text'>Initial Notes</span>
  <textarea className='input' rows={3} placeholder='Notes' value={livestockRecordForm.notes} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, notes: e.target.value })} />
  </label>
- <div className='panel' style={{padding:12, background:'#f8fafc', border:'1px solid #e2e8f0'}}>
+ <div className='panel' style={{padding:12, background:'#ffffff', border:'1px solid #e2e8f0', borderRadius:16, boxShadow:'0 6px 18px rgba(15,23,42,.04)'}}>
  <div className='helper-text' style={{fontWeight:700, color:'#475569', marginBottom:8}}>Breeding Type</div>
  <div className='inlineForm' style={{gap:8, flexWrap:'wrap'}}>
  {['Natural','AI Fresh','AI Frozen','ET'].map(opt => (
@@ -4144,7 +4144,7 @@ function AppInner() {
  ))}
  </div>
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <label style={{display:'grid', gap:4}}>
  <span className='helper-text'>Castrated</span>
  <select className='input' value={livestockRecordForm.castrated ? 'Yes' : 'No'} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, castrated: e.target.value === 'Yes' })}><option>No</option><option>Yes</option></select>
@@ -4154,7 +4154,7 @@ function AppInner() {
  <input className='input' type='date' value={livestockRecordForm.sale_date} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, sale_date: e.target.value })} />
  </label>
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <label style={{display:'grid', gap:4}}>
  <span className='helper-text'>Sold To</span>
  <input className='input' placeholder='Choose' value={livestockRecordForm.sold_to} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, sold_to: e.target.value })} />
@@ -4164,7 +4164,7 @@ function AppInner() {
  <input className='input' type='number' step='0.01' placeholder='$ Amount' value={livestockRecordForm.sale_price} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, sale_price: e.target.value })} />
  </label>
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <label style={{display:'grid', gap:4}}>
  <span className='helper-text'>Sale Desc</span>
  <input className='input' placeholder='Sale Desc (Optional)' value={livestockRecordForm.pen_location} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, pen_location: e.target.value })} />
@@ -4174,7 +4174,7 @@ function AppInner() {
  <input className='input' placeholder='Winnings' value={livestockRecordForm.treatment_entry} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, treatment_entry: e.target.value })} />
  </label>
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <label style={{display:'grid', gap:4}}>
  <span className='helper-text'>Died</span>
  <input className='input' type='date' value={livestockRecordForm.died_date} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, died_date: e.target.value })} />
@@ -4184,14 +4184,14 @@ function AppInner() {
  <input className='input' placeholder='Choose' value={livestockRecordForm.cull_reason} onChange={e => setLivestockRecordForm({ ...livestockRecordForm, cull_reason: e.target.value })} />
  </label>
  </div>
- <div className='panel' style={{padding:12, background:'#f8fafc', border:'1px solid #e2e8f0'}}>
+ <div className='panel' style={{padding:12, background:'#ffffff', border:'1px solid #e2e8f0', borderRadius:16, boxShadow:'0 6px 18px rgba(15,23,42,.04)'}}>
  <div className='helper-text' style={{fontWeight:700, color:'#475569', marginBottom:8}}>Should Be Culled</div>
  <div className='inlineForm' style={{gap:8}}>
  <button type='button' className={`btn ${livestockRecordForm.cull_keep_status==='CULL' ? 'btn-dark' : ''}`} onClick={() => setLivestockRecordForm({ ...livestockRecordForm, cull_keep_status: 'CULL' })}>Cull</button>
  <button type='button' className={`btn ${livestockRecordForm.cull_keep_status==='KEEP' ? 'btn-dark' : ''}`} onClick={() => setLivestockRecordForm({ ...livestockRecordForm, cull_keep_status: 'KEEP' })}>Keep</button>
  </div>
  </div>
- <button className='btn btn-dark'>Create Record</button>
+ <button className='btn btn-dark' style={{borderRadius:999, padding:'12px 18px'}}>Create Record</button>
  </form>}
  </article>
 
@@ -4232,19 +4232,19 @@ function AppInner() {
  }
  }}>
  <input className='input' placeholder='Record ID' value={livestockRecordEdit.id} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, id: e.target.value })} required />
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <select className='input' value={livestockRecordEdit.species} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, species: e.target.value, animal_type: e.target.value === 'GOAT' ? 'DOE' : (e.target.value === 'CATTLE' ? 'COW' : (e.target.value === 'POULTRY' ? 'LAYER_HEN' : 'EWE')) })}><option value='SHEEP'>SHEEP</option><option value='GOAT'>GOAT</option><option value='CATTLE'>CATTLE</option><option value='POULTRY'>POULTRY</option></select>
  <select className='input' value={livestockRecordEdit.animal_type} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, animal_type: e.target.value })}>{livestockRecordEdit.species === 'GOAT' ? <><option value='DOE'>DOE</option><option value='BUCK'>BUCK</option></> : (livestockRecordEdit.species === 'CATTLE' ? <><option value='COW'>COW</option><option value='BULL'>BULL</option><option value='HEIFER'>HEIFER</option><option value='STEER'>STEER</option></> : (livestockRecordEdit.species === 'POULTRY' ? <><option value='LAYER_HEN'>LAYER_HEN</option><option value='BROILER'>BROILER</option><option value='PULLET'>PULLET</option><option value='COCKEREL'>COCKEREL</option><option value='CHICK'>CHICK</option><option value='BREEDER'>BREEDER</option></> : <><option value='EWE'>EWE</option><option value='RAM'>RAM</option></>))}</select>
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' placeholder='Name' value={livestockRecordEdit.name} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, name: e.target.value })} />
  <input className='input' placeholder='Ear tag' value={livestockRecordEdit.ear_tag} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, ear_tag: e.target.value })} />
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' placeholder='Farm ID' value={livestockRecordEdit.farm_id} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, farm_id: e.target.value })} />
  <input className='input' placeholder='Registration number' value={livestockRecordEdit.registration_number} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, registration_number: e.target.value })} />
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <label style={{display:'grid', gap:4}}>
  <span className='helper-text'>Date of birth</span>
  <input className='input' type='date' value={livestockRecordEdit.date_of_birth ? String(livestockRecordEdit.date_of_birth).slice(0,10) : ''} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, date_of_birth: e.target.value })} />
@@ -4254,12 +4254,12 @@ function AppInner() {
  <input className='input' type='date' value={livestockRecordEdit.acquisition_date ? String(livestockRecordEdit.acquisition_date).slice(0,10) : ''} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, acquisition_date: e.target.value })} />
  </label>
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' list='livestock-purchase-sources-edit' placeholder='Purchased from' value={livestockRecordEdit.purchased_from} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, purchased_from: e.target.value })} />
  <select className='input' value={livestockRecordEdit.purchased_from_type} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, purchased_from_type: e.target.value })}><option value='BREEDER'>Breeder</option><option value='MARKET'>Market</option><option value='OTHER'>Other</option></select>
  </div>
  <datalist id='livestock-purchase-sources-edit'>{state.livestockPurchaseSources.filter(s => !s.species || s.species === 'ALL' || s.species === livestockRecordEdit.species).map(s => <option key={`edit-source-${s.id}-${s.name}`} value={s.name}>{s.source_type || ''}</option>)}</datalist>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' type='number' step='0.01' placeholder='Purchase price' value={livestockRecordEdit.purchase_price} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, purchase_price: e.target.value })} />
  <select className='input' value={livestockRecordEdit.currency} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, currency: e.target.value })}><option>GHS</option><option>NGN</option><option>XOF</option><option>USD</option></select>
  </div>
@@ -4274,32 +4274,32 @@ function AppInner() {
  alert(`Could not save breeder/market: ${errMsg(err)}`)
  }
  }}>Save breeder / market</button>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' type='number' min='0' max='5' placeholder='Stars (0-5)' value={livestockRecordEdit.stars} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, stars: e.target.value })} />
  <input className='input' type='number' step='0.01' placeholder='Initial weight (kg)' value={livestockRecordEdit.initial_weight_kg} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, initial_weight_kg: e.target.value })} />
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' placeholder={livestockRecordEdit.species === 'POULTRY' ? 'Breeder line / rooster ID' : 'Sire ID'} value={livestockRecordEdit.sire_id} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, sire_id: e.target.value })} />
  <input className='input' placeholder={livestockRecordEdit.species === 'POULTRY' ? 'Hatchery batch / hen line' : 'Dam ID'} value={livestockRecordEdit.dam_id} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, dam_id: e.target.value })} />
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' type='number' min='0' placeholder={livestockRecordEdit.species === 'POULTRY' ? 'Flock/batch size' : 'Litter size'} value={livestockRecordEdit.litter_size} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, litter_size: e.target.value })} />
  <input className='input' placeholder={livestockRecordEdit.species === 'POULTRY' ? 'Production type (layer/broiler/breeder)' : 'Breeding type'} value={livestockRecordEdit.breeding_type} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, breeding_type: e.target.value })} />
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' placeholder='Health status' value={livestockRecordEdit.health_status} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, health_status: e.target.value })} />
  <input className='input' placeholder='Pen location' value={livestockRecordEdit.pen_location} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, pen_location: e.target.value })} />
  </div>
  {livestockRecordEdit.species !== 'POULTRY' && <label><input type='checkbox' checked={livestockRecordEdit.castrated} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, castrated: e.target.checked })} /> Castrated</label>}
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' placeholder='Cull/keep status' value={livestockRecordEdit.cull_keep_status} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, cull_keep_status: e.target.value })} />
  <input className='input' placeholder='Cull reason' value={livestockRecordEdit.cull_reason} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, cull_reason: e.target.value })} />
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' type='date' placeholder='Sale date' value={livestockRecordEdit.sale_date ? String(livestockRecordEdit.sale_date).slice(0,10) : ''} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, sale_date: e.target.value })} />
  <input className='input' type='number' step='0.01' placeholder='Sale price' value={livestockRecordEdit.sale_price} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, sale_price: e.target.value })} />
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' placeholder='Sold to' value={livestockRecordEdit.sold_to} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, sold_to: e.target.value })} />
  <input className='input' type='date' placeholder='Died date' value={livestockRecordEdit.died_date ? String(livestockRecordEdit.died_date).slice(0,10) : ''} onChange={e => setLivestockRecordEdit({ ...livestockRecordEdit, died_date: e.target.value })} />
  </div>
@@ -4522,17 +4522,17 @@ function AppInner() {
  {active === 'payments' && <section><h3>{t('Payments & Escrow','Paiements et séquestre','支付和托管')}</h3><div className='panel' style={{marginBottom:12}}><strong>Order updates</strong><div className='list' style={{marginTop:8}}>{state.notifications.slice(0,6).map((n) => <div key={`note-${n.id}`} className='list-row'><span><strong>{n.title}</strong><br /><span className='helper-text'>{n.message}</span></span></div>)}{!state.notifications.length && <div className='helper-text' style={{marginTop:8}}>No notifications yet.</div>}</div></div>
  <div className='three-col'>
  <article className='panel'><h4>Seller Payout Settings</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.savePayoutProfile({ ...payoutForm, user_id: Number(payoutForm.user_id) }); await load() }}>
- <div className='row2'><input className='input' value='Your payout profile' readOnly /><input className='input' placeholder='Country' value={payoutForm.country} onChange={e => setPayoutForm({ ...payoutForm, country: e.target.value })} /></div>
- <div className='row2'><input className='input' placeholder='Payout method' value={payoutForm.payout_method} onChange={e => setPayoutForm({ ...payoutForm, payout_method: e.target.value })} /><input className='input' placeholder='Account name' value={payoutForm.account_name} onChange={e => setPayoutForm({ ...payoutForm, account_name: e.target.value })} /></div>
- <div className='row2'><input className='input' placeholder='Bank name' value={payoutForm.bank_name} onChange={e => setPayoutForm({ ...payoutForm, bank_name: e.target.value })} /><input className='input' placeholder='Account number' value={payoutForm.account_number} onChange={e => setPayoutForm({ ...payoutForm, account_number: e.target.value })} /></div>
- <div className='row2'><input className='input' placeholder='MoMo provider' value={payoutForm.mobile_money_provider} onChange={e => setPayoutForm({ ...payoutForm, mobile_money_provider: e.target.value })} /><input className='input' placeholder='MoMo number' value={payoutForm.mobile_money_number} onChange={e => setPayoutForm({ ...payoutForm, mobile_money_number: e.target.value })} /></div>
+ <div className='row2' style={{gap:10}}><input className='input' value='Your payout profile' readOnly /><input className='input' placeholder='Country' value={payoutForm.country} onChange={e => setPayoutForm({ ...payoutForm, country: e.target.value })} /></div>
+ <div className='row2' style={{gap:10}}><input className='input' placeholder='Payout method' value={payoutForm.payout_method} onChange={e => setPayoutForm({ ...payoutForm, payout_method: e.target.value })} /><input className='input' placeholder='Account name' value={payoutForm.account_name} onChange={e => setPayoutForm({ ...payoutForm, account_name: e.target.value })} /></div>
+ <div className='row2' style={{gap:10}}><input className='input' placeholder='Bank name' value={payoutForm.bank_name} onChange={e => setPayoutForm({ ...payoutForm, bank_name: e.target.value })} /><input className='input' placeholder='Account number' value={payoutForm.account_number} onChange={e => setPayoutForm({ ...payoutForm, account_number: e.target.value })} /></div>
+ <div className='row2' style={{gap:10}}><input className='input' placeholder='MoMo provider' value={payoutForm.mobile_money_provider} onChange={e => setPayoutForm({ ...payoutForm, mobile_money_provider: e.target.value })} /><input className='input' placeholder='MoMo number' value={payoutForm.mobile_money_number} onChange={e => setPayoutForm({ ...payoutForm, mobile_money_number: e.target.value })} /></div>
  <button className='btn btn-dark'>Save Seller Payout Method</button>
  </form></article>
  <article className='panel'><h4>Create Escrow Order</h4><p className='helper-text'>Listing buttons now prefill this form automatically for the signed-in buyer.</p><form className='list' onSubmit={async e => { e.preventDefault(); await api.createOrder({ ...orderForm, buyer_id: Number(orderForm.buyer_id), seller_id: Number(orderForm.seller_id), listing_id: Number(orderForm.listing_id), quantity: Number(orderForm.quantity), unit_price: Number(orderForm.unit_price) }); await load() }}>
- <div className='row2'><input className='input' placeholder='Listing title' value={orderForm.listing_title} onChange={e => setOrderForm({ ...orderForm, listing_title: e.target.value })} required /><input className='input' placeholder='Listing type' value={orderForm.listing_type} onChange={e => setOrderForm({ ...orderForm, listing_type: e.target.value })} /></div>
- <div className='row2'><input className='input' value='Buyer captured from signed-in account' readOnly /><input className='input' value='Seller captured from listing owner' readOnly /></div>
- <div className='row2'><input className='input' placeholder='Listing ID' value={orderForm.listing_id} onChange={e => setOrderForm({ ...orderForm, listing_id: e.target.value })} /><input className='input' placeholder='Quantity' value={orderForm.quantity} onChange={e => setOrderForm({ ...orderForm, quantity: e.target.value })} /></div>
- <div className='row2'><input className='input' placeholder='Unit price' value={orderForm.unit_price} onChange={e => setOrderForm({ ...orderForm, unit_price: e.target.value })} required /><input className='input' placeholder='Delivery method' value={orderForm.delivery_method} onChange={e => setOrderForm({ ...orderForm, delivery_method: e.target.value })} /></div>
+ <div className='row2' style={{gap:10}}><input className='input' placeholder='Listing title' value={orderForm.listing_title} onChange={e => setOrderForm({ ...orderForm, listing_title: e.target.value })} required /><input className='input' placeholder='Listing type' value={orderForm.listing_type} onChange={e => setOrderForm({ ...orderForm, listing_type: e.target.value })} /></div>
+ <div className='row2' style={{gap:10}}><input className='input' value='Buyer captured from signed-in account' readOnly /><input className='input' value='Seller captured from listing owner' readOnly /></div>
+ <div className='row2' style={{gap:10}}><input className='input' placeholder='Listing ID' value={orderForm.listing_id} onChange={e => setOrderForm({ ...orderForm, listing_id: e.target.value })} /><input className='input' placeholder='Quantity' value={orderForm.quantity} onChange={e => setOrderForm({ ...orderForm, quantity: e.target.value })} /></div>
+ <div className='row2' style={{gap:10}}><input className='input' placeholder='Unit price' value={orderForm.unit_price} onChange={e => setOrderForm({ ...orderForm, unit_price: e.target.value })} required /><input className='input' placeholder='Delivery method' value={orderForm.delivery_method} onChange={e => setOrderForm({ ...orderForm, delivery_method: e.target.value })} /></div>
  <input className='input' placeholder='Buyer note' value={orderForm.buyer_note} onChange={e => setOrderForm({ ...orderForm, buyer_note: e.target.value })} />
  <button className='btn btn-dark'>Create Escrow Order</button>
  </form></article>
@@ -4810,14 +4810,14 @@ function AppInner() {
  setPayoutSaving(false)
  }
  }}>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' placeholder='Your user ID' value={payoutForm.user_id} readOnly />
  <select className='input' value={payoutForm.payout_method} onChange={e => setPayoutForm({ ...payoutForm, payout_method: e.target.value })}>
  <option value='MOBILE_MONEY'>Mobile Money</option>
  <option value='BANK_TRANSFER'>Bank Transfer</option>
  </select>
  </div>
- <div className='row2'>
+ <div className='row2' style={{gap:10}}>
  <input className='input' placeholder='Account name' value={payoutForm.account_name} onChange={e => setPayoutForm({ ...payoutForm, account_name: e.target.value })} />
  <select className='input' value={payoutForm.country} onChange={e => setPayoutForm({ ...payoutForm, country: e.target.value, currency: e.target.value === 'NG' ? 'NGN' : e.target.value === 'BF' ? 'XOF' : 'GHS' })}>
  <option value='GH'>GH</option>
@@ -4825,10 +4825,10 @@ function AppInner() {
  <option value='BF'>BF</option>
  </select>
  </div>
- {payoutForm.payout_method === 'BANK_TRANSFER' ? <div className='row2'>
+ {payoutForm.payout_method === 'BANK_TRANSFER' ? <div className='row2' style={{gap:10}}>
  <input className='input' placeholder='Bank name' value={payoutForm.bank_name} onChange={e => setPayoutForm({ ...payoutForm, bank_name: e.target.value })} />
  <input className='input' placeholder='Account number' value={payoutForm.account_number} onChange={e => setPayoutForm({ ...payoutForm, account_number: e.target.value })} />
- </div> : <div className='row2'>
+ </div> : <div className='row2' style={{gap:10}}>
  <select className='input' value={payoutForm.mobile_money_provider} onChange={e => setPayoutForm({ ...payoutForm, mobile_money_provider: e.target.value })}>
  <option value='MTN'>MTN</option>
  <option value='Vodafone Cash'>Vodafone Cash</option>
