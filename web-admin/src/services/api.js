@@ -208,6 +208,7 @@ export const fetchSpotTrading = async () => (await api.get('/market/spot-trading
 export const fetchSpotTradingHistory = async () => (await api.get('/market/spot-trading/history')).data
 export const fetchTradeExportStats = async () => (await api.get('/trade/export-stats')).data
 export const fetchLivestockRecordsPlans = async () => (await api.get('/livestock-records/subscription/plans')).data
+export const fetchLivestockRecordsSubscriptionMe = async () => (await api.get('/livestock-records/subscription/me')).data
 export const checkoutLivestockRecordsPlan = async (payload) => (await api.post('/livestock-records/subscription/checkout', payload)).data
 export const fetchUniversityPlans = async (product) => (await api.get(`/university/${product}/plans`)).data
 export const fetchUniversitySubscriptionMe = async (product) => (await api.get(`/university/${product}/subscription/me`)).data

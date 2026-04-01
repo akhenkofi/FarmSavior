@@ -734,6 +734,99 @@ def _mark_trial_used(user: Optional[User], user_id: Optional[int]):
     _trial_ledger_write(ledger)
 
 
+LIVESTOCK_PLAN_CATALOG = {
+    'trial': {
+        'plan_code': 'trial',
+        'name': '7-Day Trial',
+        'monthly_usd': 0.0,
+        'yearly_usd': 0.0,
+        'record_limit': 10,
+        'team_limit': 1,
+        'features': ['Up to 10 animals', 'Create, edit, and test core records', 'One-time 7-day trial per phone/email'],
+    },
+    'starter': {
+        'plan_code': 'starter',
+        'name': 'Sheep & Goats Starter',
+        'monthly_usd': 4.99,
+        'yearly_usd': 49.99,
+        'record_limit': 300,
+        'team_limit': 1,
+        'features': ['Up to 300 animals', 'Basic records', 'Breeding groups', 'CSV export'],
+    },
+    'pro': {
+        'plan_code': 'pro',
+        'name': 'Sheep & Goats Pro',
+        'monthly_usd': 9.99,
+        'yearly_usd': 99.99,
+        'record_limit': 2500,
+        'team_limit': 3,
+        'features': ['Up to 2,500 animals', 'Health and cull tracking', 'Performance analytics', 'Team access (3 users)'],
+    },
+    'enterprise': {
+        'plan_code': 'enterprise',
+        'name': 'Sheep & Goats Enterprise',
+        'monthly_usd': 24.99,
+        'yearly_usd': 249.99,
+        'record_limit': None,
+        'team_limit': None,
+        'features': ['Unlimited animals', 'Multi-farm operations', 'Priority support', 'API/data integrations'],
+    },
+}
+
+
+def _livestock_plan_snapshot(plan_code: str) -> dict:
+    plan = dict(LIVESTOCK_PLAN_CATALOG.get(plan_code, LIVESTOCK_PLAN_CATALOG['starter']))
+    plan['record_limit_label'] = 'Unlimited animals' if plan.get('record_limit') in (None, 0) else f"Up to {int(plan['record_limit'])} animals"
+    plan['team_limit_label'] = 'Unlimited team users' if plan.get('team_limit') in (None, 0) else f"Up to {int(plan['team_limit'])} team user{'s' if int(plan['team_limit']) != 1 else ''}"
+    return plan
+
+
+def _livestock_active_subscription_for_user(user_id: Optional[int], db: Session):
+    if not user_id:
+        return None
+    return db.query(SheepGoatSubscription).filter(
+        SheepGoatSubscription.user_id == int(user_id),
+        SheepGoatSubscription.status.in_(['ACTIVE', 'TRIAL_ACTIVE', 'PENDING_PAYMENT'])
+    ).order_by(SheepGoatSubscription.id.desc()).first()
+
+
+def _livestock_access_context(user_id: Optional[int], db: Session) -> dict:
+    sub = _livestock_active_subscription_for_user(user_id, db)
+    if not sub:
+        return {
+            'tier': 'free',
+            'status': 'NONE',
+            'record_limit': 0,
+            'can_create_records': False,
+            'plan': None,
+            'subscription': None,
+        }
+    tier = 'trial' if str(sub.status) == 'TRIAL_ACTIVE' else str(sub.plan_code or 'starter')
+    plan = _livestock_plan_snapshot(tier)
+    return {
+        'tier': tier,
+        'status': str(sub.status),
+        'record_limit': plan.get('record_limit'),
+        'can_create_records': str(sub.status) in ['ACTIVE', 'TRIAL_ACTIVE'],
+        'plan': plan,
+        'subscription': sub,
+    }
+
+
+def _enforce_livestock_record_limit(user_id: Optional[int], db: Session):
+    ctx = _livestock_access_context(user_id, db)
+    if not ctx['can_create_records']:
+        raise HTTPException(status_code=402, detail='Livestock records require an active subscription or trial')
+    limit = ctx.get('record_limit')
+    if limit in (None, 0):
+        return ctx
+    count = int(db.query(func.count(SheepGoatRecord.id)).filter(SheepGoatRecord.user_id == int(user_id or 0)).scalar() or 0)
+    if count >= int(limit):
+        label = ctx.get('plan', {}).get('record_limit_label') or f'Up to {int(limit)} animals'
+        raise HTTPException(status_code=403, detail=f"{label} reached for your current livestock tier ({ctx['tier']}). Upgrade to add more records.")
+    return ctx
+
+
 def _twilio_from_for_destination(destination: str) -> str:
     dest = str(destination or '').strip()
     sender = str(settings.TWILIO_FROM_NUMBER or '').strip()
@@ -3471,6 +3564,7 @@ def list_livestock_records(species: Optional[str] = None, animal_type: Optional[
 @router.post('/livestock-records/animals')
 def create_livestock_record(payload: SheepGoatRecordIn, db: Session = Depends(get_db)):
     data = payload.model_dump()
+    _enforce_livestock_record_limit(data.get('user_id'), db)
     if data.get('species'):
         data['species'] = str(data['species']).upper()
     if data.get('animal_type'):
@@ -3536,40 +3630,44 @@ def livestock_subscription_plans():
     return {
         'note': 'Prices are monthly base rates and can be billed in supported currencies by FX conversion. Includes one-time 7-day free trial per phone/email.',
         'supported_currencies': ['GHS', 'NGN', 'XOF', 'KES', 'TZS', 'UGX', 'ZAR', 'USD', 'EUR'],
-        'plans': [
-            {
-                'plan_code': 'starter',
-                'name': 'Sheep & Goats Starter',
-                'monthly_usd': 4.99,
-                'yearly_usd': 49.99,
-                'features': ['Up to 300 animals', 'Basic records', 'Breeding groups', 'CSV export']
-            },
-            {
-                'plan_code': 'pro',
-                'name': 'Sheep & Goats Pro',
-                'monthly_usd': 9.99,
-                'yearly_usd': 99.99,
-                'features': ['Up to 2,500 animals', 'Health and cull tracking', 'Performance analytics', 'Team access (3 users)']
-            },
-            {
-                'plan_code': 'enterprise',
-                'name': 'Sheep & Goats Enterprise',
-                'monthly_usd': 24.99,
-                'yearly_usd': 249.99,
-                'features': ['Unlimited animals', 'Multi-farm operations', 'Priority support', 'API/data integrations']
-            }
-        ],
+        'trial': _livestock_plan_snapshot('trial'),
+        'plans': [_livestock_plan_snapshot('starter'), _livestock_plan_snapshot('pro'), _livestock_plan_snapshot('enterprise')],
         'coverage': 'Available for all African countries and all FarmSavior listed countries.'
+    }
+
+
+
+@router.get('/livestock-records/subscription/me')
+def livestock_subscription_me(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    user = _current_user_from_auth(authorization, db)
+    ctx = _livestock_access_context(user.id, db)
+    sub = ctx.get('subscription')
+    return {
+        'tier': ctx.get('tier') or 'free',
+        'status': ctx.get('status') or 'NONE',
+        'record_limit': ctx.get('record_limit'),
+        'can_create_records': ctx.get('can_create_records', False),
+        'trial': _livestock_plan_snapshot('trial'),
+        'plans': [_livestock_plan_snapshot('starter'), _livestock_plan_snapshot('pro'), _livestock_plan_snapshot('enterprise')],
+        'subscription': {
+            'id': sub.id,
+            'user_id': sub.user_id,
+            'plan_code': sub.plan_code,
+            'billing_cycle': sub.billing_cycle,
+            'currency': sub.currency,
+            'amount': sub.amount,
+            'status': sub.status,
+            'reference': sub.reference,
+            'started_at': sub.started_at.isoformat() if sub and sub.started_at else None,
+            'ends_at': sub.ends_at.isoformat() if sub and sub.ends_at else None,
+            'country': sub.country,
+        } if sub else None,
     }
 
 
 @router.post('/livestock-records/subscription/checkout')
 def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Session = Depends(get_db)):
-    plans = {
-        'starter': {'monthly': 4.99, 'yearly': 49.99},
-        'pro': {'monthly': 9.99, 'yearly': 99.99},
-        'enterprise': {'monthly': 24.99, 'yearly': 249.99}
-    }
+    plans = {code: {'monthly': plan['monthly_usd'], 'yearly': plan['yearly_usd']} for code, plan in LIVESTOCK_PLAN_CATALOG.items() if code != 'trial'}
     fx = {'USD': 1.0, 'GHS': 15.0, 'NGN': 1600.0, 'XOF': 610.0}
 
     amount_usd = plans[payload.plan_code][payload.billing_cycle]

@@ -1351,6 +1351,7 @@ function AppInner() {
  const [expandedTradeCommodity, setExpandedTradeCommodity] = useState('')
  const [expandedTradeSections, setExpandedTradeSections] = useState({})
  const [expandedLivestockPlan, setExpandedLivestockPlan] = useState('')
+ const [livestockSubscription, setLivestockSubscription] = useState({ tier: 'free', status: 'NONE', record_limit: 0, can_create_records: false, subscription: null, plans: [] })
  const [poultryTrack, setPoultryTrack] = useState('layers')
  const [poultryZone, setPoultryZone] = useState('humid')
  const [openPoultryModule, setOpenPoultryModule] = useState(0)
@@ -1427,6 +1428,24 @@ function AppInner() {
  }
 
  useEffect(() => {
+
+ const loadLivestockSubscription = async () => {
+ if (!token) {
+ setLivestockSubscription({ tier: 'free', status: 'NONE', record_limit: 0, can_create_records: false, subscription: null, plans: [] })
+ return
+ }
+ const sub = await api.fetchLivestockRecordsSubscriptionMe().catch(() => ({ tier: 'free', status: 'NONE', record_limit: 0, can_create_records: false, subscription: null, plans: [] }))
+ setLivestockSubscription({
+ tier: sub?.tier || 'free',
+ status: sub?.status || 'NONE',
+ record_limit: sub?.record_limit ?? 0,
+ can_create_records: !!sub?.can_create_records,
+ subscription: sub?.subscription || null,
+ plans: sub?.plans || [],
+ trial: sub?.trial || null,
+ })
+ }
+
  const loadUniversitySubscriptions = async () => {
  const products = await Promise.all(universityProducts.map(async (product) => {
  const plans = await api.fetchUniversityPlans(product).catch(() => ({ plans: [] }))
@@ -1441,6 +1460,7 @@ function AppInner() {
  }
  }
  loadUniversitySubscriptions().catch(() => {})
+ loadLivestockSubscription().catch(() => {})
  }, [me?.id, token])
  const [fxBase, setFxBase] = useState('USD')
  const [fxAmount, setFxAmount] = useState('1')
@@ -2618,6 +2638,9 @@ function AppInner() {
  <p style={{fontSize:'.82rem',color:'#64748b',marginTop:4}}>{t('Pricing auto-displays in your selected country currency. Settlement can route to Ghana Mobile Money or US bank account once payout details are configured.','Les prix s’affichent automatiquement dans la devise du pays sélectionné. Le règlement peut être acheminé vers Mobile Money Ghana ou un compte bancaire US une fois les détails de paiement configurés.','价格会按你选择的国家货币自动显示。配置收款后，可结算到加纳移动支付或美国银行账户。')}</p>
  <p style={{fontSize:'.85rem',color:'#0f766e',marginTop:6,fontWeight:700}}>{t('🎁 7-day free trial available • No charge now • Free cancellation during trial • Trial is limited to 10 animals and available once per email/phone','🎁 Essai gratuit de 7 jours • Aucun débit maintenant • Annulation gratuite pendant l’essai • Essai limité à 10 animaux et une seule fois par email/téléphone','🎁 提供7天免费试用 • 现在不扣费 • 试用期可免费取消 • 试用仅限10只动物且每个邮箱/手机号仅一次')}</p>
  <h4 style={{margin:'8px 0'}}>{t('Select Your Subscription Plan','Sélectionnez votre plan d’abonnement','选择你的订阅方案')}</h4>
+ {livestockSubscription?.tier && livestockSubscription.tier !== 'free' && <div className='panel' style={{marginBottom:10,padding:10,background:'#ecfeff',border:'1px solid #a5f3fc'}}>
+ <strong>Current livestock tier:</strong> {String(livestockSubscription.tier).toUpperCase()} • {livestockSubscription.record_limit ? `Limit ${livestockSubscription.record_limit} animals` : 'Unlimited animals'}{livestockSubscription.subscription?.status ? ` • ${livestockSubscription.subscription.status}` : ''}
+ </div>}
  <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
  {publicLivestockPlans.map((p, i) => {
  const key = p.plan_code || p.name || `plan-${i}`
