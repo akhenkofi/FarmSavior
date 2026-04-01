@@ -1361,6 +1361,9 @@ function AppInner() {
  const [livestockRecordEdit, setLivestockRecordEdit] = useState({ id: '', user_id: 1, ownership: 'Owned by Me', species: 'SHEEP', animal_type: 'EWE', name: '', ear_tag: '', farm_id: '', registration_number: '', stars: 0, date_of_birth: '', acquisition_date: '', purchased_from: '', purchased_from_type: 'BREEDER', purchase_price: '', currency: 'GHS', sire_id: '', dam_id: '', litter_size: 1, initial_weight_kg: '', breeding_type: 'Natural', castrated: false, sale_date: '', sale_price: '', sold_to: '', died_date: '', cull_keep_status: 'KEEP', cull_reason: '', health_status: '', pen_location: '', notes: '', treatment_entry: '' })
  const [selectedLivestockRecord, setSelectedLivestockRecord] = useState(null)
  const [selectedBreederDetail, setSelectedBreederDetail] = useState(null)
+ const breederPhotoInputRef = useRef(null)
+ const breederDocInputRef = useRef(null)
+ const [breederUploads, setBreederUploads] = useState({ photos: [], docs: [] })
  const [livestockRecordsFilter, setLivestockRecordsFilter] = useState('ALL')
  const [recordsSectionOpen, setRecordsSectionOpen] = useState({ create: false, edit: false, batch: false, details: false })
  const [batchMedicationForm, setBatchMedicationForm] = useState({ species:'ALL', animal_type:'ALL', health_status:'ALL', cull_keep_status:'ALL', minStars:'', pen_location:'', medication:'', dose:'', days:'' })
@@ -1485,6 +1488,30 @@ function AppInner() {
  const setUniversityProductMessage = (product, message) => {
  setUniversityBillingMsg(prev => ({ ...prev, [product]: message || '' }))
  if (product === 'poultry') setPoultryBillingMsg(message || '')
+ }
+
+
+ const handleBreederPhotoFiles = async (fileList) => {
+ const files = Array.from(fileList || []).filter(Boolean)
+ if (!files.length) return
+ const mapped = await Promise.all(files.map(async (file) => ({
+ name: file.name,
+ type: file.type || 'image/*',
+ size: file.size,
+ url: URL.createObjectURL(file),
+ })))
+ setBreederUploads(prev => ({ ...prev, photos: [...(prev.photos || []), ...mapped] }))
+ }
+
+ const handleBreederDocFiles = async (fileList) => {
+ const files = Array.from(fileList || []).filter(Boolean)
+ if (!files.length) return
+ const mapped = files.map((file) => ({
+ name: file.name,
+ type: file.type || 'application/octet-stream',
+ size: file.size,
+ }))
+ setBreederUploads(prev => ({ ...prev, docs: [...(prev.docs || []), ...mapped] }))
  }
 
  const startUniversityCheckout = async (product, planCode, label) => {
@@ -4498,6 +4525,7 @@ function AppInner() {
  const clickable = action === 'breeder' && value && value !== '--'
  return <div key={`detail-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: clickable ? 'pointer' : 'default'}} onClick={() => {
  if (!clickable) return
+ setBreederUploads({ photos: [], docs: [] })
  setSelectedBreederDetail({
  id: String(selectedLivestockRecord?.id || '0001').padStart(4,'0'),
  name: value,
@@ -4569,7 +4597,13 @@ function AppInner() {
  ['Notes', selectedBreederDetail.notes],
  ].map(([label, value], idx) => <div key={`breeder-detail-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}><span style={{color:'#1e3a8a', fontWeight:600}}>{label}</span><strong style={{marginLeft:'auto', color:'#111827', textAlign:'right'}}>{value}</strong></div>)}
  <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>PHOTOS & DOCS</div>
- {['Add Photo','Add Doc','View Breeder Report'].map((label, idx) => <div key={`breeder-action-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}><span style={{color:'#111827', fontWeight:600}}>{label}</span><strong style={{marginLeft:'auto', color:'#9ca3af'}}>›</strong></div>)}
+ <input ref={breederPhotoInputRef} type='file' accept='image/*' capture='environment' multiple style={{display:'none'}} onChange={(e) => handleBreederPhotoFiles(e.target.files)} />
+ <input ref={breederDocInputRef} type='file' accept='.pdf,.doc,.docx,.txt,.rtf,.csv,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain' multiple style={{display:'none'}} onChange={(e) => handleBreederDocFiles(e.target.files)} />
+ <div className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor:'pointer'}} onClick={() => breederPhotoInputRef.current?.click()}><span style={{color:'#111827', fontWeight:600}}>Add Photo</span><strong style={{marginLeft:'auto', color:'#9ca3af'}}>›</strong></div>
+ <div className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor:'pointer'}} onClick={() => breederDocInputRef.current?.click()}><span style={{color:'#111827', fontWeight:600}}>Add Doc</span><strong style={{marginLeft:'auto', color:'#9ca3af'}}>›</strong></div>
+ {(breederUploads.photos || []).map((file, idx) => <div key={`breeder-photo-${idx}`} className='list-row' style={{padding:'10px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}><span style={{color:'#475569'}}>📷 {file.name}</span><strong style={{marginLeft:'auto', color:'#94a3b8'}}>{Math.round((file.size || 0)/1024)} KB</strong></div>)}
+ {(breederUploads.docs || []).map((file, idx) => <div key={`breeder-doc-${idx}`} className='list-row' style={{padding:'10px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}><span style={{color:'#475569'}}>📄 {file.name}</span><strong style={{marginLeft:'auto', color:'#94a3b8'}}>{Math.round((file.size || 0)/1024)} KB</strong></div>)}
+ <div className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}><span style={{color:'#111827', fontWeight:600}}>View Breeder Report</span><strong style={{marginLeft:'auto', color:'#9ca3af'}}>›</strong></div>
  </div>
  </article>}
 
