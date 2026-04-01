@@ -4317,14 +4317,28 @@ function AppInner() {
       setActionBusy(busyKey)
       try {
        const { treatment_entry, ...payload } = form
-       if (recordsSectionOpen.edit) await api.updateLivestockRecord(Number(form.id), { ...payload, user_id: Number(form.user_id || me?.id || 0) })
-       else await api.createLivestockRecord({ ...payload, user_id: Number(me?.id || form.user_id || 0) })
+       const normalizedPayload = {
+        ...payload,
+        user_id: Number((recordsSectionOpen.edit ? form.user_id : (me?.id || form.user_id)) || 0),
+        stars: Number(form.stars || 0),
+        purchase_price: form.purchase_price === '' ? null : Number(form.purchase_price),
+        litter_size: form.litter_size === '' ? null : Number(form.litter_size),
+        initial_weight_kg: form.initial_weight_kg === '' ? null : Number(form.initial_weight_kg),
+        sale_price: form.sale_price === '' ? null : Number(form.sale_price),
+        date_of_birth: form.date_of_birth || null,
+        acquisition_date: form.acquisition_date || null,
+        sale_date: form.sale_date || null,
+        died_date: form.died_date || null,
+       }
+       if (recordsSectionOpen.edit) await api.updateLivestockRecord(Number(form.id), normalizedPayload)
+       else await api.createLivestockRecord(normalizedPayload)
        await loadLivestockRecords()
        if (recordsSectionOpen.edit) {
         const fresh = state.livestockRecords.find(x => Number(x.id) === Number(form.id))
         if (fresh) setSelectedLivestockRecord(fresh)
        } else {
         setLivestockRecordForm({ user_id: '', ownership: 'Owned by Me', species: 'SHEEP', animal_type: 'EWE', name: '', ear_tag: '', farm_id: '', registration_number: '', stars: 0, date_of_birth: '', acquisition_date: '', purchased_from: '', purchased_from_type: 'BREEDER', purchase_price: '', currency: 'GHS', sire_id: '', dam_id: '', litter_size: 1, initial_weight_kg: '', breeding_type: 'Natural', castrated: false, sale_date: '', sale_price: '', sold_to: '', died_date: '', cull_keep_status: 'KEEP', cull_reason: '', health_status: '', pen_location: '', notes: '', treatment_entry: '' })
+        setAnimalUploads({ photos: [], docs: [] })
        }
        setRecordsSectionOpen(prev => ({ ...prev, create: false, edit: false, details: true }))
       } catch (err) {
@@ -4343,18 +4357,29 @@ function AppInner() {
         <label className='records-field'><span>Ownership</span><select className='input' value={form.ownership} onChange={e => setForm({ ...form, ownership: e.target.value })}><option value='OWNED'>Owned by me</option><option value='THIRD_PARTY'>Owned by someone else</option></select></label>
         <label className='records-field'><span>Date of birth</span><input className='input' type='date' value={form.date_of_birth} onChange={e => setForm({ ...form, date_of_birth: e.target.value })} /></label>
         <label className='records-field'><span>Acquisition date</span><input className='input' type='date' value={form.acquisition_date} onChange={e => setForm({ ...form, acquisition_date: e.target.value })} /></label>
-        <label className='records-field'><span>Purchased from</span><input className='input' placeholder='Breeder / market / seller' value={form.purchased_from} onChange={e => setForm({ ...form, purchased_from: e.target.value })} /></label>
+        <label className='records-field'><span>Purchased from</span><input className='input' list='livestock-purchase-sources-create' placeholder='Breeder / market / seller' value={form.purchased_from} onChange={e => setForm({ ...form, purchased_from: e.target.value })} /></label>
         <label className='records-field'><span>Source type</span><select className='input' value={form.purchased_from_type} onChange={e => setForm({ ...form, purchased_from_type: e.target.value })}><option value='BREEDER'>Breeder</option><option value='MARKET'>Market</option><option value='FARM'>Farm</option><option value='OTHER'>Other</option></select></label>
+        {!recordsSectionOpen.edit && <datalist id='livestock-purchase-sources-create'>{state.livestockPurchaseSources.filter(s => !s.species || s.species === 'ALL' || s.species === form.species).map(s => <option key={`create-source-${s.id}-${s.name}`} value={s.name}>{s.source_type || ''}</option>)}</datalist>}
         <label className='records-field'><span>Purchase price</span><input className='input' inputMode='decimal' placeholder='0.00' value={form.purchase_price} onChange={e => setForm({ ...form, purchase_price: e.target.value })} /></label>
         <label className='records-field'><span>Currency</span><input className='input' placeholder='GHS' value={form.currency} onChange={e => setForm({ ...form, currency: e.target.value })} /></label>
+        <label className='records-field'><span>Stars</span><select className='input' value={form.stars} onChange={e => setForm({ ...form, stars: e.target.value })}><option value='0'>0 stars</option><option value='1'>1 star</option><option value='2'>2 stars</option><option value='3'>3 stars</option><option value='4'>4 stars</option><option value='5'>5 stars</option></select></label>
         <label className='records-field'><span>Initial weight (kg)</span><input className='input' inputMode='decimal' placeholder='0' value={form.initial_weight_kg} onChange={e => setForm({ ...form, initial_weight_kg: e.target.value })} /></label>
         <label className='records-field'><span>Litter size</span><input className='input' inputMode='numeric' placeholder='1' value={form.litter_size} onChange={e => setForm({ ...form, litter_size: e.target.value })} /></label>
         <label className='records-field'><span>Breeding type</span><input className='input' placeholder='Natural / AI / Embryo' value={form.breeding_type} onChange={e => setForm({ ...form, breeding_type: e.target.value })} /></label>
         <label className='records-field'><span>Health status</span><input className='input' placeholder='Healthy / Monitor / Treated' value={form.health_status} onChange={e => setForm({ ...form, health_status: e.target.value })} /></label>
         <label className='records-field'><span>Pen / location</span><input className='input' placeholder='Pen A / Pasture 3' value={form.pen_location} onChange={e => setForm({ ...form, pen_location: e.target.value })} /></label>
+        <label className='records-field'><span>Farm / maternal line ref</span><input className='input' placeholder='Farm ID / maternal grandsire' value={form.farm_id} onChange={e => setForm({ ...form, farm_id: e.target.value })} /></label>
         <label className='records-field'><span>Sire ID</span><input className='input' placeholder='Sire record ID' value={form.sire_id} onChange={e => setForm({ ...form, sire_id: e.target.value })} /></label>
         <label className='records-field'><span>Dam ID</span><input className='input' placeholder='Dam record ID' value={form.dam_id} onChange={e => setForm({ ...form, dam_id: e.target.value })} /></label>
         <label className='records-field'><span>Cull / keep</span><select className='input' value={form.cull_keep_status} onChange={e => setForm({ ...form, cull_keep_status: e.target.value })}><option value='KEEP'>Keep</option><option value='CULL'>Cull</option><option value='SOLD'>Sold</option><option value='DIED'>Died</option></select></label>
+        <label className='records-field'><span>Cull reason</span><input className='input' placeholder='Low performance / health / age' value={form.cull_reason} onChange={e => setForm({ ...form, cull_reason: e.target.value })} /></label>
+        <label className='records-field'><span>Castrated</span><select className='input' value={form.castrated ? 'YES' : 'NO'} onChange={e => setForm({ ...form, castrated: e.target.value === 'YES' })}><option value='NO'>No</option><option value='YES'>Yes</option></select></label>
+        <label className='records-field'><span>Sale date</span><input className='input' type='date' value={form.sale_date} onChange={e => setForm({ ...form, sale_date: e.target.value })} /></label>
+        <label className='records-field'><span>Sale price</span><input className='input' inputMode='decimal' placeholder='0.00' value={form.sale_price} onChange={e => setForm({ ...form, sale_price: e.target.value })} /></label>
+        <label className='records-field'><span>Sold to</span><input className='input' placeholder='Buyer / market / processor' value={form.sold_to} onChange={e => setForm({ ...form, sold_to: e.target.value })} /></label>
+        <label className='records-field'><span>Died date</span><input className='input' type='date' value={form.died_date} onChange={e => setForm({ ...form, died_date: e.target.value })} /></label>
+        <label className='records-field records-field-wide'><span>Medicine / treatment note</span><input className='input' placeholder='Initial medicine, dosage, or treatment note' value={form.treatment_entry} onChange={e => setForm({ ...form, treatment_entry: e.target.value })} /></label>
+        <label className='records-field records-field-wide'><span>Draft attachments</span><div style={{display:'grid', gap:8}}><div className='row2' style={{gap:10}}><label className='upload-field'><span className='helper-text'>Animal photos</span><input type='file' accept='image/*' multiple onChange={e => { handleAnimalPhotoFiles(e.target.files).catch(console.error); e.target.value = '' }} /></label><label className='upload-field'><span className='helper-text'>Animal documents</span><input type='file' multiple onChange={e => { handleAnimalDocFiles(e.target.files); e.target.value = '' }} /></label></div><div className='helper-text'>{animalUploads.photos.length} photo(s) · {animalUploads.docs.length} document(s) selected. Backend persistence for record attachments is not wired yet.</div>{!!animalUploads.photos.length && <div className='helper-text'>Photos: {animalUploads.photos.map(file => file.name).join(', ')}</div>}{!!animalUploads.docs.length && <div className='helper-text'>Docs: {animalUploads.docs.map(file => file.name).join(', ')}</div>}</div></label>
         <label className='records-field records-field-wide'><span>Notes</span><textarea className='input' rows='4' placeholder='Anything useful about lineage, treatment, temperament, or special handling.' value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></label>
        </>
       })()}
