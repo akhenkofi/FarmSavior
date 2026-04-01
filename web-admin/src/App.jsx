@@ -945,6 +945,41 @@ const livestockBreedOptions = {
 const livestockRaisedByDamOptions = ['Yes', 'No', 'Unknown']
 const livestockDnaOptions = ['Not tested', 'Parentage verified', 'Genomics available']
 
+const livestockDetailRows = (record) => {
+ if (!record) return []
+ return [
+ ['Name / Tag #', record.name || record.id || '--'],
+ ['Labels', record.labels || 'None'],
+ ['EID / RFID', record.ear_tag || '--'],
+ ['Scrapie Tag', record.farm_id || '--'],
+ ['Registration #', record.registration_number || '--'],
+ ['Reg. Name', record.name || '--'],
+ ['Breed', record.breeding_type || '--'],
+ ['Breeder', record.purchased_from || '--'],
+ ['Stars', String(record.stars ?? '--')],
+ ['Sex', record.animal_type || '--'],
+ ['Born', record.date_of_birth ? String(record.date_of_birth).slice(0,10) : '--'],
+ ['Acquired', record.acquisition_date ? String(record.acquisition_date).slice(0,10) : '--'],
+ ['Sold To', record.sold_to || '--'],
+ ['Sire', record.sire_id || '--'],
+ ['Dam', record.dam_id || '--'],
+ ['Dam-Sire', record.farm_id || '--'],
+ ['Litter Size', record.litter_size ?? '--'],
+ ['DNA', record.registration_number || '--'],
+ ['Initial Weight', record.initial_weight_kg ? `${record.initial_weight_kg} kg` : '--'],
+ ['Initial Notes', record.notes || '--'],
+ ['Breeding Type', record.health_status || '--'],
+ ['Castrated', record.castrated ? 'Yes' : 'No'],
+ ['Sale Date', record.sale_date ? String(record.sale_date).slice(0,10) : '--'],
+ ['Sale Price', record.sale_price || '--'],
+ ['Sale Desc', record.pen_location || '--'],
+ ['Winnings', record.treatment_entry || '--'],
+ ['Died', record.died_date ? String(record.died_date).slice(0,10) : '--'],
+ ['Breed With', record.cull_reason || '--'],
+ ['Should Be Culled', record.cull_keep_status || '--'],
+ ]
+}
+
 
 const professionalOutcomeBenchmarks = {
  poultry: ['Flock readiness score', 'Health-compliance score', 'Feed-efficiency watchpoints', 'Market margin review'],
@@ -4412,17 +4447,19 @@ function AppInner() {
  </article>
 
 
- {selectedLivestockRecord && <article className='panel'>
- <div className='list-row' style={{marginBottom:10}}>
- <div>
- <h4 style={{margin:'0 0 4px 0'}}>Animal Details</h4>
- <div className='helper-text'>Opened when you tap a row in the records table.</div>
+ {selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18}}>
+ <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setSelectedLivestockRecord(null)}>‹</button>
+ <strong style={{fontSize:'1.05rem'}}>{String(selectedLivestockRecord.species || 'Animal').charAt(0) + String(selectedLivestockRecord.species || 'Animal').slice(1).toLowerCase()}</strong>
+ <div style={{marginLeft:'auto', fontWeight:700}}>{selectedLivestockRecord.name || selectedLivestockRecord.id || '0001'}</div>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none'}} onClick={() => { setLivestockRecordEdit(mapLivestockRecordToEditForm(selectedLivestockRecord)); setRecordsSectionOpen(prev => ({ ...prev, edit: true, create: false, details: true })) }}>Edit</button>
  </div>
- <button type='button' className='btn' onClick={() => setRecordsSectionOpen(prev => ({ ...prev, details: !prev.details }))}>{recordsSectionOpen.details ? 'Hide' : 'Open'}</button>
+ {recordsSectionOpen.details && <div style={{background:'#fff'}}>
+ {livestockDetailRows(selectedLivestockRecord).map(([label, value], idx) => (
+ <div key={`detail-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}>
+ <span style={{color:'#1e3a8a', fontWeight:600}}>{label}</span>
+ <strong style={{marginLeft:'auto', color:'#111827', textAlign:'right'}}>{value == null || value === '' ? '--' : String(value)}</strong>
  </div>
- {recordsSectionOpen.details && <div className='list'>
- {Object.entries(selectedLivestockRecord).map(([k,v]) => (
- <div className='list-row' key={`detail-${k}`}><span>{k}</span><strong>{v == null || v === '' ? '—' : String(v)}</strong></div>
  ))}
  </div>}
  </article>}
