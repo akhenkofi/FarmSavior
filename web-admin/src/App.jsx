@@ -956,7 +956,7 @@ const livestockHistoryRows = (record) => {
  ['Notes', `(${notesCount})`, 'notes'],
  ['Add Note', '›'],
  ['Add Weight', '›', 'add-weight'],
- ['Medicines', `(${medsCount})`],
+ ['Medicines', `(${medsCount})`, 'medicines'],
  ['Add Medicine', '›'],
  ['Add FAMACHA/Body Condition Score', '›'],
  ['View Ancestor Tree', '›'],
@@ -1368,6 +1368,8 @@ function AppInner() {
  const [notesScreenOpen, setNotesScreenOpen] = useState(false)
  const [notesComposerOpen, setNotesComposerOpen] = useState(false)
  const [weightComposerOpen, setWeightComposerOpen] = useState(false)
+ const [medicinesScreenOpen, setMedicinesScreenOpen] = useState(false)
+ const [medicinesSearch, setMedicinesSearch] = useState('')
  const [notesSearch, setNotesSearch] = useState('')
  const [draftNote, setDraftNote] = useState('')
  const [draftWeight, setDraftWeight] = useState('')
@@ -4551,10 +4553,11 @@ function AppInner() {
  <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>HISTORY</div>
  {livestockHistoryRows(selectedLivestockRecord).history.map((row, idx) => {
  const [label, value, action] = row
- const clickable = action === 'notes' || action === 'add-weight'
+ const clickable = action === 'notes' || action === 'add-weight' || action === 'medicines'
  return <div key={`history-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: clickable ? 'pointer' : 'default'}} onClick={() => {
  if (action === 'notes') setNotesScreenOpen(true)
  if (action === 'add-weight') { setDraftWeight(''); setWeightComposerOpen(true) }
+ if (action === 'medicines') setMedicinesScreenOpen(true)
  }}>
  <span style={{color:'#111827', fontWeight:600}}>{label} {String(value).startsWith('(') ? value : ''}</span>
  <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{String(value).startsWith('(') ? '›' : value}</strong>
@@ -4631,6 +4634,25 @@ function AppInner() {
 
 
 
+
+
+ {medicinesScreenOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setMedicinesScreenOpen(false)}>‹</button>
+ <strong>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</strong>
+ <div style={{fontWeight:700}}>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</div>
+ <button type='button' className='btn' style={{marginLeft:'auto', background:'transparent', color:'#fff', border:'none', fontSize:'1.4rem'}}>+</button>
+ </div>
+ <div style={{padding:12, background:'#f8fafc'}}>
+ <input className='input' placeholder='Search' value={medicinesSearch} onChange={(e) => setMedicinesSearch(e.target.value)} style={{background:'#1e3a8a', color:'#fff', border:'none', borderRadius:12}} />
+ </div>
+ <div style={{background:'#fff', minHeight:320}}>
+ {[
+ {name: 'Tsetsefly Shot', date: '2023-09-13'},
+ {name: 'PPR vax', date: '2023-03-01'},
+ ].filter(item => !medicinesSearch || `${item.name} ${item.date}`.toLowerCase().includes(medicinesSearch.toLowerCase())).map((item, idx) => <div key={`medicine-row-${idx}`} className='list-row' style={{padding:'18px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}><span style={{fontWeight:600, color:'#111827'}}>{item.name}</span><strong style={{marginLeft:'auto', color:'#111827'}}>{new Date(item.date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}</strong><span style={{marginLeft:10, color:'#9ca3af'}}>›</span></div>)}
+ </div>
+ </article>}
 
  {weightComposerOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
