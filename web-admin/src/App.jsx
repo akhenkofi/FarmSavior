@@ -3335,12 +3335,12 @@ function AppInner() {
  <article className='panel'>
  <h3>{t('Logistics Activity + Farmer Growth','Activité logistique + croissance des agriculteurs','物流活动 + 农户增长')}</h3>
  <div className='list-row'><span>Active Logistics Requests</span><strong>{state.logistics.length}</strong></div>
- <div className='list-row'><span>Farmer Profiles</span><strong>{state.users.filter(u => (u.role||'') === 'Farmer').length}</strong></div>
- <div className='list-row'><span>Growth Signal</span><strong>{state.users.length > 5 ? 'Growing' : 'Early Stage'}</strong></div>
+ <div className='list-row'><span>Farmer Profiles</span><strong>{(state.users || []).filter(u => (u.role||'') === 'Farmer').length}</strong></div>
+ <div className='list-row'><span>Growth Signal</span><strong>{(state.users || []).length > 5 ? 'Growing' : 'Early Stage'}</strong></div>
  </article>
  </div>
 
- <DataTable columns={['id', 'full_name', 'phone', 'country', 'region', 'role']} rows={state.users} filterKey='full_name' />
+ <DataTable columns={['id', 'full_name', 'phone', 'country', 'region', 'role']} rows={state.users || []} filterKey='full_name' />
  </section>}
 
  {active === 'onboarding' && <section className='onboarding-shell'>
@@ -6036,7 +6036,7 @@ function AppInner() {
  {active === 'admin' && ((me?.role || '').toLowerCase() === 'admin') && <section>
  <h2>{t('Admin Dashboard (Admin Only)','Tableau de bord admin (admin uniquement)','管理员仪表盘（仅管理员）')}</h2>
  <div className='kpi-grid'>
- <article className='kpi-card'><p>User management</p><strong>{state.users.length}</strong></article>
+ <article className='kpi-card'><p>User management</p><strong>{(state.users || []).length}</strong></article>
  <article className='kpi-card'><p>Crop marketplace monitoring</p><strong>{state.listings.length}</strong></article>
  <article className='kpi-card'><p>Payment tracking</p><strong>{state.payments.length}</strong></article>
  <article className='kpi-card'><p>Logistics monitoring</p><strong>{state.logistics.length}</strong></article>
@@ -6046,7 +6046,7 @@ function AppInner() {
 
  <article className='panel'>
  <h3>User Management</h3>
- <DataTable columns={['id','full_name','phone','country','region','role']} rows={state.users} filterKey='full_name' />
+ <DataTable columns={['id','full_name','phone','country','region','role']} rows={state.users || []} filterKey='full_name' />
  </article>
 
  <div className='two-col'>
