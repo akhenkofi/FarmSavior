@@ -15,6 +15,13 @@ Base.metadata.create_all(bind=engine)
 logger = logging.getLogger(__name__)
 
 
+def _ts_type() -> str:
+    try:
+        return 'TIMESTAMP' if str(getattr(engine.dialect, 'name', '')).lower().startswith('postgres') else 'DATETIME'
+    except Exception:
+        return 'DATETIME'
+
+
 def _safe_add_column(conn, table_name: str, column_name: str, ddl: str):
     try:
         cols = {c['name'] for c in inspect(conn).get_columns(table_name)}
@@ -48,7 +55,7 @@ def ensure_runtime_columns():
                 if 'is_deleted' not in ucols:
                     conn.execute(text('ALTER TABLE users ADD COLUMN is_deleted BOOLEAN DEFAULT 0'))
                 if 'deleted_at' not in ucols:
-                    conn.execute(text('ALTER TABLE users ADD COLUMN deleted_at DATETIME'))
+                    conn.execute(text(f'ALTER TABLE users ADD COLUMN deleted_at {_ts_type()}'))
 
 
             for table_name in ['crop_listings', 'livestock_listings', 'logistics_requests', 'equipment_rentals', 'storage_reservations']:
@@ -70,14 +77,14 @@ def ensure_runtime_columns():
             if 'marketplace_orders' in tables:
                 ocols = {c['name'] for c in inspector.get_columns('marketplace_orders')}
                 extra = {
-                    'auto_release_at': 'DATETIME',
-                    'released_at': 'DATETIME',
-                    'refunded_at': 'DATETIME'
+                    'auto_release_at': _ts_type(),
+                    'released_at': _ts_type(),
+                    'refunded_at': _ts_type()
                 }
                 for col, ddl in extra.items():
                     if col not in ocols:
                         conn.execute(text(f'ALTER TABLE marketplace_orders ADD COLUMN {col} {ddl}'))
-            conn.execute(text("""
+            conn.execute(text(f"""
                 CREATE TABLE IF NOT EXISTS seller_payout_profiles (
                     id INTEGER PRIMARY KEY,
                     user_id INTEGER,
@@ -94,8 +101,8 @@ def ensure_runtime_columns():
                     transfer_recipient_code VARCHAR(120),
                     recipient_last_status VARCHAR(120),
                     default_payout_method BOOLEAN DEFAULT 1,
-                    created_at DATETIME,
-                    updated_at DATETIME
+                    created_at {_ts_type()},
+                    updated_at {_ts_type()}
                 )
             """))
             if 'seller_payout_profiles' in tables:
@@ -107,7 +114,7 @@ def ensure_runtime_columns():
                 'account_name': 'VARCHAR(160)', 'bank_name': 'VARCHAR(120)', 'account_number': 'VARCHAR(120)',
                 'mobile_money_provider': 'VARCHAR(80)', 'mobile_money_number': 'VARCHAR(80)', 'currency': "VARCHAR(10) DEFAULT 'GHS'",
                 'is_verified': 'BOOLEAN DEFAULT 0', 'verification_status': "VARCHAR(40) DEFAULT 'PENDING'", 'transfer_recipient_code': 'VARCHAR(120)', 'recipient_last_status': 'VARCHAR(120)', 'default_payout_method': 'BOOLEAN DEFAULT 1',
-                'updated_at': 'DATETIME'
+                'updated_at': _ts_type()
             }
             for col, ddl in required.items():
                 if col not in pcols:
@@ -121,7 +128,7 @@ def ensure_runtime_columns():
                     'seller_net': 'FLOAT DEFAULT 0', 'currency': "VARCHAR(10) DEFAULT 'GHS'", 'escrow_status': "VARCHAR(40) DEFAULT 'AWAITING_PAYMENT'",
                     'fulfillment_status': "VARCHAR(40) DEFAULT 'PENDING'", 'payment_status': "VARCHAR(40) DEFAULT 'UNPAID'", 'payout_status': "VARCHAR(40) DEFAULT 'HELD'",
                     'delivery_method': "VARCHAR(60) DEFAULT 'STANDARD'", 'delivery_note': 'TEXT', 'buyer_note': 'TEXT', 'seller_note': 'TEXT',
-                    'payment_reference': 'VARCHAR(120)', 'updated_at': 'DATETIME'
+                    'payment_reference': 'VARCHAR(120)', 'updated_at': _ts_type()
                 }
                 for col, ddl in required.items():
                     if col not in ocols:
@@ -138,14 +145,14 @@ def ensure_runtime_columns():
                 _safe_add_column(conn, 'sheep_goat_records', 'purchased_from', 'VARCHAR(160)')
                 _safe_add_column(conn, 'sheep_goat_records', 'purchased_from_type', 'VARCHAR(20)')
 
-            conn.execute(text("""
+            conn.execute(text(f"""
                 CREATE TABLE IF NOT EXISTS livestock_purchase_sources (
                     id INTEGER PRIMARY KEY,
                     user_id INTEGER,
                     species VARCHAR(20),
                     name VARCHAR(160) NOT NULL,
                     source_type VARCHAR(20),
-                    created_at DATETIME
+                    created_at {_ts_type()}
                 )
             """))
     except Exception as exc:
