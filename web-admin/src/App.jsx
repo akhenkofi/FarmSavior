@@ -1398,6 +1398,7 @@ function AppInner() {
  const [ancestorPdfOpen, setAncestorPdfOpen] = useState(false)
  const [offspringReportOpen, setOffspringReportOpen] = useState(false)
  const [offspringListOpen, setOffspringListOpen] = useState(false)
+ const [selectedOffspringRecord, setSelectedOffspringRecord] = useState(null)
  const [offspringSearch, setOffspringSearch] = useState('')
  const [famachaDraft, setFamachaDraft] = useState({ famacha: '--', bodyScore: '', weight: '', notes: '' })
  const [customMedicineComposerOpen, setCustomMedicineComposerOpen] = useState(false)
@@ -4553,22 +4554,23 @@ function AppInner() {
  </article>
 
 
- {selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18}}>
+ {(selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setSelectedLivestockRecord(null)}>‹</button>
- <strong style={{fontSize:'1.05rem'}}>{String(selectedLivestockRecord.species || 'Animal').charAt(0) + String(selectedLivestockRecord.species || 'Animal').slice(1).toLowerCase()}</strong>
- <div style={{marginLeft:'auto', fontWeight:700}}>{selectedLivestockRecord.name || selectedLivestockRecord.id || '0001'}</div>
- <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none'}} onClick={() => { setLivestockRecordEdit(mapLivestockRecordToEditForm(selectedLivestockRecord)); setRecordsSectionOpen(prev => ({ ...prev, edit: true, create: false, details: true })) }}>Edit</button>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => { if (selectedOffspringRecord) setSelectedOffspringRecord(null); else setSelectedLivestockRecord(null) }}>‹</button>
+ <strong style={{fontSize:'1.05rem'}}>{selectedOffspringRecord ? 'Offspring' : (String((selectedOffspringRecord || selectedLivestockRecord).species || 'Animal').charAt(0) + String((selectedOffspringRecord || selectedLivestockRecord).species || 'Animal').slice(1).toLowerCase())}</strong>
+ <div style={{marginLeft:'auto', fontWeight:700}}>{(selectedOffspringRecord || selectedLivestockRecord)?.name || (selectedOffspringRecord || selectedLivestockRecord)?.id || '0001'}</div>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none'}} onClick={() => { const baseRecord = selectedOffspringRecord || selectedLivestockRecord; setLivestockRecordEdit(mapLivestockRecordToEditForm(baseRecord)); setRecordsSectionOpen(prev => ({ ...prev, edit: true, create: false, details: true })) }}>Edit</button>
  </div>
  {recordsSectionOpen.details && <div style={{background:'#fff'}}>
- {livestockDetailRows(selectedLivestockRecord).map((row, idx) => {
+ {livestockDetailRows(selectedOffspringRecord || selectedLivestockRecord).map((row, idx) => {
  const [label, value, action] = row
  const clickable = action === 'breeder' && value && value !== '--'
  return <div key={`detail-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: clickable ? 'pointer' : 'default'}} onClick={() => {
  if (!clickable) return
+ const baseRecord = selectedOffspringRecord || selectedLivestockRecord
  setBreederUploads({ photos: [], docs: [] })
  setSelectedBreederDetail({
- id: String(selectedLivestockRecord?.id || '0001').padStart(4,'0'),
+ id: String(baseRecord?.id || '0001').padStart(4,'0'),
  name: value,
  phone: '--',
  email: '--',
@@ -4654,7 +4656,7 @@ function AppInner() {
  <div style={{padding:'12px 14px', borderBottom:'1px solid #e5e7eb', fontWeight:700}}>Breeder animals summary</div>
  <div className='list-row' style={{padding:'12px 14px', fontWeight:700, background:'#f8fafc'}}><span>Name / Tag #</span><span>Sire</span><span>Dam</span><span>Birth Date</span><span>Sex</span><span>Breed</span><span>Stars</span></div>
  {[
- [selectedLivestockRecord?.name || '0001', selectedLivestockRecord?.sire_id || '--', selectedLivestockRecord?.dam_id || '--', selectedLivestockRecord?.date_of_birth ? String(selectedLivestockRecord.date_of_birth).slice(0,10) : '--', selectedLivestockRecord?.animal_type || '--', selectedLivestockRecord?.breeding_type || '--', selectedLivestockRecord?.stars ?? '--'],
+ [selectedLivestockRecord?.name || '0001', selectedLivestockRecord?.sire_id || '--', selectedLivestockRecord?.dam_id || '--', selectedLivestockRecord?.date_of_birth ? String((selectedOffspringRecord || selectedLivestockRecord).date_of_birth).slice(0,10) : '--', selectedLivestockRecord?.animal_type || '--', selectedLivestockRecord?.breeding_type || '--', selectedLivestockRecord?.stars ?? '--'],
  ['0005','--','--','--','F','Baloji','4'],
  ['0007Y','--','--','--','F','Baloji','4'],
  ['0020 old 06','--','--','--','F','Baloji','3'],
@@ -4679,10 +4681,10 @@ function AppInner() {
 
 
 
- {offspringListOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ {offspringListOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setOffspringListOpen(false)}>‹</button>
- <strong>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</strong>
+ <strong>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</strong>
  <div style={{fontWeight:700}}>Offspring</div>
  <button type='button' className='btn' style={{marginLeft:'auto', background:'transparent', color:'#fff', border:'none', fontSize:'1.4rem'}}>+</button>
  </div>
@@ -4694,32 +4696,53 @@ function AppInner() {
  {date:'2023-02-08', id:'0040', breeder:'Sheep Ghana'},
  {date:'2023-09-27', id:'0185', breeder:'Sheep Ghana'},
  {date:'2024-04-13', id:'0019g', breeder:'Sheep Ghana'},
- ].filter(item => !offspringSearch || `${item.date} ${item.id} ${item.breeder}`.toLowerCase().includes(offspringSearch.toLowerCase())).map((item, idx) => <div key={`offspring-list-${idx}`} style={{borderTop:'1px solid #eef2f7'}}>
+ ].filter(item => !offspringSearch || `${item.date} ${item.id} ${item.breeder}`.toLowerCase().includes(offspringSearch.toLowerCase())).map((item, idx) => <div key={`offspring-list-${idx}`} style={{borderTop:'1px solid #eef2f7', cursor:'pointer'}} onClick={() => {
+ setSelectedOffspringRecord({
+ id: item.id,
+ name: item.id,
+ species: (selectedLivestockRecord?.species || 'SHEEP'),
+ animal_type: idx === 0 ? 'Ewe' : (idx === 1 ? 'W' : 'Ewe'),
+ purchased_from: item.breeder,
+ breeding_type: idx === 2 ? 'Boboji' : ((selectedLivestockRecord?.breeding_type) || 'Boboji'),
+ date_of_birth: item.date,
+ sold_to: idx === 0 ? 'Myroc' : '--',
+ sale_date: idx === 0 ? '2024-02-27' : '',
+ sire_id: '--',
+ dam_id: '0001',
+ farm_id: '--',
+ litter_size: 1,
+ registration_number: '--',
+ notes: '--',
+ health_status: 'Natural',
+ cull_keep_status: '',
+ })
+ setRecordsSectionOpen(prev => ({ ...prev, details: true }))
+ }}>
  <div style={{padding:'16px 16px 8px', color:'#6b7280', fontWeight:700}}>{new Date(item.date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase()}</div>
  <div className='list-row' style={{padding:'0 16px 14px', alignItems:'center'}}><div><div style={{fontWeight:700, color:'#111827'}}>{item.id}</div><div style={{fontSize:'.9rem', color:'#111827'}}>{item.breeder}</div></div><strong style={{marginLeft:'auto', color:'#9ca3af'}}>›</strong></div>
  </div>)}
  </div>
  </article>}
 
- {offspringReportOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ {offspringReportOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#0f172a', color:'#fff', padding:'14px 16px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setOffspringReportOpen(false)}>‹</button>
  <div>
  <div style={{fontSize:'1.05rem', fontWeight:700}}>FarmSavior Offspring Report</div>
- <div style={{fontSize:'.82rem', opacity:.85}}>Offspring summary for {String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</div>
+ <div style={{fontSize:'.82rem', opacity:.85}}>Offspring summary for {String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</div>
  </div>
  <button type='button' className='btn' style={{marginLeft:'auto', background:'#fff', color:'#0f172a', border:'none'}} onClick={() => window.print()}>Print / Save PDF</button>
  </div>
  <div style={{background:'#fff', padding:16}}>
  <div className='row2' style={{gap:12}}>
- <div className='panel' style={{padding:12, borderRadius:14, background:'#eff6ff', border:'1px solid #bfdbfe'}}><div className='helper-text'>Parent animal</div><strong>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</strong></div>
- <div className='panel' style={{padding:12, borderRadius:14, background:'#f8fafc', border:'1px solid #e5e7eb'}}><div className='helper-text'>Recorded offspring</div><strong>{Number(selectedLivestockRecord.litter_size || 0)}</strong></div>
+ <div className='panel' style={{padding:12, borderRadius:14, background:'#eff6ff', border:'1px solid #bfdbfe'}}><div className='helper-text'>Parent animal</div><strong>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</strong></div>
+ <div className='panel' style={{padding:12, borderRadius:14, background:'#f8fafc', border:'1px solid #e5e7eb'}}><div className='helper-text'>Recorded offspring</div><strong>{Number((selectedOffspringRecord || selectedLivestockRecord).litter_size || 0)}</strong></div>
  </div>
  <article className='panel' style={{marginTop:12, padding:0, overflow:'hidden', borderRadius:16}}>
  <div style={{padding:'12px 14px', borderBottom:'1px solid #e5e7eb', fontWeight:700}}>Offspring table</div>
  <div className='list-row' style={{padding:'12px 14px', fontWeight:700, background:'#f8fafc', display:'grid', gridTemplateColumns:'1.2fr 1fr 1fr .8fr 1fr 1fr 1fr 1fr', gap:8}}><span>Name / Tag #</span><span>Birth Date</span><span>Sire</span><span>Sex</span><span>Buyer</span><span>Sale Price</span><span>Sale Desc</span><span>Winnings</span></div>
  {[
- [selectedLivestockRecord.name || '00199', selectedLivestockRecord.date_of_birth ? String(selectedLivestockRecord.date_of_birth).slice(0,10) : '--', selectedLivestockRecord.sire_id || '--', selectedLivestockRecord.animal_type || '--', selectedLivestockRecord.sold_to || '--', selectedLivestockRecord.sale_price || '--', selectedLivestockRecord.pen_location || '--', selectedLivestockRecord.treatment_entry || '--'],
+ [(selectedOffspringRecord || selectedLivestockRecord).name || '00199', (selectedOffspringRecord || selectedLivestockRecord).date_of_birth ? String((selectedOffspringRecord || selectedLivestockRecord).date_of_birth).slice(0,10) : '--', (selectedOffspringRecord || selectedLivestockRecord).sire_id || '--', (selectedOffspringRecord || selectedLivestockRecord).animal_type || '--', (selectedOffspringRecord || selectedLivestockRecord).sold_to || '--', (selectedOffspringRecord || selectedLivestockRecord).sale_price || '--', (selectedOffspringRecord || selectedLivestockRecord).pen_location || '--', (selectedOffspringRecord || selectedLivestockRecord).treatment_entry || '--'],
  ['0185','2023-09-27','--','W','--','$0','--','--'],
  ['0040','2020-02-05','--','Ewe','--','$0','--','--'],
  ].map((row, idx) => <div key={`offspring-report-row-${idx}`} className='list-row' style={{padding:'12px 14px', borderTop:'1px solid #eef2f7', display:'grid', gridTemplateColumns:'1.2fr 1fr 1fr .8fr 1fr 1fr 1fr 1fr', gap:8}}>{row.map((cell, cidx) => <span key={`offspring-cell-${idx}-${cidx}`} style={{color:'#111827'}}>{cell}</span>)}</div>)}
@@ -4732,7 +4755,7 @@ function AppInner() {
  </div>
  </article>}
 
- {ancestorPdfOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ {ancestorPdfOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#0f172a', color:'#fff', padding:'14px 16px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setAncestorPdfOpen(false)}>‹</button>
  <div>
@@ -4744,23 +4767,23 @@ function AppInner() {
  <div style={{background:'#fff', padding:16}}>
  <div className='row2' style={{gap:12}}>
  <div className='panel' style={{padding:12, borderRadius:14, background:'#eff6ff', border:'1px solid #bfdbfe'}}>
- <div className='helper-text'>Animal ID</div><strong>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</strong>
+ <div className='helper-text'>Animal ID</div><strong>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</strong>
  </div>
  <div className='panel' style={{padding:12, borderRadius:14, background:'#f8fafc', border:'1px solid #e5e7eb'}}>
- <div className='helper-text'>Species / Sex</div><strong>{selectedLivestockRecord.species || '--'} • {selectedLivestockRecord.animal_type || '--'}</strong>
+ <div className='helper-text'>Species / Sex</div><strong>{(selectedOffspringRecord || selectedLivestockRecord).species || '--'} • {(selectedOffspringRecord || selectedLivestockRecord).animal_type || '--'}</strong>
  </div>
  </div>
  <div className='row2' style={{gap:12, marginTop:12}}>
- <div className='panel' style={{padding:12, borderRadius:14, background:'#f0fdf4', border:'1px solid #86efac'}}><div className='helper-text'>Breed</div><strong>{selectedLivestockRecord.breeding_type || '--'}</strong></div>
- <div className='panel' style={{padding:12, borderRadius:14, background:'#fff7ed', border:'1px solid #fdba74'}}><div className='helper-text'>Breeder</div><strong>{selectedLivestockRecord.purchased_from || '--'}</strong></div>
+ <div className='panel' style={{padding:12, borderRadius:14, background:'#f0fdf4', border:'1px solid #86efac'}}><div className='helper-text'>Breed</div><strong>{(selectedOffspringRecord || selectedLivestockRecord).breeding_type || '--'}</strong></div>
+ <div className='panel' style={{padding:12, borderRadius:14, background:'#fff7ed', border:'1px solid #fdba74'}}><div className='helper-text'>Breeder</div><strong>{(selectedOffspringRecord || selectedLivestockRecord).purchased_from || '--'}</strong></div>
  </div>
  <article className='panel' style={{marginTop:12, padding:16, borderRadius:16}}>
  <div style={{fontWeight:700, marginBottom:12}}>Pedigree Overview</div>
  <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:12}}>
- <div style={{padding:12, border:'1px solid #e5e7eb', borderRadius:12}}><div className='helper-text'>Sire</div><strong>{selectedLivestockRecord.sire_id || 'Not chosen'}</strong></div>
- <div style={{padding:12, border:'1px solid #e5e7eb', borderRadius:12}}><div className='helper-text'>Dam</div><strong>{selectedLivestockRecord.dam_id || 'Not chosen'}</strong></div>
- <div style={{padding:12, border:'1px solid #e5e7eb', borderRadius:12}}><div className='helper-text'>Dam-Sire</div><strong>{selectedLivestockRecord.farm_id || 'Not chosen'}</strong></div>
- <div style={{padding:12, border:'1px solid #e5e7eb', borderRadius:12}}><div className='helper-text'>DNA</div><strong>{selectedLivestockRecord.registration_number || 'Not tested'}</strong></div>
+ <div style={{padding:12, border:'1px solid #e5e7eb', borderRadius:12}}><div className='helper-text'>Sire</div><strong>{(selectedOffspringRecord || selectedLivestockRecord).sire_id || 'Not chosen'}</strong></div>
+ <div style={{padding:12, border:'1px solid #e5e7eb', borderRadius:12}}><div className='helper-text'>Dam</div><strong>{(selectedOffspringRecord || selectedLivestockRecord).dam_id || 'Not chosen'}</strong></div>
+ <div style={{padding:12, border:'1px solid #e5e7eb', borderRadius:12}}><div className='helper-text'>Dam-Sire</div><strong>{(selectedOffspringRecord || selectedLivestockRecord).farm_id || 'Not chosen'}</strong></div>
+ <div style={{padding:12, border:'1px solid #e5e7eb', borderRadius:12}}><div className='helper-text'>DNA</div><strong>{(selectedOffspringRecord || selectedLivestockRecord).registration_number || 'Not tested'}</strong></div>
  </div>
  </article>
  <article className='panel' style={{marginTop:12, padding:16, borderRadius:16}}>
@@ -4771,31 +4794,31 @@ function AppInner() {
  </div>
  </article>}
 
- {ancestorTreeOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ {ancestorTreeOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setAncestorTreeOpen(false)}>‹</button>
- <strong>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</strong>
- <div style={{fontWeight:700}}>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</div>
+ <strong>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</strong>
+ <div style={{fontWeight:700}}>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</div>
  <button type='button' className='btn' style={{marginLeft:'auto', background:'transparent', color:'#fff', border:'none'}} onClick={() => setAncestorPdfOpen(true)}>Share PDF</button>
  </div>
  <div style={{background:'#6b7280', height:140}} />
  <div style={{background:'#f8fafc', minHeight:520, position:'relative', overflow:'hidden', backgroundImage:'linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)', backgroundSize:'16px 16px'}}>
  <div style={{position:'absolute', left:24, top:40, width:84, minHeight:90, background:'#fff', border:'2px solid #111827', borderRadius:8, display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', fontWeight:700}}>
- <div>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</div>
- <div style={{fontSize:'1.1rem'}}>{String(selectedLivestockRecord.animal_type || 'Ewe').replaceAll('_',' ')}</div>
+ <div>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</div>
+ <div style={{fontSize:'1.1rem'}}>{String((selectedOffspringRecord || selectedLivestockRecord).animal_type || 'Ewe').replaceAll('_',' ')}</div>
  </div>
- <div style={{position:'absolute', left:38, top:178, width:68, minHeight:44, background:'#fff', border:'2px solid #f0abfc', borderRadius:8, display:'flex', justifyContent:'center', alignItems:'center', fontWeight:700}}>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</div>
+ <div style={{position:'absolute', left:38, top:178, width:68, minHeight:44, background:'#fff', border:'2px solid #f0abfc', borderRadius:8, display:'flex', justifyContent:'center', alignItems:'center', fontWeight:700}}>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</div>
  <div style={{position:'absolute', left:105, top:197, width:56, height:2, background:'#6b7280'}} />
  <div style={{position:'absolute', left:160, top:105, width:2, height:110, background:'#6b7280'}} />
  <div style={{position:'absolute', left:160, top:105, width:40, height:2, background:'#6b7280'}} />
  <div style={{position:'absolute', left:160, top:215, width:40, height:2, background:'#6b7280'}} />
- <div style={{position:'absolute', left:198, top:86, padding:'8px 16px', background:'#fff', border:'1px solid #d1d5db', borderRadius:10, color:'#9ca3af', fontSize:'1.1rem'}}>{selectedLivestockRecord.sire_id ? `Sire ${selectedLivestockRecord.sire_id}` : 'Sire Not Chosen'}</div>
- <div style={{position:'absolute', left:198, top:196, padding:'8px 16px', background:'#fff', border:'1px solid #d1d5db', borderRadius:10, color:'#9ca3af', fontSize:'1.1rem'}}>{selectedLivestockRecord.dam_id ? `Dam ${selectedLivestockRecord.dam_id}` : 'Dam Not Chosen'}</div>
+ <div style={{position:'absolute', left:198, top:86, padding:'8px 16px', background:'#fff', border:'1px solid #d1d5db', borderRadius:10, color:'#9ca3af', fontSize:'1.1rem'}}>{(selectedOffspringRecord || selectedLivestockRecord).sire_id ? `Sire ${(selectedOffspringRecord || selectedLivestockRecord).sire_id}` : 'Sire Not Chosen'}</div>
+ <div style={{position:'absolute', left:198, top:196, padding:'8px 16px', background:'#fff', border:'1px solid #d1d5db', borderRadius:10, color:'#9ca3af', fontSize:'1.1rem'}}>{(selectedOffspringRecord || selectedLivestockRecord).dam_id ? `Dam ${(selectedOffspringRecord || selectedLivestockRecord).dam_id}` : 'Dam Not Chosen'}</div>
  <div style={{position:'absolute', left:20, bottom:18, color:'#cbd5e1', fontWeight:700, opacity:.8}}>FarmSavior</div>
  </div>
  </article>}
 
- {famachaComposerOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ {famachaComposerOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setFamachaComposerOpen(false)}>Cancel</button>
  <strong style={{margin:'0 auto'}}>FAMACHA / BCS</strong>
@@ -4833,7 +4856,7 @@ function AppInner() {
  </div>
  </article>}
 
- {customMedicineComposerOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ {customMedicineComposerOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setCustomMedicineComposerOpen(false)}>Cancel</button>
  <strong style={{margin:'0 auto'}}>Medicines</strong>
@@ -4849,7 +4872,7 @@ function AppInner() {
  </div>
  </article>}
 
- {medicineChooserOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ {medicineChooserOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setMedicineChooserOpen(false)}>Cancel</button>
  <strong style={{margin:'0 auto'}}>Medicines</strong>
@@ -4860,7 +4883,7 @@ function AppInner() {
  </div>
  <div style={{background:'#fff', minHeight:320}}>
  {(() => {
- const species = String(selectedLivestockRecord.species || 'SHEEP').toUpperCase()
+ const species = String((selectedOffspringRecord || selectedLivestockRecord).species || 'SHEEP').toUpperCase()
  const catalog = livestockMedicineOptions[species] || livestockMedicineOptions.SHEEP
  const match = (name) => !medicineChooserSearch || name.toLowerCase().includes(medicineChooserSearch.toLowerCase())
  return <>
@@ -4874,7 +4897,7 @@ function AppInner() {
  </div>
  </article>}
 
- {medicineShotOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ {medicineShotOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setMedicineShotOpen(false)}>Cancel</button>
  <strong style={{margin:'0 auto'}}>Medicine Shot</strong>
@@ -4901,11 +4924,11 @@ function AppInner() {
  </div>
  </article>}
 
- {medicinesScreenOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ {medicinesScreenOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setMedicinesScreenOpen(false)}>‹</button>
- <strong>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</strong>
- <div style={{fontWeight:700}}>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</div>
+ <strong>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</strong>
+ <div style={{fontWeight:700}}>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</div>
  <button type='button' className='btn' style={{marginLeft:'auto', background:'transparent', color:'#fff', border:'none', fontSize:'1.4rem'}} onClick={() => { setMedicineShotDraft({ medicine: '', dosage: '', notes: '' }); setMedicineShotOpen(true) }}>+</button>
  </div>
  <div style={{padding:12, background:'#f8fafc'}}>
@@ -4919,7 +4942,7 @@ function AppInner() {
  </div>
  </article>}
 
- {weightComposerOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ {weightComposerOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setWeightComposerOpen(false)}>Cancel</button>
  <strong style={{margin:'0 auto'}}>Weight</strong>
@@ -4944,7 +4967,7 @@ function AppInner() {
  </div>
  </article>}
 
- {notesComposerOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ {notesComposerOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setNotesComposerOpen(false)}>Cancel</button>
  <strong style={{margin:'0 auto'}}>Notes</strong>
@@ -4961,10 +4984,10 @@ function AppInner() {
  </div>
  </article>}
 
- {notesScreenOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ {notesScreenOpen && (selectedOffspringRecord || selectedLivestockRecord) && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
  <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
  <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setNotesScreenOpen(false)}>‹</button>
- <strong>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</strong>
+ <strong>{String((selectedOffspringRecord || selectedLivestockRecord).id || '0001').padStart(4,'0')}</strong>
  <div style={{fontWeight:700}}>Notes</div>
  <button type='button' className='btn' style={{marginLeft:'auto', background:'transparent', color:'#fff', border:'none', fontSize:'1.4rem'}} onClick={() => { setDraftNote(''); setNotesComposerOpen(true) }}>+</button>
  </div>
@@ -4972,7 +4995,7 @@ function AppInner() {
  <input className='input' placeholder='Search' value={notesSearch} onChange={(e) => setNotesSearch(e.target.value)} style={{background:'#1e3a8a', color:'#fff', border:'none', borderRadius:12}} />
  </div>
  <div style={{background:'#fff', minHeight:320}}>
- {[{date: selectedLivestockRecord.date_of_birth || '2023-07-08', text: selectedLivestockRecord.notes || 'Brown local boboji with black ewe'}]
+ {[{date: (selectedOffspringRecord || selectedLivestockRecord).date_of_birth || '2023-07-08', text: (selectedOffspringRecord || selectedLivestockRecord).notes || 'Brown local boboji with black ewe'}]
  .filter(note => !notesSearch || `${note.date} ${note.text}`.toLowerCase().includes(notesSearch.toLowerCase()))
  .map((note, idx) => <div key={`note-row-${idx}`} style={{borderTop:'1px solid #eef2f7'}}>
  <div style={{padding:'16px 16px 8px', color:'#6b7280', fontWeight:700}}>{new Date(note.date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase()}</div>
