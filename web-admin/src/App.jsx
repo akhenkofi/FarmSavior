@@ -1018,27 +1018,27 @@ const livestockHistoryRows = (record) => {
  ['Add Note', '›', 'add-note'],
  ['Add Weight', '›', 'add-weight'],
  ['Medicines', `(${medsCount})`, 'medicines'],
- ['Add Medicine', '›'],
+ ['Add Medicine', '›', 'add-medicine'],
  ['Add FAMACHA/Body Condition Score', '›', 'famacha'],
  ['View Ancestor Tree', '›', 'ancestor-tree'],
- ['Share PDF Report', '›'],
+ ['Share PDF Report', '›', 'share-pdf'],
  ['View Offspring Report', '›', 'offspring-report'],
  ],
  offspring: [
  [`Offspring`, `(${offspringCount})`, 'offspring-list'],
- ['Add Lamb', '›'],
+ ['Add Lamb', '›', 'add-lamb'],
  ],
  marks: [
  ['Add Mark', '›', 'add-mark'],
  ['Add Flush', '›', 'add-flush'],
- ['Add Ultrasound', '›'],
+ ['Add Ultrasound', '›', 'add-ultrasound'],
  ],
  photosDocs: [
- ['Add Photo', '›'],
- ['Add Doc', '›'],
+ ['Add Photo', '›', 'add-photo'],
+ ['Add Doc', '›', 'add-doc'],
  ],
  herd: [
- ['Move to Different Herd', '›'],
+ ['Move to Different Herd', '›', 'move-herd'],
  ]
  }
 }
@@ -1423,6 +1423,13 @@ function AppInner() {
  const [livestockRecordEdit, setLivestockRecordEdit] = useState({ id: '', user_id: 1, ownership: 'Owned by Me', species: 'SHEEP', animal_type: 'EWE', name: '', ear_tag: '', farm_id: '', registration_number: '', stars: 0, date_of_birth: '', acquisition_date: '', purchased_from: '', purchased_from_type: 'BREEDER', purchase_price: '', currency: 'GHS', sire_id: '', dam_id: '', litter_size: 1, initial_weight_kg: '', breeding_type: 'Natural', castrated: false, sale_date: '', sale_price: '', sold_to: '', died_date: '', cull_keep_status: 'KEEP', cull_reason: '', health_status: '', pen_location: '', notes: '', treatment_entry: '' })
  const [selectedLivestockRecord, setSelectedLivestockRecord] = useState(null)
  const [selectedBreederDetail, setSelectedBreederDetail] = useState(null)
+ const animalPhotoInputRef = useRef(null)
+ const animalDocInputRef = useRef(null)
+ const [animalUploads, setAnimalUploads] = useState({ photos: [], docs: [] })
+ const [ultrasoundComposerOpen, setUltrasoundComposerOpen] = useState(false)
+ const [ultrasoundDraft, setUltrasoundDraft] = useState({ date: '', result: '', notes: '' })
+ const [moveHerdOpen, setMoveHerdOpen] = useState(false)
+ const [moveHerdDraft, setMoveHerdDraft] = useState({ herd: '', notes: '' })
  const breederPhotoInputRef = useRef(null)
  const breederDocInputRef = useRef(null)
  const [breederUploads, setBreederUploads] = useState({ photos: [], docs: [] })
@@ -1601,6 +1608,20 @@ function AppInner() {
  size: file.size,
  }))
  setBreederUploads(prev => ({ ...prev, docs: [...(prev.docs || []), ...mapped] }))
+ }
+
+ const handleAnimalPhotoFiles = async (fileList) => {
+ const files = Array.from(fileList || []).filter(Boolean)
+ if (!files.length) return
+ const mapped = files.map((file) => ({ name: file.name, type: file.type || 'image/*', size: file.size }))
+ setAnimalUploads(prev => ({ ...prev, photos: [...(prev.photos || []), ...mapped] }))
+ }
+
+ const handleAnimalDocFiles = async (fileList) => {
+ const files = Array.from(fileList || []).filter(Boolean)
+ if (!files.length) return
+ const mapped = files.map((file) => ({ name: file.name, type: file.type || 'application/octet-stream', size: file.size }))
+ setAnimalUploads(prev => ({ ...prev, docs: [...(prev.docs || []), ...mapped] }))
  }
 
  const startUniversityCheckout = async (product, planCode, label) => {
@@ -4634,12 +4655,14 @@ function AppInner() {
  <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>HISTORY</div>
  {livestockHistoryRows(selectedLivestockRecord).history.map((row, idx) => {
  const [label, value, action] = row
- const clickable = action === 'notes' || action === 'add-note' || action === 'add-weight' || action === 'medicines' || action === 'famacha' || action === 'ancestor-tree' || action === 'offspring-report' || action === 'offspring-list' || action === 'add-mark' || action === 'add-flush'
+ const clickable = action === 'notes' || action === 'add-note' || action === 'add-weight' || action === 'medicines' || action === 'add-medicine' || action === 'famacha' || action === 'ancestor-tree' || action === 'share-pdf' || action === 'offspring-report' || action === 'offspring-list' || action === 'add-mark' || action === 'add-flush'
  return <div key={`history-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: clickable ? 'pointer' : 'default'}} onClick={() => {
  if (action === 'notes') setNotesScreenOpen(true)
  if (action === 'add-note') { setDraftNote(''); setNotesComposerOpen(true) }
  if (action === 'add-weight') { setDraftWeight(''); setWeightComposerOpen(true) }
  if (action === 'medicines') setMedicinesScreenOpen(true)
+ if (action === 'add-medicine') { setMedicineShotDraft({ medicine: '', dosage: '', notes: '' }); setMedicineShotOpen(true) }
+ if (action === 'share-pdf') setAncestorPdfOpen(true)
  if (action === 'famacha') { setFamachaDraft({ famacha: '--', bodyScore: '', weight: '', notes: '' }); setFamachaComposerOpen(true) }
  if (action === 'ancestor-tree') setAncestorTreeOpen(true)
  if (action === 'offspring-report') setOffspringReportOpen(true)
@@ -4653,7 +4676,7 @@ function AppInner() {
  })}
  <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>OFFSPRING</div>
  {livestockHistoryRows(selectedOffspringRecord || selectedLivestockRecord).offspring.map(([label, value], idx) => {
- const action = label === 'Add Lamb'
+ const action = value === 'add-lamb'
  return <div key={`offspring-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: action ? 'pointer' : 'default'}} onClick={() => {
  if (!action) return
  const parent = selectedOffspringRecord || selectedLivestockRecord
@@ -4666,26 +4689,15 @@ function AppInner() {
  </div>
  })}
  <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>MARKS</div>
- {livestockHistoryRows(selectedLivestockRecord).marks.map(([label, value], idx) => (
- <div key={`marks-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}>
- <span style={{color:'#111827', fontWeight:600}}>{label}</span>
- <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{value}</strong>
- </div>
- ))}
+ {livestockHistoryRows(selectedLivestockRecord).marks.map(([label, value], idx) => <div key={`marks-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor:'pointer'}} onClick={() => { if (value === 'add-mark') { const base=(selectedOffspringRecord || selectedLivestockRecord); setMarkDraft({ sire: base?.sire_id || '', dam: base?.dam_id || base?.id || '', markDate: new Date().toISOString().slice(0,10), dueDate: '2026-08-26', fertilizationType: 'Natural' }); setMarkComposerOpen(true) } if (value === 'add-flush') { const base=(selectedOffspringRecord || selectedLivestockRecord); setFlushDraft({ ram: base?.sire_id || '', date: new Date().toISOString().slice(0,10), cidrIn: '', cidrOut: '', notes: '' }); setFlushComposerOpen(true) } if (value === 'add-ultrasound') { setUltrasoundDraft({ date: new Date().toISOString().slice(0,10), result: '', notes: '' }); setUltrasoundComposerOpen(true) } }}><span style={{color:'#111827', fontWeight:600}}>{label}</span><strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>›</strong></div>)}
  <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>PHOTOS & DOCS</div>
- {livestockHistoryRows(selectedLivestockRecord).photosDocs.map(([label, value], idx) => (
- <div key={`photosdocs-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}>
- <span style={{color:'#111827', fontWeight:600}}>{label}</span>
- <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{value}</strong>
- </div>
- ))}
+ <input ref={animalPhotoInputRef} type='file' accept='image/*' capture='environment' multiple style={{display:'none'}} onChange={(e) => handleAnimalPhotoFiles(e.target.files)} />
+ <input ref={animalDocInputRef} type='file' accept='.pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,application/pdf,text/plain' multiple style={{display:'none'}} onChange={(e) => handleAnimalDocFiles(e.target.files)} />
+ {livestockHistoryRows(selectedLivestockRecord).photosDocs.map(([label, value], idx) => <div key={`photosdocs-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor:'pointer'}} onClick={() => { if (value === 'add-photo') animalPhotoInputRef.current?.click(); if (value === 'add-doc') animalDocInputRef.current?.click() }}><span style={{color:'#111827', fontWeight:600}}>{label}</span><strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>›</strong></div>)}
+ {(animalUploads.photos || []).map((file, idx) => <div key={`animal-photo-${idx}`} className='list-row' style={{padding:'10px 16px', borderBottom:'1px solid #eef2f7'}}><span>📷 {file.name}</span><strong style={{marginLeft:'auto', color:'#94a3b8'}}>{Math.round((file.size||0)/1024)} KB</strong></div>)}
+ {(animalUploads.docs || []).map((file, idx) => <div key={`animal-doc-${idx}`} className='list-row' style={{padding:'10px 16px', borderBottom:'1px solid #eef2f7'}}><span>📄 {file.name}</span><strong style={{marginLeft:'auto', color:'#94a3b8'}}>{Math.round((file.size||0)/1024)} KB</strong></div>)}
  <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>HERD</div>
- {livestockHistoryRows(selectedLivestockRecord).herd.map(([label, value], idx) => (
- <div key={`herd-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}>
- <span style={{color:'#111827', fontWeight:600}}>{label}</span>
- <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{value}</strong>
- </div>
- ))}
+ {livestockHistoryRows(selectedLivestockRecord).herd.map(([label, value], idx) => <div key={`herd-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor:'pointer'}} onClick={() => { if (value === 'move-herd') { setMoveHerdDraft({ herd: '', notes: '' }); setMoveHerdOpen(true) } }}><span style={{color:'#111827', fontWeight:600}}>{label}</span><strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>›</strong></div>)}
  </div>}
  </article>}
 
