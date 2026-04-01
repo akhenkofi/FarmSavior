@@ -953,7 +953,7 @@ const livestockHistoryRows = (record) => {
  const offspringCount = Number(record.litter_size || 0)
  return {
  history: [
- ['Notes', `(${notesCount})`],
+ ['Notes', `(${notesCount})`, 'notes'],
  ['Add Note', '›'],
  ['Add Weight', '›'],
  ['Medicines', `(${medsCount})`],
@@ -1365,6 +1365,8 @@ function AppInner() {
  const breederDocInputRef = useRef(null)
  const [breederUploads, setBreederUploads] = useState({ photos: [], docs: [] })
  const [breederReportOpen, setBreederReportOpen] = useState(false)
+ const [notesScreenOpen, setNotesScreenOpen] = useState(false)
+ const [notesSearch, setNotesSearch] = useState('')
  const [livestockRecordsFilter, setLivestockRecordsFilter] = useState('ALL')
  const [recordsSectionOpen, setRecordsSectionOpen] = useState({ create: false, edit: false, batch: false, details: false })
  const [batchMedicationForm, setBatchMedicationForm] = useState({ species:'ALL', animal_type:'ALL', health_status:'ALL', cull_keep_status:'ALL', minStars:'', pen_location:'', medication:'', dose:'', days:'' })
@@ -4543,12 +4545,14 @@ function AppInner() {
  </div>
  })}
  <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>HISTORY</div>
- {livestockHistoryRows(selectedLivestockRecord).history.map(([label, value], idx) => (
- <div key={`history-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}>
+ {livestockHistoryRows(selectedLivestockRecord).history.map((row, idx) => {
+ const [label, value, action] = row
+ const clickable = action === 'notes'
+ return <div key={`history-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center', cursor: clickable ? 'pointer' : 'default'}} onClick={() => { if (action === 'notes') setNotesScreenOpen(true) }}>
  <span style={{color:'#111827', fontWeight:600}}>{label} {String(value).startsWith('(') ? value : ''}</span>
  <strong style={{marginLeft:'auto', color:'#9ca3af', textAlign:'right'}}>{String(value).startsWith('(') ? '›' : value}</strong>
  </div>
- ))}
+ })}
  <div style={{padding:'12px 16px', background:'#eef4ff', color:'#6b7280', fontWeight:700, letterSpacing:'.02em'}}>OFFSPRING</div>
  {livestockHistoryRows(selectedLivestockRecord).offspring.map(([label, value], idx) => (
  <div key={`offspring-${label}-${idx}`} className='list-row' style={{padding:'14px 16px', borderBottom:'1px solid #eef2f7', alignItems:'center'}}>
@@ -4615,6 +4619,27 @@ function AppInner() {
  <div style={{fontWeight:700, marginBottom:6}}>FarmSavior summary</div>
  <div style={{fontSize:'.92rem', color:'#475569'}}>This breeder report is designed to be cleaner and more useful than a raw export. It highlights breeder quality, recorded offspring, and quick lineage review in a mobile-friendly layout.</div>
  </article>
+ </div>
+ </article>}
+
+
+ {notesScreenOpen && selectedLivestockRecord && <article className='panel' style={{padding:0, overflow:'hidden', borderRadius:18, marginTop:12}}>
+ <div style={{background:'#1d4ed8', color:'#fff', padding:'12px 14px', display:'flex', alignItems:'center', gap:12}}>
+ <button type='button' className='btn' style={{background:'transparent', color:'#fff', border:'none', padding:0}} onClick={() => setNotesScreenOpen(false)}>‹</button>
+ <strong>{String(selectedLivestockRecord.id || '0001').padStart(4,'0')}</strong>
+ <div style={{fontWeight:700}}>Notes</div>
+ <button type='button' className='btn' style={{marginLeft:'auto', background:'transparent', color:'#fff', border:'none', fontSize:'1.4rem'}} onClick={() => alert('Add Note flow next')}>+</button>
+ </div>
+ <div style={{padding:12, background:'#f8fafc'}}>
+ <input className='input' placeholder='Search' value={notesSearch} onChange={(e) => setNotesSearch(e.target.value)} style={{background:'#1e3a8a', color:'#fff', border:'none', borderRadius:12}} />
+ </div>
+ <div style={{background:'#fff', minHeight:320}}>
+ {[{date: selectedLivestockRecord.date_of_birth || '2023-07-08', text: selectedLivestockRecord.notes || 'Brown local boboji with black ewe'}]
+ .filter(note => !notesSearch || `${note.date} ${note.text}`.toLowerCase().includes(notesSearch.toLowerCase()))
+ .map((note, idx) => <div key={`note-row-${idx}`} style={{borderTop:'1px solid #eef2f7'}}>
+ <div style={{padding:'16px 16px 8px', color:'#6b7280', fontWeight:700}}>{new Date(note.date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase()}</div>
+ <div className='list-row' style={{padding:'0 16px 14px', alignItems:'center'}}><span style={{fontWeight:700, color:'#111827'}}>{note.text}</span><strong style={{marginLeft:'auto', color:'#9ca3af'}}>›</strong></div>
+ </div>)}
  </div>
  </article>}
 
