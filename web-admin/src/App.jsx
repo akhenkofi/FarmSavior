@@ -1351,7 +1351,7 @@ function AppInner() {
  const [expandedTradeCommodity, setExpandedTradeCommodity] = useState('')
  const [expandedTradeSections, setExpandedTradeSections] = useState({})
  const [expandedLivestockPlan, setExpandedLivestockPlan] = useState('')
- const [livestockSubscription, setLivestockSubscription] = useState({ tier: 'free', status: 'NONE', record_limit: 0, can_create_records: false, subscription: null, plans: [] })
+ const [livestockSubscription, setLivestockSubscription] = useState({ tier: 'free', status: 'FREE', record_limit: 25, can_create_records: true, subscription: null, plans: [] })
  const [poultryTrack, setPoultryTrack] = useState('layers')
  const [poultryZone, setPoultryZone] = useState('humid')
  const [openPoultryModule, setOpenPoultryModule] = useState(0)
@@ -1431,10 +1431,10 @@ function AppInner() {
 
  const loadLivestockSubscription = async () => {
  if (!token) {
- setLivestockSubscription({ tier: 'free', status: 'NONE', record_limit: 0, can_create_records: false, subscription: null, plans: [] })
+ setLivestockSubscription({ tier: 'free', status: 'FREE', record_limit: 25, can_create_records: true, subscription: null, plans: [] })
  return
  }
- const sub = await api.fetchLivestockRecordsSubscriptionMe().catch(() => ({ tier: 'free', status: 'NONE', record_limit: 0, can_create_records: false, subscription: null, plans: [] }))
+ const sub = await api.fetchLivestockRecordsSubscriptionMe().catch(() => ({ tier: 'free', status: 'FREE', record_limit: 25, can_create_records: true, subscription: null, plans: [] }))
  setLivestockSubscription({
  tier: sub?.tier || 'free',
  status: sub?.status || 'NONE',
@@ -2636,11 +2636,11 @@ function AppInner() {
  <h3>{t('🐄 Livestock Records & Intelligence Platform (Africa-Wide)','🐄 Plateforme de registres et d’intelligence du bétail (Afrique entière)','🐄 畜牧记录与智能平台（非洲范围）')}</h3>
  <p style={{fontSize:'.85rem',color:'#475569'}}>{t('A production-grade livestock records system for poultry, sheep, goats, and cattle, with traceability, breeding performance, health tracking, and subscription-based access for operators across Africa.','Un système professionnel de registres d’élevage pour la volaille, les ovins, les caprins et les bovins, avec traçabilité, performance de reproduction, suivi sanitaire et accès par abonnement pour les opérateurs en Afrique.','面向非洲运营者的生产级畜牧记录系统，覆盖家禽、绵羊、山羊和牛，包含溯源、繁育绩效、健康追踪和订阅访问。')}</p>
  <p style={{fontSize:'.82rem',color:'#64748b',marginTop:4}}>{t('Pricing auto-displays in your selected country currency. Settlement can route to Ghana Mobile Money or US bank account once payout details are configured.','Les prix s’affichent automatiquement dans la devise du pays sélectionné. Le règlement peut être acheminé vers Mobile Money Ghana ou un compte bancaire US une fois les détails de paiement configurés.','价格会按你选择的国家货币自动显示。配置收款后，可结算到加纳移动支付或美国银行账户。')}</p>
- <p style={{fontSize:'.85rem',color:'#0f766e',marginTop:6,fontWeight:700}}>{t('🎁 7-day free trial available • No charge now • Free cancellation during trial • Trial is limited to 10 animals and available once per email/phone','🎁 Essai gratuit de 7 jours • Aucun débit maintenant • Annulation gratuite pendant l’essai • Essai limité à 10 animaux et une seule fois par email/téléphone','🎁 提供7天免费试用 • 现在不扣费 • 试用期可免费取消 • 试用仅限10只动物且每个邮箱/手机号仅一次')}</p>
+ <p style={{fontSize:'.85rem',color:'#0f766e',marginTop:6,fontWeight:700}}>Free version allows up to 25 animals total. No photos allowed. No documents allowed.</p>
  <h4 style={{margin:'8px 0'}}>{t('Select Your Subscription Plan','Sélectionnez votre plan d’abonnement','选择你的订阅方案')}</h4>
- {livestockSubscription?.tier && livestockSubscription.tier !== 'free' && <div className='panel' style={{marginBottom:10,padding:10,background:'#ecfeff',border:'1px solid #a5f3fc'}}>
- <strong>Current livestock tier:</strong> {String(livestockSubscription.tier).toUpperCase()} • {livestockSubscription.record_limit ? `Limit ${livestockSubscription.record_limit} animals` : 'Unlimited animals'}{livestockSubscription.subscription?.status ? ` • ${livestockSubscription.subscription.status}` : ''}
- </div>}
+ <div className='panel' style={{marginBottom:10,padding:10,background:livestockSubscription?.tier==='premium'?'#ecfeff':'#f8fafc',border:'1px solid #cbd5e1'}}>
+ <strong>Current livestock tier:</strong> {livestockSubscription?.tier==='premium' ? 'PREMIUM' : 'FREE'} • {livestockSubscription?.tier==='premium' ? 'Unlimited animals' : 'Limit 25 animals'}{livestockSubscription?.subscription?.status ? ` • ${livestockSubscription.subscription.status}` : ''}
+ </div>
  <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
  {publicLivestockPlans.map((p, i) => {
  const key = p.plan_code || p.name || `plan-${i}`
@@ -2657,38 +2657,19 @@ function AppInner() {
  <div className='list-row'><span>{t('Monthly','Mensuel','月付')}</span><strong>{formatLocalPrice(p.monthly_usd)}</strong></div>
  <div className='list-row'><span>{t('Yearly','Annuel','年付')}</span><strong>{formatLocalPrice(p.yearly_usd)}</strong></div>
  <div className='list'>
+ <div className='list-row'><span>{p.record_limit ? `Up to ${p.record_limit} animals total` : 'Unlimited animals'}</span></div>
  {(p.features || []).map((f, j) => <div className='list-row' key={`pf-${i}-${j}`}><span>{displayFeature(f)}</span></div>)}
+ {!!p.yearly_savings_pct && <div className='list-row'><span>You save about {p.yearly_savings_pct}% with the yearly plan compared to monthly.</span></div>}
  </div>
  <div className='list-row' style={{marginTop:8, gap:8, flexWrap:'wrap'}}>
- <button className='btn' onClick={async () => {
- if (!token) { handleProtectedAction('onboarding', 'Start free trial'); return }
- try {
- const r = await api.checkoutLivestockRecordsPlan({
- user_id: Number(me?.id || 1),
- plan_code: p.plan_code || 'starter',
- country: uiCountry,
- billing_cycle: 'monthly',
- currency: selectedCurrency,
- force_paid: false
- })
- if (r.trial_active) {
- alert(t(`7-day free trial started. No charge now. Free cancellation before: ${r.free_cancellation_before || r.trial_ends_at}. Ref: ${r.reference}`,
- `Essai gratuit de 7 jours activé. Aucun débit maintenant. Annulation gratuite avant : ${r.free_cancellation_before || r.trial_ends_at}. Réf : ${r.reference}`))
- // Immediately open the livestock records management area after trial activation.
- setTimeout(() => openLivestockManagement(), 120)
- } else {
- alert(t(`Free trial already used for this account. No charge was made. Use Buy Subscription Now if you want paid access.`,
- `Essai gratuit déjà utilisé pour ce compte. Aucun débit n’a été effectué. Utilisez Acheter maintenant pour l’accès payant.`))
- }
- } catch (e) { alert(t(`Trial failed: ${errMsg(e)}`,`Échec de l’essai : ${errMsg(e)}`)) }
- }}>{t('Start 7-Day Free Trial','Démarrer l’essai 7 jours','开始7天免费试用')}</button>
+ <button className='btn' onClick={() => { if (!token) { handleProtectedAction('onboarding', 'Livestock Free'); return } openLivestockManagement() }}>Use Free Version</button>
 
  <button className='btn btn-dark' onClick={async () => {
  if (!token) { handleProtectedAction('onboarding', 'Subscription checkout'); return }
  try {
  const r = await api.checkoutLivestockRecordsPlan({
  user_id: Number(me?.id || 1),
- plan_code: p.plan_code || 'starter',
+ plan_code: p.plan_code || 'premium',
  country: uiCountry,
  billing_cycle: 'monthly',
  currency: selectedCurrency,
@@ -2704,7 +2685,7 @@ function AppInner() {
  alert(t(`Checkout created. Ref: ${r.reference}`,`Paiement créé. Réf : ${r.reference}`))
  }
  } catch (e) { alert(t(`Checkout failed: ${errMsg(e)}`,`Échec du paiement : ${errMsg(e)}`)) }
- }}>{t('Buy Subscription Now','Acheter maintenant','立即购买订阅')}</button>
+ }}>{t('Buy Premium Now','Acheter Premium','立即购买高级版')}</button>
  </div>
  </div>
  ))}

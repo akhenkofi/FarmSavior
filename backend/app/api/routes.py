@@ -735,49 +735,42 @@ def _mark_trial_used(user: Optional[User], user_id: Optional[int]):
 
 
 LIVESTOCK_PLAN_CATALOG = {
-    'trial': {
-        'plan_code': 'trial',
-        'name': '7-Day Trial',
+    'free': {
+        'plan_code': 'free',
+        'name': 'Livestock Free',
         'monthly_usd': 0.0,
         'yearly_usd': 0.0,
-        'record_limit': 10,
+        'record_limit': 25,
         'team_limit': 1,
-        'features': ['Up to 10 animals', 'Create, edit, and test core records', 'One-time 7-day trial per phone/email'],
+        'photos_allowed': False,
+        'docs_allowed': False,
+        'features': ['Up to 25 animals total', 'No photos allowed', 'No documents allowed'],
     },
-    'starter': {
-        'plan_code': 'starter',
-        'name': 'Sheep & Goats Starter',
-        'monthly_usd': 4.99,
-        'yearly_usd': 49.99,
-        'record_limit': 300,
-        'team_limit': 1,
-        'features': ['Up to 300 animals', 'Basic records', 'Breeding groups', 'CSV export'],
-    },
-    'pro': {
-        'plan_code': 'pro',
-        'name': 'Sheep & Goats Pro',
+    'premium': {
+        'plan_code': 'premium',
+        'name': 'Livestock Premium',
         'monthly_usd': 9.99,
-        'yearly_usd': 99.99,
-        'record_limit': 2500,
-        'team_limit': 3,
-        'features': ['Up to 2,500 animals', 'Health and cull tracking', 'Performance analytics', 'Team access (3 users)'],
-    },
-    'enterprise': {
-        'plan_code': 'enterprise',
-        'name': 'Sheep & Goats Enterprise',
-        'monthly_usd': 24.99,
-        'yearly_usd': 249.99,
+        'yearly_usd': 102.90,
         'record_limit': None,
         'team_limit': None,
-        'features': ['Unlimited animals', 'Multi-farm operations', 'Priority support', 'API/data integrations'],
+        'photos_allowed': True,
+        'docs_allowed': True,
+        'features': ['Unlimited animals', 'All livestock features unlocked', 'Photos and documents allowed', 'Choose monthly or yearly billing'],
     },
 }
 
 
 def _livestock_plan_snapshot(plan_code: str) -> dict:
     plan = dict(LIVESTOCK_PLAN_CATALOG.get(plan_code, LIVESTOCK_PLAN_CATALOG['starter']))
-    plan['record_limit_label'] = 'Unlimited animals' if plan.get('record_limit') in (None, 0) else f"Up to {int(plan['record_limit'])} animals"
+    plan['record_limit_label'] = 'Unlimited animals' if plan.get('record_limit') in (None, 0) else f"Up to {int(plan['record_limit'])} animals total"
     plan['team_limit_label'] = 'Unlimited team users' if plan.get('team_limit') in (None, 0) else f"Up to {int(plan['team_limit'])} team user{'s' if int(plan['team_limit']) != 1 else ''}"
+    yearly = float(plan.get('yearly_usd') or 0)
+    monthly = float(plan.get('monthly_usd') or 0)
+    if monthly > 0 and yearly > 0:
+        annualized = monthly * 12
+        plan['yearly_savings_pct'] = round(((annualized - yearly) / annualized) * 100, 1)
+    else:
+        plan['yearly_savings_pct'] = 0.0
     return plan
 
 
@@ -795,19 +788,19 @@ def _livestock_access_context(user_id: Optional[int], db: Session) -> dict:
     if not sub:
         return {
             'tier': 'free',
-            'status': 'NONE',
-            'record_limit': 0,
-            'can_create_records': False,
-            'plan': None,
+            'status': 'FREE',
+            'record_limit': 25,
+            'can_create_records': True,
+            'plan': _livestock_plan_snapshot('free'),
             'subscription': None,
         }
-    tier = 'trial' if str(sub.status) == 'TRIAL_ACTIVE' else str(sub.plan_code or 'starter')
+    tier = str(sub.plan_code or 'premium') if str(sub.status) == 'ACTIVE' else 'free'
     plan = _livestock_plan_snapshot(tier)
     return {
         'tier': tier,
         'status': str(sub.status),
         'record_limit': plan.get('record_limit'),
-        'can_create_records': str(sub.status) in ['ACTIVE', 'TRIAL_ACTIVE'],
+        'can_create_records': str(sub.status) in ['ACTIVE'],
         'plan': plan,
         'subscription': sub,
     }
@@ -3630,8 +3623,8 @@ def livestock_subscription_plans():
     return {
         'note': 'Prices are monthly base rates and can be billed in supported currencies by FX conversion. Includes one-time 7-day free trial per phone/email.',
         'supported_currencies': ['GHS', 'NGN', 'XOF', 'KES', 'TZS', 'UGX', 'ZAR', 'USD', 'EUR'],
-        'trial': _livestock_plan_snapshot('trial'),
-        'plans': [_livestock_plan_snapshot('starter'), _livestock_plan_snapshot('pro'), _livestock_plan_snapshot('enterprise')],
+        'free': _livestock_plan_snapshot('free'),
+        'plans': [_livestock_plan_snapshot('premium')],
         'coverage': 'Available for all African countries and all FarmSavior listed countries.'
     }
 
@@ -3647,8 +3640,8 @@ def livestock_subscription_me(authorization: Optional[str] = Header(None), db: S
         'status': ctx.get('status') or 'NONE',
         'record_limit': ctx.get('record_limit'),
         'can_create_records': ctx.get('can_create_records', False),
-        'trial': _livestock_plan_snapshot('trial'),
-        'plans': [_livestock_plan_snapshot('starter'), _livestock_plan_snapshot('pro'), _livestock_plan_snapshot('enterprise')],
+        'free': _livestock_plan_snapshot('free'),
+        'plans': [_livestock_plan_snapshot('premium')],
         'subscription': {
             'id': sub.id,
             'user_id': sub.user_id,
@@ -3667,7 +3660,7 @@ def livestock_subscription_me(authorization: Optional[str] = Header(None), db: S
 
 @router.post('/livestock-records/subscription/checkout')
 def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Session = Depends(get_db)):
-    plans = {code: {'monthly': plan['monthly_usd'], 'yearly': plan['yearly_usd']} for code, plan in LIVESTOCK_PLAN_CATALOG.items() if code != 'trial'}
+    plans = {code: {'monthly': plan['monthly_usd'], 'yearly': plan['yearly_usd']} for code, plan in LIVESTOCK_PLAN_CATALOG.items() if code not in ['free']}
     fx = {'USD': 1.0, 'GHS': 15.0, 'NGN': 1600.0, 'XOF': 610.0}
 
     amount_usd = plans[payload.plan_code][payload.billing_cycle]
@@ -3680,61 +3673,7 @@ def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Sessio
     # One-time 7-day free trial (no charge now), unique per phone/email/user.
     # IMPORTANT: trial checkout must NEVER fall through into paid checkout.
     if not payload.force_paid:
-        if _trial_already_used(user, payload.user_id, db):
-            return {
-                'message': 'free trial already used for this account/identity. Please use paid checkout.',
-                'reference': '',
-                'trial_active': False,
-                'trial_eligible': False,
-                'requires_paid_checkout': True,
-                'payment_url': '',
-                'payment_provider': 'paystack',
-                'payment_init_error': ''
-            }
-
-        ref = f"SGTRIAL-{int(datetime.utcnow().timestamp())}-{random.randint(100,999)}"
-        trial_end = datetime.utcnow() + timedelta(days=7)
-        rec = SheepGoatSubscription(
-            user_id=payload.user_id,
-            plan_code=payload.plan_code,
-            country=country or payload.country,
-            billing_cycle=payload.billing_cycle,
-            amount=0.0,
-            currency='USD',
-            status='TRIAL_ACTIVE',
-            reference=ref,
-            started_at=datetime.utcnow(),
-            ends_at=trial_end
-        )
-        db.add(rec)
-        db.commit()
-        db.refresh(rec)
-        _mark_trial_used(user, payload.user_id)
-
-        return {
-            'message': '7-day free trial started',
-            'reference': ref,
-            'trial_active': True,
-            'trial_eligible': True,
-            'trial_ends_at': trial_end.isoformat(),
-            'free_cancellation_before': trial_end.isoformat(),
-            'subscription': {
-                'id': rec.id,
-                'user_id': rec.user_id,
-                'plan_code': rec.plan_code,
-                'billing_cycle': rec.billing_cycle,
-                'currency': rec.currency,
-                'amount': rec.amount,
-                'status': rec.status,
-                'reference': rec.reference,
-                'started_at': rec.started_at.isoformat() if rec.started_at else None,
-                'ends_at': rec.ends_at.isoformat() if rec.ends_at else None,
-                'country': rec.country,
-            },
-            'payment_url': '',
-            'payment_provider': 'paystack',
-            'payment_init_error': ''
-        }
+        raise HTTPException(status_code=400, detail='Free livestock tier does not require checkout. Use paid checkout only for Premium.')
 
     def mask_value(v: str, keep: int = 4) -> str:
         s = str(v or '')

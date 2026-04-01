@@ -314,7 +314,7 @@ class SheepGoatBreedingGroupIn(BaseModel):
 
 class SheepGoatSubscriptionIn(BaseModel):
     user_id: Optional[int] = None
-    plan_code: Literal['starter', 'pro', 'enterprise']
+    plan_code: Literal['premium']
     country: str = 'GH'
     billing_cycle: Literal['monthly', 'yearly'] = 'monthly'
     currency: str
