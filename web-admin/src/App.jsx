@@ -3563,36 +3563,42 @@ function AppInner() {
  <img src='/assets/farmsavior-logo.jpg' alt='FarmSavior' style={{width:36,height:36,borderRadius:8,objectFit:'cover'}} />
  <h3 style={{margin:0}}>FarmSavior</h3>
  </div>
- {menu.map(m => <button key={m} className={`sideBtn ${active === m ? 'on' : ''}`} onClick={() => { setActive(m); setMobileMenuOpen(false) }}>{menuLabel(m)}</button>)}
+ <div className='sidebar-section-label'>Current section</div>
+ {menu.map(m => <button key={m} className={`sideBtn ${active === m ? 'on' : ''}`} aria-current={active === m ? 'page' : undefined} onClick={() => { setActive(m); setMobileMenuOpen(false) }}><span>{menuLabel(m)}</span>{active === m && <span className='sideBtnMarker'>Current</span>}</button>)}
  <button className='sideBtn' onClick={() => { localStorage.removeItem('farmsavior_token'); setToken('') }}>{t('logout','se déconnecter')}</button>
  </aside>
  <main className='main'>
  <div className='mobileTopBar'>
  <button className='btn btn-dark' type='button' onClick={() => setMobileMenuOpen(v => !v)}>{mobileMenuOpen ? 'Close menu' : 'Menu'}</button>
+ <div className='mobileTopBarTitle'>
  <strong>FarmSavior</strong>
+ <span>{menuLabel(active)}</span>
+ </div>
  <span className='notif-badge'>{state.notifications.filter(n => !n.is_read).length}</span>
  </div>
- <div className='inlineForm' style={{marginBottom:10, justifyContent:'space-between'}}>
- <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+ <div className='inlineForm app-toolbar' style={{marginBottom:10, justifyContent:'space-between'}}>
+ <div className='app-toolbar-main'>
  <select className='input' value={uiCountry} onChange={(e)=>setUiCountry(e.target.value)}>
  <option value='GH'>Ghana</option><option value='NG'>Nigeria</option><option value='BF'>Burkina Faso</option>
  </select>
  <select className='input' value={uiLang} onChange={(e)=>setUiLang(e.target.value)}>
  <option value='en'>English</option><option value='fr'>Français</option><option value='zh'>中文</option>
  </select>
- <button className='btn btn-dark' onClick={() => setActive('home')}>{t('← Main Interface','← Interface principale','← 主界面')}</button>
- <button className='btn' onClick={() => setActive('products')}>{t('Products','Produits')}</button>
- <button className='btn' onClick={() => setActive('livestock')}>{t('Livestock','Élevage')}</button>
- <button className='btn' onClick={() => setActive('services')}>{t('Services','Services')}</button>
- <button className='btn' onClick={() => setActive('ai-disease')}>{t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析')}</button>
- <button className='btn' onClick={() => setActive('poultry-university')}>Poultry University</button>
- <button className='btn' onClick={() => setActive('sheep-university')}>Sheep University</button>
- <button className='btn' onClick={() => setActive('goat-university')}>Goat University</button>
- <button className='btn' onClick={() => setActive('cattle-university')}>Cattle University</button>
- <button className='btn' onClick={() => setActive('livestock-records')}>{t('Records','Registres','档案')}</button>
+ <div className='app-quick-nav' role='tablist' aria-label='App sections'>
+ <button className={`app-quick-btn ${active === 'home' ? 'active' : ''}`} aria-pressed={active === 'home'} onClick={() => setActive('home')}>{t('← Main Interface','← Interface principale','← 主界面')}</button>
+ <button className={`app-quick-btn ${active === 'products' ? 'active' : ''}`} aria-pressed={active === 'products'} onClick={() => setActive('products')}>{t('Products','Produits')}</button>
+ <button className={`app-quick-btn ${active === 'livestock' ? 'active' : ''}`} aria-pressed={active === 'livestock'} onClick={() => setActive('livestock')}>{t('Livestock','Élevage')}</button>
+ <button className={`app-quick-btn ${active === 'services' ? 'active' : ''}`} aria-pressed={active === 'services'} onClick={() => setActive('services')}>{t('Services','Services')}</button>
+ <button className={`app-quick-btn ${active === 'ai-disease' ? 'active' : ''}`} aria-pressed={active === 'ai-disease'} onClick={() => setActive('ai-disease')}>{t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析')}</button>
+ <button className={`app-quick-btn ${active === 'poultry-university' ? 'active' : ''}`} aria-pressed={active === 'poultry-university'} onClick={() => setActive('poultry-university')}>Poultry University</button>
+ <button className={`app-quick-btn ${active === 'sheep-university' ? 'active' : ''}`} aria-pressed={active === 'sheep-university'} onClick={() => setActive('sheep-university')}>Sheep University</button>
+ <button className={`app-quick-btn ${active === 'goat-university' ? 'active' : ''}`} aria-pressed={active === 'goat-university'} onClick={() => setActive('goat-university')}>Goat University</button>
+ <button className={`app-quick-btn ${active === 'cattle-university' ? 'active' : ''}`} aria-pressed={active === 'cattle-university'} onClick={() => setActive('cattle-university')}>Cattle University</button>
+ <button className={`app-quick-btn ${active === 'livestock-records' ? 'active' : ''}`} aria-pressed={active === 'livestock-records'} onClick={() => setActive('livestock-records')}>{t('Records','Registres','档案')}</button>
  </div>
- <div style={{display:'flex', gap:8}}>
- <button className='btn btn-dark' onClick={() => setActive('onboarding')}>{t('My Account','Mon compte')}</button>
+ </div>
+ <div className='app-toolbar-side'>
+ <button className={`app-quick-btn ${active === 'onboarding' ? 'active' : ''}`} aria-pressed={active === 'onboarding'} onClick={() => setActive('onboarding')}>{t('My Account','Mon compte')}</button>
  <button className='btn' onClick={goToPublicHomepage}>{t('Public Homepage','Page publique')}</button>
  </div>
  </div>
