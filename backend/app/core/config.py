@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     PAYSTACK_WEBHOOK_SECRET: str = ''
     PAYSTACK_CALLBACK_URL: str = 'https://www.farmsavior.com/?public=0&go=onboarding'
 
+    # Push notifications (optional)
+    FCM_SERVER_KEY: str = ''
+
     # App security
     FRONTEND_ORIGINS: str = 'https://www.farmsavior.com,https://api.farmsavior.com'
     FORCE_HTTPS: bool = True

@@ -3381,6 +3381,11 @@ def community_send_message(other_user_id: int, payload: CommunityDirectMessageIn
     db.add(row)
     db.commit()
     db.refresh(row)
+    lower_text = text_value.lower()
+    if 'meet.jit.si/' in lower_text and ('join my audio call:' in lower_text or 'join my video call:' in lower_text):
+        mode = 'video' if 'video' in lower_text else 'audio'
+        room_match = re.search(r'https?://meet\.jit\.si/\S+', text_value, flags=re.IGNORECASE)
+        _push_call_alert(db, int(other_user_id), caller_name=str(viewer.full_name or 'Someone'), mode=mode, room_url=(room_match.group(0) if room_match else ''))
     return {
         'id': row.id,
         'text': row.text,
@@ -4910,6 +4915,41 @@ def _notify_user(db: Session, user_id: Optional[int], title: str, message: str):
     if not user_id:
         return
     db.add(MarketplaceNotification(user_id=user_id, title=title[:180], message=message[:2000]))
+
+
+def _send_fcm_push(tokens: list[str], title: str, body: str, data: Optional[dict] = None):
+    server_key = str(getattr(settings, 'FCM_SERVER_KEY', '') or '').strip()
+    if not server_key or not tokens:
+        return
+    endpoint = 'https://fcm.googleapis.com/fcm/send'
+    payload = {
+        'registration_ids': [str(t).strip() for t in (tokens or []) if str(t).strip()],
+        'notification': {'title': str(title or '')[:120], 'body': str(body or '')[:240], 'sound': 'default'},
+        'data': data or {},
+        'priority': 'high',
+    }
+    try:
+        req = UrlRequest(endpoint, data=json.dumps(payload).encode('utf-8'), method='POST')
+        req.add_header('Content-Type', 'application/json')
+        req.add_header('Authorization', f'key={server_key}')
+        with urlopen(req, timeout=8) as resp:
+            resp.read()
+    except Exception:
+        pass
+
+
+def _push_call_alert(db: Session, user_id: int, *, caller_name: str, mode: str, room_url: str):
+    rows = db.query(DeviceToken).filter(DeviceToken.user_id == int(user_id)).all()
+    tokens = [str(r.token or '').strip() for r in rows if str(r.token or '').strip()]
+    if not tokens:
+        return
+    mode_label = 'Video' if str(mode).lower() == 'video' else 'Audio'
+    _send_fcm_push(
+        tokens,
+        title=f'Incoming {mode_label} Call',
+        body=f'{caller_name or "Someone"} is calling you on FarmSavior',
+        data={'type': 'incoming_call', 'mode': str(mode or 'audio'), 'room_url': str(room_url or '')}
+    )
 
 def _order_fee_breakdown(unit_price: float, quantity: float):
     gross = round(float(unit_price or 0) * float(quantity or 0), 2)
