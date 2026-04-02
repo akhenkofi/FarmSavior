@@ -2806,6 +2806,7 @@ function AppInner() {
  const [expandedTradeSections, setExpandedTradeSections] = useState({})
  const [expandedLivestockPlan, setExpandedLivestockPlan] = useState('')
  const [popularActionsOpen, setPopularActionsOpen] = useState(true)
+ const [publicUniversityOpen, setPublicUniversityOpen] = useState(true)
  const [weatherOpen, setWeatherOpen] = useState(true)
  const [newsOpen, setNewsOpen] = useState(true)
  const [spotTradingOpen, setSpotTradingOpen] = useState(true)
@@ -3917,10 +3918,6 @@ function AppInner() {
  {popularActionsOpen && <div className='list'>
  <div className='list-row'><span>{t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('ai-disease', 'AI Disease Analyzer')}>{t('Open','Ouvrir')}</button></div>
  <div className='list-row'><span>{t('Livestock Records Management','Gestion des registres du bétail','牲畜档案管理')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('livestock-records', 'Livestock Records Management')}>{t('Open','Ouvrir')}</button></div>
- <div className='list-row'><span>African Agricultural Digital University · Poultry University (Layers • Broilers • Guinea Fowl)</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('poultry-university', 'Poultry University')}>{t('Open','Ouvrir')}</button></div>
- <div className='list-row'><span>African Agricultural Digital University · Sheep University (Ghana Sheep Breed Program)</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('sheep-university', 'Sheep University')}>{t('Open','Ouvrir')}</button></div>
- <div className='list-row'><span>African Agricultural Digital University · Goat University (Ghana Goat Breed Program)</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('goat-university', 'Goat University')}>{t('Open','Ouvrir')}</button></div>
- <div className='list-row'><span>African Agricultural Digital University · Cattle University (Ghana Cattle Breed Program)</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('cattle-university', 'Cattle University')}>{t('Open','Ouvrir')}</button></div>
  <div className='list-row'><span>{t('List Product','Publier un produit','发布产品')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('products', 'List Product')}>{t('Start','Démarrer')}</button></div>
  <div className='list-row'><span>{t('List Services','Publier des services','发布服务')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'List Services')}>{t('Start','Démarrer')}</button></div>
  <div className='list-row'><span>{t('List Machinery for Rent','Publier des machines à louer','发布机械租赁')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'List Machinery for Rent')}>{t('Start','Démarrer')}</button></div>
@@ -3933,6 +3930,46 @@ function AppInner() {
  <p style={{fontSize:'.82rem', color:'#64748b'}}>{t('You can browse publicly; posting, renting, contacting providers, and transactions require sign-in.','Vous pouvez parcourir publiquement ; publier, louer, contacter des prestataires et effectuer des transactions nécessite une connexion.','你可以公开浏览；发布、租赁、联系服务商和交易需要登录。')}</p>
  </article>
 
+ <article className='panel' style={{marginTop:12, background:'linear-gradient(180deg,#ffffff 0%,#f8fafc 100%)'}}>
+ <div className='section-header'>
+ <div>
+ <h3 style={{margin:0}}>African Agricultural Digital University</h3>
+ <div className='helper-text' style={{marginTop:4}}>FarmSavior’s flagship livestock learning platform, now placed directly on the public homepage.</div>
+ </div>
+ <button type='button' className='btn' style={{marginLeft:'auto'}} onClick={() => setPublicUniversityOpen(v => !v)}>{publicUniversityOpen ? t('Hide','Masquer','隐藏') : t('Show','Afficher','显示')}</button>
+ </div>
+ {publicUniversityOpen && <div className='aadu-public-home'>
+ <div className='aadu-home-hero'>
+ <div className='aadu-home-copy'>
+ <div className='aadu-home-eyebrow'>Flagship learning platform</div>
+ <h3>African Agricultural Digital University</h3>
+ <p>African Agricultural Digital University is FarmSavior’s flagship digital livestock training platform. It brings Poultry University, Sheep University, Goat University, and Cattle University together under one clear umbrella so farmers, operators, and livestock teams can learn by production system and move into the right school directly.</p>
+ <p>Each university is organized around practical operating needs — production setup, breed development, herd or flock health, and commercial decision-making — presented in a clean format for field use rather than hype.</p>
+ </div>
+ <div className='aadu-home-aside'>
+ <div className='aadu-home-aside-label'>Current universities</div>
+ <div className='aadu-home-aside-list'>
+ <div><strong>4</strong><span>live schools</span></div>
+ <div><strong>Livestock-first</strong><span>digital training focus</span></div>
+ <div><strong>Public entry</strong><span>discover on the homepage, then enroll or open</span></div>
+ </div>
+ </div>
+ </div>
+ <div className='aadu-home-grid'>
+ {homeUniversityShowcase.map((school) => (
+ <article key={`public-${school.key}`} className='aadu-school-card'>
+ <div className='aadu-school-label'>African Agricultural Digital University</div>
+ <h4>{school.title}</h4>
+ <p>{school.summary}</p>
+ <div className='aadu-school-actions'>
+ <button type='button' className='btn btn-dark' onClick={() => handleProtectedAction(school.route, school.title)}>{token ? 'Open' : 'Enroll / Open'}</button>
+ <button type='button' className='btn' onClick={() => token ? setActive(school.route) : handleProtectedAction(school.route, school.title)}>{token ? 'Go to school' : 'Preview access'}</button>
+ </div>
+ </article>
+ ))}
+ </div>
+ </div>}
+ </article>
 
  <article className='panel' id='access-portal'>
  <h3>{t('Access Portal','Portail d’accès','访问入口')}</h3>
