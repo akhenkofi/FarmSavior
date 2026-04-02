@@ -2668,10 +2668,12 @@ function AppInner() {
  const [communityFollowState, setCommunityFollowState] = useState({ following_ids: [], following_count: 0, followers_count: 0, following: [], muted_ids: [], muted_count: 0 })
  const [communityPostForm, setCommunityPostForm] = useState({ text: '', media_url: '', media_type: 'TEXT', tags: '' })
  const [communityMessageThreads, setCommunityMessageThreads] = useState([])
+ const [communityInboxOpen, setCommunityInboxOpen] = useState(false)
  const [communityMessageView, setCommunityMessageView] = useState({ open: false, loading: false, error: '', user: null, messages: [] })
  const [communityMessageDraft, setCommunityMessageDraft] = useState('')
  const [communityMessageSending, setCommunityMessageSending] = useState(false)
  const [communityMessageOpeningUserId, setCommunityMessageOpeningUserId] = useState(null)
+ const communityMessageListRef = useRef(null)
  const [editingCommunityPostId, setEditingCommunityPostId] = useState(null)
  const [communityCommentText, setCommunityCommentText] = useState({})
  const [communityComments, setCommunityComments] = useState({})
@@ -2739,8 +2741,15 @@ function AppInner() {
  setCommunityProfileView({ open: false, loading: false, data: null, error: '', userId: null })
  window.scrollTo({ top: 0, behavior: 'smooth' })
  }
+ const openCommunityInbox = async () => {
+ setCommunityInboxOpen(true)
+ const threads = await api.fetchCommunityMessageThreads().catch(() => communityMessageThreads || [])
+ setCommunityMessageThreads(threads || [])
+ return threads || []
+ }
  const openCommunityMessages = async (user) => {
  if (!user?.user_id) return
+ setCommunityInboxOpen(true)
  setCommunityMessageOpeningUserId(user.user_id)
  setCommunityMessageView({ open: true, loading: true, error: '', user, messages: [] })
  try {
@@ -2753,6 +2762,7 @@ function AppInner() {
  }
  }
  const closeCommunityMessages = () => {
+ setCommunityInboxOpen(false)
  setCommunityMessageView({ open: false, loading: false, error: '', user: null, messages: [] })
  setCommunityMessageDraft('')
  setCommunityMessageSending(false)
@@ -2775,6 +2785,12 @@ function AppInner() {
    setCommunityMessageSending(false)
   }
  }
+ useEffect(() => {
+  if (!communityInboxOpen || !communityMessageView.open) return
+  const node = communityMessageListRef.current
+  if (!node) return
+  node.scrollTop = node.scrollHeight
+ }, [communityInboxOpen, communityMessageView.open, communityMessageView.messages, communityMessageView.loading])
  useEffect(() => {
  if (active !== 'community') return
  const routeUserId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('communityProfile') : ''
@@ -2933,7 +2949,7 @@ function AppInner() {
  const [customMedicineComposerOpen, setCustomMedicineComposerOpen] = useState(false)
  const [customMedicineName, setCustomMedicineName] = useState('')
  const [actionBusy, setActionBusy] = useState('')
- const appScreenOpen = notesComposerOpen || weightComposerOpen || medicinesScreenOpen || medicineShotOpen || medicineChooserOpen || customMedicineComposerOpen || famachaComposerOpen || ancestorTreeOpen || ancestorPdfOpen || offspringReportOpen || offspringListOpen || markComposerOpen || flushComposerOpen || ultrasoundComposerOpen || moveHerdOpen || selectedBreederDetail || breederReportOpen || notesScreenOpen
+ const appScreenOpen = notesComposerOpen || weightComposerOpen || medicinesScreenOpen || medicineShotOpen || medicineChooserOpen || customMedicineComposerOpen || famachaComposerOpen || ancestorTreeOpen || ancestorPdfOpen || offspringReportOpen || offspringListOpen || markComposerOpen || flushComposerOpen || ultrasoundComposerOpen || moveHerdOpen || selectedBreederDetail || breederReportOpen || notesScreenOpen || communityInboxOpen
  const [notesSearch, setNotesSearch] = useState('')
  const [draftNote, setDraftNote] = useState('')
  const [draftWeight, setDraftWeight] = useState('')
@@ -6933,55 +6949,93 @@ function AppInner() {
  </div>
  </article>
 
- <article className='panel' style={{marginTop:10}}>
- <div className='list-row' style={{alignItems:'flex-start', gap:10, flexWrap:'wrap'}}>
+ <article className='panel community-inbox-card' style={{marginTop:10}}>
+ <div className='community-inbox-hero'>
  <div>
- <h4 style={{margin:'0 0 4px 0'}}>Direct messages</h4>
- <div className='helper-text'>Message growers you follow when their inbox setting allows it.</div>
+ <div className='community-inbox-kicker'>Direct messages</div>
+ <h4 style={{margin:'4px 0 6px 0'}}>Open a real inbox, not a hidden thread.</h4>
+ <div className='helper-text'>Tap Message from any profile, search result, or post to jump straight into a focused conversation view with loading, send, and close states.</div>
  </div>
- <div style={{fontSize:'.8rem', color:'#64748b'}}>{communityMessageThreads.length ? `${communityMessageThreads.length} active conversation${communityMessageThreads.length === 1 ? '' : 's'}` : 'No conversations yet'}</div>
+ <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+ <button type='button' className='btn btn-dark' onClick={()=>openCommunityInbox()}>{communityMessageThreads.length ? `Open Inbox (${communityMessageThreads.length})` : 'Open Inbox'}</button>
+ {communityMessageView?.user?.user_id && <button type='button' className='btn' onClick={()=>openCommunityMessages(communityMessageView.user)}>Resume chat</button>}
  </div>
- {!communityMessageView.open && <div className='list' style={{marginTop:10}}>
- {(communityMessageThreads || []).slice(0, 6).map((thread)=><button key={`community-thread-${thread?.user?.user_id}`} type='button' className='panel' style={{padding:10, textAlign:'left', border:'1px solid #dbe6df', background:'#fff'}} onClick={()=>openCommunityMessages(thread.user)}>
- <div className='list-row' style={{alignItems:'center', gap:10}}>
+ </div>
+ <div className='community-thread-preview-list'>
+ {(communityMessageThreads || []).slice(0, 3).map((thread)=><button key={`community-thread-preview-${thread?.user?.user_id}`} type='button' className='community-thread-preview' onClick={()=>openCommunityMessages(thread.user)}>
  <div>
- <div style={{fontWeight:700}}>{thread?.user?.full_name || `User ${thread?.user?.user_id || ''}`}</div>
+ <strong>{thread?.user?.full_name || `User ${thread?.user?.user_id || ''}`}</strong>
  <div style={{fontSize:'.8rem', color:'#0284c7'}}>{thread?.user?.username ? `@${thread.user.username}` : 'No username yet'}</div>
  </div>
- <span style={{fontSize:'.75rem', color:'#64748b'}}>{String(thread?.last_message?.created_at || '').replace('T',' ').slice(0,16)}</span>
- </div>
- <div style={{marginTop:6, fontSize:'.88rem', color:'#475569'}}>{thread?.last_message?.is_mine ? 'You: ' : ''}{String(thread?.last_message?.text || '').slice(0, 120)}</div>
+ <div style={{fontSize:'.84rem', color:'#475569', textAlign:'left'}}>{thread?.last_message?.is_mine ? 'You: ' : ''}{String(thread?.last_message?.text || 'No messages yet').slice(0, 88)}</div>
  </button>)}
- {!communityMessageThreads.length && <div className='list-row'><span>Your inbox will appear here after you send or receive a message.</span></div>}
- </div>}
- {communityMessageView.open && <div className='panel' style={{marginTop:10, background:'#f8fafc', border:'1px solid #dbe6df'}}>
- <div className='list-row' style={{alignItems:'center', gap:10, flexWrap:'wrap'}}>
+ {!communityMessageThreads.length && <div className='community-thread-preview community-thread-preview-empty'>Your inbox will appear here after you send or receive your first direct message.</div>}
+ </div>
+ </article>
+
+ {communityInboxOpen && <div className='community-messenger-overlay' onClick={(e)=>{ if (e.target === e.currentTarget) closeCommunityMessages() }}>
+ <div className={`community-messenger-shell ${communityMessageView.open ? 'conversation-open' : ''}`}>
+ <div className='community-messenger-sidebar'>
+ <div className='community-messenger-sidebar-head'>
  <div>
- <div style={{fontWeight:700}}>{communityMessageView?.user?.full_name || `User ${communityMessageView?.user?.user_id || ''}`}</div>
- <div style={{fontSize:'.8rem', color:'#0284c7'}}>{communityMessageView?.user?.username ? `@${communityMessageView.user.username}` : 'No username yet'}</div>
+ <div className='community-inbox-kicker'>Inbox</div>
+ <h4 style={{margin:'4px 0 0 0'}}>Community messages</h4>
  </div>
  <button type='button' className='btn' onClick={closeCommunityMessages}>Close</button>
  </div>
- {communityMessageView.loading && <div className='helper-text' style={{marginTop:8}}>Loading messages…</div>}
+ <div className='helper-text' style={{marginBottom:10}}>{communityMessageThreads.length ? `${communityMessageThreads.length} conversation${communityMessageThreads.length === 1 ? '' : 's'} ready` : 'No conversations yet — tap Message on a profile, search result, or post to start one.'}</div>
+ <div className='community-thread-list'>
+ {(communityMessageThreads || []).map((thread)=><button key={`community-thread-${thread?.user?.user_id}`} type='button' className={`community-thread-row ${String(communityMessageView?.user?.user_id || '') === String(thread?.user?.user_id || '') ? 'active' : ''}`} onClick={()=>openCommunityMessages(thread.user)}>
+ <div className='community-thread-row-top'>
+ <strong>{thread?.user?.full_name || `User ${thread?.user?.user_id || ''}`}</strong>
+ <span>{String(thread?.last_message?.created_at || '').replace('T',' ').slice(0,16)}</span>
+ </div>
+ <div style={{fontSize:'.8rem', color:'#0284c7'}}>{thread?.user?.username ? `@${thread.user.username}` : 'No username yet'}</div>
+ <div className='community-thread-snippet'>{thread?.last_message?.is_mine ? 'You: ' : ''}{String(thread?.last_message?.text || '').slice(0, 120)}</div>
+ </button>)}
+ {!communityMessageThreads.length && <div className='community-thread-preview community-thread-preview-empty'>No active conversations yet.</div>}
+ </div>
+ </div>
+ <div className='community-messenger-main'>
+ <div className='community-messenger-main-head'>
+ <div>
+ <div className='community-inbox-kicker'>Conversation</div>
+ <h4 style={{margin:'4px 0 0 0'}}>{communityMessageView?.user?.full_name || 'Select a conversation'}</h4>
+ <div className='helper-text'>{communityMessageView?.user?.username ? `@${communityMessageView.user.username}` : (communityMessageView.loading ? 'Opening chat…' : 'Choose someone to start messaging.')}</div>
+ </div>
+ <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+ {communityMessageView.open && <button type='button' className='btn community-mobile-back-btn' onClick={()=>setCommunityMessageView({ open: false, loading: false, error: '', user: null, messages: [] })}>Back to inbox</button>}
+ <button type='button' className='btn' onClick={closeCommunityMessages}>Close</button>
+ </div>
+ </div>
+ {!communityMessageView.open && <div className='community-messenger-empty'>
+ <div className='empty-emoji'>💬</div>
+ <strong>Pick a conversation from the inbox</strong>
+ <span>When you tap Message anywhere in Community, this pane opens immediately and loads the thread here.</span>
+ </div>}
+ {communityMessageView.open && <>
+ {communityMessageView.loading && <div className='community-messenger-empty'><div className='empty-emoji'>⏳</div><strong>Opening messages…</strong><span>Loading the latest conversation safely.</span></div>}
  {!!communityMessageView.error && <div className='panel' style={{marginTop:8, background:'#fff7ed', color:'#9a3412'}}>{communityMessageView.error}</div>}
  {!communityMessageView.loading && !communityMessageView.error && <>
- <div className='list' style={{marginTop:10, maxHeight:260, overflowY:'auto'}}>
+ <div ref={communityMessageListRef} className='community-message-scroll'>
  {(communityMessageView.messages || []).map((msg)=><div key={`community-dm-${msg.id}`} style={{display:'flex', justifyContent: msg.is_mine ? 'flex-end' : 'flex-start'}}>
- <div className='panel' style={{padding:'8px 10px', maxWidth:'80%', background: msg.is_mine ? '#dcfce7' : '#fff', border:'1px solid #dbe6df'}}>
+ <div className={`community-message-bubble ${msg.is_mine ? 'mine' : ''}`}>
  <div style={{whiteSpace:'pre-wrap'}}>{msg.text}</div>
- <div style={{marginTop:4, fontSize:'.72rem', color:'#64748b'}}>{String(msg.created_at || '').replace('T',' ').slice(0,16)}</div>
+ <div className='community-message-meta'>{String(msg.created_at || '').replace('T',' ').slice(0,16)}</div>
  </div>
  </div>)}
- {!(communityMessageView.messages || []).length && <div className='list-row'><span>No messages in this conversation yet.</span></div>}
+ {!(communityMessageView.messages || []).length && <div className='community-messenger-empty compact'><strong>No messages yet.</strong><span>Send the first message to start the conversation.</span></div>}
  </div>
- <div className='inlineForm' style={{marginTop:10}}>
- <input className='input' placeholder='Write a direct message…' value={communityMessageDraft} onChange={(e)=>setCommunityMessageDraft(e.target.value)} disabled={communityMessageSending} />
+ <div className='community-message-composer'>
+ <input className='input' placeholder='Write a direct message…' value={communityMessageDraft} onChange={(e)=>setCommunityMessageDraft(e.target.value)} disabled={communityMessageSending} onKeyDown={(e)=>{ if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendActiveCommunityMessage() } }} />
  <button type='button' className='btn btn-dark' disabled={communityMessageSending || !String(communityMessageDraft || '').trim()} onClick={sendActiveCommunityMessage}>{communityMessageSending ? 'Sending…' : 'Send'}</button>
  </div>
- <div style={{marginTop:6, fontSize:'.76rem', color:'#64748b'}}>If this user changes message privacy, new sends can be blocked even if this thread still appears here.</div>
+ <div style={{marginTop:6, fontSize:'.76rem', color:'#64748b'}}>If this grower changes inbox privacy, new sends can be blocked even if the thread still appears here.</div>
  </>}
+ </>}
+ </div>
+ </div>
  </div>}
- </article>
 
  <article className='panel' style={{marginTop:10}}>
  <div className='tabs' style={{marginBottom:8, flexWrap:'wrap'}}>
