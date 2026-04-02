@@ -2747,18 +2747,24 @@ function AppInner() {
  setCommunityInboxOpen(true)
  const threads = await api.fetchCommunityMessageThreads().catch(() => communityMessageThreads || [])
  setCommunityMessageThreads(threads || [])
+ if ((threads || []).length === 1) {
+  const firstUser = threads?.[0]?.user
+  if (firstUser?.user_id || firstUser?.id) openCommunityMessages(firstUser)
+ }
  return threads || []
  }
  const openCommunityMessages = async (user) => {
- if (!user?.user_id) return
+ const targetUserId = user?.user_id || user?.id
+ if (!targetUserId) return
+ const normalizedUser = { ...(user || {}), user_id: targetUserId }
  setCommunityInboxOpen(true)
- setCommunityMessageOpeningUserId(user.user_id)
- setCommunityMessageView({ open: true, loading: true, error: '', user, messages: [] })
+ setCommunityMessageOpeningUserId(targetUserId)
+ setCommunityMessageView({ open: true, loading: true, error: '', user: normalizedUser, messages: [] })
  try {
-  const data = await api.fetchCommunityMessageThread(user.user_id, 80)
-  setCommunityMessageView({ open: true, loading: false, error: '', user: data?.user || user, messages: data?.messages || [] })
+  const data = await api.fetchCommunityMessageThread(targetUserId, 80)
+  setCommunityMessageView({ open: true, loading: false, error: '', user: data?.user || normalizedUser, messages: data?.messages || [] })
  } catch (err) {
-  setCommunityMessageView({ open: true, loading: false, error: errMsg(err), user, messages: [] })
+  setCommunityMessageView({ open: true, loading: false, error: errMsg(err), user: normalizedUser, messages: [] })
  } finally {
   setCommunityMessageOpeningUserId(null)
  }
