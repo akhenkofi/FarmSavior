@@ -3535,7 +3535,7 @@ function AppInner() {
  <div className='authCard' style={{width:'min(1180px,98vw)'}}>
  <div className='panel' style={{background:'linear-gradient(135deg,#0f172a 0%,#0e7490 42%,#16a34a 100%)', color:'#fff', border:'1px solid rgba(255,255,255,.08)', boxShadow:'0 28px 70px rgba(15,23,42,.22)', overflow:'hidden', position:'relative'}}>
  <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:8}}>
- <img src='/assets/farmsavior-logo.jpg' alt='FarmSavior logo' style={{width:72,height:72,borderRadius:12,objectFit:'cover',border:'2px solid rgba(255,255,255,.3)'}} />
+ <img src='/assets/farmsavior-app-icon.png' alt='FarmSavior logo' className='brand-mark brand-mark-hero' />
  <h2 style={{margin:0}}>{isZh ? 'FarmSavior 市场实时' : t('FarmSavior Marketplace Live','Marché FarmSavior en direct')}</h2>
  </div>
  <p style={{opacity:.95, fontSize:'1rem', lineHeight:1.6, maxWidth:760}}>{isZh ? '覆盖加纳、尼日利亚和布基纳法索的高需求产品与服务。可自由浏览；联系服务商或使用工具请注册/登录。' : t('High-demand products and services across Ghana, Nigeria, and Burkina Faso. Browse freely. To contact providers or use tools, sign up/sign in.','Produits et services à forte demande au Ghana, au Nigeria et au Burkina Faso. Parcourez librement. Pour contacter les fournisseurs ou utiliser les outils, inscrivez-vous/connectez-vous.')}</p>
@@ -4185,13 +4185,13 @@ function AppInner() {
  return <>
  {showSplash && <div className='app-splash'>
  <div className='app-splash-inner'>
- <img src='/assets/farmsavior-logo.jpg' alt='FarmSavior' />
+ <img src='/assets/farmsavior-app-icon.png' alt='FarmSavior' className='brand-mark brand-mark-splash' />
  <p>FarmSavior is loading…</p>
  </div>
  </div>}
  {isOffline && <div className='offline-overlay'>
  <div className='offline-inner'>
- <img src='/assets/farmsavior-logo.jpg' alt='FarmSavior' />
+ <img src='/assets/farmsavior-app-icon.png' alt='FarmSavior' className='brand-mark brand-mark-offline' />
  <h3>No internet connection</h3>
  <p>Check your network and try again.</p>
  </div>
@@ -4238,9 +4238,12 @@ function AppInner() {
  </div>}
  <div className='layout'>
  <aside className={`sidebar ${mobileMenuOpen ? 'open' : ''}`}>
- <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
- <img src='/assets/farmsavior-logo.jpg' alt='FarmSavior' style={{width:36,height:36,borderRadius:8,objectFit:'cover'}} />
+ <div className='sidebar-brand'>
+ <img src='/assets/farmsavior-app-icon.png' alt='FarmSavior' className='brand-mark brand-mark-sidebar' />
+ <div>
  <h3 style={{margin:0}}>FarmSavior</h3>
+ <div className='sidebar-brand-subtitle'>Marketplace Admin</div>
+ </div>
  </div>
  <div className='sidebar-section-label'>Current section</div>
  {menu.map(m => <button key={m} className={`sideBtn ${active === m ? 'on' : ''}`} aria-current={active === m ? 'page' : undefined} onClick={() => { setActive(m); setMobileMenuOpen(false) }}><span>{menuLabel(m)}</span>{active === m && <span className='sideBtnMarker'>Current</span>}</button>)}
@@ -4250,7 +4253,10 @@ function AppInner() {
  <div className='mobileTopBar'>
  <button className='btn btn-dark' type='button' onClick={() => setMobileMenuOpen(v => !v)}>{mobileMenuOpen ? 'Close menu' : 'Menu'}</button>
  <div className='mobileTopBarTitle'>
+ <div className='mobileTopBarBrand'>
+ <img src='/assets/farmsavior-app-icon.png' alt='FarmSavior' className='brand-mark brand-mark-mobile' />
  <strong>FarmSavior</strong>
+ </div>
  <span>{menuLabel(active)}</span>
  </div>
  <span className='notif-badge'>{state.notifications.filter(n => !n.is_read).length}</span>
