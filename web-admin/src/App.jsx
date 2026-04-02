@@ -1122,23 +1122,62 @@ const executiveBriefs = {
 
 Professional poultry production succeeds when climate control, feed discipline, vaccination timing, mortality management, and route-to-market are managed as one operating system.
 
-Minister-level message
+Strategic operator message
 - Humid systems need litter dryness, drainage, and mycotoxin discipline.
 - Dry systems need heat relief, water security, and airflow reliability.
 - The most bankable poultry farms are not the biggest; they are the most consistent by tray, cycle, and margin.`,
- sheep: `Sheep University Executive Brief
+ sheep: `Sheep University Professional Executive Brief
+Premium Flock Strategy Pack
 
-A serious sheep program combines breeding discipline, lamb survival, parasite control, and measured market grading.
+Overview
+This brief is built for sheep operators who need more than motivational copy. It is a practical premium asset for presenting a flock-improvement plan to partners, lenders, managers, and serious buyers while also guiding week-to-week operating decisions on the farm.
 
-Minister-level message
+Commercial objective
+Build a Ghana-adapted sheep enterprise that improves lamb survival, flock fertility, growth consistency, and sale quality without losing the hardiness that keeps the system profitable under local feed, climate, and disease pressure.
+
+Core performance pillars
+1. Breeding discipline
+- Set one breeding objective per cycle: replacement females, market lamb growth, hardiness, or cross improvement.
+- Use rams only after checking structure, feet, fertility signs, growth history, and line consistency.
+- Keep ewe groups intentional; random mating destroys clarity and slows improvement.
+
+2. Lamb survival control
+- Colostrum timing, birth supervision, early weakness detection, and pen hygiene are profit drivers, not minor tasks.
+- Review every lamb death for preventable causes: dystocia, exposure, poor milk supply, infection, or delayed intervention.
+- Track survival by sire group and dam line so weak genetics do not hide inside average flock numbers.
+
+3. Parasite and health pressure management
+- Treat worm pressure, foot issues, and vaccination timing as management systems with fixed routines.
+- In humid zones, parasite discipline can matter more than ambitious breeding plans.
+- Escalate fast when body condition, coat quality, appetite, or growth rate start to slide.
+
+4. Growth and market readiness
+- Weigh sample lambs regularly and compare progress by age band, not guesswork.
+- Grade sale animals by frame, thriftiness, health, and finishing potential.
+- Do not hold underperforming lambs too long unless there is a clear recovery margin.
+
+5. Record-led scaling
+- The flock earns the right to expand only after two stable cycles with acceptable fertility, low avoidable losses, and consistent sale outcomes.
+- Keep breeding, lambing, treatment, mortality, and sale records tight enough to support lender or investor review.
+
+90-day action plan
+- Audit ewe condition, ram quality, mortality records, and parasite pressure before the next mating window.
+- Remove weak breeders and non-performing lines early.
+- Standardize a lambing-kit checklist, neonatal check routine, and treatment log.
+- Start a simple weekly dashboard for conception signals, lamb survival, growth samples, and sale candidates.
+
+Strategic review message
 - Breed improvement must be backed by records, not animal appearance alone.
 - Climate-fit management determines whether genetics translate into farmer profit.
-- The strongest systems reduce avoidable loss before chasing larger size.`,
+- The strongest systems reduce avoidable loss before chasing larger size.
+
+Boardroom takeaway
+A premium sheep business is not defined by owning impressive animals. It is defined by running a disciplined flock system that turns breeding decisions, survival control, and market grading into repeatable commercial results.`,
  goat: `Goat University Executive Brief
 
 A professional goat enterprise depends on kidding survival, parasite discipline, climate-fit browse strategy, and smart sire selection.
 
-Minister-level message
+Strategic operator message
 - WAD resilience must be protected while improving frame and market weight.
 - Humid-zone parasite losses can erase the value of better genetics if management is weak.
 - Strong goat businesses are built on repeatable kidding and sale batches, not isolated showcase animals.`,
@@ -1146,7 +1185,7 @@ Minister-level message
 
 A modern cattle program should be judged by fertility, calf survival, feed-water resilience, and repeatable market weights.
 
-Minister-level message
+Strategic operator message
 - Local adaptation is an asset to preserve, not a weakness to replace.
 - Climate adaptation, health schedule discipline, and breeding records create the real productivity gains.
 - Scalable cattle systems are built through measured herd improvement, not one-off large animals.`
@@ -4266,7 +4305,7 @@ function AppInner() {
  <div className='list-row'><span>Printable breeding + health templates</span></div>
  <div className='list-row'><span>Advanced terminal-sire selection framework</span></div>
  <div className='list-row'><span>Progress tracking dashboard</span></div>
- <div className='list-row'><span>Minister-grade expansion notes for breed, market, and climate decisions</span></div>
+ <div className='list-row'><span>Advanced expansion notes for breed, market, and climate decisions</span></div>
  </div>
  <div className='inlineForm' style={{marginTop:8,flexWrap:'wrap'}}>
  <a className='btn' download='Goat-Breed-Strategy-Framework.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Goat University Professional\nExpanded Breed Strategy Framework\n\n1. Commercial objective\n- Decide whether the unit is targeting breeding stock, festive meat, female replacement sales, or terminal finishing.\n- Match the breeding objective to one dominant KPI: fertility, kid survival, frame growth, or carcass value.\n\n2. Foundation-doe selection\n- Keep only does with reliable kidding history, acceptable udder structure, parasite resilience, and strong mothering.\n- Separate survival genetics from feeding advantage: high-performing does under poor conditions are more valuable than animals that only perform under expensive feeding.\n\n3. Buck strategy\n- Sahelian-type bucks: use when frame and height are the immediate target.\n- Red Sokoto/Maradi-type bucks: use when market preference, twinning tendency, and maternal productivity matter.\n- Boer/Kalahari/Savannah terminal sires: use only after the adapted maternal base is stable.\n\n4. Climate discipline\n- Humid systems must prioritize parasite control, hoof health, shelter dryness, and browse rotation.\n- Dry systems must prioritize water security, heat stress relief, drought feed buffers, and respiratory control.\n\n5. Scale rule\n- Expand only after two kidding cycles show acceptable kid survival, parasite control, and sale margins.`)}>Download Breed Strategy Framework</a>
@@ -4394,7 +4433,7 @@ function AppInner() {
  <div className='inlineForm' style={{marginTop:8,flexWrap:'wrap'}}>
  <a className='btn' download='Cattle-Herd-Selection-Matrix.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Cattle University Professional\nAdvanced Herd Selection Matrix\n\n1. Cow base selection\n- Retain cows with reliable calving history, mothering ability, acceptable fertility, and resilience under local feed pressure.\n- Separate survival genetics from subsidy feeding effects. A cow that breeds and raises calves consistently under field conditions is more valuable than a high-cost show animal.\n\n2. Bull decision framework\n- Sahelian/Zebu influence: frame and growth improvement.\n- White Fulani/Sudanese influence: dual-purpose market appeal and structure.\n- Brahman/Gudali terminal sires: use only when maternal base and management are already stable.\n\n3. Herd replacement logic\n- Keep heifers from top-calving cows with strong weaning results.\n- Cull repeated calving trouble, weak mothering, poor fertility, or chronic disease lines.\n\n4. Scale logic\n- Expand only after calving interval, calf survival, and feed security are stable across seasons.`)}>Download Herd Selection Matrix</a>
  <a className='btn' download='Cattle-Breeding-Calving-Playbook.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Cattle University Professional\nBreeding + Calving Playbook\n\nPre-breeding\n- Body condition review\n- Bull soundness and fertility checks\n- Water, mineral, and fodder planning\n\nBreeding season\n- Controlled bull groups and service records\n- Heat observation and re-service notes\n- Remove poor breeders quickly\n\nPregnancy management\n- Stage-based nutrition and stress control\n- Vaccination and parasite schedule by veterinary guidance\n- Calving pen and labor prep before due dates cluster\n\nCalving phase\n- Calving watch, colostrum assurance, and calf vigor checks\n- Postpartum recovery and mastitis watch\n- Early calf disease response plan\n\nPost-calving growth period\n- Tick and blood-parasite control\n- Sample weight tracking and weak-line intervention\n- Replacement vs sale decision review`)}>Download Breeding + Calving Playbook</a>
- <a className='btn' download='Cattle-Professional-Executive-Brief.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Cattle University Professional\nExecutive Brief\n\nThis program is designed for serious herd builders who want a Ghana-adapted commercial cattle line with stronger carcass, better resilience, and more disciplined breeding records.\n\nProfessional operating priorities\n- Convert every breeding season into a measurable economic review.\n- Track conception, calving interval, calf survival, growth, and margin by cohort.\n- Build feed and water buffers before the dry season rather than reacting during crisis.\n- Treat disease surveillance as an executive KPI, not only as a veterinary issue.\n\nPolicy and investor message\n- The herd model aims to protect local adaptation while improving output.\n- The business case depends on lower mortality, tighter selection, and market-class consistency.\n- Long-run value comes from repeatable herd performance, not one-off large animals.\n\nMinister-level takeaway\n- A disciplined cattle system combines genetics, climate adaptation, health scheduling, and market records into one measurable production strategy.`)}>Download Executive Brief</a>
+ <a className='btn' download='Cattle-Professional-Executive-Brief.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Cattle University Professional\nExecutive Brief\n\nThis program is designed for serious herd builders who want a Ghana-adapted commercial cattle line with stronger carcass, better resilience, and more disciplined breeding records.\n\nProfessional operating priorities\n- Convert every breeding season into a measurable economic review.\n- Track conception, calving interval, calf survival, growth, and margin by cohort.\n- Build feed and water buffers before the dry season rather than reacting during crisis.\n- Treat disease surveillance as an executive KPI, not only as a veterinary issue.\n\nPolicy and investor message\n- The herd model aims to protect local adaptation while improving output.\n- The business case depends on lower mortality, tighter selection, and market-class consistency.\n- Long-run value comes from repeatable herd performance, not one-off large animals.\n\nStrategic takeaway\n- A disciplined cattle system combines genetics, climate adaptation, health scheduling, and market records into one measurable production strategy.`)}>Download Executive Brief</a>
  <button className='btn' onClick={()=>setCattleProgress((s)=>({ ...s, completed: Array.from(new Set([...(s.completed||[]), `${cattleTrack}:${openCattleModule}`])) }))}>Mark Current Module Complete</button>
  <div className='list-row' style={{padding:'6px 10px', background:'#fff'}}><span>Completed checkpoints</span><strong>{(cattleProgress.completed||[]).length}</strong></div>
  </div>
