@@ -2618,7 +2618,7 @@ function AppInner() {
  const explicitGo = searchParams.get('go') || ''
  const mappedGo = (explicitGo === 'poultry-academy' ? 'poultry-university' : (explicitGo === 'sheep-academy' ? 'sheep-university' : (explicitGo === 'goat-academy' ? 'goat-university' : (explicitGo === 'cattle-academy' ? 'cattle-university' : explicitGo))))
  const stickySections = new Set(['onboarding','payments','livestock-records','poultry-university','sheep-university','goat-university','cattle-university'])
- const lastSection = (typeof window !== 'undefined' ? (localStorage.getItem('farmsavior_last_active_section') || '') : '')
+ const lastSection = (typeof window !== 'undefined' ? (sessionStorage.getItem('farmsavior_last_active_section_session') || '') : '')
  const initialSection = mappedGo || (stickySections.has(lastSection) ? lastSection : 'home')
  const [token, setToken] = useState(localStorage.getItem('farmsavior_token'))
  const [authMode, setAuthMode] = useState('login')
@@ -2642,8 +2642,8 @@ function AppInner() {
  useEffect(() => {
   try {
    const stickySections = new Set(['onboarding','payments','livestock-records','poultry-university','sheep-university','goat-university','cattle-university'])
-   if (stickySections.has(active)) localStorage.setItem('farmsavior_last_active_section', active)
-   else localStorage.removeItem('farmsavior_last_active_section')
+   if (stickySections.has(active)) sessionStorage.setItem('farmsavior_last_active_section_session', active)
+   else sessionStorage.removeItem('farmsavior_last_active_section_session')
   } catch {}
  }, [active])
  const [publicDetail, setPublicDetail] = useState(null)
