@@ -27,7 +27,7 @@ from app.models.models import (
     LivestockListing, EquipmentRental, StorageReservation, TradeContract, VerificationReview, UpdateReview,
     DeviceToken, DiseaseScan, SheepGoatRecord, LivestockPurchaseSource, SheepGoatBreedingGroup, SheepGoatSubscription,
     WorldChatMessage, WorldChatUserModeration,
-    CommunityProfile, CommunityPost, CommunityPostLike, CommunityPostComment,
+    CommunityProfile, CommunityFollow, CommunityMute, CommunityPost, CommunityPostLike, CommunityPostComment,
     MarketplaceOrder, SellerPayoutProfile, PayoutHistory, MarketplaceNotification
 )
 from app.schemas.schemas import (
@@ -2981,6 +2981,49 @@ def world_chat_user_sanction(user_id: int, payload: WorldChatUserSanctionIn, aut
     return rec
 
 
+def _community_followed_user_ids(db: Session, viewer_id: int) -> set[int]:
+    rows = db.query(CommunityFollow.followed_user_id).filter(CommunityFollow.follower_user_id == viewer_id).all()
+    return {int(r[0]) for r in rows if r and r[0] is not None}
+
+
+def _community_muted_user_ids(db: Session, viewer_id: int) -> set[int]:
+    rows = db.query(CommunityMute.muted_user_id).filter(CommunityMute.muter_user_id == viewer_id).all()
+    return {int(r[0]) for r in rows if r and r[0] is not None}
+
+
+def _community_user_card(db: Session, user: User, viewer_id: Optional[int] = None):
+    profile = db.query(CommunityProfile).filter(CommunityProfile.user_id == user.id).first()
+    followers_count = db.query(func.count(CommunityFollow.id)).filter(CommunityFollow.followed_user_id == user.id).scalar() or 0
+    following_count = db.query(func.count(CommunityFollow.id)).filter(CommunityFollow.follower_user_id == user.id).scalar() or 0
+    posts_count = db.query(func.count(CommunityPost.id)).filter(CommunityPost.user_id == user.id, CommunityPost.status == 'VISIBLE').scalar() or 0
+    is_following = False
+    if viewer_id and viewer_id != user.id:
+        is_following = db.query(CommunityFollow.id).filter(
+            CommunityFollow.follower_user_id == viewer_id,
+            CommunityFollow.followed_user_id == user.id,
+        ).first() is not None
+    return {
+        'user_id': user.id,
+        'full_name': user.full_name,
+        'country': user.country.value if hasattr(user.country, 'value') else str(user.country),
+        'region': user.region,
+        'role': user.role.value if hasattr(user.role, 'value') else str(user.role),
+        'username': profile.username if profile else None,
+        'avatar_url': profile.avatar_url if profile else None,
+        'cover_image_url': profile.cover_image_url if profile else None,
+        'bio': _mask_contact_info(profile.bio) if profile else '',
+        'farm_life': _mask_contact_info(profile.farm_life) if profile else '',
+        'interests': _mask_contact_info(profile.interests) if profile else '',
+        'visibility': profile.visibility if profile else 'PUBLIC',
+        'updated_at': profile.updated_at if profile else None,
+        'followers_count': followers_count,
+        'following_count': following_count,
+        'posts_count': posts_count,
+        'is_me': viewer_id == user.id if viewer_id else False,
+        'is_following': is_following,
+    }
+
+
 @router.get('/community/profile/me')
 def community_profile_me(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
     u = _current_user_from_auth(authorization, db)
@@ -2996,6 +3039,8 @@ def community_profile_me(authorization: Optional[str] = Header(None), db: Sessio
         p.username = f"{base}{u.id}"
         db.commit()
         db.refresh(p)
+    followers_count = db.query(func.count(CommunityFollow.id)).filter(CommunityFollow.followed_user_id == u.id).scalar() or 0
+    following_count = db.query(func.count(CommunityFollow.id)).filter(CommunityFollow.follower_user_id == u.id).scalar() or 0
     return {
         'full_name': u.full_name,
         'username': p.username,
@@ -3005,6 +3050,8 @@ def community_profile_me(authorization: Optional[str] = Header(None), db: Sessio
         'farm_life': _mask_contact_info(p.farm_life),
         'interests': _mask_contact_info(p.interests),
         'visibility': p.visibility,
+        'followers_count': followers_count,
+        'following_count': following_count,
     }
 
 
@@ -3036,6 +3083,8 @@ def community_profile_upsert(payload: CommunityProfileIn, authorization: Optiona
     db.commit()
     db.refresh(p)
     _account_store_upsert_user(u)
+    followers_count = db.query(func.count(CommunityFollow.id)).filter(CommunityFollow.followed_user_id == u.id).scalar() or 0
+    following_count = db.query(func.count(CommunityFollow.id)).filter(CommunityFollow.follower_user_id == u.id).scalar() or 0
     return {
         'full_name': u.full_name,
         'username': p.username,
@@ -3045,7 +3094,221 @@ def community_profile_upsert(payload: CommunityProfileIn, authorization: Optiona
         'farm_life': _mask_contact_info(p.farm_life),
         'interests': _mask_contact_info(p.interests),
         'visibility': p.visibility,
+        'followers_count': followers_count,
+        'following_count': following_count,
     }
+
+
+@router.get('/community/users/search')
+def community_search_users(q: str = '', limit: int = 20, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    viewer = _current_user_from_auth(authorization, db)
+    n = max(1, min(limit, 40))
+    query = str(q or '').strip().lower()
+
+    rows = db.query(User).filter(User.is_deleted == False)
+    if query:
+        like = f"%{query}%"
+        profile_ids = [r[0] for r in db.query(CommunityProfile.user_id).filter(
+            (func.lower(CommunityProfile.username).like(like)) |
+            (func.lower(CommunityProfile.bio).like(like)) |
+            (func.lower(CommunityProfile.interests).like(like))
+        ).all()]
+        rows = rows.filter(
+            (func.lower(User.full_name).like(like)) |
+            (func.lower(User.region).like(like)) |
+            (func.lower(User.country).like(like)) |
+            (User.id.in_(profile_ids) if profile_ids else text('1=0'))
+        )
+
+    candidates = rows.order_by(User.created_at.desc(), User.id.desc()).limit(120).all()
+    cards = [_community_user_card(db, user, viewer.id) for user in candidates if user.id != viewer.id]
+    cards.sort(key=lambda card: (
+        not card['is_following'],
+        -int(card['followers_count'] or 0),
+        -int(card['posts_count'] or 0),
+        str(card.get('full_name') or '').lower(),
+    ))
+    return cards[:n]
+
+
+@router.get('/community/follows/me')
+def community_follow_state(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    viewer = _current_user_from_auth(authorization, db)
+    following_ids = _community_followed_user_ids(db, viewer.id)
+    following = []
+    for uid in sorted(following_ids):
+        user = db.query(User).filter(User.id == uid, User.is_deleted == False).first()
+        if user:
+            following.append(_community_user_card(db, user, viewer.id))
+    followers_count = db.query(func.count(CommunityFollow.id)).filter(CommunityFollow.followed_user_id == viewer.id).scalar() or 0
+    return {
+        'following_ids': sorted(following_ids),
+        'following_count': len(following_ids),
+        'followers_count': followers_count,
+        'following': following,
+    }
+
+
+@router.post('/community/users/{target_user_id}/follow')
+def community_toggle_follow(target_user_id: int, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    viewer = _current_user_from_auth(authorization, db)
+    if target_user_id == viewer.id:
+        raise HTTPException(status_code=400, detail='You cannot follow yourself')
+    target = db.query(User).filter(User.id == target_user_id, User.is_deleted == False).first()
+    if not target:
+        raise HTTPException(status_code=404, detail='User not found')
+
+    existing = db.query(CommunityFollow).filter(
+        CommunityFollow.follower_user_id == viewer.id,
+        CommunityFollow.followed_user_id == target_user_id,
+    ).first()
+    if existing:
+        db.delete(existing)
+        following = False
+    else:
+        db.add(CommunityFollow(follower_user_id=viewer.id, followed_user_id=target_user_id))
+        following = True
+    db.commit()
+
+    followers_count = db.query(func.count(CommunityFollow.id)).filter(CommunityFollow.followed_user_id == target_user_id).scalar() or 0
+    following_count = db.query(func.count(CommunityFollow.id)).filter(CommunityFollow.follower_user_id == viewer.id).scalar() or 0
+    return {
+        'target_user_id': target_user_id,
+        'following': following,
+        'followers_count': followers_count,
+        'following_count': following_count,
+    }
+
+
+@router.get('/community/feed')
+def community_activity_feed(limit: int = 40, mode: str = 'for-you', authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    viewer = _current_user_from_auth(authorization, db)
+    n = max(1, min(limit, 80))
+    followed_ids = _community_followed_user_ids(db, viewer.id)
+    if mode == 'following' and not followed_ids:
+        return []
+
+    items = []
+    seen_profile_events: set[int] = set()
+
+    def push_item(item: dict):
+        items.append(item)
+
+    post_query = db.query(CommunityPost).filter(CommunityPost.status == 'VISIBLE')
+    if muted_ids:
+        post_query = post_query.filter(~CommunityPost.user_id.in_(muted_ids))
+    if mode == 'following':
+        post_query = post_query.filter(CommunityPost.user_id.in_(followed_ids))
+    rows = post_query.order_by(CommunityPost.created_at.desc(), CommunityPost.id.desc()).limit(120).all()
+    for r in rows:
+        profile = db.query(CommunityProfile).filter(CommunityProfile.user_id == r.user_id).first()
+        user = db.query(User).filter(User.id == r.user_id).first()
+        liked_by_me = db.query(CommunityPostLike.id).filter(CommunityPostLike.post_id == r.id, CommunityPostLike.user_id == viewer.id).first() is not None
+        push_item({
+            'id': f'post-{r.id}',
+            'type': 'community_post',
+            'created_at': r.created_at,
+            'priority': 100,
+            'actor': _community_user_card(db, user, viewer.id) if user else None,
+            'post': {
+                'id': r.id,
+                'user_id': r.user_id,
+                'author_name': r.author_name,
+                'author_country': r.author_country,
+                'author_full_name': user.full_name if user else r.author_name,
+                'author_username': profile.username if profile else None,
+                'author_avatar_url': profile.avatar_url if profile else None,
+                'author_cover_image_url': profile.cover_image_url if profile else None,
+                'text': _mask_contact_info(r.text),
+                'media_url': r.media_url,
+                'media_type': r.media_type,
+                'tags': r.tags,
+                'likes_count': db.query(func.count(CommunityPostLike.id)).filter(CommunityPostLike.post_id == r.id).scalar() or 0,
+                'comments_count': db.query(func.count(CommunityPostComment.id)).filter(CommunityPostComment.post_id == r.id).scalar() or 0,
+                'liked_by_me': liked_by_me,
+                'created_at': r.created_at,
+            },
+            'summary': 'Shared a community post',
+        })
+
+    listing_models = [
+        ('crop_listing', CropListing, 'crop_name', 'quantity_kg', 'kg'),
+        ('livestock_listing', LivestockListing, 'livestock_type', 'quantity', 'head'),
+    ]
+    for item_type, model, title_field, qty_field, unit_label in listing_models:
+        q = db.query(model)
+        if mode == 'following':
+            q = q.filter(model.farmer_id.in_(followed_ids))
+        listings = q.order_by(model.created_at.desc(), model.id.desc()).limit(60).all()
+        for row in listings:
+            user = db.query(User).filter(User.id == row.farmer_id).first()
+            if not user:
+                continue
+            push_item({
+                'id': f'{item_type}-{row.id}',
+                'type': item_type,
+                'created_at': row.created_at,
+                'priority': 70,
+                'actor': _community_user_card(db, user, viewer.id),
+                'listing': {
+                    'id': row.id,
+                    'title': getattr(row, title_field, ''),
+                    'quantity': getattr(row, qty_field, None),
+                    'unit_label': unit_label,
+                    'location': getattr(row, 'location', None),
+                    'unit_price': getattr(row, 'unit_price', None),
+                    'country': row.country.value if hasattr(row.country, 'value') else str(row.country),
+                    'cover_image_url': getattr(row, 'cover_image_url', None),
+                },
+                'summary': 'Added a marketplace listing',
+            })
+
+    profile_query = db.query(CommunityProfile)
+    if mode == 'following':
+        profile_query = profile_query.filter(CommunityProfile.user_id.in_(followed_ids))
+    profiles = profile_query.order_by(CommunityProfile.updated_at.desc(), CommunityProfile.id.desc()).limit(80).all()
+    for profile in profiles:
+        if profile.user_id in seen_profile_events:
+            continue
+        user = db.query(User).filter(User.id == profile.user_id).first()
+        if not user:
+            continue
+        has_visual_update = bool(profile.avatar_url or profile.cover_image_url)
+        has_profile_text = bool((profile.bio or '').strip() or (profile.farm_life or '').strip())
+        if not has_visual_update and not has_profile_text:
+            continue
+        seen_profile_events.add(profile.user_id)
+        push_item({
+            'id': f'profile-{profile.user_id}',
+            'type': 'profile_update',
+            'created_at': profile.updated_at,
+            'priority': 40,
+            'actor': _community_user_card(db, user, viewer.id),
+            'profile_update': {
+                'avatar_url': profile.avatar_url,
+                'cover_image_url': profile.cover_image_url,
+                'bio': _mask_contact_info(profile.bio),
+                'farm_life': _mask_contact_info(profile.farm_life),
+                'interests': _mask_contact_info(profile.interests),
+                'updated_at': profile.updated_at,
+            },
+            'summary': 'Updated their profile',
+        })
+
+    items.sort(key=lambda item: (item.get('created_at') or datetime.min, item.get('priority', 0)), reverse=True)
+    if mode == 'following':
+        deduped = []
+        recent_profile_users = set()
+        for item in items:
+            actor = item.get('actor') or {}
+            uid = actor.get('user_id')
+            if item.get('type') == 'profile_update':
+                if uid in recent_profile_users:
+                    continue
+                recent_profile_users.add(uid)
+            deduped.append(item)
+        items = deduped
+    return items[:n]
 
 
 @router.get('/community/posts')

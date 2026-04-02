@@ -470,6 +470,28 @@ class CommunityProfile(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
+class CommunityFollow(Base):
+    __tablename__ = 'community_follows'
+    __table_args__ = (
+        UniqueConstraint('follower_user_id', 'followed_user_id', name='uq_community_follows_pair'),
+    )
+    id = Column(Integer, primary_key=True)
+    follower_user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    followed_user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+class CommunityMute(Base):
+    __tablename__ = 'community_mutes'
+    __table_args__ = (
+        UniqueConstraint('muter_user_id', 'muted_user_id', name='uq_community_mutes_pair'),
+    )
+    id = Column(Integer, primary_key=True)
+    muter_user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    muted_user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
 class CommunityPost(Base):
     __tablename__ = 'community_posts'
     id = Column(Integer, primary_key=True)

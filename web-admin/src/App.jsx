@@ -2657,6 +2657,10 @@ function AppInner() {
  const [communityProfileSaving, setCommunityProfileSaving] = useState(false)
  const [communityPosts, setCommunityPosts] = useState([])
  const [communityFeedMode, setCommunityFeedMode] = useState('for-you')
+ const [communityFeedItems, setCommunityFeedItems] = useState([])
+ const [communityUserSearch, setCommunityUserSearch] = useState('')
+ const [communityUserResults, setCommunityUserResults] = useState([])
+ const [communityFollowState, setCommunityFollowState] = useState({ following_ids: [], following_count: 0, followers_count: 0, following: [] })
  const [communityPostForm, setCommunityPostForm] = useState({ text: '', media_url: '', media_type: 'TEXT', tags: '' })
  const [editingCommunityPostId, setEditingCommunityPostId] = useState(null)
  const [communityCommentText, setCommunityCommentText] = useState({})
@@ -2665,6 +2669,76 @@ function AppInner() {
  useEffect(() => {
  try { localStorage.setItem('farmsavior_community_profile_cache', JSON.stringify(communityProfile || {})) } catch {}
  }, [communityProfile])
+
+ const isFollowingUser = (userId) => (communityFollowState?.following_ids || []).map(String).includes(String(userId))
+ const isMutedUser = (userId) => (communityFollowState?.muted_ids || []).map(String).includes(String(userId))
+ const syncCommunityUserFollow = (userId, following, followersCount = null) => {
+ setCommunityUserResults(prev => (prev || []).map(user => String(user.user_id) === String(userId)
+ ? { ...user, is_following: following, followers_count: followersCount ?? user.followers_count }
+ : user
+ ))
+ setCommunityFeedItems(prev => (prev || []).map(item => item?.actor?.user_id === userId
+ ? { ...item, actor: { ...(item.actor || {}), is_following: following, followers_count: followersCount ?? item?.actor?.followers_count } }
+ : item
+ ))
+ }
+ const syncCommunityUserMute = (userId, muted) => {
+ setCommunityUserResults(prev => (prev || []).map(user => String(user.user_id) === String(userId)
+ ? { ...user, is_muted: muted }
+ : user
+ ))
+ setCommunityFeedItems(prev => muted
+ ? (prev || []).filter(item => String(item?.actor?.user_id || item?.post?.user_id || '') !== String(userId))
+ : (prev || []).map(item => item?.actor?.user_id === userId
+ ? { ...item, actor: { ...(item.actor || {}), is_muted: false } }
+ : item
+ ))
+ setCommunityPosts(prev => muted
+ ? (prev || []).filter(post => String(post?.user_id || '') !== String(userId))
+ : prev
+ )
+ }
+ const toggleFollowUser = async (userId) => {
+ try {
+ const result = await api.toggleCommunityFollow(userId)
+ const following = !!result?.following
+ const followersCount = Number(result?.followers_count ?? 0)
+ setCommunityFollowState(prev => {
+ const ids = new Set((prev?.following_ids || []).map(String))
+ if (following) ids.add(String(userId))
+ else ids.delete(String(userId))
+ return {
+ ...prev,
+ following_ids: Array.from(ids).map(Number).filter(Number.isFinite),
+ following_count: Number(result?.following_count ?? ids.size),
+ followers_count: prev?.followers_count ?? 0,
+ following: following
+ ? [ ...(prev?.following || []), ...(communityUserResults.filter(user => String(user.user_id) === String(userId))) ].filter((user, idx, arr) => user && arr.findIndex(x => String(x?.user_id) === String(user?.user_id)) === idx)
+ : (prev?.following || []).filter(user => String(user?.user_id) !== String(userId))
+ }
+ })
+ syncCommunityUserFollow(userId, following, followersCount)
+ await loadCommunity()
+ } catch (err) {
+ alert(errMsg(err))
+ }
+ }
+ const toggleMuteUser = async (userId) => {
+ try {
+ const result = await api.toggleCommunityMute(userId)
+ const muted = !!result?.muted
+ const mutedIds = (result?.muted_ids || []).map(Number).filter(Number.isFinite)
+ setCommunityFollowState(prev => ({
+ ...prev,
+ muted_ids: mutedIds,
+ muted_count: Number(result?.muted_count ?? mutedIds.length),
+ }))
+ syncCommunityUserMute(userId, muted)
+ await loadCommunity()
+ } catch (err) {
+ alert(errMsg(err))
+ }
+ }
 
  const [state, setState] = useState({ metrics: {}, users: [], listings: [], livestock: [], livestockRecords: [], livestockPurchaseSources: [], logistics: [], equipment: [], storage: [], payments: [], orders: [], payoutProfiles: [], notifications: [], payoutHistory: [], alerts: [], contracts: [], idv: [], passports: [], verificationApps: [], approvedAccounts: [], deviceTokens: [], diseaseScans: [], disputes: [], fraudFlags: [], news: [], publicWeather: [], govPrograms: [], spotTrading: [], spotHistory: [], tradeExportStats: [], livestockPlans: [] })
  const [me, setMe] = useState(null)
@@ -3248,15 +3322,19 @@ function AppInner() {
  }
 
  const loadCommunity = async () => {
- const [p, posts] = await Promise.all([
+ const [p, posts, feed, followState] = await Promise.all([
  api.fetchCommunityProfileMe().catch(() => null),
- api.fetchCommunityPosts(80).catch(() => [])
+ api.fetchCommunityPosts(80).catch(() => []),
+ api.fetchCommunityFeed(communityFeedMode === 'following' ? 'following' : 'for-you', 60).catch(() => []),
+ api.fetchCommunityFollowState().catch(() => ({ following_ids: [], following_count: 0, followers_count: 0, following: [] }))
  ])
  if (p && !communityProfileDirty && !communityProfileSaving) {
  setCommunityProfile(p)
  setCommunityProfileBaseline(p)
  }
  setCommunityPosts(posts || [])
+ setCommunityFeedItems(feed || [])
+ setCommunityFollowState(followState || { following_ids: [], following_count: 0, followers_count: 0, following: [] })
  }
 
  useEffect(() => { if (token) load().catch(console.error) }, [token, alertCountryFilter])
@@ -3304,7 +3382,21 @@ function AppInner() {
  loadCommunity().catch(() => {})
  const id = setInterval(() => { loadCommunity().catch(() => {}) }, 7000)
  return () => clearInterval(id)
- }, [token, communityProfileDirty])
+ }, [token, communityProfileDirty, communityFeedMode])
+
+ useEffect(() => {
+ if (!token) return
+ const query = String(communityUserSearch || '').trim()
+ const timer = setTimeout(async () => {
+ try {
+ const rows = await api.searchCommunityUsers(query, query ? 18 : 10)
+ setCommunityUserResults(rows || [])
+ } catch {
+ setCommunityUserResults([])
+ }
+ }, query ? 250 : 0)
+ return () => clearTimeout(timer)
+ }, [token, communityUserSearch, communityFollowState?.following_count])
 
  useEffect(() => {
  const key = `${token ? 'auth' : 'guest'}|${active}|${uiCountry}|${uiLang}`
@@ -4642,14 +4734,16 @@ function AppInner() {
  <div style={{position:'absolute',left:74,bottom:8,color:'#fff',fontWeight:700,textShadow:'0 1px 2px rgba(0,0,0,.6)'}}>{(communityProfile.full_name || me?.full_name || 'Your Community Profile') + verificationBadge(me) + (communityProfile.username ? ` • @${communityProfile.username}` : '')}</div>
  </div>
 
- <div className='list' style={{maxHeight:220, overflow:'auto', marginTop:26}}>
- {communityPosts.slice(0, 3).map((p)=><div key={`home-cp-${p.id}`} className='panel' style={{padding:8}}>
- <div style={{fontWeight:700}}>{p.author_name || `User ${p.user_id}`} {p.author_country ? `(${p.author_country})` : ''}</div>
- {!!p.text && <div style={{fontSize:'.9rem'}}>{String(p.text).slice(0, 140)}{String(p.text).length > 140 ? '…' : ''}</div>}
- {p.media_url && <div style={{fontSize:'.8rem', color:'#64748b'}}>{p.media_type || 'MEDIA'} attached</div>}
- <div style={{fontSize:'.8rem', color:'#64748b'}}>👍 {p.likes_count || 0} • 💬 {p.comments_count || 0}</div>
+ <div className='list' style={{maxHeight:260, overflow:'auto', marginTop:26}}>
+ {(communityFeedItems || []).slice(0, 4).map((item)=><div key={`home-feed-${item.id}`} className='panel' style={{padding:8}}>
+ <div style={{fontWeight:700}}>{item?.actor?.full_name || item?.post?.author_full_name || `User ${item?.actor?.user_id || ''}`}{item?.actor?.username ? ` • @${item.actor.username}` : ''}</div>
+ <div style={{fontSize:'.82rem', color:'#64748b'}}>{item.summary || 'Community activity'}</div>
+ {item.type === 'community_post' && !!item?.post?.text && <div style={{fontSize:'.9rem'}}>{String(item.post.text).slice(0, 140)}{String(item.post.text).length > 140 ? '…' : ''}</div>}
+ {item.type === 'profile_update' && <div style={{fontSize:'.88rem'}}>{item?.profile_update?.bio || item?.profile_update?.farm_life || 'Updated profile photos and bio.'}</div>}
+ {String(item.type || '').includes('listing') && <div style={{fontSize:'.88rem'}}>{item?.listing?.title} • {item?.listing?.quantity || 0} {item?.listing?.unit_label || ''} {item?.listing?.location ? `• ${item.listing.location}` : ''}</div>}
+ <div style={{fontSize:'.8rem', color:'#64748b'}}>{String(item.created_at || '').replace('T',' ').slice(0,16)}</div>
  </div>)}
- {!communityPosts.length && <div className='list-row'><span>No community posts yet.</span></div>}
+ {!(communityFeedItems || []).length && <div className='list-row'><span>No community activity yet.</span></div>}
  </div>
  </article>
 
@@ -6394,6 +6488,11 @@ function AppInner() {
  <div style={{fontSize:'1rem',fontWeight:700,color:'#0f172a'}}>{(communityProfile.full_name || me?.full_name || 'Your profile') + verificationBadge(me)}</div>
  <div style={{fontSize:'.82rem',color:'#0284c7',fontWeight:600}}>@{communityProfile.username || 'set_username'}</div>
  <div style={{fontSize:'.85rem',color:'#475569'}}>{communityProfile.bio || 'Add a short bio to attract followers.'}</div>
+ <div style={{display:'flex',gap:12,flexWrap:'wrap',marginTop:6,fontSize:'.78rem',color:'#475569'}}>
+ <span><strong>{communityProfile.followers_count || communityFollowState.followers_count || 0}</strong> followers</span>
+ <span><strong>{communityProfile.following_count || communityFollowState.following_count || 0}</strong> following</span>
+ <span><strong>{communityPosts.filter(p => String(p.user_id) === String(me?.id)).length}</strong> posts</span>
+ </div>
  </div>
  <form className='list' onSubmit={async(e)=>{
  e.preventDefault()
@@ -6499,32 +6598,93 @@ function AppInner() {
  </div>
 
  <article className='panel' style={{marginTop:10}}>
+ <div className='list-row' style={{alignItems:'flex-start', gap:10, flexWrap:'wrap'}}>
+ <div>
+ <h4 style={{margin:'0 0 4px 0'}}>Find growers to follow</h4>
+ <div className='helper-text'>Search by name, username, region, bio, or interests. Following shapes your home feed with posts, profile updates, and fresh listings.</div>
+ </div>
+ <div style={{display:'flex',gap:8,flexWrap:'wrap',fontSize:'.82rem',color:'#475569'}}>
+ <span><strong>{communityFollowState.following_count || 0}</strong> following</span>
+ <span><strong>{communityFollowState.followers_count || communityProfile.followers_count || 0}</strong> followers</span>
+ <span><strong>{communityFollowState.muted_count || 0}</strong> muted</span>
+ </div>
+ </div>
+ <div className='inlineForm' style={{marginTop:10}}>
+ <input className='input' placeholder='Search farmers, buyers, usernames, interests…' value={communityUserSearch} onChange={(e)=>setCommunityUserSearch(e.target.value)} />
+ <button type='button' className='btn' onClick={()=>setCommunityUserSearch('')}>Clear</button>
+ </div>
+ <div className='list' style={{marginTop:10}}>
+ {(communityUserResults || []).slice(0, 8).map((user)=><div key={`community-user-${user.user_id}`} className='panel' style={{padding:10,border:'1px solid #dbe6df',boxShadow:'0 1px 6px rgba(0,0,0,.04)'}}>
+ <div className='list-row' style={{alignItems:'center', gap:10, flexWrap:'wrap'}}>
+ <div style={{display:'flex',alignItems:'center',gap:10}}>
+ {isUserImage(user.avatar_url)
+ ? <img src={user.avatar_url} alt='avatar' style={{width:44,height:44,objectFit:'cover',borderRadius:'50%',border:'1px solid #e2e8f0'}} />
+ : <div style={{width:44,height:44,borderRadius:'50%',background:'#e2e8f0',display:'grid',placeItems:'center',color:'#64748b',fontSize:'.75rem'}}>No DP</div>}
+ <div>
+ <div style={{fontWeight:700}}>{user.full_name}{user.country ? ` (${user.country})` : ''}</div>
+ <div style={{fontSize:'.8rem', color:'#0284c7'}}>{user.username ? `@${user.username}` : 'No username yet'}{user.region ? ` • ${user.region}` : ''}</div>
+ </div>
+ </div>
+ {!user.is_me && <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+ <button className={`btn ${isFollowingUser(user.user_id) ? 'btn-dark' : ''}`} onClick={()=>toggleFollowUser(user.user_id)}>{isFollowingUser(user.user_id) ? 'Following' : 'Follow'}</button>
+ <button className={`btn ${isMutedUser(user.user_id) ? 'btn-dark' : ''}`} onClick={()=>toggleMuteUser(user.user_id)}>{isMutedUser(user.user_id) ? 'Unmute' : 'Mute / Hide'}</button>
+ </div>}
+ </div>
+ <div style={{fontSize:'.86rem',color:'#475569',marginTop:6}}>{user.bio || user.farm_life || `Interested in ${user.interests || 'farming'}.`}</div>
+ <div style={{display:'flex',gap:12,flexWrap:'wrap',marginTop:8,fontSize:'.78rem',color:'#64748b'}}>
+ <span><strong>{user.followers_count || 0}</strong> followers</span>
+ <span><strong>{user.following_count || 0}</strong> following</span>
+ <span><strong>{user.posts_count || 0}</strong> posts</span>
+ <span>{isMutedUser(user.user_id) ? 'Muted' : 'Visible'}</span>
+ </div>
+ </div>)}
+ {!(communityUserResults || []).length && <div className='list-row'><span>{communityUserSearch ? 'No matching community users yet.' : 'Start typing to find growers and agri-builders to follow.'}</span></div>}
+ </div>
+ </article>
+
+ <article className='panel' style={{marginTop:10}}>
  <div className='tabs' style={{marginBottom:8, flexWrap:'wrap'}}>
  <button className={`tab ${communityFeedMode === 'for-you' ? 'active' : ''}`} onClick={()=>setCommunityFeedMode('for-you')}>For You</button>
  <button className={`tab ${communityFeedMode === 'following' ? 'active' : ''}`} onClick={()=>setCommunityFeedMode('following')}>Following</button>
  <button className={`tab ${communityFeedMode === 'reels' ? 'active' : ''}`} onClick={()=>setCommunityFeedMode('reels')}>FarmReels</button>
  </div>
  <div className='list'>
- {(communityFeedMode === 'reels' ? communityPosts.filter(x => String(x.media_type || '').toUpperCase() === 'VIDEO') : communityPosts).map((p)=><div key={`cp-${p.id}`} className='panel' style={{padding:10,border:'1px solid #dbe6df',boxShadow:'0 1px 6px rgba(0,0,0,.05)'}}>
- <div className='list-row' style={{alignItems:'center', gap:10}}>
+ {(communityFeedMode === 'reels'
+ ? communityPosts.filter(x => String(x.media_type || '').toUpperCase() === 'VIDEO').map(post => ({ type: 'community_post', id: `post-${post.id}`, actor: { user_id: post.user_id, full_name: post.author_full_name, username: post.author_username, avatar_url: post.author_avatar_url, country: post.author_country, is_following: isFollowingUser(post.user_id) }, post, created_at: post.created_at, summary: 'Shared a reel' }))
+ : communityFeedMode === 'following'
+ ? communityFeedItems.filter(item => item?.type !== 'profile_update' || !item?.post)
+ : communityFeedItems
+ ).map((item)=>{
+ const p = item?.post
+ const actor = item?.actor || {}
+ const canFollow = actor?.user_id && String(actor.user_id) !== String(me?.id)
+ return <div key={`cp-${item.id}`} className='panel' style={{padding:10,border:'1px solid #dbe6df',boxShadow:'0 1px 6px rgba(0,0,0,.05)'}}>
+ <div className='list-row' style={{alignItems:'center', gap:10, flexWrap:'wrap'}}>
  <div style={{display:'flex',alignItems:'center',gap:10}}>
- {isUserImage(p.author_avatar_url)
- ? <img src={p.author_avatar_url} alt='Author avatar' style={{width:42,height:42,objectFit:'cover',borderRadius:'50%',border:'1px solid #e2e8f0'}} />
+ {isUserImage(actor.avatar_url || p?.author_avatar_url)
+ ? <img src={actor.avatar_url || p?.author_avatar_url} alt='Author avatar' style={{width:42,height:42,objectFit:'cover',borderRadius:'50%',border:'1px solid #e2e8f0'}} />
  : <div style={{width:42,height:42,borderRadius:'50%',background:'#e2e8f0',display:'grid',placeItems:'center',color:'#64748b',fontSize:'.75rem'}}>No DP</div>}
  <div>
- <strong>{p.author_full_name || p.author_name || `User ${p.user_id}`} {p.author_country ? `(${p.author_country})` : ''}</strong>
- <div style={{fontSize:'.78rem', color:'#0284c7'}}>{p.author_username ? `@${p.author_username}` : ''}</div>
+ <strong>{actor.full_name || p?.author_full_name || p?.author_name || `User ${actor.user_id || p?.user_id || ''}`} {(actor.country || p?.author_country) ? `(${actor.country || p?.author_country})` : ''}</strong>
+ <div style={{fontSize:'.78rem', color:'#0284c7'}}>{actor.username || p?.author_username ? `@${actor.username || p?.author_username}` : ''}</div>
  </div>
  </div>
- <span style={{fontSize:'.78rem', color:'#64748b'}}>{String(p.created_at || '').replace('T',' ').slice(0,16)}</span>
+ <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+ {canFollow && communityFeedMode !== 'reels' && <button className={`btn ${isFollowingUser(actor.user_id) ? 'btn-dark' : ''}`} onClick={()=>toggleFollowUser(actor.user_id)}>{isFollowingUser(actor.user_id) ? 'Following' : 'Follow'}</button>}
+ <span style={{fontSize:'.78rem', color:'#64748b'}}>{String(item.created_at || '').replace('T',' ').slice(0,16)}</span>
  </div>
- {p.text && <div style={{margin:'6px 0', whiteSpace:'pre-wrap'}}>{p.text}</div>}
- {p.media_url && (
- p.media_type === 'VIDEO'
+ </div>
+ <div style={{fontSize:'.8rem', color:'#64748b', margin:'4px 0 8px'}}>{item.summary || 'Community activity'}</div>
+ {item.type === 'profile_update' && <div style={{margin:'6px 0', whiteSpace:'pre-wrap'}}>{item?.profile_update?.bio || item?.profile_update?.farm_life || 'Updated profile images and farm bio.'}</div>}
+ {item.type === 'crop_listing' || item.type === 'livestock_listing' ? <div style={{margin:'6px 0', whiteSpace:'pre-wrap'}}><strong>{item?.listing?.title}</strong> • {item?.listing?.quantity || 0} {item?.listing?.unit_label || ''}{item?.listing?.location ? ` • ${item.listing.location}` : ''}{item?.listing?.unit_price ? ` • ₵${item.listing.unit_price}` : ''}</div> : null}
+ {p?.text && <div style={{margin:'6px 0', whiteSpace:'pre-wrap'}}>{p.text}</div>}
+ {((p?.media_url) || item?.listing?.cover_image_url || item?.profile_update?.cover_image_url) && (
+ (p?.media_type === 'VIDEO')
  ? <video src={p.media_url} controls style={{width:'100%', maxHeight:360, borderRadius:10, background:'#000'}} />
- : <img src={p.media_url} alt='community post' style={{width:'100%', maxHeight:360, objectFit:'cover', borderRadius:10}} />
+ : <img src={p?.media_url || item?.listing?.cover_image_url || item?.profile_update?.cover_image_url || item?.profile_update?.avatar_url} alt='community activity' style={{width:'100%', maxHeight:360, objectFit:'cover', borderRadius:10}} />
  )}
- {!!p.tags && <div style={{fontSize:'.82rem', color:'#0284c7', marginTop:6}}>#{String(p.tags).split(',').map(s=>s.trim()).filter(Boolean).join(' #')}</div>}
+ {!!p?.tags && <div style={{fontSize:'.82rem', color:'#0284c7', marginTop:6}}>#{String(p.tags).split(',').map(s=>s.trim()).filter(Boolean).join(' #')}</div>}
+ {!!p && <>
  <div className='list-row' style={{marginTop:8, flexWrap:'wrap', gap:8}}>
  <button className='btn' onClick={async()=>{
  try {
@@ -6532,6 +6692,10 @@ function AppInner() {
  setCommunityPosts(prev => (prev || []).map(post => String(post.id) === String(p.id)
  ? { ...post, liked_by_me: !!result?.liked, likes_count: Number(result?.likes_count ?? post.likes_count ?? 0) }
  : post
+ ))
+ setCommunityFeedItems(prev => (prev || []).map(feedItem => String(feedItem?.post?.id) === String(p.id)
+ ? { ...feedItem, post: { ...(feedItem.post || {}), liked_by_me: !!result?.liked, likes_count: Number(result?.likes_count ?? feedItem?.post?.likes_count ?? 0) } }
+ : feedItem
  ))
  } catch (e) {
  alert(errMsg(e))
@@ -6548,8 +6712,12 @@ function AppInner() {
  {(communityComments[p.id] || []).length > 0 && <div className='list' style={{marginTop:6}}>
  {(communityComments[p.id] || []).slice(-5).map((c)=><div className='list-row' key={`cc-${c.id}`}><span><strong>{c.author_name || `User ${c.user_id}`}:</strong> {c.text}</span></div>)}
  </div>}
- </div>)}
- {!(communityFeedMode === 'reels' ? communityPosts.filter(x => String(x.media_type || '').toUpperCase() === 'VIDEO').length : communityPosts.length) && (
+ </>}
+ </div>
+ })}
+ {!((communityFeedMode === 'reels'
+ ? communityPosts.filter(x => String(x.media_type || '').toUpperCase() === 'VIDEO').length
+ : communityFeedItems.length)) && (
  <div className='two-col'>
  <div className='panel' style={{padding:8}}>
  <div style={{width:'100%',height:150,borderRadius:8,background:'#f1f5f9',display:'grid',placeItems:'center',color:'#64748b'}}>No user image yet</div>

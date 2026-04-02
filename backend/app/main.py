@@ -163,6 +163,24 @@ def ensure_runtime_columns():
                     created_at {_ts_type()}
                 )
             """))
+
+            conn.execute(text(f"""
+                CREATE TABLE IF NOT EXISTS community_follows (
+                    id INTEGER PRIMARY KEY,
+                    follower_user_id INTEGER NOT NULL,
+                    followed_user_id INTEGER NOT NULL,
+                    created_at {_ts_type()}
+                )
+            """))
+
+            conn.execute(text(f"""
+                CREATE TABLE IF NOT EXISTS community_mutes (
+                    id INTEGER PRIMARY KEY,
+                    muter_user_id INTEGER NOT NULL,
+                    muted_user_id INTEGER NOT NULL,
+                    created_at {_ts_type()}
+                )
+            """))
     except Exception as exc:
         logger.exception('Runtime schema bootstrap failed: %s', exc)
 
