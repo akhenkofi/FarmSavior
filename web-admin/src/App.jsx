@@ -6692,19 +6692,6 @@ function AppInner() {
  </div>
  </div>
 
- <article className='panel' style={{marginBottom:10, border:'1px solid #dbeafe', background:'linear-gradient(180deg,#eff6ff 0%,#f8fafc 100%)'}}>
- <div className='list-row' style={{alignItems:'flex-start', gap:10, flexWrap:'wrap'}}>
- <div>
- <h4 style={{margin:'0 0 4px 0'}}>Messages & Calls</h4>
- <div className='helper-text'>Quick access to your DMs, audio calls, and video calls from the Community home.</div>
- </div>
- <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
- <button type='button' className='btn btn-dark' onClick={()=>openCommunityInbox()}>{communityMessageThreads.length ? `Open Inbox (${communityMessageThreads.length})` : 'Open Inbox'}</button>
- {communityMessageView?.user?.user_id && <button type='button' className='btn' onClick={()=>openCommunityMessages(communityMessageView.user)}>Resume last chat</button>}
- </div>
- </div>
- <div style={{marginTop:8, fontSize:'.82rem', color:'#475569'}}>Tip: open any thread, then use Audio Call or Video Call inside the chat header.</div>
- </article>
 
  <article className='panel' style={{marginBottom:10}}>
  <h4 style={{marginTop:0}}>Stories</h4>
@@ -6952,6 +6939,15 @@ function AppInner() {
  <div style={{fontSize:'.78rem', color:'#64748b', textAlign:'center'}}>{communityProfileDirty ? 'Save to publish your latest profile edits everywhere in Community.' : 'No unsaved changes right now.'}</div>
  </div>
  </form>}
+ </div>
+ </article>
+
+ <article className='panel' style={{border:'1px solid #dbeafe', background:'linear-gradient(180deg,#eff6ff 0%,#f8fafc 100%)'}}>
+ <h4 style={{marginTop:0}}>Messages & Calls</h4>
+ <div className='helper-text' style={{marginBottom:8}}>Quick access to your inbox, calls, and active conversations.</div>
+ <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+ <button type='button' className='btn btn-dark' onClick={()=>openCommunityInbox()}>{communityMessageThreads.length ? `Open Inbox (${communityMessageThreads.length})` : 'Open Inbox'}</button>
+ {communityMessageView?.user?.user_id && <button type='button' className='btn' onClick={()=>openCommunityMessages(communityMessageView.user)}>Resume last chat</button>}
  </div>
  </article>
 
