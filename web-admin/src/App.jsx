@@ -4364,76 +4364,7 @@ function AppInner() {
  </>}
  </article>
 
- <article className='panel' style={{marginTop:10}}>
- <h3>{t('🐄 Livestock Records & Intelligence Platform (Africa-Wide)','🐄 Plateforme de registres et d’intelligence du bétail (Afrique entière)','🐄 畜牧记录与智能平台（非洲范围）')}</h3>
- <p style={{fontSize:'.85rem',color:'#475569'}}>{t('A production-grade livestock records system for poultry, sheep, goats, and cattle, with traceability, breeding performance, health tracking, and subscription-based access for operators across Africa.','Un système professionnel de registres d’élevage pour la volaille, les ovins, les caprins et les bovins, avec traçabilité, performance de reproduction, suivi sanitaire et accès par abonnement pour les opérateurs en Afrique.','面向非洲运营者的生产级畜牧记录系统，覆盖家禽、绵羊、山羊和牛，包含溯源、繁育绩效、健康追踪和订阅访问。')}</p>
- <p style={{fontSize:'.82rem',color:'#64748b',marginTop:4}}>{t('Pricing auto-displays in your selected country currency. Settlement can route to Ghana Mobile Money or US bank account once payout details are configured.','Les prix s’affichent automatiquement dans la devise du pays sélectionné. Le règlement peut être acheminé vers Mobile Money Ghana ou un compte bancaire US une fois les détails de paiement configurés.','价格会按你选择的国家货币自动显示。配置收款后，可结算到加纳移动支付或美国银行账户。')}</p>
- <p style={{fontSize:'.85rem',color:'#0f766e',marginTop:6,fontWeight:700}}>Free version allows up to 25 animals total. No photos allowed. No documents allowed.</p>
- <h4 style={{margin:'8px 0'}}>{t('Select Your Subscription Plan','Sélectionnez votre plan d’abonnement','选择你的订阅方案')}</h4>
- <div className='panel' style={{marginBottom:12,padding:12,background:effectiveLivestockSubscription?.tier==='premium'?'linear-gradient(180deg,#ecfeff 0%,#f0fdfa 100%)':'linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%)',border:'1px solid #cbd5e1', boxShadow:'0 10px 30px rgba(15,23,42,.05)'}}>
- <strong>Current livestock tier:</strong> {effectiveLivestockSubscription?.tier==='premium' ? 'PREMIUM' : 'FREE'} • {effectiveLivestockSubscription?.tier==='premium' ? 'Unlimited animals' : 'Limit 25 animals'}{effectiveLivestockSubscription?.subscription?.status ? ` • ${effectiveLivestockSubscription.subscription.status}` : ''}
- </div>
- <div className='tabs' style={{marginBottom:10, flexWrap:'wrap'}}>
- {publicLivestockPlans.map((p, i) => {
- const key = p.plan_code || p.name || `plan-${i}`
- return <button key={`plan-tab-${key}`} className={`tab ${expandedLivestockPlan === key ? 'active' : ''}`} onClick={() => setExpandedLivestockPlan(key)}>{displayPlanName(p.name)}</button>
- })}
- </div>
-
- <div>
- {publicLivestockPlans
- .filter((p, i) => (p.plan_code || p.name || `plan-${i}`) === expandedLivestockPlan)
- .map((p, i) => (
- <div className='panel' key={`plan-${i}`} style={{padding:14, background:'linear-gradient(180deg,#ffffff 0%,#f8fafc 100%)', boxShadow:'0 16px 40px rgba(15,23,42,.08)'}}>
- <h4 style={{marginTop:0, fontSize:'1.05rem'}}>{displayPlanName(p.name)}</h4><div className='helper-text' style={{marginBottom:8}}>{p.plan_code === 'free' ? 'Essential entry plan for small holders.' : 'Unlimited premium access for serious operators.'}</div>
- <div className='list-row'><span>{t('Monthly','Mensuel','月付')}</span><strong style={{fontSize:'1.02rem'}}>{formatLocalPrice(p.monthly_usd)}</strong></div>
- <div className='list-row'><span>{t('Yearly','Annuel','年付')}</span><strong style={{fontSize:'1.02rem'}}>{formatLocalPrice(p.yearly_usd)}</strong></div>
- <div className='list'>
- <div className='list-row'><span>{p.record_limit ? `Up to ${p.record_limit} animals total` : 'Unlimited animals'}</span></div>
- {(p.features || []).map((f, j) => <div className='list-row' key={`pf-${i}-${j}`}><span>{displayFeature(f)}</span></div>)}
- {!!p.yearly_savings_pct && <div className='list-row'><span>You save about {p.yearly_savings_pct}% with the yearly plan compared to monthly.</span></div>}
- </div>
- <div className='list-row' style={{marginTop:8, gap:8, flexWrap:'wrap'}}>
- <button className='btn' onClick={() => { if (!token) { handleProtectedAction('onboarding', 'Livestock Free'); return } openLivestockManagement() }}>Use Free Version</button>
-
- <button className='btn btn-dark' onClick={async () => {
- if (!token) { handleProtectedAction('onboarding', 'Subscription checkout'); return }
- if (effectiveLivestockSubscription?.tier === 'premium' || isActiveSubscriptionStatus(effectiveLivestockSubscription?.subscription?.status)) {
- alert(t('Your Livestock Records premium access is already active. Opening your records workspace now.','Votre accès Premium aux registres d’élevage est déjà actif. Ouverture de votre espace maintenant.'))
- openLivestockManagement()
- return
- }
- try {
- const r = await api.checkoutLivestockRecordsPlan({
- user_id: Number(me?.id || 1),
- plan_code: p.plan_code || 'premium',
- country: uiCountry,
- billing_cycle: 'monthly',
- currency: selectedCurrency,
- force_paid: true
- })
- if (r?.already_active) {
- alert(t('Your Livestock Records premium access is already active. Opening your records workspace now.','Votre accès Premium aux registres d’élevage est déjà actif. Ouverture de votre espace maintenant.'))
- openLivestockManagement()
- return
- }
- cachePendingCheckout({ type: 'livestock', product: 'livestock-records', plan_code: p.plan_code || 'premium', reference: r.reference })
- if (r.payment_url) {
- try {
- const popup = window.open(r.payment_url, '_blank', 'noopener,noreferrer')
- if (!popup) window.location.assign(r.payment_url)
- } catch { window.location.assign(r.payment_url) }
- alert(t(`Redirecting to secure payment now. Ref: ${r.reference}`,`Redirection vers le paiement sécurisé. Réf : ${r.reference}`))
- } else {
- alert(t(`Checkout created. Ref: ${r.reference}`,`Paiement créé. Réf : ${r.reference}`))
- }
- } catch (e) { alert(t(`Checkout failed: ${errMsg(e)}`,`Échec du paiement : ${errMsg(e)}`)) }
- }}>{effectiveLivestockSubscription?.tier === 'premium' ? t('Premium Active — Open Records','Premium actif — ouvrir les registres','高级版已激活—打开档案') : t('Buy Premium Now','Acheter Premium','立即购买高级版')}</button>
- </div>
- </div>
- ))}
- </div>
- </article>
+ 
 
  <article className='panel' style={{marginTop:10}}>
  <div className='list-row'>
