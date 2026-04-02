@@ -4496,7 +4496,7 @@ function AppInner() {
  <p>{school.summary}</p>
  <div className='aadu-school-actions'>
  <button type='button' className='btn btn-dark' onClick={() => handleProtectedAction(school.route, school.title)}>{token ? 'Open' : 'Enroll / Open'}</button>
- <button type='button' className='btn' onClick={() => token ? setActive(school.route) : handleProtectedAction(school.route, school.title)}>{token ? 'Go to school' : 'Preview access'}</button>
+ <button type='button' className='btn' onClick={() => token ? (window.location.href = `/?public=0&go=${school.route}`) : handleProtectedAction(school.route, school.title)}>{token ? 'Go to school' : 'Preview access'}</button>
  </div>
  </article>
  ))}
