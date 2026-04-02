@@ -560,14 +560,121 @@ const poultryClimate = {
 
 const poultryVaxProgram = [
  'Pre-placement: full wash/disinfection, downtime, rodent and vector control',
- 'Day 0-1: confirm hatchery vaccination declaration and lot records',
- 'Day 5-7: Newcastle prime (cold-chain compliant)',
- 'Day 10-14: IBD/Gumboro first dose in high-pressure zones',
- 'Day 18-24: ND/IBD booster per veterinary directive',
- 'Week 6-8: Fowl pox / region-specific vaccines where indicated',
- 'Ongoing: deworming/coccidiosis prevention by housing and risk profile'
+ 'Day 0-1: confirm hatchery vaccination declaration, hatch date, and lot records',
+ 'Day 5-7: Newcastle prime only if this is not already covered by the hatchery program and your local protocol says to start then',
+ 'Day 10-14: IBD/Gumboro first dose in high-pressure zones or according to hatchery and veterinary guidance',
+ 'Day 18-24: ND/IBD booster per veterinary directive, product label, and water-application discipline',
+ 'Week 6-8 or pullet phase: fowl pox / region-specific vaccines where indicated for your district and production system',
+ 'Ongoing: coccidiosis prevention, sanitation review, and parasite control by housing type and local risk profile'
 ]
 
+const poultryHealthGuides = {
+ layers: {
+  title: 'Layer vaccination + prevention calendar',
+  caution: 'Educational planning tool only: exact layer vaccine products, route, dilution, revaccination interval, withdrawal periods, and legal use must be confirmed with a licensed local veterinarian or extension officer before application.',
+  timing: [
+   'Pre-placement to week 2: prepare the house early, verify hatchery vaccinations, start chicks warm and drinking fast, and protect brooding comfort because early stress delays later lay performance.',
+   'Week 3-8: focus on frame build, litter dryness, coccidiosis control, and on-time booster execution; missed grower health discipline usually reappears as uneven pullets at point of lay.',
+   'Week 9-16: keep pullets uniform, avoid premature light stimulation, and complete any point-of-lay health work early enough that birds are not stressed right as laying begins.',
+   'Point of lay through peak production: protect water reliability, shell quality, heat control, and booster timing for long-cycle birds according to the local veterinary plan.'
+  ],
+  vaccines: [
+   'Common commercial timing guide to validate locally: hatchery day-old vaccination may include Marek’s and sometimes Newcastle/IB support depending on source; never assume coverage without the hatchery declaration.',
+   'Newcastle disease (ND): prime and booster timing varies by local pressure, product type, and hatchery program, but layers usually need a longer-term ND plan than broilers because they stay on farm for many months.',
+   'IBD/Gumboro: confirm whether your zone, maternal antibody profile, and hatchery status require an early one-dose or two-dose program; poor timing creates expensive immunity gaps.',
+   'Fowl pox / infectious bronchitis / egg-drop or other layer-relevant vaccines may be part of the pullet-to-lay plan where licensed products and local disease risk justify them; schedule these before peak lay stress, not during an unexplained production drop.'
+  ],
+  parasite: [
+   'Internal parasite pressure is usually lower in well-managed cage systems than in deep-litter or free-range units, but do not assume zero risk where birds contact soil, insects, or mixed-age groups.',
+   'Coccidiosis control is usually more important than routine worming in young layers; keep litter dry, stop leaks fast, and review anticoccidial strategy before reaching for random medication.',
+   'For deep-litter or free-range layer flocks, discuss a strategic deworming calendar with your local vet around grower age, point of lay, and post-rain parasite pressure rather than monthly guesswork.',
+   'Dose by real bird weight bands, respect egg withdrawal rules, and avoid off-label use without direct veterinary instruction.'
+  ],
+  seasonal: [
+   'Humid / rainy periods: raise drinkers, remove wet litter daily, tighten rodent and wild-bird control, and inspect shell quality plus respiratory signs twice weekly.',
+   'Dry / hot periods: protect cool clean water at midday, reduce heat build-up, and avoid making vaccine-water decisions during the hottest, most stressful hours.',
+   'Holiday and school-demand windows: keep egg quality records tight because market opportunity means little if cracks, dirties, or shell weakness are rising.',
+   'Before bringing in replacement pullets: empty, wash, disinfect, and rest the house long enough to break carryover infection pressure.'
+  ],
+  calendar: [
+   'January-February: dry-season heat and water review, pullet uniformity checks, and targeted parasite review for deep-litter/free-range flocks.',
+   'March-April: pre-rain drainage cleanup, rodent control reset, verify vaccine stock and cold chain before humidity pressure builds.',
+   'May-August: highest litter moisture, coccidiosis, and respiratory pressure in many humid systems; intensify twice-weekly health walks and shell-quality review.',
+   'September-October: point-of-lay or post-peak review window; check body weight, booster completion, egg quality drift, and deworm only where the housing system and local advice justify it.',
+   'November-December: replace chronic non-performers, clean out houses before the next flock, and lock the next year’s pullet and vaccine plan onto one written calendar.'
+  ]
+ },
+ broilers: {
+  title: 'Broiler cycle vaccination + prevention calendar',
+  caution: 'Educational planning tool only: broiler vaccine timing depends on hatchery history, local disease challenge, intended slaughter age, and withdrawal rules. Confirm all brands, routes, water-medication compatibility, and legal use with local veterinary authorities.',
+  timing: [
+   'Pre-placement to day 7: brooding precision matters more than almost anything else—weak heat, poor water access, or bad chick start can look like disease later even when the real cause was management.',
+   'Day 8-21: keep broilers on schedule for ND/IBD work where used locally, while protecting litter dryness and watching for coccidiosis, wet droppings, and uneven growth.',
+   'Day 22 to sale: the health focus shifts toward heat stress, respiratory pressure, leg quality, and avoiding medication or vaccine decisions that clash with slaughter withdrawal periods.',
+   'Between cycles: complete total clean-out, wash, disinfect, dry, and downtime before the next placement so one weak batch does not infect the next one.'
+  ],
+  vaccines: [
+   'Common field pattern to verify locally: day-old hatchery declarations may cover Marek\'s and sometimes ND/IB, but many broiler farms still run farm-level ND and/or IBD boosters depending on pressure and slaughter age.',
+   'Newcastle disease (ND): timing often sits in the first and second/third week, but it must match hatchery status, outbreak pressure, and product label; do not copy another farm blindly.',
+   'IBD/Gumboro: most useful where challenge is real and maternal antibody timing has been considered; a badly timed dose may give false confidence.',
+   'Coccidiosis prevention usually relies more on feed program, litter management, and sanitation than on emergency treatment after the flock has already lost performance.'
+  ],
+  parasite: [
+   'Routine worming is less common in short-cycle housed broilers than in long-cycle or free-range birds; focus first on litter, drinker leaks, insect pressure, and coccidiosis control.',
+   'Where broilers are kept longer, partially ranged, or on reused ground, review internal parasite risk after the rains and around cycle carryover points with a veterinarian.',
+   'Do not medicate late in the cycle without checking withdrawal periods against the actual planned sale date.',
+   'Keep flies, beetles, rodents, and wild birds under control because they act like disease and parasite pressure multipliers even when worms are not the main issue.'
+  ],
+  seasonal: [
+   'Humid / rainy periods: wet litter, ammonia, coccidiosis, and respiratory flare-ups rise fast; patrol drinker lines and low-airflow corners every day.',
+   'Dry / hot periods: protect airflow, shade, stocking comfort, and cool water timing because midday heat quietly ruins gain and FCR before obvious deaths begin.',
+   'Festival or target-market windows: map sale date backward from withdrawal deadlines and target weight so birds are not held too long while still under medication restriction.',
+   'Downtime season discipline: if consecutive cycles run through the rains, increase clean-out and insect-control intensity rather than just adding more medicine.'
+  ],
+  calendar: [
+   'January-February: dry-season ventilation and heat-stress review, line flushing, and cycle-close margin checks before the next placement.',
+   'March-April: pre-rain drainage work, litter-material stocking, and vaccine cold-chain preparation for higher disease pressure months.',
+   'May-August: highest wet-litter and coccidiosis risk in many regions; inspect droppings, body-weight spread, and mortality pattern daily.',
+   'September-October: post-rain clean-out discipline, insect control, and review whether the last cycles lost money through delayed sale or poor FCR.',
+   'November-December: plan festive-market batches early, align withdrawal calendars with buyer dates, and do not sacrifice downtime just to squeeze in one more placement.'
+  ]
+ },
+ guinea: {
+  title: 'Guinea fowl prevention + hardy-season calendar',
+  caution: 'Educational planning tool only: guinea fowl vaccine availability, age suitability, and parasite-control labels vary sharply by country. Use poultry products only where the label or a licensed veterinarian specifically supports that use.',
+  timing: [
+   'Pre-placement to 4 weeks: keet warmth, dryness, and predator protection are the first health program; a chilled or panicked keet flock will never show its true potential.',
+   'Week 5-10: transition carefully from brooder dependence into grow-out or controlled ranging while keeping shelter return habits strong and monitoring for weather-related setbacks.',
+   'Grow-out to breeder/market age: focus on survival, parasite pressure under ranging systems, and keeping birds strong through wet nights and hot afternoons.',
+   'Breeder or long-kept flocks: review periodic booster need, external parasite pressure, and fence/perimeter biosecurity before the next seasonal stress window.'
+  ],
+  vaccines: [
+   'Many guinea operations adapt core poultry vaccination principles—especially ND and fowl pox where locally relevant—but exact suitability, age timing, and label support must be confirmed before use.',
+   'Ask local veterinary authorities whether your district commonly vaccinates guinea fowl against Newcastle disease and what schedule is actually followed under field conditions.',
+   'If breeder guinea are kept for extended periods, discuss whether any longer-cycle booster plan is warranted rather than copying a short broiler schedule.',
+   'Do not mix species assumptions: what works for chickens is not automatically label-approved or effective for guinea fowl.'
+  ],
+  parasite: [
+   'Guinea on range can pick up worms, ticks, lice, and other external parasites more readily than confined broilers, so the control plan should match how much ground the birds cover.',
+   'After the rains, inspect body condition, feather quality, droppings, and nighttime roost hygiene before deciding whether treatment is needed.',
+   'Keep perimeter grass controlled, remove damp organic waste, and reduce standing water because vectors and wild-bird contact rise where the range is unmanaged.',
+   'Use only products with clear species guidance or direct veterinary instruction, and separate weak birds early because shy guinea hide decline well.'
+  ],
+  seasonal: [
+   'Humid / rainy periods: secure dry night housing, stop puddles near drinkers, and tighten predator control because wet stressed birds are easier losses.',
+   'Dry / hot periods: protect shade, walking distance to water, and low-stress afternoon handling so birds do not burn condition before market.',
+   'Festive and premium-market windows: build sale groups from healthy uniform birds early; do not wait for the week of sale to separate culls and breeder-quality stock.',
+   'Before widening range access: train return-to-house behavior first, or predator and weather losses will erase the premium.'
+  ],
+  calendar: [
+   'January-February: dry-season shade, water, and predator review; inspect body condition in ranging birds and clean night shelters thoroughly.',
+   'March-April: pre-rain roof repair, drainage cleanup, and confirm with local vets whether ND/fowl pox timing should be refreshed for the coming high-risk period.',
+   'May-August: highest wet-season survival pressure for many free-range guinea systems; watch keets and growers closely for chill, parasite buildup, and failure to return strongly to shelter.',
+   'September-October: post-rain parasite and predator-loss review, sort breeder candidates, and cull chronic weak birds before dry-season market pushes.',
+   'November-December: festive-sales planning, perimeter tightening, and written breeder/market split for the next season.'
+  ]
+ }
+}
 
 const sheepTracks = {
  balamiCross: {
@@ -5149,7 +5256,18 @@ function AppInner() {
  {(poultryZone === 'humid' ? poultryClimate.humid : poultryClimate.dry).map((p)=><div className='list-row' key={p}><span>{p}</span></div>)}
  {poultryVaxProgram.map((v)=><div className='list-row' key={v}><span>{v}</span></div>)}
  </div>
+ <div className='panel' style={{marginTop:10,padding:10,background:'#fffaf0',border:'1px solid #fed7aa'}}>
+ <strong>{poultryHealthGuides[poultryTrack].title}</strong>
+ <div className='list' style={{marginTop:8}}>
+ {poultryHealthGuides[poultryTrack].timing.map((item)=><div className='list-row' key={item}><span>{item}</span></div>)}
+ {poultryHealthGuides[poultryTrack].vaccines.map((item)=><div className='list-row' key={item}><span>{item}</span></div>)}
+ {poultryHealthGuides[poultryTrack].parasite.map((item)=><div className='list-row' key={item}><span>{item}</span></div>)}
+ {poultryHealthGuides[poultryTrack].seasonal.map((item)=><div className='list-row' key={item}><span>{item}</span></div>)}
+ {poultryHealthGuides[poultryTrack].calendar.map((item)=><div className='list-row' key={item}><span>{item}</span></div>)}
+ </div>
+ <p style={{fontSize:'.82rem',color:'#64748b',marginTop:8}}>{poultryHealthGuides[poultryTrack].caution}</p>
  <p style={{fontSize:'.82rem',color:'#64748b',marginTop:8}}>Final vaccine brands/timing must be validated with licensed local veterinary authorities before execution.</p>
+ </div>
  </article>}
 
  {poultryTier === 'pro' && <article className='panel poultry-pro-shell' style={{marginTop:10, border:'1.5px solid #f59e0b', background:'#fffbeb'}}>
