@@ -6166,7 +6166,7 @@ function AppInner() {
    </div>
 
    <div className='records-detail-column'>
-    {(recordsSectionOpen.create || recordsSectionOpen.edit) && <article className='panel records-panel records-form-panel'>
+    {(recordsSectionOpen.create || recordsSectionOpen.edit) && <article className='panel records-panel records-form-panel' style={{position:'fixed', inset:0, zIndex:230, margin:0, borderRadius:0, overflow:'auto', background:'#f8fafc', padding:'16px 12px 28px'}}>
      <div className='records-panel-head'>
       <div>
        <div className='records-panel-title'>{recordsSectionOpen.edit ? 'Edit animal record' : 'Create animal record'}</div>
