@@ -3577,6 +3577,7 @@ function AppInner() {
  <div className='list-row'><span>ID type</span><strong>{myIdVerification?.application?.id_type || '-'}</strong></div>
  <div className='list-row'><span>Submitted at</span><strong>{String(myIdVerification?.application?.created_at || myIdVerification?.application?.submitted_at || '-').slice(0, 16)}</strong></div>
  {myIdVerification?.review?.reviewed_at ? <div className='list-row'><span>Reviewed at</span><strong>{String(myIdVerification.review.reviewed_at).slice(0, 16)}</strong></div> : null}
+ {myIdVerification?.review?.reviewer_note ? <div className='helper-text' style={{marginTop:8}}>Latest reviewer note: {myIdVerification.review.reviewer_note}</div> : null}
  </div>
  <form className='list' onSubmit={async e => {
  e.preventDefault()
@@ -3588,7 +3589,8 @@ function AppInner() {
  } catch (e) { alert(errMsg(e)) }
  }}>
  <select className='input' value={myIdForm.id_type} onChange={e => setMyIdForm({ ...myIdForm, id_type: e.target.value })}><option>GhanaCard</option><option>NIN</option><option>BF National ID</option></select>
- <input className='input' placeholder='ID Number' value={myIdForm.id_number} onChange={e => setMyIdForm({ ...myIdForm, id_number: e.target.value })} />
+ <input className='input' placeholder='ID Number (e.g. GHA-123456789-0)' value={myIdForm.id_number} onChange={e => setMyIdForm({ ...myIdForm, id_number: e.target.value.toUpperCase() })} />
+ <div className='helper-text'>For Ghana Card, use the PIN format shown on the card. Front and back images are required.</div>
  <label className='upload-field'><span className='helper-text'>Upload ID Front</span>
  <input className='input' type='file' accept='image/*' onChange={(e) => {
  const f = e.target.files?.[0]; if (!f) return
@@ -3611,7 +3613,8 @@ function AppInner() {
  {((me?.role || '').toLowerCase() === 'admin') && <article className='panel onboarding-panel'><div className='onboarding-panel-head'><h3>{t('ID Verification','Vérification d’identité','身份认证')}</h3><p className='helper-text'>Admin-only manual verification form.</p></div><form className='list onboarding-form' onSubmit={async e => { e.preventDefault(); if (!idForm.id_front_photo_url || !idForm.id_back_photo_url) { alert('Please upload front and back ID photos from your device or camera.'); return } await api.createIdVerification({ ...idForm, user_id: Number(idForm.user_id), facial_verification_flag: false }); await load() }}>
  <input className='input' type='number' placeholder='User ID' value={idForm.user_id} onChange={e => setIdForm({ ...idForm, user_id: e.target.value })} />
  <select className='input' value={idForm.id_type} onChange={e => setIdForm({ ...idForm, id_type: e.target.value })}><option>GhanaCard</option><option>NIN</option><option>BF National ID</option></select>
- <input className='input' placeholder='ID Number' value={idForm.id_number} onChange={e => setIdForm({ ...idForm, id_number: e.target.value })} />
+ <input className='input' placeholder='ID Number (e.g. GHA-123456789-0)' value={idForm.id_number} onChange={e => setIdForm({ ...idForm, id_number: e.target.value.toUpperCase() })} />
+ <div className='helper-text'>Ghana Card reviews are fastest when the PIN matches card format and both sides are uploaded clearly.</div>
  <label className='upload-field'><span className='helper-text'>Upload ID Front</span>
  <input className='input' type='file' accept='image/*' onChange={(e) => {
  const f = e.target.files?.[0]; if (!f) return
@@ -3630,17 +3633,42 @@ function AppInner() {
 
  {((me?.role || '').toLowerCase() === 'admin') && <article className='panel' style={{marginTop: 12}}>
  <div className='panelHeadActions'>
+ <div>
  <h3>{t('Verification Applications','Demandes de vérification','认证申请')}</h3>
- <button className='btn btn-dark' onClick={async () => { await api.analyzeAllVerifications(); await load(); }}>AI Analyze & Decide All</button>
+ <div className='helper-text'>Ghana Card queue with fast-pass recommendations. Human approval is still required before the badge turns on.</div>
+ </div>
+ <button className='btn btn-dark' onClick={async () => { await api.analyzeAllVerifications(); await load(); }}>Run Ghana Card Analysis</button>
  </div>
  <DataTable columns={['id_verification_id','full_name','phone','country','id_type','status','ai_score','ai_reason']} rows={state.verificationApps} filterKey='full_name' />
- <div className='list' style={{marginTop:12}}>{state.verificationApps.slice(0, 12).map((app) => <div key={`verify-preview-${app.id_verification_id}`} className='panel' style={{padding:12}}><div style={{fontWeight:700, marginBottom:8}}>{app.full_name} — {verificationStatusLabel(app.status)}{app.status === 'APPROVED' ? ' 🔵' : ''}</div><div className='row2' style={{gap:10}}>{app.id_front_photo_view_url ? <a className='btn' href={api.withAuthToken(app.id_front_photo_view_url)} target='_blank' rel='noreferrer'>View ID Front</a> : <span className='helper-text'>No front image</span>}{app.id_back_photo_view_url ? <a className='btn' href={api.withAuthToken(app.id_back_photo_view_url)} target='_blank' rel='noreferrer'>View ID Back</a> : <span className='helper-text'>No back image</span>}</div></div>)}</div>
- <div className='inlineForm'>
- <input id='verifyAppId' className='input' placeholder='Application ID' />
- <button className='btn btn-dark' onClick={async ()=>{ const id=Number(document.getElementById('verifyAppId').value); if(id){ await api.analyzeVerification(id); await load(); }}}>Analyze One</button>
- <button className='btn btn-dark' onClick={async ()=>{ const id=Number(document.getElementById('verifyAppId').value); if(id){ await api.setVerificationDecision(id,{status:'APPROVED'}); await load(); }}}>Approve</button>
- <button className='btn btn-dark' onClick={async ()=>{ const id=Number(document.getElementById('verifyAppId').value); if(id){ await api.setVerificationDecision(id,{status:'DENIED'}); await load(); }}}>Deny</button>
+ <div className='list' style={{marginTop:12}}>{state.verificationApps.slice().sort((a, b) => {
+ const rank = { FAST_PASS: 0, HIGH: 1, NORMAL: 2 }
+ return (rank[a?.assessment?.review_priority] ?? 9) - (rank[b?.assessment?.review_priority] ?? 9) || Number(b.id_verification_id || 0) - Number(a.id_verification_id || 0)
+ }).slice(0, 16).map((app) => {
+ const assessment = app.assessment || {}
+ const reasons = [...(assessment.hard_failures || []), ...(assessment.warnings || [])].slice(0, 3)
+ const quickApproveNote = assessment.recommendation === 'FAST_PASS_RECOMMENDED'
+ ? `Fast-pass approved after reviewer confirmed Ghana Card front/back images and PIN ${assessment?.extracted?.id_number_normalized || app.id_number || ''}.`
+ : `Approved after manual document review for ${app.id_type || 'ID submission'}.`
+ const quickDenyNote = `Denied after Ghana Card review: ${reasons.join('; ') || 'document did not meet verification requirements.'}`
+ return <div key={`verify-preview-${app.id_verification_id}`} className='panel' style={{padding:12, border:assessment.recommendation === 'FAST_PASS_RECOMMENDED' ? '1px solid #16a34a' : assessment.recommendation === 'AUTO_REJECT' ? '1px solid #dc2626' : '1px solid #e2e8f0', background:assessment.recommendation === 'FAST_PASS_RECOMMENDED' ? '#f0fdf4' : assessment.recommendation === 'AUTO_REJECT' ? '#fef2f2' : '#fff'}}>
+ <div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'flex-start',flexWrap:'wrap'}}>
+ <div>
+ <div style={{fontWeight:700, marginBottom:4}}>{app.full_name} — {verificationStatusLabel(app.status)}{app.status === 'APPROVED' ? ' 🔵' : ''}</div>
+ <div className='helper-text'>Application #{app.id_verification_id} • {app.id_type} • {assessment.extracted?.id_number_normalized || app.id_number || 'No ID number'}</div>
+ <div style={{marginTop:6, fontSize:'.85rem'}}><strong>{assessment.summary || app.ai_reason}</strong></div>
+ {assessment.recommendation ? <div style={{marginTop:6, fontSize:'.82rem', color:assessment.recommendation === 'FAST_PASS_RECOMMENDED' ? '#166534' : assessment.recommendation === 'AUTO_REJECT' ? '#991b1b' : '#475569'}}>Recommendation: {String(assessment.recommendation || '').replaceAll('_', ' ')}</div> : null}
+ {reasons.length ? <div style={{marginTop:6}}>{reasons.map((reason, idx) => <div key={`${app.id_verification_id}-reason-${idx}`} className='helper-text'>• {reason}</div>)}</div> : null}
+ {app.reviewer_note ? <div className='helper-text' style={{marginTop:6}}>Reviewer note: {app.reviewer_note}</div> : null}
  </div>
+ <div style={{textAlign:'right', minWidth:150}}>
+ <div style={{fontSize:'.8rem', color:'#64748b'}}>AI score</div>
+ <div style={{fontWeight:800, fontSize:'1.1rem'}}>{Math.round(Number(app.ai_score || 0) * 100)}%</div>
+ <div className='helper-text'>{assessment.review_priority || 'NORMAL'}</div>
+ </div>
+ </div>
+ <div className='row2' style={{gap:10, marginTop:10}}>{app.id_front_photo_view_url ? <a className='btn' href={api.withAuthToken(app.id_front_photo_view_url)} target='_blank' rel='noreferrer'>View ID Front</a> : <span className='helper-text'>No front image</span>}{app.id_back_photo_view_url ? <a className='btn' href={api.withAuthToken(app.id_back_photo_view_url)} target='_blank' rel='noreferrer'>View ID Back</a> : <span className='helper-text'>No back image</span>}<button className='btn' onClick={async ()=>{ await api.analyzeVerification(app.id_verification_id); await load(); }}>Analyze</button><button className='btn btn-dark' onClick={async ()=>{ await api.setVerificationDecision(app.id_verification_id,{status:'APPROVED', reviewer_note:quickApproveNote}); await load(); }}>Approve + badge</button><button className='btn' onClick={async ()=>{ await api.setVerificationDecision(app.id_verification_id,{status:'DENIED', reviewer_note:quickDenyNote}); await load(); }}>Deny with reason</button></div>
+ </div>
+ })}</div>
  </article>}
 
  {((me?.role || '').toLowerCase() === 'admin') && <article className='panel' style={{marginTop: 12}}>

@@ -262,35 +262,213 @@ def _validate_uploaded_image_input(v: Optional[str], field_name: str, required: 
         raise HTTPException(status_code=400, detail=f'{field_name} must be an uploaded image payload')
 
 
-def _ai_review_id_verification(rec: IDVerification):
+def _file_ref_signature(ref: Optional[str]) -> str:
+    s = str(ref or '').strip()
+    if not s:
+        return ''
+    if s.startswith('local:'):
+        return s.split('/')[-1]
+    return hashlib.sha256(s.encode('utf-8')).hexdigest()[:16]
+
+
+GHCARD_PIN_RE = re.compile(r'^GHA-\d{9}-\d$', re.I)
+
+
+def _ghana_card_assessment(rec: IDVerification) -> dict:
+    id_number_raw = str(getattr(rec, 'id_number', '') or '').strip().upper()
+    id_number_normalized = re.sub(r'[^A-Z0-9]', '', id_number_raw)
+    expected_normalized = ''
+    format_ok = False
+    if GHCARD_PIN_RE.match(id_number_raw):
+        format_ok = True
+        expected_normalized = id_number_raw.replace('-', '')
+    elif re.fullmatch(r'GHA\d{10}', id_number_normalized):
+        format_ok = True
+        expected_normalized = id_number_normalized
+
+    has_front = _valid_photo_url(getattr(rec, 'id_front_photo_url', None))
+    has_back = _valid_photo_url(getattr(rec, 'id_back_photo_url', None))
+    has_legacy = _valid_photo_url(getattr(rec, 'id_photo_url', None))
+    front_sig = _file_ref_signature(getattr(rec, 'id_front_photo_url', None))
+    back_sig = _file_ref_signature(getattr(rec, 'id_back_photo_url', None))
+    duplicate_images = bool(front_sig and back_sig and front_sig == back_sig)
+    front_present = has_front or has_legacy
+
+    hard_failures = []
+    warnings = []
+    positives = []
     score = 0.0
-    reasons = []
+
+    if not format_ok:
+        hard_failures.append('Ghana Card PIN must match GHA-123456789-0')
+    else:
+        score += 0.34
+        positives.append('Ghana Card PIN format looks valid')
+
+    if front_present:
+        score += 0.23
+        positives.append('Front ID image attached')
+    else:
+        hard_failures.append('Front Ghana Card image missing')
+
+    if has_back:
+        score += 0.23
+        positives.append('Back ID image attached')
+    else:
+        hard_failures.append('Back Ghana Card image missing')
+
+    if duplicate_images:
+        hard_failures.append('Front and back images appear to be the same file')
+    else:
+        if front_present and has_back:
+            score += 0.10
+            positives.append('Front/back images appear distinct')
+
+    if rec.facial_verification_flag:
+        score += 0.10
+        positives.append('Facial verification flag present')
+    else:
+        warnings.append('Facial verification not completed')
+
+    if len(id_number_normalized) >= 13:
+        score += 0.0
+    else:
+        warnings.append('PIN normalization looks shorter than expected')
+
+    if hard_failures:
+        status = 'DENIED'
+        recommendation = 'AUTO_REJECT'
+        review_priority = 'HIGH'
+        summary = 'Auto-rejected: ' + '; '.join(hard_failures)
+    elif score >= 0.86:
+        status = 'PENDING'
+        recommendation = 'FAST_PASS_RECOMMENDED'
+        review_priority = 'FAST_PASS'
+        summary = 'Fast-pass recommended: Ghana Card checks look strong. Human approval still required.'
+    elif score >= 0.65:
+        status = 'PENDING'
+        recommendation = 'MANUAL_REVIEW'
+        review_priority = 'NORMAL'
+        summary = 'Manual review recommended: basic Ghana Card checks passed but reviewer confirmation is still needed.'
+    else:
+        status = 'PENDING'
+        recommendation = 'MANUAL_REVIEW'
+        review_priority = 'NORMAL'
+        summary = 'Manual review required: submission is incomplete or weak but not an obvious auto-reject.'
+
+    all_reasons = []
+    if hard_failures:
+        all_reasons.extend(hard_failures)
+    if warnings:
+        all_reasons.extend(warnings)
+    if positives:
+        all_reasons.extend(positives)
+
+    return {
+        'document_type': 'GhanaCard',
+        'status': status,
+        'recommendation': recommendation,
+        'review_priority': review_priority,
+        'score': round(min(score, 0.99), 3),
+        'summary': summary,
+        'hard_failures': hard_failures,
+        'warnings': warnings,
+        'positives': positives,
+        'checks': {
+            'ghana_card_pin_format_ok': format_ok,
+            'front_image_present': front_present,
+            'back_image_present': has_back,
+            'front_back_distinct': not duplicate_images,
+            'facial_verification_flag': bool(rec.facial_verification_flag),
+        },
+        'extracted': {
+            'id_number_raw': id_number_raw,
+            'id_number_normalized': expected_normalized or id_number_normalized,
+        },
+        'reviewer_hint': 'Fast-pass good Ghana Card submissions, but still open the images before approval.' if recommendation == 'FAST_PASS_RECOMMENDED' else 'Check the Ghana Card images and deny if the card is unreadable, mismatched, or clearly invalid.'
+    }
+
+
+def _generic_id_assessment(rec: IDVerification) -> dict:
+    score = 0.0
+    hard_failures = []
+    warnings = []
+    positives = []
 
     if rec.id_number and len(str(rec.id_number).strip()) >= 8:
-        score += 0.35
+        score += 0.4
+        positives.append('ID number provided')
     else:
-        reasons.append('ID number too short')
+        hard_failures.append('ID number too short')
 
     has_front = _valid_photo_url(getattr(rec, 'id_front_photo_url', None))
     has_back = _valid_photo_url(getattr(rec, 'id_back_photo_url', None))
     has_legacy = _valid_photo_url(getattr(rec, 'id_photo_url', None))
 
     if has_front and has_back:
-        score += 0.45
+        score += 0.4
+        positives.append('Front and back images attached')
     elif has_legacy:
-        score += 0.20
-        reasons.append('Only single ID image provided (front+back required for full approval)')
+        score += 0.2
+        warnings.append('Only single ID image provided')
     else:
-        reasons.append('ID photos missing/invalid')
+        hard_failures.append('ID photos missing or invalid')
 
     if rec.facial_verification_flag:
-        score += 0.20
+        score += 0.1
+        positives.append('Facial verification flag present')
     else:
-        reasons.append('Facial verification not completed')
+        warnings.append('Facial verification not completed')
 
-    status = 'APPROVED' if score >= 0.75 else 'DENIED'
-    reason = 'Auto AI analyzer: ' + ('; '.join(reasons) if reasons else 'All checks passed')
-    return status, round(score, 3), reason
+    if hard_failures:
+        status = 'DENIED'
+        recommendation = 'AUTO_REJECT'
+        summary = 'Auto-rejected: ' + '; '.join(hard_failures)
+    else:
+        status = 'PENDING'
+        recommendation = 'MANUAL_REVIEW'
+        summary = 'Manual review required before approval.'
+
+    return {
+        'document_type': str(getattr(rec, 'id_type', '') or 'ID'),
+        'status': status,
+        'recommendation': recommendation,
+        'review_priority': 'NORMAL',
+        'score': round(min(score, 0.95), 3),
+        'summary': summary,
+        'hard_failures': hard_failures,
+        'warnings': warnings,
+        'positives': positives,
+        'checks': {
+            'front_image_present': has_front or has_legacy,
+            'back_image_present': has_back,
+            'facial_verification_flag': bool(rec.facial_verification_flag),
+        },
+        'extracted': {
+            'id_number_raw': str(getattr(rec, 'id_number', '') or '').strip(),
+            'id_number_normalized': str(getattr(rec, 'id_number', '') or '').strip(),
+        },
+        'reviewer_hint': 'Approval still requires human review.'
+    }
+
+
+def _assess_id_verification(rec: IDVerification) -> dict:
+    if str(getattr(rec, 'id_type', '') or '') == 'GhanaCard':
+        return _ghana_card_assessment(rec)
+    return _generic_id_assessment(rec)
+
+
+def _ai_review_id_verification(rec: IDVerification):
+    assessment = _assess_id_verification(rec)
+    reason_parts = [assessment['summary']]
+    if assessment.get('hard_failures'):
+        reason_parts.append('Hard failures: ' + '; '.join(assessment['hard_failures']))
+    if assessment.get('warnings'):
+        reason_parts.append('Warnings: ' + '; '.join(assessment['warnings']))
+    if assessment.get('positives'):
+        reason_parts.append('Signals: ' + '; '.join(assessment['positives']))
+    reason_parts.append(f"Recommendation: {assessment['recommendation']}")
+    return assessment['status'], assessment['score'], ' | '.join(reason_parts)
 
 
 def _require_transact_verified_user(db: Session, user_id: int, label: str = 'User'):
@@ -1263,9 +1441,12 @@ def analytics_users_summary(authorization: Optional[str] = Header(None), db: Ses
 
 
 @router.post('/onboarding/id-verification')
-def create_id_verification(payload: IDVerificationIn, db: Session = Depends(get_db)):
+def create_id_verification(payload: IDVerificationIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    admin = _current_user_from_auth(authorization, db)
+    if not _is_admin_user(admin):
+        raise HTTPException(status_code=403, detail='Admin access required')
     data = payload.model_dump()
-    data['user_id'] = user.id
+    data['user_id'] = int(payload.user_id)
     if not data.get('id_front_photo_url'):
         data['id_front_photo_url'] = data.get('id_photo_url')
 
@@ -1296,7 +1477,10 @@ def create_id_verification(payload: IDVerificationIn, db: Session = Depends(get_
 
 
 @router.get('/onboarding/id-verification')
-def list_id_verifications(db: Session = Depends(get_db)):
+def list_id_verifications(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    admin = _current_user_from_auth(authorization, db)
+    if not _is_admin_user(admin):
+        raise HTTPException(status_code=403, detail='Admin access required')
     return db.query(IDVerification).order_by(IDVerification.id.desc()).all()
 
 
@@ -1376,7 +1560,10 @@ def verification_file(id_verification_id: int, side: str, authorization: Optiona
 
 
 @router.get('/verification/applications')
-def list_verification_applications(db: Session = Depends(get_db)):
+def list_verification_applications(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    admin = _current_user_from_auth(authorization, db)
+    if not _is_admin_user(admin):
+        raise HTTPException(status_code=403, detail='Admin access required')
     rows = db.query(VerificationReview, IDVerification, User).join(
         IDVerification, VerificationReview.id_verification_id == IDVerification.id
     ).join(
@@ -1403,12 +1590,17 @@ def list_verification_applications(db: Session = Depends(get_db)):
         'ai_score': r.ai_score,
         'ai_reason': r.ai_reason,
         'reviewer_note': r.reviewer_note,
-        'reviewed_at': r.reviewed_at
+        'reviewed_at': r.reviewed_at,
+        'assessment': _assess_id_verification(iv),
+        'badge_ready': str(r.status or '').upper() == 'APPROVED',
     } for r, iv, u in rows]
 
 
 @router.post('/verification/analyze/{id_verification_id}')
-def analyze_verification(id_verification_id: int, db: Session = Depends(get_db)):
+def analyze_verification(id_verification_id: int, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    admin = _current_user_from_auth(authorization, db)
+    if not _is_admin_user(admin):
+        raise HTTPException(status_code=403, detail='Admin access required')
     iv = db.query(IDVerification).filter(IDVerification.id == id_verification_id).first()
     if not iv:
         raise HTTPException(status_code=404, detail='Verification application not found')
@@ -1429,12 +1621,15 @@ def analyze_verification(id_verification_id: int, db: Session = Depends(get_db))
 
 
 @router.post('/verification/analyze-all')
-def analyze_all_verifications(db: Session = Depends(get_db)):
+def analyze_all_verifications(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    admin = _current_user_from_auth(authorization, db)
+    if not _is_admin_user(admin):
+        raise HTTPException(status_code=403, detail='Admin access required')
     all_ids = [x.id for x in db.query(IDVerification).all()]
     approved = 0
     denied = 0
     for vid in all_ids:
-        result = analyze_verification(vid, db)
+        result = analyze_verification(vid, authorization, db)
         if result['status'] == 'APPROVED':
             approved += 1
         else:
@@ -1443,7 +1638,10 @@ def analyze_all_verifications(db: Session = Depends(get_db)):
 
 
 @router.post('/verification/decision/{id_verification_id}')
-def manual_verification_decision(id_verification_id: int, payload: VerificationDecisionIn, db: Session = Depends(get_db)):
+def manual_verification_decision(id_verification_id: int, payload: VerificationDecisionIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    admin = _current_user_from_auth(authorization, db)
+    if not _is_admin_user(admin):
+        raise HTTPException(status_code=403, detail='Admin access required')
     iv = db.query(IDVerification).filter(IDVerification.id == id_verification_id).first()
     if not iv:
         raise HTTPException(status_code=404, detail='Verification application not found')
@@ -1453,12 +1651,19 @@ def manual_verification_decision(id_verification_id: int, payload: VerificationD
         review = VerificationReview(id_verification_id=iv.id, user_id=iv.user_id)
         db.add(review)
 
+    assessment = _assess_id_verification(iv)
     review.status = payload.status
-    review.reviewer_note = payload.reviewer_note or ''
+    if payload.reviewer_note:
+        review.reviewer_note = payload.reviewer_note
+    elif payload.status == 'APPROVED':
+        review.reviewer_note = 'Approved by reviewer after Ghana-focused document check. Badge is now active.' if str(iv.id_type) == 'GhanaCard' else 'Approved by reviewer after document check.'
+    else:
+        denial_reasons = assessment.get('hard_failures') or assessment.get('warnings') or ['Reviewer denied the submission after manual check.']
+        review.reviewer_note = 'Denied: ' + '; '.join(denial_reasons[:3])
     review.reviewed_at = datetime.utcnow()
     db.commit()
     identity = _identity_review_for_user(db, iv.user_id)
-    return {'message': 'Decision saved', 'status': review.status, 'identity_status': identity['status'], 'identity_blue_check': identity['blue_check'], 'identity_label': identity['label']}
+    return {'message': 'Decision saved', 'status': review.status, 'identity_status': identity['status'], 'identity_blue_check': identity['blue_check'], 'identity_label': identity['label'], 'reviewer_note': review.reviewer_note, 'assessment': assessment}
 
 
 @router.get('/reviews/updates')
@@ -3430,7 +3635,10 @@ def list_disease_scans(db: Session = Depends(get_db)):
 
 
 @router.get('/verification/approved-accounts')
-def approved_accounts(db: Session = Depends(get_db)):
+def approved_accounts(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    admin = _current_user_from_auth(authorization, db)
+    if not _is_admin_user(admin):
+        raise HTTPException(status_code=403, detail='Admin access required')
     rows = db.query(User, VerificationReview).join(
         VerificationReview, VerificationReview.user_id == User.id
     ).filter(VerificationReview.status == 'APPROVED').order_by(VerificationReview.reviewed_at.desc()).all()
