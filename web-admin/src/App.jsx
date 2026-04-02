@@ -4484,7 +4484,6 @@ function AppInner() {
  <div className='aadu-home-aside-list'>
  <div><strong>4</strong><span>live schools</span></div>
  <div><strong>Livestock-first</strong><span>digital training under one AADU umbrella</span></div>
- <div><strong>Public entry</strong><span>Open or enroll directly from Home</span></div>
  </div>
  </div>
  </div>
