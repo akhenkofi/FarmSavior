@@ -1166,6 +1166,12 @@ const paymentProviders = {
 const currencyByCountry = { GH: 'GHS', NG: 'NGN', BF: 'XOF' }
 const fxByCurrency = { USD: 1, GHS: 15, NGN: 1600, XOF: 610 }
 const universityProducts = ['poultry', 'sheep', 'goat', 'cattle']
+const homeUniversityShowcase = [
+ { key: 'poultry', title: 'Poultry University', route: 'poultry-university', summary: 'Applied training for layers, broilers, and guinea fowl, with operating guidance for flock setup, health control, production routines, and sales planning.', accessLabel: 'Open Poultry University' },
+ { key: 'sheep', title: 'Sheep University', route: 'sheep-university', summary: 'Structured sheep production and breed-development learning focused on breeding systems, lamb survival, parasite control, and market-ready flock improvement.', accessLabel: 'Open Sheep University' },
+ { key: 'goat', title: 'Goat University', route: 'goat-university', summary: 'Practical goat training covering adapted breed improvement, kidding performance, parasite pressure, browse strategy, and commercial herd management.', accessLabel: 'Open Goat University' },
+ { key: 'cattle', title: 'Cattle University', route: 'cattle-university', summary: 'Professional cattle learning built around herd improvement, breeding discipline, calf survival, health scheduling, and stronger commercial decision-making.', accessLabel: 'Open Cattle University' },
+]
 const emptyUniversitySubscription = { tier: 'free', subscription: null, plans: [] }
 const livestockBreedOptions = {
  SHEEP: ['Dorper', 'Merino', 'Sahel', 'Djallonké', 'West African Dwarf', 'Cross'],
@@ -4587,22 +4593,36 @@ function AppInner() {
  </div>
  {active === 'home' && <section>
  <h2>{t('Main App Homepage','Page d’accueil de l’application')}</h2>
- <article className='panel' style={{marginBottom:10, background:'linear-gradient(135deg,#0f172a 0%,#0f3d2e 45%,#155e75 100%)', color:'#fff', border:'1px solid rgba(255,255,255,.08)', boxShadow:'0 18px 40px rgba(15,23,42,.18)'}}>
- <div style={{display:'flex',justifyContent:'space-between',gap:16,flexWrap:'wrap',alignItems:'flex-start'}}>
- <div style={{maxWidth:820}}>
- <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',opacity:.82}}>Institutional learning platform</div>
- <h3 style={{margin:'6px 0 8px', fontSize:'1.35rem'}}>African Agricultural Digital University</h3>
- <div style={{color:'rgba(255,255,255,.88)', lineHeight:1.6}}>A structured digital learning environment for livestock production, breed development, and operational decision-making. Poultry University, Sheep University, Goat University, and Cattle University sit within this umbrella as applied schools for specific production systems.</div>
+ <article className='aadu-home-section'>
+ <div className='aadu-home-hero'>
+ <div className='aadu-home-copy'>
+ <div className='aadu-home-eyebrow'>Flagship learning platform</div>
+ <h3>African Agricultural Digital University</h3>
+ <p>African Agricultural Digital University is FarmSavior’s flagship digital livestock training platform. It brings Poultry University, Sheep University, Goat University, and Cattle University together under one clear umbrella so farmers, operators, and livestock teams can learn by production system and move into the right school directly.</p>
+ <p>Each university is organized around practical operating needs — production setup, breed development, herd or flock health, and commercial decision-making — presented in a clean format for field use rather than hype.</p>
  </div>
- <div className='panel' style={{minWidth:260, padding:10, background:'rgba(255,255,255,.08)', border:'1px solid rgba(255,255,255,.12)'}}>
- <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',opacity:.82}}>Current schools</div>
- <div className='list' style={{marginTop:8}}>
- <div className='list-row'><span>Poultry University</span><strong>Production systems</strong></div>
- <div className='list-row'><span>Sheep University</span><strong>Breed development</strong></div>
- <div className='list-row'><span>Goat University</span><strong>Breed development</strong></div>
- <div className='list-row'><span>Cattle University</span><strong>Herd improvement</strong></div>
+ <div className='aadu-home-aside'>
+ <div className='aadu-home-aside-label'>Current universities</div>
+ <div className='aadu-home-aside-list'>
+ <div><strong>4</strong><span>live schools</span></div>
+ <div><strong>Livestock-first</strong><span>digital training focus</span></div>
+ <div><strong>Open access</strong><span>available from the main app</span></div>
  </div>
  </div>
+ </div>
+
+ <div className='aadu-home-grid'>
+ {homeUniversityShowcase.map((school) => (
+ <article key={school.key} className='aadu-school-card'>
+ <div className='aadu-school-label'>African Agricultural Digital University</div>
+ <h4>{school.title}</h4>
+ <p>{school.summary}</p>
+ <div className='aadu-school-actions'>
+ <button type='button' className='btn btn-dark' onClick={() => handleProtectedAction(school.route, school.title)}>Enroll / Open</button>
+ <button type='button' className='btn' onClick={() => setActive(school.route)}>Open Access</button>
+ </div>
+ </article>
+ ))}
  </div>
  </article>
 
