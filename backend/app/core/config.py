@@ -30,7 +30,9 @@ class Settings(BaseSettings):
     PAYSTACK_CALLBACK_URL: str = 'https://www.farmsavior.com/?public=0&go=onboarding'
 
     # Push notifications (optional)
-    FCM_SERVER_KEY: str = ''
+    FCM_SERVER_KEY: str = ''  # legacy fallback
+    FIREBASE_PROJECT_ID: str = ''
+    FIREBASE_SERVICE_ACCOUNT_JSON: str = ''
 
     # App security
     FRONTEND_ORIGINS: str = 'https://www.farmsavior.com,https://api.farmsavior.com'

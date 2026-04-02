@@ -1,6 +1,7 @@
 import random
 import json
 import hashlib
+import time
 import hmac
 import smtplib
 from email.message import EmailMessage
@@ -44,6 +45,7 @@ from app.schemas.schemas import (
 )
 from app.core.config import settings
 from app.core.security import create_access_token, hash_password, verify_password, decode_access_token
+from jose import jwt as jose_jwt
 from app.core.data_lake import write_jsonl, write_snapshot
 
 router = APIRouter(prefix='/api/v1')
@@ -4918,12 +4920,49 @@ def _notify_user(db: Session, user_id: Optional[int], title: str, message: str):
 
 
 def _send_fcm_push(tokens: list[str], title: str, body: str, data: Optional[dict] = None):
+    clean_tokens = [str(t).strip() for t in (tokens or []) if str(t).strip()]
+    if not clean_tokens:
+        return
+
+    service_account_json = str(getattr(settings, 'FIREBASE_SERVICE_ACCOUNT_JSON', '') or '').strip()
+    project_id = str(getattr(settings, 'FIREBASE_PROJECT_ID', '') or '').strip()
+
+    if service_account_json and project_id:
+        try:
+            from google.oauth2 import service_account
+            from google.auth.transport.requests import Request as GoogleRequest
+            account_info = json.loads(service_account_json)
+            creds = service_account.Credentials.from_service_account_info(
+                account_info,
+                scopes=['https://www.googleapis.com/auth/firebase.messaging']
+            )
+            creds.refresh(GoogleRequest())
+            endpoint = f'https://fcm.googleapis.com/v1/projects/{project_id}/messages:send'
+            for token in clean_tokens:
+                payload = {
+                    'message': {
+                        'token': token,
+                        'notification': {'title': str(title or '')[:120], 'body': str(body or '')[:240]},
+                        'data': {k: str(v) for k, v in (data or {}).items()},
+                        'android': {'priority': 'high', 'notification': {'sound': 'default'}},
+                        'apns': {'payload': {'aps': {'sound': 'default'}}},
+                    }
+                }
+                req = UrlRequest(endpoint, data=json.dumps(payload).encode('utf-8'), method='POST')
+                req.add_header('Content-Type', 'application/json')
+                req.add_header('Authorization', f'Bearer {creds.token}')
+                with urlopen(req, timeout=8) as resp:
+                    resp.read()
+            return
+        except Exception:
+            pass
+
     server_key = str(getattr(settings, 'FCM_SERVER_KEY', '') or '').strip()
-    if not server_key or not tokens:
+    if not server_key:
         return
     endpoint = 'https://fcm.googleapis.com/fcm/send'
     payload = {
-        'registration_ids': [str(t).strip() for t in (tokens or []) if str(t).strip()],
+        'registration_ids': clean_tokens,
         'notification': {'title': str(title or '')[:120], 'body': str(body or '')[:240], 'sound': 'default'},
         'data': data or {},
         'priority': 'high',
