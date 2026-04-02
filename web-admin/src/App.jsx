@@ -1124,7 +1124,7 @@ const poultryProDownloads = [
   content: `Poultry University Professional
 Operating Playbook
 
-This playbook is meant to sit beside the manager or owner during a live cycle. It is not motivational copy. It is a practical operating document for keeping the flock stable, protecting margin, and knowing what to review before a small issue becomes an expensive one.
+This playbook is meant to sit beside the manager or owner during a live cycle. It focuses on keeping the flock stable, protecting margin, and knowing what to review before a small issue becomes an expensive one.
 
 1. Weekly operating review
 - Confirm total birds placed, current live count, mortality to date, and culls this week.
@@ -1400,7 +1400,7 @@ Observed reaction / notes:
   content: `Poultry University Professional
 Expert Q&A Field Workbook
 
-Use this workbook before calling an advisor, vet, investor, manager, or serious buyer. The goal is to arrive with sharp facts, not vague complaints.
+Use this workbook before calling an advisor, vet, manager, lender, or buyer. The goal is to arrive with clear facts, not vague complaints.
 
 1. Core flock facts
 - Track:
@@ -1631,7 +1631,7 @@ const getPoultryGuidancePlaybook = (question='', track='layers', zone='humid') =
 }
 
 const executiveBriefs = {
- poultry: `Poultry University Executive Brief
+ poultry: `Poultry University Operating Brief
 
 Professional poultry production succeeds when climate control, feed discipline, vaccination timing, mortality management, and route-to-market are managed as one operating system.
 
@@ -1639,11 +1639,11 @@ Strategic operator message
 - Humid systems need litter dryness, drainage, and mycotoxin discipline.
 - Dry systems need heat relief, water security, and airflow reliability.
 - The most bankable poultry farms are not the biggest; they are the most consistent by tray, cycle, and margin.`,
- sheep: `Sheep University Professional Executive Brief
+ sheep: `Sheep University Professional Operating Brief
 Premium Flock Strategy Pack
 
 Overview
-This brief is built for sheep operators who need more than motivational copy. It is a practical premium asset for presenting a flock-improvement plan to partners, lenders, managers, and serious buyers while also guiding week-to-week operating decisions on the farm.
+This brief gives sheep operators a practical flock-improvement plan they can use internally and share with partners, lenders, managers, and buyers when needed.
 
 Commercial objective
 Build a Ghana-adapted sheep enterprise that improves lamb survival, flock fertility, growth consistency, and sale quality without losing the hardiness that keeps the system profitable under local feed, climate, and disease pressure.
@@ -1686,7 +1686,7 @@ Strategic review message
 
 Boardroom takeaway
 A premium sheep business is not defined by owning impressive animals. It is defined by running a disciplined flock system that turns breeding decisions, survival control, and market grading into repeatable commercial results.`,
- goat: `Goat University Executive Brief
+ goat: `Goat University Operating Brief
 
 A professional goat enterprise depends on kidding survival, parasite discipline, climate-fit browse strategy, and smart sire selection.
 
@@ -1694,7 +1694,7 @@ Strategic operator message
 - WAD resilience must be protected while improving frame and market weight.
 - Humid-zone parasite losses can erase the value of better genetics if management is weak.
 - Strong goat businesses are built on repeatable kidding and sale batches, not isolated showcase animals.`,
- cattle: `Cattle University Executive Brief
+ cattle: `Cattle University Operating Brief
 
 A modern cattle program should be judged by fertility, calf survival, feed-water resilience, and repeatable market weights.
 
@@ -1708,10 +1708,10 @@ function ProfessionalAssets({ product, progress, setProgress, trackKey, openModu
  const completed = (progress?.completed || []).length
  return <>
  <article className='panel' style={{marginTop:10, border:'1.5px solid #334155', background:'#f8fafc'}}>
- <h4 style={{marginTop:0}}>🏛️ Executive / Policy Brief</h4>
- <div className='helper-text' style={{marginBottom:8}}>Designed to feel credible to senior buyers, partners, and public-sector reviewers.</div>
+ <h4 style={{marginTop:0}}>🏛️ Operating Brief</h4>
+ <div className='helper-text' style={{marginBottom:8}}>A concise operating brief for teams, partners, and program stakeholders.</div>
  <div className='inlineForm' style={{flexWrap:'wrap'}}>
- <a className='btn' download={`${product}-Executive-Brief.txt`} href={'data:text/plain;charset=utf-8,' + encodeURIComponent(executiveBriefs[product] || '')}>Download Executive Brief</a>
+ <a className='btn' download={`${product}-Executive-Brief.txt`} href={'data:text/plain;charset=utf-8,' + encodeURIComponent(executiveBriefs[product] || '')}>Download Operating Brief</a>
  <button className='btn' type='button' onClick={() => setProgress((s) => ({ ...s, completed: Array.from(new Set([...(s.completed || []), `${trackKey}:${openModule}`, `${product}:brief`])) }))}>Mark Brief Reviewed</button>
  </div>
  </article>
@@ -1750,7 +1750,7 @@ const universityPlanPreview = {
  },
  pro: {
  title: 'Professional',
- features: ['Everything in Basic', 'Executive briefs, scorecards, and printable templates', 'Progress tracking dashboard', 'Certificate/report path where supported']
+ features: ['Everything in Basic', 'Operating briefs, scorecards, and printable templates', 'Progress tracking dashboard', 'Certificate/report path where supported']
  }
 }
 
@@ -3870,7 +3870,7 @@ function AppInner() {
  <article className='panel' style={{marginBottom:10, background:effectiveLivestockSubscription?.tier === 'premium' ? 'linear-gradient(135deg,#0f172a 0%,#155e75 55%,#16a34a 100%)' : 'linear-gradient(135deg,#f8fafc 0%,#eff6ff 100%)', color:effectiveLivestockSubscription?.tier === 'premium' ? '#fff' : '#0f172a', border:effectiveLivestockSubscription?.tier === 'premium' ? '1px solid rgba(255,255,255,.12)' : '1px solid #bfdbfe'}}>
  <div style={{display:'flex',justifyContent:'space-between',gap:16,flexWrap:'wrap',alignItems:'center'}}>
  <div>
- <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',opacity:.9}}>{effectiveLivestockSubscription?.tier === 'premium' ? 'Premium workspace' : 'Upgrade available'}</div>
+ <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',opacity:.9}}>{effectiveLivestockSubscription?.tier === 'premium' ? 'Records active' : 'Upgrade available'}</div>
  <h3 style={{margin:'4px 0 6px'}}>
  {effectiveLivestockSubscription?.tier === 'premium' ? 'Livestock Records Premium ✓' : 'Unlock Livestock Records Premium'}
  </h3>
@@ -3881,8 +3881,8 @@ function AppInner() {
  </div>
  </div>
  <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
- {effectiveLivestockSubscription?.tier === 'premium' && <span className='cover-badge' style={{background:'rgba(255,255,255,.16)', color:'#fff', border:'1px solid rgba(255,255,255,.25)'}}>Premium badge</span>}
- <button className={`btn ${effectiveLivestockSubscription?.tier === 'premium' ? '' : 'btn-dark'}`} onClick={() => setActive('livestock-records')}>{effectiveLivestockSubscription?.tier === 'premium' ? 'Open premium records' : 'View upgrade plans'}</button>
+ {effectiveLivestockSubscription?.tier === 'premium' && <span className='cover-badge' style={{background:'rgba(255,255,255,.16)', color:'#fff', border:'1px solid rgba(255,255,255,.25)'}}>Paid plan</span>}
+ <button className={`btn ${effectiveLivestockSubscription?.tier === 'premium' ? '' : 'btn-dark'}`} onClick={() => setActive('livestock-records')}>{effectiveLivestockSubscription?.tier === 'premium' ? 'Open records' : 'View upgrade plans'}</button>
  <button className='btn' onClick={() => setActive('onboarding')}>My billing</button>
  </div>
  </div>
@@ -4405,7 +4405,7 @@ function AppInner() {
 
  {active === 'poultry-university' && <section>
  <h3>🐔 Poultry University</h3>
- <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Executive standard:</strong> Poultry University Professional packages the production system in a format suitable for operators, partners, lenders, and policy stakeholders.</div>
+ <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Program overview:</strong> Poultry University Professional brings the production system together in one practical reference for operators and teams.</div>
  <article className='panel' style={{marginBottom:10}}>
  <h4 style={{marginTop:0}}>Access & Delivery Format</h4>
  <p style={{fontSize:'.85rem',color:'#475569'}}>Standalone professional purchase also available (₵200–₵1,000 depending on package depth).</p>
@@ -4432,7 +4432,7 @@ function AppInner() {
  </div>
  <div className='panel' style={{padding:10, border:poultryTier==='pro' || poultryPlanPreview==='pro'?'2px solid #f59e0b':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setPoultryPlanPreview('pro')}>
  <strong>🏆 Professional — ₵120/mo</strong>
- <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus executive briefings, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
+ <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus operating briefs, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
  <button className='btn btn-dark' onClick={async(e)=>{ e.stopPropagation();
  try {
  if (!token || !me?.id) { handleProtectedAction('onboarding', 'Poultry University Professional checkout'); return }
@@ -4632,7 +4632,7 @@ function AppInner() {
 
  {active === 'sheep-university' && <section>
  <h3>🐑 Sheep University</h3>
- <div className='panel' style={{marginBottom:10, background:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? 'linear-gradient(135deg,#0f172a 0%,#14532d 45%,#0f766e 100%)' : '#eff6ff', color:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? '#fff' : '#0f172a', border:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? '1px solid rgba(255,255,255,.12)' : '1px solid #bfdbfe', boxShadow:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? '0 18px 40px rgba(15,23,42,.24)' : 'none'}}><div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'center',flexWrap:'wrap'}}><div><div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',opacity:.9}}>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? 'Premium access confirmed' : 'Executive standard'}</div><strong style={{display:'block',fontSize:'1.05rem',marginTop:4}}>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? `Sheep University ${String(universitySubscriptions.sheep?.subscription?.plan_code || sheepTier || '').toUpperCase()} ✓` : 'Sheep University Professional'}</strong><div style={{marginTop:6,color:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? 'rgba(255,255,255,.88)' : '#1e3a8a'}}>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? `Your paid sheep subscription is active${universitySubscriptions.sheep?.subscription?.reference ? ` • Ref ${universitySubscriptions.sheep.subscription.reference}` : ''}. Full modules are unlocked${sheepTier === 'pro' ? ', executive tools are live,' : ''} and upgrade prompts are cleared.` : 'Sheep University Professional presents the breeding and operating system in a format suitable for institutional, investor, and policy review.'}</div></div>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? <span className='cover-badge' style={{background:'rgba(255,255,255,.14)', color:'#fff', border:'1px solid rgba(255,255,255,.24)'}}>{String(universitySubscriptions.sheep?.subscription?.status || 'ACTIVE').replaceAll('_',' ')}</span> : null}</div></div>
+ <div className='panel' style={{marginBottom:10, background:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? 'linear-gradient(135deg,#0f172a 0%,#14532d 45%,#0f766e 100%)' : '#eff6ff', color:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? '#fff' : '#0f172a', border:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? '1px solid rgba(255,255,255,.12)' : '1px solid #bfdbfe', boxShadow:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? '0 18px 40px rgba(15,23,42,.24)' : 'none'}}><div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'center',flexWrap:'wrap'}}><div><div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',opacity:.9}}>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? 'Access active' : 'Program overview'}</div><strong style={{display:'block',fontSize:'1.05rem',marginTop:4}}>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? `Sheep University ${String(universitySubscriptions.sheep?.subscription?.plan_code || sheepTier || '').toUpperCase()} ✓` : 'Sheep University Professional'}</strong><div style={{marginTop:6,color:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? 'rgba(255,255,255,.88)' : '#1e3a8a'}}>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? `Your sheep subscription is active${universitySubscriptions.sheep?.subscription?.reference ? ` • Ref ${universitySubscriptions.sheep.subscription.reference}` : ''}. Full modules are unlocked${sheepTier === 'pro' ? ', with advanced tools available,' : ''} and the upgrade prompts are hidden.` : 'Sheep University Professional organizes the breeding and operating system into a clear working reference.'}</div></div>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? <span className='cover-badge' style={{background:'rgba(255,255,255,.14)', color:'#fff', border:'1px solid rgba(255,255,255,.24)'}}>{String(universitySubscriptions.sheep?.subscription?.status || 'ACTIVE').replaceAll('_',' ')}</span> : null}</div></div>
  <article className='panel' style={{marginBottom:10,border:'1px solid #ddd6fe',background:'#faf5ff'}}>
  <h4 style={{marginTop:0,color:'#6d28d9'}}>Ghana Sheep Breed Development Framework</h4>
  <div className='list'>
@@ -4656,7 +4656,7 @@ function AppInner() {
  </div>
  <div className='panel' style={{padding:10, border:sheepTier==='pro' || sheepPlanPreview==='pro'?'2px solid #7c3aed':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setSheepPlanPreview('pro')}>
  <strong>🏆 Professional — ₵120/mo</strong>
- <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus executive briefings, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
+ <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus operating briefs, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
  <button className={`btn ${sheepTier==='pro' ? '' : 'btn-dark'}`} onClick={(e)=>{e.stopPropagation(); if (sheepTier==='pro') return; startUniversityCheckout('sheep', 'pro', 'Sheep University Professional checkout')}}>{sheepTier==='pro' ? 'Professional active ✓' : 'Go Professional'}</button>
  </div>
  </div>
@@ -4756,7 +4756,7 @@ function AppInner() {
 
  {active === 'goat-university' && <section>
  <h3>🐐 Goat University</h3>
- <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Executive standard:</strong> Goat University Professional presents the breeding and operating system in a format suitable for institutional, investor, and policy review.</div>
+ <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Program overview:</strong> Goat University Professional organizes the breeding and operating system into a practical reference for day-to-day use.</div>
  <article className='panel' style={{marginBottom:10,border:'1px solid #99f6e4',background:'#f0fdfa'}}>
  <h4 style={{marginTop:0,color:'#0f766e'}}>Ghana Goat Breed Development Framework</h4>
  <div className='list'>
@@ -4780,7 +4780,7 @@ function AppInner() {
  </div>
  <div className='panel' style={{padding:10, border:goatTier==='pro' || goatPlanPreview==='pro'?'2px solid #0d9488':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setGoatPlanPreview('pro')}>
  <strong>🏆 Professional — ₵120/mo</strong>
- <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus executive briefings, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
+ <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus operating briefs, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
  <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('goat', 'pro', 'Goat University Professional checkout')}}>Go Professional</button>
  </div>
  </div>
@@ -4882,7 +4882,7 @@ function AppInner() {
 
  {active === 'cattle-university' && <section>
  <h3>🐄 Cattle University</h3>
- <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Executive standard:</strong> Cattle University Professional presents the herd-improvement system in a format suitable for institutional, investor, and policy review.</div>
+ <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Program overview:</strong> Cattle University Professional brings the herd-improvement system into one practical reference for operators and managers.</div>
  <article className='panel' style={{marginBottom:10,border:'1px solid #fde68a',background:'#fffbeb'}}>
  <h4 style={{marginTop:0,color:'#92400e'}}>Ghana Cattle Breed Program (3 Phases)</h4>
  <p style={{fontSize:'.85rem',color:'#92400e'}}>Final breeding sires: <strong>Brahman or Gudali</strong>.</p>
@@ -4906,7 +4906,7 @@ function AppInner() {
  </div>
  <div className='panel' style={{padding:10, border:cattleTier==='pro' || cattlePlanPreview==='pro'?'2px solid #d97706':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setCattlePlanPreview('pro')}>
  <strong>🏆 Professional — ₵120/mo</strong>
- <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus executive briefings, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
+ <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus operating briefs, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
  <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('cattle', 'pro', 'Cattle University Professional checkout')}}>Go Professional</button>
  </div>
  </div>
@@ -4981,12 +4981,12 @@ function AppInner() {
  <div className='list-row'><span>Advanced herd selection matrix</span></div>
  <div className='list-row'><span>Printable breeding and calving templates</span></div>
  <div className='list-row'><span>Progress tracking dashboard</span></div>
- <div className='list-row'><span>Expanded professional brief suitable for policy, investor, and executive review</span></div>
+ <div className='list-row'><span>Expanded operating brief for planning and review</span></div>
  </div>
  <div className='inlineForm' style={{marginTop:8,flexWrap:'wrap'}}>
  <a className='btn' download='Cattle-Herd-Selection-Matrix.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Cattle University Professional\nAdvanced Herd Selection Matrix\n\n1. Cow base selection\n- Retain cows with reliable calving history, mothering ability, acceptable fertility, and resilience under local feed pressure.\n- Separate survival genetics from subsidy feeding effects. A cow that breeds and raises calves consistently under field conditions is more valuable than a high-cost show animal.\n\n2. Bull decision framework\n- Sahelian/Zebu influence: frame and growth improvement.\n- White Fulani/Sudanese influence: dual-purpose market appeal and structure.\n- Brahman/Gudali terminal sires: use only when maternal base and management are already stable.\n\n3. Herd replacement logic\n- Keep heifers from top-calving cows with strong weaning results.\n- Cull repeated calving trouble, weak mothering, poor fertility, or chronic disease lines.\n\n4. Scale logic\n- Expand only after calving interval, calf survival, and feed security are stable across seasons.`)}>Download Herd Selection Matrix</a>
  <a className='btn' download='Cattle-Breeding-Calving-Playbook.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Cattle University Professional\nBreeding + Calving Playbook\n\nPre-breeding\n- Body condition review\n- Bull soundness and fertility checks\n- Water, mineral, and fodder planning\n\nBreeding season\n- Controlled bull groups and service records\n- Heat observation and re-service notes\n- Remove poor breeders quickly\n\nPregnancy management\n- Stage-based nutrition and stress control\n- Vaccination and parasite schedule by veterinary guidance\n- Calving pen and labor prep before due dates cluster\n\nCalving phase\n- Calving watch, colostrum assurance, and calf vigor checks\n- Postpartum recovery and mastitis watch\n- Early calf disease response plan\n\nPost-calving growth period\n- Tick and blood-parasite control\n- Sample weight tracking and weak-line intervention\n- Replacement vs sale decision review`)}>Download Breeding + Calving Playbook</a>
- <a className='btn' download='Cattle-Professional-Executive-Brief.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Cattle University Professional\nExecutive Brief\n\nThis program is designed for serious herd builders who want a Ghana-adapted commercial cattle line with stronger carcass, better resilience, and more disciplined breeding records.\n\nProfessional operating priorities\n- Convert every breeding season into a measurable economic review.\n- Track conception, calving interval, calf survival, growth, and margin by cohort.\n- Build feed and water buffers before the dry season rather than reacting during crisis.\n- Treat disease surveillance as an executive KPI, not only as a veterinary issue.\n\nPolicy and investor message\n- The herd model aims to protect local adaptation while improving output.\n- The business case depends on lower mortality, tighter selection, and market-class consistency.\n- Long-run value comes from repeatable herd performance, not one-off large animals.\n\nStrategic takeaway\n- A disciplined cattle system combines genetics, climate adaptation, health scheduling, and market records into one measurable production strategy.`)}>Download Executive Brief</a>
+ <a className='btn' download='Cattle-Operating-Brief.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Cattle University Professional\nOperating Brief\n\nThis program helps herd builders develop a Ghana-adapted commercial cattle line with stronger carcass performance, resilience, and disciplined breeding records.\n\nOperating priorities\n- Convert every breeding season into a measurable economic review.\n- Track conception, calving interval, calf survival, growth, and margin by cohort.\n- Build feed and water buffers before the dry season rather than reacting during crisis.\n- Treat disease surveillance as a core performance measure, not only as a veterinary issue.\n\nSystem goals\n- Protect local adaptation while improving output.\n- Improve business performance through lower mortality, tighter selection, and market-class consistency.\n- Build long-run value through repeatable herd performance, not one-off large animals.\n\nSummary\n- A disciplined cattle system combines genetics, climate adaptation, health scheduling, and market records into one measurable production strategy.`)}>Download Brief</a>
  <button className='btn' onClick={()=>setCattleProgress((s)=>({ ...s, completed: Array.from(new Set([...(s.completed||[]), `${cattleTrack}:${openCattleModule}`])) }))}>Mark Current Module Complete</button>
  <div className='list-row' style={{padding:'6px 10px', background:'#fff'}}><span>Completed checkpoints</span><strong>{(cattleProgress.completed||[]).length}</strong></div>
  </div>
@@ -5007,7 +5007,7 @@ function AppInner() {
    <div>
     <div className='records-eyebrow'>FARMSAVIOR RECORDS</div>
     <h3>Livestock Records</h3>
-    <p>Run your flock or herd from one premium mobile-first workspace with quick counts, sane record capture, and a clear path from summary to details to edit.</p>
+    <p>Run your flock or herd from one clear mobile-first workspace with quick counts, practical record capture, and an easy path from summary to details to edit.</p>
    </div>
    <div className='records-hero-actions'>
     <button type='button' className='btn' onClick={() => { setSelectedLivestockRecord(null); setSelectedOffspringRecord(null); setRecordsSectionOpen(prev => ({ ...prev, create: false, edit: false, details: false })) }}>Reset view</button>
@@ -6253,3 +6253,4 @@ function AppInner() {
 export default function App() {
  return <AppErrorBoundary><AppInner /></AppErrorBoundary>
 }
+
