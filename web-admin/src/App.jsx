@@ -2802,8 +2802,8 @@ function AppInner() {
   const roomSeed = [meId, otherId].filter(Boolean).sort().join('-') || `${Date.now()}`
   const room = `farmsavior-${roomSeed}`
   const callUrl = mode === 'video'
-   ? `https://meet.jit.si/${room}`
-   : `https://meet.jit.si/${room}#config.startWithVideoMuted=true`
+   ? `https://meet.jit.si/${room}#config.prejoinPageEnabled=false&config.disableDeepLinking=true`
+   : `https://meet.jit.si/${room}#config.startWithVideoMuted=true&config.prejoinPageEnabled=false&config.disableDeepLinking=true`
   const latestOwn = [...(communityMessageView?.messages || [])].reverse().find(m => m?.is_mine)
   const latestText = String(latestOwn?.text || '')
   if (latestText.includes(callUrl) && typeof window !== 'undefined') {
@@ -6705,6 +6705,17 @@ function AppInner() {
  <span className='tab'>🛒 Products</span>
  </div>
  </div>
+
+
+ {(typeof window !== 'undefined' && 'Notification' in window && Notification.permission !== 'granted') && <article className='panel' style={{marginBottom:10, border:'1px solid #fde68a', background:'#fffbeb'}}>
+ <div className='list-row' style={{alignItems:'flex-start', gap:10, flexWrap:'wrap'}}>
+ <div>
+ <h4 style={{margin:'0 0 4px 0'}}>Enable call permissions</h4>
+ <div className='helper-text'>To receive rings and answer calls smoothly, enable notifications + mic/camera permissions.</div>
+ </div>
+ <button type='button' className='btn btn-dark' disabled={communityCallPermissionBusy} onClick={()=>enableCommunityCallPermissions()}>{communityCallPermissionBusy ? 'Enabling…' : 'Enable now'}</button>
+ </div>
+ </article>}
 
 
  <article className='panel' style={{marginBottom:10}}>
