@@ -4257,7 +4257,7 @@ function AppInner() {
  <p style={{fontSize:'.82rem',color:'#64748b',marginTop:8}}>Final vaccine brands/timing must be validated with licensed local veterinary authorities before execution.</p>
  </article>}
 
- {poultryTier === 'pro' && <article className='panel' style={{marginTop:10, border:'1.5px solid #f59e0b', background:'#fffbeb'}}>
+ {poultryTier === 'pro' && <article className='panel poultry-pro-shell' style={{marginTop:10, border:'1.5px solid #f59e0b', background:'#fffbeb'}}>
  <h4 style={{marginTop:0}}>🏆 Executive Tools</h4>
  <div className='list'>
  <div className='list-row'><span>Expanded detailed module content</span></div>
@@ -4269,10 +4269,19 @@ function AppInner() {
  <div className='list-row'><span>Progress tracking dashboard</span></div>
  </div>
 
- <div className='inlineForm' style={{marginTop:8,flexWrap:'wrap'}}>
- <button className='btn btn-dark' onClick={()=>{setActive('ai-disease'); api.trackAnalyticsEvent({ event_name:'poultry_pro_action', country: uiCountry, role_hint: me?.role || 'user', properties:{action:'open_ai_disease'} }).catch(()=>{})}}>Open AI Disease Analyzer</button>
- <button className='btn' onClick={()=>setPoultryQuestion(`${poultryTracks[poultryTrack].title} • ${poultryZone === 'dry' ? 'Dry / Savanna Zone' : 'Humid / Forest Zone'} • review current flock issue`)}>Load track-specific guidance prompt</button>
- {poultryProDownloads.map((asset)=><a key={asset.filename} className='btn' download={asset.filename} href={'data:text/plain;charset=utf-8,'+encodeURIComponent(asset.content)}>{asset.title}</a>)}
+ <div className='poultry-tool-grid' style={{marginTop:8}}>
+ <button className={`poultry-tool-card ${active==='ai-disease' ? 'active' : ''}`} onClick={()=>{setActive('ai-disease'); api.trackAnalyticsEvent({ event_name:'poultry_pro_action', country: uiCountry, role_hint: me?.role || 'user', properties:{action:'open_ai_disease'} }).catch(()=>{})}}>
+ <strong>AI Disease Analyzer</strong>
+ <span>Open the analyzer for symptoms, photos, and flock health review.</span>
+ </button>
+ <button className={`poultry-tool-card ${poultryQuestion ? 'active' : ''}`} onClick={()=>setPoultryQuestion(`${poultryTracks[poultryTrack].title} • ${poultryZone === 'dry' ? 'Dry / Savanna Zone' : 'Humid / Forest Zone'} • review current flock issue`)}>
+ <strong>Guidance Workspace</strong>
+ <span>Load a track-specific guidance prompt and build a response plan.</span>
+ </button>
+ {poultryProDownloads.map((asset)=><a key={asset.filename} className={`poultry-tool-card ${poultryAnswer && poultryAnswer.includes(asset.title) ? 'active' : ''}`} download={asset.filename} href={'data:text/plain;charset=utf-8,'+encodeURIComponent(asset.content)}>
+ <strong>{asset.title}</strong>
+ <span>Download this premium operating asset.</span>
+ </a>)}
  </div>
 
  <div className='panel' style={{marginTop:8,padding:10,background:'#fff'}}>
