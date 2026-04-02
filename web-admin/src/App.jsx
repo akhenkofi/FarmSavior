@@ -2612,6 +2612,19 @@ function AppInner() {
  if (product === 'poultry') setPoultryBillingMsg(message || '')
  }
 
+ const isActiveSubscriptionStatus = (status) => ['ACTIVE', 'TRIAL_ACTIVE'].includes(String(status || '').toUpperCase())
+ const hasActiveUniversityAccess = (product) => {
+ const tier = String(universitySubscriptions[product]?.tier || '').toLowerCase()
+ const status = universitySubscriptions[product]?.subscription?.status
+ return ['basic', 'pro'].includes(tier) || isActiveSubscriptionStatus(status)
+ }
+ const openUniversityProduct = (product) => {
+ setActive(paymentSectionRoute(product))
+ }
+ const showAlreadyActiveMessage = (product, tierOverride) => {
+ const tier = String(tierOverride || universitySubscriptions[product]?.subscription?.plan_code || universitySubscriptions[product]?.tier || 'paid').toUpperCase()
+ setUniversityProductMessage(product, `${paymentSectionLabel(product)} ${tier} access is already active. Open and use your program — no new checkout is needed.`)
+ }
  const cachePendingCheckout = (payload) => {
  try { localStorage.setItem(PAYMENT_RETURN_CACHE_KEY, JSON.stringify({ ...(payload || {}), created_at: new Date().toISOString() })) } catch {}
  }
@@ -2660,7 +2673,18 @@ function AppInner() {
  const startUniversityCheckout = async (product, planCode, label) => {
  try {
  if (!token || !me?.id) { handleProtectedAction('onboarding', label); return }
+ if (hasActiveUniversityAccess(product)) {
+ showAlreadyActiveMessage(product)
+ openUniversityProduct(product)
+ return
+ }
  const r = await api.checkoutUniversityPlan(product, { user_id: me.id, plan_code: planCode, billing_cycle: 'monthly', currency: 'GHS', country: me?.country || uiCountry })
+ if (r?.already_active) {
+ setUniversityProductState(product, { tier: r?.tier || universitySubscriptions[product]?.tier, subscription: r.subscription || universitySubscriptions[product]?.subscription || null })
+ showAlreadyActiveMessage(product, r?.tier)
+ openUniversityProduct(product)
+ return
+ }
  cachePendingCheckout({ type: 'university', product, plan_code: planCode, reference: r.reference })
  setUniversityProductMessage(product, r.payment_url ? `${label} created. Redirecting to payment. Ref: ${r.reference}` : (r.payment_init_error || 'Unable to initialize payment right now.'))
  setUniversityProductState(product, { subscription: r.subscription || universitySubscriptions[product]?.subscription || null })
@@ -4036,6 +4060,11 @@ function AppInner() {
 
  <button className='btn btn-dark' onClick={async () => {
  if (!token) { handleProtectedAction('onboarding', 'Subscription checkout'); return }
+ if (effectiveLivestockSubscription?.tier === 'premium' || isActiveSubscriptionStatus(effectiveLivestockSubscription?.subscription?.status)) {
+ alert(t('Your Livestock Records premium access is already active. Opening your records workspace now.','Votre accès Premium aux registres d’élevage est déjà actif. Ouverture de votre espace maintenant.'))
+ openLivestockManagement()
+ return
+ }
  try {
  const r = await api.checkoutLivestockRecordsPlan({
  user_id: Number(me?.id || 1),
@@ -4045,6 +4074,11 @@ function AppInner() {
  currency: selectedCurrency,
  force_paid: true
  })
+ if (r?.already_active) {
+ alert(t('Your Livestock Records premium access is already active. Opening your records workspace now.','Votre accès Premium aux registres d’élevage est déjà actif. Ouverture de votre espace maintenant.'))
+ openLivestockManagement()
+ return
+ }
  cachePendingCheckout({ type: 'livestock', product: 'livestock-records', plan_code: p.plan_code || 'premium', reference: r.reference })
  if (r.payment_url) {
  try {
@@ -4056,7 +4090,7 @@ function AppInner() {
  alert(t(`Checkout created. Ref: ${r.reference}`,`Paiement créé. Réf : ${r.reference}`))
  }
  } catch (e) { alert(t(`Checkout failed: ${errMsg(e)}`,`Échec du paiement : ${errMsg(e)}`)) }
- }}>{t('Buy Premium Now','Acheter Premium','立即购买高级版')}</button>
+ }}>{effectiveLivestockSubscription?.tier === 'premium' ? t('Premium Active — Open Records','Premium actif — ouvrir les registres','高级版已激活—打开档案') : t('Buy Premium Now','Acheter Premium','立即购买高级版')}</button>
  </div>
  </div>
  ))}
@@ -4872,32 +4906,12 @@ function AppInner() {
  <div className='panel' style={{padding:10, border:poultryTier==='basic' || poultryPlanPreview==='basic'?'2px solid #16a34a':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setPoultryPlanPreview('basic')}>
  <strong>🌿 Basic — ₵50/mo</strong>
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Full pillar access, both operating zones, health schedules, and structured implementation guidance.</div>
- <button className='btn btn-dark' onClick={async(e)=>{ e.stopPropagation();
- try {
- if (!token || !me?.id) { handleProtectedAction('onboarding', 'Poultry University Basic checkout'); return }
- const r = await api.checkoutPoultryUniversityPlan({ user_id: me.id, plan_code: 'basic', billing_cycle: 'monthly', currency: 'GHS', country: me?.country || uiCountry })
- setPoultryBillingMsg(r.payment_url ? `Basic checkout created. Redirecting to payment. Ref: ${r.reference}` : (r.payment_init_error || 'Unable to initialize payment right now.'))
- setPoultrySubscription(prev => ({ ...prev, subscription: r.subscription || prev.subscription }))
- if (r.payment_url) window.location.href = r.payment_url
- } catch (e) {
- setPoultryBillingMsg(errMsg(e))
- }
- }}>Buy Basic</button>
+ <button className={`btn ${hasActiveUniversityAccess('poultry') ? '' : 'btn-dark'}`} onClick={(e)=>{ e.stopPropagation(); if (hasActiveUniversityAccess('poultry')) { showAlreadyActiveMessage('poultry'); openUniversityProduct('poultry'); return } startUniversityCheckout('poultry', 'basic', 'Poultry University Basic checkout') }}>{hasActiveUniversityAccess('poultry') ? 'Access active ✓' : 'Buy Basic'}</button>
  </div>
  <div className='panel' style={{padding:10, border:poultryTier==='pro' || poultryPlanPreview==='pro'?'2px solid #f59e0b':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setPoultryPlanPreview('pro')}>
  <strong>🏆 Professional — ₵120/mo</strong>
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus operating briefs, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
- <button className='btn btn-dark' onClick={async(e)=>{ e.stopPropagation();
- try {
- if (!token || !me?.id) { handleProtectedAction('onboarding', 'Poultry University Professional checkout'); return }
- const r = await api.checkoutPoultryUniversityPlan({ user_id: me.id, plan_code: 'pro', billing_cycle: 'monthly', currency: 'GHS', country: me?.country || uiCountry })
- setPoultryBillingMsg(r.payment_url ? `Professional checkout created. Redirecting to payment. Ref: ${r.reference}` : (r.payment_init_error || 'Unable to initialize payment right now.'))
- setPoultrySubscription(prev => ({ ...prev, subscription: r.subscription || prev.subscription }))
- if (r.payment_url) window.location.href = r.payment_url
- } catch (e) {
- setPoultryBillingMsg(errMsg(e))
- }
- }}>Buy Professional</button>
+ <button className={`btn ${hasActiveUniversityAccess('poultry') ? '' : 'btn-dark'}`} onClick={(e)=>{ e.stopPropagation(); if (hasActiveUniversityAccess('poultry')) { showAlreadyActiveMessage('poultry'); openUniversityProduct('poultry'); return } startUniversityCheckout('poultry', 'pro', 'Poultry University Professional checkout') }}>{hasActiveUniversityAccess('poultry') ? 'Professional access active ✓' : 'Buy Professional'}</button>
  </div>
  </div>
  <div className='panel' style={{marginTop:8,padding:8,background:'#fff7ed',border:'1px solid #fed7aa'}}>
@@ -4905,7 +4919,7 @@ function AppInner() {
  <div className='list' style={{marginTop:6}}>
  {universityPlanPreview[poultryPlanPreview].features.map((feature)=><div className='list-row' key={feature}><span>{feature}</span></div>)}
  </div>
- {poultryPlanPreview !== 'free' && <div style={{marginTop:8}}><button className='btn btn-dark' onClick={()=>startUniversityCheckout('poultry', poultryPlanPreview, `Poultry University ${poultryPlanPreview === 'pro' ? 'Professional' : 'Basic'} checkout`)}>{poultryPlanPreview === 'pro' ? 'Upgrade to Professional' : 'Upgrade to Basic'}</button></div>}
+ {poultryPlanPreview !== 'free' && <div style={{marginTop:8}}><button className={`btn ${hasActiveUniversityAccess('poultry') ? '' : 'btn-dark'}`} onClick={()=>{ if (hasActiveUniversityAccess('poultry')) { showAlreadyActiveMessage('poultry'); openUniversityProduct('poultry'); return } startUniversityCheckout('poultry', poultryPlanPreview, `Poultry University ${poultryPlanPreview === 'pro' ? 'Professional' : 'Basic'} checkout`) }}>{hasActiveUniversityAccess('poultry') ? 'Access active ✓' : (poultryPlanPreview === 'pro' ? 'Upgrade to Professional' : 'Upgrade to Basic')}</button></div>}
  </div>
  {poultryTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#fff7ed',border:'1px solid #fed7aa'}}><strong>Preview access active.</strong> This tier shows the opening pillar while the full operating framework remains under the paid plan.</div>}
  {poultrySubscription?.subscription?.status === 'PENDING_PAYMENT' && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}><strong>Payment pending.</strong> Reference: {poultrySubscription.subscription.reference}. <button className='btn btn-dark' style={{marginLeft:8}} onClick={async()=>{ const v = await api.verifyPoultryUniversitySubscription(poultrySubscription.subscription.reference); const tier = v.tier || 'free'; setPoultryTier(tier); const meSub = await api.fetchPoultryUniversitySubscriptionMe().catch(()=>({ tier, subscription: poultrySubscription.subscription })); setPoultrySubscription(prev => ({ ...prev, tier: meSub.tier || tier, subscription: meSub.subscription || prev.subscription })); setPoultryBillingMsg(v.message || 'Verification checked.'); }}>Verify Payment</button></div>}
@@ -5215,12 +5229,12 @@ function AppInner() {
  <div className='panel' style={{padding:10, border:goatTier==='basic' || goatPlanPreview==='basic'?'2px solid #16a34a':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setGoatPlanPreview('basic')}>
  <strong>🌿 Basic — ₵50/mo</strong>
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Full pillar access, both operating zones, and health schedule guidance.</div>
- <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('goat', 'basic', 'Goat University Basic checkout')}}>Unlock Basic</button>
+ <button className={`btn ${hasActiveUniversityAccess('goat') ? '' : 'btn-dark'}`} onClick={(e)=>{e.stopPropagation(); if (hasActiveUniversityAccess('goat')) { showAlreadyActiveMessage('goat'); openUniversityProduct('goat'); return } startUniversityCheckout('goat', 'basic', 'Goat University Basic checkout')}}>{hasActiveUniversityAccess('goat') ? 'Access active ✓' : 'Unlock Basic'}</button>
  </div>
  <div className='panel' style={{padding:10, border:goatTier==='pro' || goatPlanPreview==='pro'?'2px solid #0d9488':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setGoatPlanPreview('pro')}>
  <strong>🏆 Professional — ₵120/mo</strong>
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus operating briefs, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
- <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('goat', 'pro', 'Goat University Professional checkout')}}>Go Professional</button>
+ <button className={`btn ${hasActiveUniversityAccess('goat') ? '' : 'btn-dark'}`} onClick={(e)=>{e.stopPropagation(); if (hasActiveUniversityAccess('goat')) { showAlreadyActiveMessage('goat'); openUniversityProduct('goat'); return } startUniversityCheckout('goat', 'pro', 'Goat University Professional checkout')}}>{hasActiveUniversityAccess('goat') ? 'Professional access active ✓' : 'Go Professional'}</button>
  </div>
  </div>
  <div className='panel' style={{marginTop:8,padding:8,background:'#f0fdfa',border:'1px solid #99f6e4'}}>
@@ -5228,7 +5242,7 @@ function AppInner() {
  <div className='list' style={{marginTop:6}}>
  {universityPlanPreview[goatPlanPreview].features.map((feature)=><div className='list-row' key={feature}><span>{feature}</span></div>)}
  </div>
- {goatPlanPreview !== 'free' && <div style={{marginTop:8}}><button className='btn btn-dark' onClick={()=>startUniversityCheckout('goat', goatPlanPreview, `Goat University ${goatPlanPreview === 'pro' ? 'Professional' : 'Basic'} checkout`)}>{goatPlanPreview === 'pro' ? 'Upgrade to Professional' : 'Upgrade to Basic'}</button></div>}
+ {goatPlanPreview !== 'free' && <div style={{marginTop:8}}><button className={`btn ${hasActiveUniversityAccess('goat') ? '' : 'btn-dark'}`} onClick={()=>{ if (hasActiveUniversityAccess('goat')) { showAlreadyActiveMessage('goat'); openUniversityProduct('goat'); return } startUniversityCheckout('goat', goatPlanPreview, `Goat University ${goatPlanPreview === 'pro' ? 'Professional' : 'Basic'} checkout`) }}>{hasActiveUniversityAccess('goat') ? 'Access active ✓' : (goatPlanPreview === 'pro' ? 'Upgrade to Professional' : 'Upgrade to Basic')}</button></div>}
  </div>
  </article>
  {universitySubscriptions.goat?.subscription?.status === 'PENDING_PAYMENT' && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}><strong>Payment pending.</strong> Reference: {universitySubscriptions.goat.subscription.reference}. <button className='btn btn-dark' style={{marginLeft:8}} onClick={()=>verifyUniversityCheckout('goat')}>Verify Payment</button></div>}
@@ -5325,12 +5339,12 @@ function AppInner() {
  <div className='panel' style={{padding:10, border:cattleTier==='basic' || cattlePlanPreview==='basic'?'2px solid #16a34a':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setCattlePlanPreview('basic')}>
  <strong>🌿 Basic — ₵50/mo</strong>
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Full pillar access, both operating zones, and health schedule guidance.</div>
- <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('cattle', 'basic', 'Cattle University Basic checkout')}}>Unlock Basic</button>
+ <button className={`btn ${hasActiveUniversityAccess('cattle') ? '' : 'btn-dark'}`} onClick={(e)=>{e.stopPropagation(); if (hasActiveUniversityAccess('cattle')) { showAlreadyActiveMessage('cattle'); openUniversityProduct('cattle'); return } startUniversityCheckout('cattle', 'basic', 'Cattle University Basic checkout')}}>{hasActiveUniversityAccess('cattle') ? 'Access active ✓' : 'Unlock Basic'}</button>
  </div>
  <div className='panel' style={{padding:10, border:cattleTier==='pro' || cattlePlanPreview==='pro'?'2px solid #d97706':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setCattlePlanPreview('pro')}>
  <strong>🏆 Professional — ₵120/mo</strong>
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus operating briefs, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
- <button className='btn btn-dark' onClick={(e)=>{e.stopPropagation(); startUniversityCheckout('cattle', 'pro', 'Cattle University Professional checkout')}}>Go Professional</button>
+ <button className={`btn ${hasActiveUniversityAccess('cattle') ? '' : 'btn-dark'}`} onClick={(e)=>{e.stopPropagation(); if (hasActiveUniversityAccess('cattle')) { showAlreadyActiveMessage('cattle'); openUniversityProduct('cattle'); return } startUniversityCheckout('cattle', 'pro', 'Cattle University Professional checkout')}}>{hasActiveUniversityAccess('cattle') ? 'Professional access active ✓' : 'Go Professional'}</button>
  </div>
  </div>
  <div className='panel' style={{marginTop:8,padding:8,background:'#fffbeb',border:'1px solid #fde68a'}}>
@@ -5338,7 +5352,7 @@ function AppInner() {
  <div className='list' style={{marginTop:6}}>
  {universityPlanPreview[cattlePlanPreview].features.map((feature)=><div className='list-row' key={feature}><span>{feature}</span></div>)}
  </div>
- {cattlePlanPreview !== 'free' && <div style={{marginTop:8}}><button className='btn btn-dark' onClick={()=>startUniversityCheckout('cattle', cattlePlanPreview, `Cattle University ${cattlePlanPreview === 'pro' ? 'Professional' : 'Basic'} checkout`)}>{cattlePlanPreview === 'pro' ? 'Upgrade to Professional' : 'Upgrade to Basic'}</button></div>}
+ {cattlePlanPreview !== 'free' && <div style={{marginTop:8}}><button className={`btn ${hasActiveUniversityAccess('cattle') ? '' : 'btn-dark'}`} onClick={()=>{ if (hasActiveUniversityAccess('cattle')) { showAlreadyActiveMessage('cattle'); openUniversityProduct('cattle'); return } startUniversityCheckout('cattle', cattlePlanPreview, `Cattle University ${cattlePlanPreview === 'pro' ? 'Professional' : 'Basic'} checkout`) }}>{hasActiveUniversityAccess('cattle') ? 'Access active ✓' : (cattlePlanPreview === 'pro' ? 'Upgrade to Professional' : 'Upgrade to Basic')}</button></div>}
  </div>
  </article>
  {universitySubscriptions.cattle?.subscription?.status === 'PENDING_PAYMENT' && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}><strong>Payment pending.</strong> Reference: {universitySubscriptions.cattle.subscription.reference}. <button className='btn btn-dark' style={{marginLeft:8}} onClick={()=>verifyUniversityCheckout('cattle')}>Verify Payment</button></div>}

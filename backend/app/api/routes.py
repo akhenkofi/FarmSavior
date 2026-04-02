@@ -993,6 +993,35 @@ def _livestock_active_subscription_for_user(user_id: Optional[int], db: Session)
 
 
 
+def _university_active_subscription_for_user(product: str, user_id: Optional[int], db: Session):
+    if not user_id:
+        return None
+
+    prefix = _university_subscription_prefix(product)
+    records = db.query(SheepGoatSubscription).filter(
+        SheepGoatSubscription.user_id == int(user_id),
+        SheepGoatSubscription.reference.like(f'{prefix}%')
+    ).order_by(SheepGoatSubscription.created_at.desc(), SheepGoatSubscription.id.desc()).limit(50).all()
+
+    if not records:
+        return None
+
+    pending_statuses = {'PENDING_PAYMENT', 'PENDING', 'PROCESSING'}
+    synced_any = False
+    for rec in records:
+        if _subscription_status_upper(rec.status) in pending_statuses:
+            _sync_subscription_record(rec, db)
+            synced_any = True
+
+    if synced_any:
+        records = db.query(SheepGoatSubscription).filter(
+            SheepGoatSubscription.user_id == int(user_id),
+            SheepGoatSubscription.reference.like(f'{prefix}%')
+        ).order_by(SheepGoatSubscription.created_at.desc(), SheepGoatSubscription.id.desc()).limit(50).all()
+
+    return _select_best_subscription_record(records)
+
+
 def _livestock_access_context(user_id: Optional[int], db: Session) -> dict:
     sub = _livestock_active_subscription_for_user(user_id, db)
     if not sub:
@@ -2306,6 +2335,19 @@ def university_product_subscription_me(product: str, authorization: Optional[str
 @router.post('/university/{product}/subscription/checkout')
 def university_product_subscription_checkout(product: str, payload: PoultryUniversitySubscriptionIn, db: Session = Depends(get_db)):
     prefix = _university_subscription_prefix(product)
+    active_existing = _university_active_subscription_for_user(product, payload.user_id, db)
+    if active_existing and _subscription_status_upper(active_existing.status) in {'ACTIVE', 'TRIAL_ACTIVE'}:
+        return {
+            'product': product,
+            'message': 'subscription already active',
+            'already_active': True,
+            'reference': active_existing.reference,
+            'subscription': _serialize_subscription_record(active_existing),
+            'tier': active_existing.plan_code,
+            'payment_url': '',
+            'payment_provider': 'not_needed',
+            'payment_init_error': '',
+        }
     plans = {
         'basic': {'monthly': 3.33, 'yearly': 33.0},
         'pro': {'monthly': 8.0, 'yearly': 80.0}
@@ -4057,6 +4099,19 @@ def livestock_subscription_me(authorization: Optional[str] = Header(None), db: S
 
 @router.post('/livestock-records/subscription/checkout')
 def livestock_subscription_checkout(payload: SheepGoatSubscriptionIn, db: Session = Depends(get_db)):
+    active_existing = _livestock_active_subscription_for_user(payload.user_id, db)
+    if active_existing and _subscription_status_upper(active_existing.status) in {'ACTIVE', 'TRIAL_ACTIVE'}:
+        return {
+            'message': 'subscription already active',
+            'already_active': True,
+            'reference': active_existing.reference,
+            'subscription': _serialize_subscription_record(active_existing),
+            'tier': active_existing.plan_code,
+            'payment_url': '',
+            'payment_provider': 'not_needed',
+            'payment_init_error': '',
+        }
+
     plans = {code: {'monthly': plan['monthly_usd'], 'yearly': plan['yearly_usd']} for code, plan in LIVESTOCK_PLAN_CATALOG.items() if code not in ['free']}
     fx = {'USD': 1.0, 'GHS': 15.0, 'NGN': 1600.0, 'XOF': 610.0}
 
