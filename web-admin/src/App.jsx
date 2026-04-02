@@ -7078,7 +7078,7 @@ function AppInner() {
  <strong>{thread?.user?.full_name || `User ${thread?.user?.user_id || ''}`}</strong>
  <div style={{fontSize:'.8rem', color:'#0284c7'}}>{thread?.user?.username ? `@${thread.user.username}` : 'No username yet'}</div>
  </div>
- <div style={{fontSize:'.84rem', color:'#475569', textAlign:'left'}}>{thread?.last_message?.is_mine ? 'You: ' : ''}{String(thread?.last_message?.text || 'No messages yet').slice(0, 88)}</div>
+ <div style={{fontSize:'.84rem', color:'#475569', textAlign:'left'}}>{(()=>{ const tx = String(thread?.last_message?.text || 'No messages yet'); const lx = tx.toLowerCase(); if (lx.includes('join my audio call:') || lx.includes('join my video call:') || lx.includes('meet.jit.si/')) return `📞 ${thread?.last_message?.is_mine ? 'Outgoing' : 'Missed'} call`; return `${thread?.last_message?.is_mine ? 'You: ' : ''}${tx.slice(0, 88)}` })()}</div>
  </button>)}
  {!communityMessageThreads.length && <div className='community-thread-preview community-thread-preview-empty'>Your inbox will appear here after you send or receive your first direct message.</div>}
  </div>
@@ -7130,7 +7130,12 @@ function AppInner() {
  {!communityMessageView.open && <div className='community-messenger-empty'>
  <div className='empty-emoji'>💬</div>
  <strong>Pick a conversation from the inbox</strong>
- <span>When you tap Message anywhere in Community, this pane opens immediately and loads the thread here.</span>
+ <span>Start a new conversation from any profile, then use Audio or Video call instantly from the header.</span>
+ <div style={{display:'flex', gap:8, flexWrap:'wrap', justifyContent:'center'}}>
+ <button type='button' className='btn btn-dark' onClick={()=>{ closeCommunityMessages(); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>Start New Conversation</button>
+ <button type='button' className='btn' disabled title='Select a conversation first'>Audio Call</button>
+ <button type='button' className='btn' disabled title='Select a conversation first'>Video Call</button>
+ </div>
  </div>}
  {communityMessageView.open && <>
  {communityMessageView.loading && <div className='community-messenger-empty'><div className='empty-emoji'>⏳</div><strong>Opening messages…</strong><span>Loading the latest conversation safely.</span></div>}
