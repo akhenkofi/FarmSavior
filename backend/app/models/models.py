@@ -467,6 +467,7 @@ class CommunityProfile(Base):
     farm_life = Column(Text, default='')
     interests = Column(String(255), default='farming,gardening')
     visibility = Column(String(20), default='PUBLIC')
+    message_privacy = Column(String(20), default='FOLLOWING')  # EVERYONE|FOLLOWING|NOBODY
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
@@ -527,3 +528,12 @@ class CommunityPostComment(Base):
     author_name = Column(String(120), nullable=True)
     text = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class CommunityDirectMessage(Base):
+    __tablename__ = 'community_direct_messages'
+    id = Column(Integer, primary_key=True)
+    sender_user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    recipient_user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    text = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)

@@ -354,6 +354,11 @@ class CommunityProfileIn(BaseModel):
     farm_life: Optional[str] = ''
     interests: Optional[str] = 'farming,gardening'
     visibility: Optional[Literal['PUBLIC', 'FOLLOWERS']] = 'PUBLIC'
+    message_privacy: Optional[Literal['EVERYONE', 'FOLLOWING', 'NOBODY']] = 'FOLLOWING'
+
+
+class CommunityDirectMessageIn(BaseModel):
+    text: str
 
 
 class CommunityPostIn(BaseModel):

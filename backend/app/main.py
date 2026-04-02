@@ -181,6 +181,19 @@ def ensure_runtime_columns():
                     created_at {_ts_type()}
                 )
             """))
+
+            if 'community_profiles' in tables:
+                _safe_add_column(conn, 'community_profiles', 'message_privacy', "VARCHAR(20) DEFAULT 'FOLLOWING'")
+
+            conn.execute(text(f"""
+                CREATE TABLE IF NOT EXISTS community_direct_messages (
+                    id INTEGER PRIMARY KEY,
+                    sender_user_id INTEGER NOT NULL,
+                    recipient_user_id INTEGER NOT NULL,
+                    text TEXT NOT NULL,
+                    created_at {_ts_type()}
+                )
+            """))
     except Exception as exc:
         logger.exception('Runtime schema bootstrap failed: %s', exc)
 

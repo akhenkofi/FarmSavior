@@ -27,7 +27,7 @@ from app.models.models import (
     LivestockListing, EquipmentRental, StorageReservation, TradeContract, VerificationReview, UpdateReview,
     DeviceToken, DiseaseScan, SheepGoatRecord, LivestockPurchaseSource, SheepGoatBreedingGroup, SheepGoatSubscription,
     WorldChatMessage, WorldChatUserModeration,
-    CommunityProfile, CommunityFollow, CommunityMute, CommunityPost, CommunityPostLike, CommunityPostComment,
+    CommunityProfile, CommunityFollow, CommunityMute, CommunityPost, CommunityPostLike, CommunityPostComment, CommunityDirectMessage,
     MarketplaceOrder, SellerPayoutProfile, PayoutHistory, MarketplaceNotification
 )
 from app.schemas.schemas import (
@@ -38,7 +38,7 @@ from app.schemas.schemas import (
     VerificationDecisionIn, DeviceTokenIn, DiseaseAnalyzeIn,
     SheepGoatRecordIn, LivestockPurchaseSourceIn, SheepGoatBreedingGroupIn, SheepGoatSubscriptionIn, PoultryUniversitySubscriptionIn,
     WorldChatMessageIn, WorldChatModerationActionIn, WorldChatUserSanctionIn,
-    CommunityProfileIn, CommunityPostIn, CommunityCommentIn,
+    CommunityProfileIn, CommunityDirectMessageIn, CommunityPostIn, CommunityCommentIn,
     PlantIdentifyIn, PestIdentifyIn, AccountUpdateIn, PasswordChangeIn, DeleteAccountIn,
     MarketplaceOrderIn, MarketplaceOrderStatusIn, SellerPayoutProfileIn, SellerPayoutVerificationIn, RefundRequestIn, AutoReleaseIn
 )
@@ -2991,6 +2991,25 @@ def _community_muted_user_ids(db: Session, viewer_id: int) -> set[int]:
     return {int(r[0]) for r in rows if r and r[0] is not None}
 
 
+def _community_message_privacy_value(profile: Optional[CommunityProfile]) -> str:
+    return str(getattr(profile, 'message_privacy', 'FOLLOWING') or 'FOLLOWING').upper()
+
+
+def _community_can_message_user(db: Session, sender_id: int, recipient_user_id: int, recipient_profile: Optional[CommunityProfile] = None) -> bool:
+    if sender_id == recipient_user_id:
+        return False
+    recipient_profile = recipient_profile or db.query(CommunityProfile).filter(CommunityProfile.user_id == recipient_user_id).first()
+    policy = _community_message_privacy_value(recipient_profile)
+    if policy == 'NOBODY':
+        return False
+    if policy == 'EVERYONE':
+        return True
+    return db.query(CommunityFollow.id).filter(
+        CommunityFollow.follower_user_id == sender_id,
+        CommunityFollow.followed_user_id == recipient_user_id,
+    ).first() is not None
+
+
 def _community_user_card(db: Session, user: User, viewer_id: Optional[int] = None):
     profile = db.query(CommunityProfile).filter(CommunityProfile.user_id == user.id).first()
     followers_count = db.query(func.count(CommunityFollow.id)).filter(CommunityFollow.followed_user_id == user.id).scalar() or 0
@@ -3015,6 +3034,8 @@ def _community_user_card(db: Session, user: User, viewer_id: Optional[int] = Non
         'farm_life': _mask_contact_info(profile.farm_life) if profile else '',
         'interests': _mask_contact_info(profile.interests) if profile else '',
         'visibility': profile.visibility if profile else 'PUBLIC',
+        'message_privacy': _community_message_privacy_value(profile),
+        'can_message': _community_can_message_user(db, viewer_id, user.id, profile) if viewer_id and viewer_id != user.id else False,
         'updated_at': profile.updated_at if profile else None,
         'followers_count': followers_count,
         'following_count': following_count,
@@ -3092,6 +3113,7 @@ def community_profile_me(authorization: Optional[str] = Header(None), db: Sessio
         'farm_life': _mask_contact_info(p.farm_life),
         'interests': _mask_contact_info(p.interests),
         'visibility': p.visibility,
+        'message_privacy': _community_message_privacy_value(p),
         'followers_count': followers_count,
         'following_count': following_count,
     }
@@ -3136,6 +3158,7 @@ def community_profile_upsert(payload: CommunityProfileIn, authorization: Optiona
         'farm_life': _mask_contact_info(p.farm_life),
         'interests': _mask_contact_info(p.interests),
         'visibility': p.visibility,
+        'message_privacy': _community_message_privacy_value(p),
         'followers_count': followers_count,
         'following_count': following_count,
     }
@@ -3220,11 +3243,14 @@ def community_follow_state(authorization: Optional[str] = Header(None), db: Sess
         if user:
             following.append(_community_user_card(db, user, viewer.id))
     followers_count = db.query(func.count(CommunityFollow.id)).filter(CommunityFollow.followed_user_id == viewer.id).scalar() or 0
+    muted_ids = sorted(_community_muted_user_ids(db, viewer.id))
     return {
         'following_ids': sorted(following_ids),
         'following_count': len(following_ids),
         'followers_count': followers_count,
         'following': following,
+        'muted_ids': muted_ids,
+        'muted_count': len(muted_ids),
     }
 
 
@@ -3259,11 +3285,118 @@ def community_toggle_follow(target_user_id: int, authorization: Optional[str] = 
     }
 
 
+@router.post('/community/users/{target_user_id}/mute')
+def community_toggle_mute(target_user_id: int, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    viewer = _current_user_from_auth(authorization, db)
+    if target_user_id == viewer.id:
+        raise HTTPException(status_code=400, detail='You cannot mute yourself')
+    target = db.query(User).filter(User.id == target_user_id, User.is_deleted == False).first()
+    if not target:
+        raise HTTPException(status_code=404, detail='User not found')
+
+    existing = db.query(CommunityMute).filter(
+        CommunityMute.muter_user_id == viewer.id,
+        CommunityMute.muted_user_id == target_user_id,
+    ).first()
+    if existing:
+        db.delete(existing)
+        muted = False
+    else:
+        db.add(CommunityMute(muter_user_id=viewer.id, muted_user_id=target_user_id))
+        muted = True
+    db.commit()
+    muted_ids = sorted(_community_muted_user_ids(db, viewer.id))
+    return {'target_user_id': target_user_id, 'muted': muted, 'muted_ids': muted_ids, 'muted_count': len(muted_ids)}
+
+
+@router.get('/community/messages')
+def community_message_threads(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    viewer = _current_user_from_auth(authorization, db)
+    rows = db.query(CommunityDirectMessage).filter(
+        (CommunityDirectMessage.sender_user_id == viewer.id) | (CommunityDirectMessage.recipient_user_id == viewer.id)
+    ).order_by(CommunityDirectMessage.created_at.desc(), CommunityDirectMessage.id.desc()).all()
+    threads = {}
+    for row in rows:
+        other_user_id = row.recipient_user_id if int(row.sender_user_id) == int(viewer.id) else row.sender_user_id
+        if other_user_id in threads:
+            continue
+        other = db.query(User).filter(User.id == other_user_id, User.is_deleted == False).first()
+        if not other:
+            continue
+        card = _community_user_card(db, other, viewer.id)
+        threads[other_user_id] = {
+            'user': card,
+            'last_message': {
+                'id': row.id,
+                'text': row.text,
+                'sender_user_id': row.sender_user_id,
+                'recipient_user_id': row.recipient_user_id,
+                'created_at': row.created_at,
+                'is_mine': int(row.sender_user_id) == int(viewer.id),
+            }
+        }
+    return list(threads.values())
+
+
+@router.get('/community/messages/{other_user_id}')
+def community_message_thread(other_user_id: int, limit: int = 80, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    viewer = _current_user_from_auth(authorization, db)
+    other = db.query(User).filter(User.id == other_user_id, User.is_deleted == False).first()
+    if not other:
+        raise HTTPException(status_code=404, detail='User not found')
+    rows = db.query(CommunityDirectMessage).filter(
+        ((CommunityDirectMessage.sender_user_id == viewer.id) & (CommunityDirectMessage.recipient_user_id == other_user_id)) |
+        ((CommunityDirectMessage.sender_user_id == other_user_id) & (CommunityDirectMessage.recipient_user_id == viewer.id))
+    ).order_by(CommunityDirectMessage.created_at.asc(), CommunityDirectMessage.id.asc()).limit(max(1, min(limit, 200))).all()
+    return {
+        'user': _community_user_card(db, other, viewer.id),
+        'messages': [{
+            'id': row.id,
+            'text': row.text,
+            'sender_user_id': row.sender_user_id,
+            'recipient_user_id': row.recipient_user_id,
+            'created_at': row.created_at,
+            'is_mine': int(row.sender_user_id) == int(viewer.id),
+        } for row in rows]
+    }
+
+
+@router.post('/community/messages/{other_user_id}')
+def community_send_message(other_user_id: int, payload: CommunityDirectMessageIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    viewer = _current_user_from_auth(authorization, db)
+    if other_user_id == viewer.id:
+        raise HTTPException(status_code=400, detail='You cannot message yourself')
+    other = db.query(User).filter(User.id == other_user_id, User.is_deleted == False).first()
+    if not other:
+        raise HTTPException(status_code=404, detail='User not found')
+    profile = db.query(CommunityProfile).filter(CommunityProfile.user_id == other_user_id).first()
+    if not _community_can_message_user(db, viewer.id, other_user_id, profile):
+        raise HTTPException(status_code=403, detail='This user is not accepting messages from you right now')
+    text_value = str(payload.text or '').strip()
+    if not text_value:
+        raise HTTPException(status_code=400, detail='Message cannot be empty')
+    if len(text_value) > 2000:
+        raise HTTPException(status_code=400, detail='Message is too long')
+    row = CommunityDirectMessage(sender_user_id=viewer.id, recipient_user_id=other_user_id, text=text_value)
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return {
+        'id': row.id,
+        'text': row.text,
+        'sender_user_id': row.sender_user_id,
+        'recipient_user_id': row.recipient_user_id,
+        'created_at': row.created_at,
+        'is_mine': True,
+    }
+
+
 @router.get('/community/feed')
 def community_activity_feed(limit: int = 40, mode: str = 'for-you', authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
     viewer = _current_user_from_auth(authorization, db)
     n = max(1, min(limit, 80))
     followed_ids = _community_followed_user_ids(db, viewer.id)
+    muted_ids = _community_muted_user_ids(db, viewer.id)
     if mode == 'following' and not followed_ids:
         return []
 

@@ -2663,8 +2663,15 @@ function AppInner() {
  const [communityFeedItems, setCommunityFeedItems] = useState([])
  const [communityUserSearch, setCommunityUserSearch] = useState('')
  const [communityUserResults, setCommunityUserResults] = useState([])
- const [communityFollowState, setCommunityFollowState] = useState({ following_ids: [], following_count: 0, followers_count: 0, following: [] })
+ const [communityFollowBusyUserId, setCommunityFollowBusyUserId] = useState(null)
+ const [communityLikeBusyPostIds, setCommunityLikeBusyPostIds] = useState({})
+ const [communityFollowState, setCommunityFollowState] = useState({ following_ids: [], following_count: 0, followers_count: 0, following: [], muted_ids: [], muted_count: 0 })
  const [communityPostForm, setCommunityPostForm] = useState({ text: '', media_url: '', media_type: 'TEXT', tags: '' })
+ const [communityMessageThreads, setCommunityMessageThreads] = useState([])
+ const [communityMessageView, setCommunityMessageView] = useState({ open: false, loading: false, error: '', user: null, messages: [] })
+ const [communityMessageDraft, setCommunityMessageDraft] = useState('')
+ const [communityMessageSending, setCommunityMessageSending] = useState(false)
+ const [communityMessageOpeningUserId, setCommunityMessageOpeningUserId] = useState(null)
  const [editingCommunityPostId, setEditingCommunityPostId] = useState(null)
  const [communityCommentText, setCommunityCommentText] = useState({})
  const [communityComments, setCommunityComments] = useState({})
@@ -2677,6 +2684,7 @@ function AppInner() {
 
  const isFollowingUser = (userId) => (communityFollowState?.following_ids || []).map(String).includes(String(userId))
  const isMutedUser = (userId) => (communityFollowState?.muted_ids || []).map(String).includes(String(userId))
+ const isCommunityLikeBusy = (postId) => !!communityLikeBusyPostIds?.[postId]
  const syncCommunityProfileRoute = (userId, mode = 'push') => {
  try {
  const url = new URL(window.location.href)
@@ -2731,6 +2739,42 @@ function AppInner() {
  setCommunityProfileView({ open: false, loading: false, data: null, error: '', userId: null })
  window.scrollTo({ top: 0, behavior: 'smooth' })
  }
+ const openCommunityMessages = async (user) => {
+ if (!user?.user_id) return
+ setCommunityMessageOpeningUserId(user.user_id)
+ setCommunityMessageView({ open: true, loading: true, error: '', user, messages: [] })
+ try {
+  const data = await api.fetchCommunityMessageThread(user.user_id, 80)
+  setCommunityMessageView({ open: true, loading: false, error: '', user: data?.user || user, messages: data?.messages || [] })
+ } catch (err) {
+  setCommunityMessageView({ open: true, loading: false, error: errMsg(err), user, messages: [] })
+ } finally {
+  setCommunityMessageOpeningUserId(null)
+ }
+ }
+ const closeCommunityMessages = () => {
+ setCommunityMessageView({ open: false, loading: false, error: '', user: null, messages: [] })
+ setCommunityMessageDraft('')
+ setCommunityMessageSending(false)
+ setCommunityMessageOpeningUserId(null)
+ }
+ const sendActiveCommunityMessage = async () => {
+  const targetUserId = communityMessageView?.user?.user_id
+  const textValue = String(communityMessageDraft || '').trim()
+  if (!targetUserId || !textValue || communityMessageSending) return
+  try {
+   setCommunityMessageSending(true)
+   const sent = await api.sendCommunityMessage(targetUserId, { text: textValue })
+   setCommunityMessageDraft('')
+   setCommunityMessageView(prev => ({ ...prev, messages: [ ...(prev?.messages || []), sent ].filter(Boolean) }))
+   const threads = await api.fetchCommunityMessageThreads().catch(() => [])
+   setCommunityMessageThreads(threads || [])
+  } catch (err) {
+   alert(errMsg(err))
+  } finally {
+   setCommunityMessageSending(false)
+  }
+ }
  useEffect(() => {
  if (active !== 'community') return
  const routeUserId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('communityProfile') : ''
@@ -2780,6 +2824,8 @@ function AppInner() {
  )
  }
  const toggleFollowUser = async (userId) => {
+ if (!userId || communityFollowBusyUserId === userId) return
+ setCommunityFollowBusyUserId(userId)
  try {
  const result = await api.toggleCommunityFollow(userId)
  const following = !!result?.following
@@ -2802,6 +2848,8 @@ function AppInner() {
  await loadCommunity()
  } catch (err) {
  alert(errMsg(err))
+ } finally {
+ setCommunityFollowBusyUserId(null)
  }
  }
  const toggleMuteUser = async (userId) => {
@@ -3430,11 +3478,12 @@ function AppInner() {
  }
 
  const loadCommunity = async () => {
- const [p, posts, feed, followState] = await Promise.all([
+ const [p, posts, feed, followState, threads] = await Promise.all([
  api.fetchCommunityProfileMe().catch(() => null),
  api.fetchCommunityPosts(80).catch(() => []),
  api.fetchCommunityFeed(communityFeedMode === 'following' ? 'following' : 'for-you', 60).catch(() => []),
- api.fetchCommunityFollowState().catch(() => ({ following_ids: [], following_count: 0, followers_count: 0, following: [] }))
+ api.fetchCommunityFollowState().catch(() => ({ following_ids: [], following_count: 0, followers_count: 0, following: [], muted_ids: [], muted_count: 0 })),
+ api.fetchCommunityMessageThreads().catch(() => [])
  ])
  if (p && !communityProfileDirty && !communityProfileSaving) {
  setCommunityProfile(p)
@@ -3442,7 +3491,8 @@ function AppInner() {
  }
  setCommunityPosts(posts || [])
  setCommunityFeedItems(feed || [])
- setCommunityFollowState(followState || { following_ids: [], following_count: 0, followers_count: 0, following: [] })
+ setCommunityFollowState(followState || { following_ids: [], following_count: 0, followers_count: 0, following: [], muted_ids: [], muted_count: 0 })
+ setCommunityMessageThreads(threads || [])
  }
 
  useEffect(() => { if (token) load().catch(console.error) }, [token, alertCountryFilter])
@@ -6503,7 +6553,9 @@ function AppInner() {
  <div style={{fontSize:'.95rem',color:'#475569',marginTop:8,maxWidth:780,whiteSpace:'pre-wrap'}}>{communityProfileHeadline(viewedCommunityProfile)}</div>
  </div>
  <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
- {!viewedCommunityViewer?.is_me && viewedCommunityProfile?.user_id && <button type='button' className={`btn ${isFollowingUser(viewedCommunityProfile.user_id) ? 'btn-dark' : ''}`} onClick={async()=>{ await toggleFollowUser(viewedCommunityProfile.user_id); await openCommunityProfileView(viewedCommunityProfile.user_id, { skipHistory: true }) }}>{isFollowingUser(viewedCommunityProfile.user_id) ? 'Following' : 'Follow'}</button>}
+ {!viewedCommunityViewer?.is_me && viewedCommunityProfile?.user_id && <button type='button' className={`btn ${isFollowingUser(viewedCommunityProfile.user_id) ? 'btn-dark' : ''}`} disabled={communityFollowBusyUserId === viewedCommunityProfile.user_id} onClick={async()=>{ await toggleFollowUser(viewedCommunityProfile.user_id); await openCommunityProfileView(viewedCommunityProfile.user_id, { skipHistory: true }) }}>{communityFollowBusyUserId === viewedCommunityProfile.user_id ? (isFollowingUser(viewedCommunityProfile.user_id) ? 'Unfollowing…' : 'Following…') : (isFollowingUser(viewedCommunityProfile.user_id) ? 'Following' : 'Follow')}</button>}
+ {!viewedCommunityViewer?.is_me && viewedCommunityProfile?.user_id && viewedCommunityProfile?.can_message && <button type='button' className='btn' disabled={communityMessageOpeningUserId === viewedCommunityProfile.user_id} onClick={()=>openCommunityMessages(viewedCommunityProfile)}>{communityMessageOpeningUserId === viewedCommunityProfile.user_id ? 'Opening messages…' : 'Message'}</button>}
+ {!viewedCommunityViewer?.is_me && viewedCommunityProfile?.user_id && !viewedCommunityProfile?.can_message && <button type='button' className='btn' disabled title={viewedCommunityProfile?.message_privacy === 'NOBODY' ? 'This user is not accepting direct messages.' : 'Follow this user first to message them.'}>{viewedCommunityProfile?.message_privacy === 'NOBODY' ? 'Messages Off' : 'Follow to Message'}</button>}
  {!viewedCommunityViewer?.is_me && viewedCommunityProfile?.user_id && <button type='button' className={`btn ${isMutedUser(viewedCommunityProfile.user_id) ? 'btn-dark' : ''}`} onClick={async()=>{ const wasMuted = isMutedUser(viewedCommunityProfile.user_id); await toggleMuteUser(viewedCommunityProfile.user_id); if (wasMuted) { await openCommunityProfileView(viewedCommunityProfile.user_id, { skipHistory: true }) } else { closeCommunityProfileView() } }}>{isMutedUser(viewedCommunityProfile.user_id) ? 'Unmute' : 'Mute / Hide'}</button>}
  </div>
  </div>
@@ -6790,6 +6842,12 @@ function AppInner() {
  <option value='FOLLOWERS'>Followers only</option>
  </select>
  <div style={{fontSize:'.78rem', color:'#64748b'}}>Choose who can view your community profile details in the public profile screen.</div>
+ <select className='input' value={communityProfile.message_privacy || 'FOLLOWING'} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, message_privacy:e.target.value}) }}>
+ <option value='EVERYONE'>Everyone can message me</option>
+ <option value='FOLLOWING'>Only growers who follow me can message me</option>
+ <option value='NOBODY'>Nobody can message me</option>
+ </select>
+ <div style={{fontSize:'.78rem', color:'#64748b'}}>Direct messages respect this setting immediately. Existing conversations stay visible, but new sends are blocked when someone no longer qualifies.</div>
  </div>
  </details>
 
@@ -6857,7 +6915,8 @@ function AppInner() {
  </div>
  </div>
  {!user.is_me && <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
- <button className={`btn ${isFollowingUser(user.user_id) ? 'btn-dark' : ''}`} onClick={()=>toggleFollowUser(user.user_id)}>{isFollowingUser(user.user_id) ? 'Following' : 'Follow'}</button>
+ <button className={`btn ${isFollowingUser(user.user_id) ? 'btn-dark' : ''}`} disabled={communityFollowBusyUserId === user.user_id} onClick={()=>toggleFollowUser(user.user_id)}>{communityFollowBusyUserId === user.user_id ? (isFollowingUser(user.user_id) ? 'Unfollowing…' : 'Following…') : (isFollowingUser(user.user_id) ? 'Following' : 'Follow')}</button>
+ {user?.can_message && <button className='btn' disabled={communityMessageOpeningUserId === user.user_id} onClick={()=>openCommunityMessages(user)}>{communityMessageOpeningUserId === user.user_id ? 'Opening messages…' : 'Message'}</button>}
  <button className={`btn ${isMutedUser(user.user_id) ? 'btn-dark' : ''}`} onClick={()=>toggleMuteUser(user.user_id)}>{isMutedUser(user.user_id) ? 'Unmute' : 'Mute / Hide'}</button>
  </div>}
  </div>
@@ -6872,6 +6931,56 @@ function AppInner() {
  </div>)}
  {!(communityUserResults || []).length && <div className='list-row'><span>{communityUserSearch ? 'No matching community users yet.' : 'Start typing to find growers and agri-builders to follow.'}</span></div>}
  </div>
+ </article>
+
+ <article className='panel' style={{marginTop:10}}>
+ <div className='list-row' style={{alignItems:'flex-start', gap:10, flexWrap:'wrap'}}>
+ <div>
+ <h4 style={{margin:'0 0 4px 0'}}>Direct messages</h4>
+ <div className='helper-text'>Message growers you follow when their inbox setting allows it.</div>
+ </div>
+ <div style={{fontSize:'.8rem', color:'#64748b'}}>{communityMessageThreads.length ? `${communityMessageThreads.length} active conversation${communityMessageThreads.length === 1 ? '' : 's'}` : 'No conversations yet'}</div>
+ </div>
+ {!communityMessageView.open && <div className='list' style={{marginTop:10}}>
+ {(communityMessageThreads || []).slice(0, 6).map((thread)=><button key={`community-thread-${thread?.user?.user_id}`} type='button' className='panel' style={{padding:10, textAlign:'left', border:'1px solid #dbe6df', background:'#fff'}} onClick={()=>openCommunityMessages(thread.user)}>
+ <div className='list-row' style={{alignItems:'center', gap:10}}>
+ <div>
+ <div style={{fontWeight:700}}>{thread?.user?.full_name || `User ${thread?.user?.user_id || ''}`}</div>
+ <div style={{fontSize:'.8rem', color:'#0284c7'}}>{thread?.user?.username ? `@${thread.user.username}` : 'No username yet'}</div>
+ </div>
+ <span style={{fontSize:'.75rem', color:'#64748b'}}>{String(thread?.last_message?.created_at || '').replace('T',' ').slice(0,16)}</span>
+ </div>
+ <div style={{marginTop:6, fontSize:'.88rem', color:'#475569'}}>{thread?.last_message?.is_mine ? 'You: ' : ''}{String(thread?.last_message?.text || '').slice(0, 120)}</div>
+ </button>)}
+ {!communityMessageThreads.length && <div className='list-row'><span>Your inbox will appear here after you send or receive a message.</span></div>}
+ </div>}
+ {communityMessageView.open && <div className='panel' style={{marginTop:10, background:'#f8fafc', border:'1px solid #dbe6df'}}>
+ <div className='list-row' style={{alignItems:'center', gap:10, flexWrap:'wrap'}}>
+ <div>
+ <div style={{fontWeight:700}}>{communityMessageView?.user?.full_name || `User ${communityMessageView?.user?.user_id || ''}`}</div>
+ <div style={{fontSize:'.8rem', color:'#0284c7'}}>{communityMessageView?.user?.username ? `@${communityMessageView.user.username}` : 'No username yet'}</div>
+ </div>
+ <button type='button' className='btn' onClick={closeCommunityMessages}>Close</button>
+ </div>
+ {communityMessageView.loading && <div className='helper-text' style={{marginTop:8}}>Loading messages…</div>}
+ {!!communityMessageView.error && <div className='panel' style={{marginTop:8, background:'#fff7ed', color:'#9a3412'}}>{communityMessageView.error}</div>}
+ {!communityMessageView.loading && !communityMessageView.error && <>
+ <div className='list' style={{marginTop:10, maxHeight:260, overflowY:'auto'}}>
+ {(communityMessageView.messages || []).map((msg)=><div key={`community-dm-${msg.id}`} style={{display:'flex', justifyContent: msg.is_mine ? 'flex-end' : 'flex-start'}}>
+ <div className='panel' style={{padding:'8px 10px', maxWidth:'80%', background: msg.is_mine ? '#dcfce7' : '#fff', border:'1px solid #dbe6df'}}>
+ <div style={{whiteSpace:'pre-wrap'}}>{msg.text}</div>
+ <div style={{marginTop:4, fontSize:'.72rem', color:'#64748b'}}>{String(msg.created_at || '').replace('T',' ').slice(0,16)}</div>
+ </div>
+ </div>)}
+ {!(communityMessageView.messages || []).length && <div className='list-row'><span>No messages in this conversation yet.</span></div>}
+ </div>
+ <div className='inlineForm' style={{marginTop:10}}>
+ <input className='input' placeholder='Write a direct message…' value={communityMessageDraft} onChange={(e)=>setCommunityMessageDraft(e.target.value)} disabled={communityMessageSending} />
+ <button type='button' className='btn btn-dark' disabled={communityMessageSending || !String(communityMessageDraft || '').trim()} onClick={sendActiveCommunityMessage}>{communityMessageSending ? 'Sending…' : 'Send'}</button>
+ </div>
+ <div style={{marginTop:6, fontSize:'.76rem', color:'#64748b'}}>If this user changes message privacy, new sends can be blocked even if this thread still appears here.</div>
+ </>}
+ </div>}
  </article>
 
  <article className='panel' style={{marginTop:10}}>
@@ -6902,7 +7011,8 @@ function AppInner() {
  </div>
  </div>
  <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
- {canFollow && communityFeedMode !== 'reels' && <button className={`btn ${isFollowingUser(actor.user_id) ? 'btn-dark' : ''}`} onClick={()=>toggleFollowUser(actor.user_id)}>{isFollowingUser(actor.user_id) ? 'Following' : 'Follow'}</button>}
+ {canFollow && communityFeedMode !== 'reels' && <button className={`btn ${isFollowingUser(actor.user_id) ? 'btn-dark' : ''}`} disabled={communityFollowBusyUserId === actor.user_id} onClick={()=>toggleFollowUser(actor.user_id)}>{communityFollowBusyUserId === actor.user_id ? (isFollowingUser(actor.user_id) ? 'Unfollowing…' : 'Following…') : (isFollowingUser(actor.user_id) ? 'Following' : 'Follow')}</button>}
+ {actor?.can_message && <button type='button' className='btn' disabled={communityMessageOpeningUserId === actor.user_id} onClick={()=>openCommunityMessages(actor)}>{communityMessageOpeningUserId === actor.user_id ? 'Opening messages…' : 'Message'}</button>}
  {actor?.user_id && <button type='button' className='btn' disabled={communityProfileOpeningUserId === actor.user_id} onClick={()=>openCommunityProfileView(actor.user_id)}>{communityProfileOpeningUserId === actor.user_id ? 'Opening…' : 'View Profile'}</button>}
  <span style={{fontSize:'.78rem', color:'#64748b'}}>{String(item.created_at || '').replace('T',' ').slice(0,16)}</span>
  </div>
@@ -6919,8 +7029,10 @@ function AppInner() {
  {!!p?.tags && <div style={{fontSize:'.82rem', color:'#0284c7', marginTop:6}}>#{String(p.tags).split(',').map(s=>s.trim()).filter(Boolean).join(' #')}</div>}
  {!!p && <>
  <div className='list-row' style={{marginTop:8, flexWrap:'wrap', gap:8}}>
- <button className='btn' onClick={async()=>{
+ <button className='btn' disabled={isCommunityLikeBusy(p.id)} onClick={async()=>{
+ if (isCommunityLikeBusy(p.id)) return
  try {
+ setCommunityLikeBusyPostIds(prev => ({ ...(prev || {}), [p.id]: true }))
  const result = await api.toggleCommunityPostLike(p.id)
  setCommunityPosts(prev => (prev || []).map(post => String(post.id) === String(p.id)
  ? { ...post, liked_by_me: !!result?.liked, likes_count: Number(result?.likes_count ?? post.likes_count ?? 0) }
@@ -6932,8 +7044,10 @@ function AppInner() {
  ))
  } catch (e) {
  alert(errMsg(e))
+ } finally {
+ setCommunityLikeBusyPostIds(prev => ({ ...(prev || {}), [p.id]: false }))
  }
- }}>👍 {p.liked_by_me ? 'Unlike' : 'Like'} ({p.likes_count || 0})</button>
+ }}>👍 {isCommunityLikeBusy(p.id) ? (p.liked_by_me ? 'Removing like…' : 'Liking…') : (p.liked_by_me ? 'Unlike' : 'Like')} ({p.likes_count || 0})</button>
  <button className='btn' onClick={async()=>{ const rows=await api.fetchCommunityPostComments(p.id).catch(()=>[]); setCommunityComments(prev=>({...prev,[p.id]:rows||[]})) }}>💬 Comments ({p.comments_count || 0})</button>
  {me?.id === p.user_id && <button className='btn' onClick={()=>{ setEditingCommunityPostId(p.id); setCommunityPostForm({ text: p.text || '', media_url: p.media_url || '', media_type: p.media_type || 'TEXT', tags: p.tags || '' }); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>✏️ Edit</button>}
  {me?.id === p.user_id && <button className='btn' onClick={async()=>{ if (!confirm('Delete this post?')) return; await api.deleteCommunityPost(p.id); if (editingCommunityPostId === p.id) { setEditingCommunityPostId(null); setCommunityPostForm({ text:'', media_url:'', media_type:'TEXT', tags:'' }) } await loadCommunity(); }}>🗑️ Delete</button>}
