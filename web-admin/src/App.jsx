@@ -2675,6 +2675,7 @@ function AppInner() {
  const [communityMessageOpeningUserId, setCommunityMessageOpeningUserId] = useState(null)
  const [communityCallPermissionBusy, setCommunityCallPermissionBusy] = useState(false)
  const [communityIncomingCall, setCommunityIncomingCall] = useState(null)
+ const [communityActiveCall, setCommunityActiveCall] = useState(null)
  const communityMessageListRef = useRef(null)
  const communityLastCallAlertRef = useRef(null)
  const [editingCommunityPostId, setEditingCommunityPostId] = useState(null)
@@ -2808,7 +2809,7 @@ function AppInner() {
    setCommunityMessageView(prev => ({ ...prev, messages: [ ...(prev?.messages || []), sent ].filter(Boolean) }))
    const threads = await api.fetchCommunityMessageThreads().catch(() => [])
    setCommunityMessageThreads(threads || [])
-   if (typeof window !== 'undefined') window.open(callUrl, '_blank', 'noopener,noreferrer')
+   setCommunityActiveCall({ url: callUrl, mode })
   } catch (err) {
    alert(errMsg(err))
   } finally {
@@ -7167,9 +7168,19 @@ function AppInner() {
  <h4 style={{margin:'6px 0 4px 0'}}>{communityIncomingCall.from} is calling you</h4>
  <div className='helper-text' style={{marginBottom:10}}>{communityIncomingCall.mode === 'video' ? 'Video call' : 'Audio call'} — answer now?</div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
- <button type='button' className='btn btn-dark' onClick={()=>{ const url = communityIncomingCall.url; setCommunityIncomingCall(null); if (typeof window !== 'undefined') window.open(url, '_blank', 'noopener,noreferrer') }}>Answer</button>
+ <button type='button' className='btn btn-dark' onClick={()=>{ const url = communityIncomingCall.url; const mode = communityIncomingCall.mode; setCommunityIncomingCall(null); setCommunityActiveCall({ url, mode }) }}>Answer</button>
  <button type='button' className='btn' onClick={()=>setCommunityIncomingCall(null)}>Decline</button>
  </div>
+ </div>
+ </div>}
+
+ {communityActiveCall?.url && <div className='community-messenger-overlay' style={{zIndex: 240, padding: 0}}>
+ <div style={{width:'100vw', height:'100vh', background:'#000', display:'grid', gridTemplateRows:'auto 1fr'}}>
+ <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 12px', background:'rgba(2,6,23,.86)', color:'#fff'}}>
+ <strong>{communityActiveCall?.mode === 'video' ? 'Video Call' : 'Audio Call'}</strong>
+ <button type='button' className='btn' onClick={()=>setCommunityActiveCall(null)}>End Call</button>
+ </div>
+ <iframe title='FarmSavior Call' src={communityActiveCall.url} allow='camera; microphone; fullscreen; display-capture; autoplay' style={{width:'100%', height:'100%', border:'0'}} />
  </div>
  </div>}
 
