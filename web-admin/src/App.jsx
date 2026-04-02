@@ -1348,7 +1348,266 @@ Immediate actions taken:
 What changed after 24 hours:
 Local vet / advisor contacted:
 Final recommendation:`
+ },
+ {
+  title: 'Download Printable Vaccination Schedule',
+  filename: 'Poultry-Printable-Vaccination-Schedule.txt',
+  content: `Poultry University Professional
+Printable Vaccination + Health Compliance Schedule
+
+Use this schedule only as an operating template. Final timing, brands, routes, dilution, and booster decisions must be confirmed with licensed local veterinary authorities.
+
+Batch / house:
+Placement date:
+Track: Layers / Broilers / Guinea Fowl
+Zone: Humid / Dry
+Manager:
+
+1. Pre-placement compliance
+- House washed and disinfected: Yes / No
+- Downtime completed: ____ days
+- Rodent / vector control completed: Yes / No
+- Vaccine storage temperature checked: Yes / No
+- Hatchery declaration received: Yes / No
+
+2. Vaccination schedule board
+- Day 0-1: hatchery vaccination declaration confirmed
+- Day 5-7: Newcastle prime
+- Day 10-14: IBD/Gumboro first dose where indicated
+- Day 18-24: ND/IBD booster per veterinary directive
+- Week 6-8: Fowl pox / region-specific program where indicated
+- Ongoing: coccidiosis, deworming, and sanitation review by risk profile
+
+3. Compliance log fields
+Date:
+Product / batch number:
+Bird age:
+Route:
+Dilution / dose note:
+Cold-chain verified by:
+Administered by:
+Observed reaction / notes:
+
+4. Failure review prompts
+- Was the product genuine and inside temperature range?
+- Was dilution or waterline preparation done correctly?
+- Were birds under unusual heat, transport, or disease stress?
+- Are records clear enough for veterinary review?`
+ },
+ {
+  title: 'Download Expert Q&A Field Workbook',
+  filename: 'Poultry-Expert-QA-Field-Workbook.txt',
+  content: `Poultry University Professional
+Expert Q&A Field Workbook
+
+Use this workbook before calling an advisor, vet, investor, manager, or serious buyer. The goal is to arrive with sharp facts, not vague complaints.
+
+1. Core flock facts
+- Track:
+- Age / week:
+- Current live count:
+- Recent mortality:
+- Feed phase:
+- Water issue in last 7 days? Yes / No
+- Weather stress in last 7 days? Yes / No
+
+2. Problem framing
+Describe the problem in one sentence:
+When did it start?
+What changed in the 72 hours before it started?
+What has already been tried?
+
+3. Management review prompts
+- Is the issue one pen, one house, or the whole flock?
+- Are birds off feed, off water, uneven, or mainly stressed by heat?
+- Did vaccination, transport, ration, litter, or buyer timing change recently?
+- What records can prove the trend is real?
+
+4. Advisor-ready questions
+- What is the most likely root cause sequence here?
+- What should be checked today, this week, and before the next cycle?
+- What would trigger urgent veterinary escalation?
+- Which single correction gives the highest chance of recovering margin?
+
+5. Decision record
+Advice received:
+Action chosen:
+Who owns the action:
+Re-check date:
+Result after re-check:`
  }
+]
+
+const poultryProModuleDeepDives = {
+ layers: [
+  {
+   title: 'Professional Layer Launch Checklist',
+   cadence: 'Before chicks arrive and during the first 7 days',
+   checklist: [
+    'Approve one written startup budget that covers chicks, 6-8 weeks of feed, water backup, litter, heat, and emergency medicine before placement.',
+    'Stress-test biosecurity flow: entry point, footbath refresh rule, dead-bird route, waste route, and visitor restriction must be clear to workers.',
+    'Check house readiness with thermometer, weighing scale, spare drinkers/feeders, and at least one contingency heat source.',
+    'Prepare a first-week dashboard for mortality, crop fill, water availability, and chick behavior by time of day.'
+   ],
+   managerNotes: 'The professional standard is to arrive prepared enough that the first week feels controlled, not improvised.'
+  },
+  {
+   title: 'First-14-Day Control Priorities',
+   cadence: 'Daily',
+   checklist: [
+    'Audit chick spread, crop fill, drinker access, and signs of chilling or overheating morning, afternoon, and evening.',
+    'Separate weak birds early instead of letting them disappear inside the flock average.',
+    'Write down any hatchery, transport, or brooder issue in a daily correction log so preventable losses are not repeated next cycle.',
+    'Confirm vaccination declaration, water sanitation, and brooder-temperature consistency before blaming chick quality.'
+   ],
+   managerNotes: 'Early mortality rarely comes from one cause. Professionals review hatchery quality, transport stress, temperature, water, and handling as one chain.'
+  },
+  {
+   title: 'Grower Uniformity and Frame Build SOP',
+   cadence: 'Weekly',
+   checklist: [
+    'Sample weights by section and compare against one target chart instead of relying on visual judgement.',
+    'Review lighting discipline, feed-phase change timing, and litter dryness together whenever body-weight spread widens.',
+    'Hold pullets back from premature stimulation if frame and uniformity are still weak.',
+    'Escalate recurring unevenness into a root-cause review covering feeder space, disease pressure, and waterline performance.'
+   ],
+   managerNotes: 'Good layer farms protect body frame before chasing early eggs. Weak frame today becomes shell and persistency trouble later.'
+  },
+  {
+   title: 'Peak Lay and Egg Quality Margin Controls',
+   cadence: 'Daily + weekly margin review',
+   checklist: [
+    'Track trays, cracked eggs, shell quality complaints, feed use, water intake, and heat events in one dashboard.',
+    'Check collection frequency, nest hygiene, and rough handling before concluding shell weakness alone is the issue.',
+    'Flag any drop in lay against the same-week light program, water reliability, ration quality, and disease signs.',
+    'Protect buyer confidence by separating top-grade, mixed-grade, and reject trays in the sales log.'
+   ],
+   managerNotes: 'A professional egg business wins by consistency. Buyers forgive a small farm faster than an inconsistent farm.'
+  },
+  {
+   title: 'Sales, Records, and Scale Gate',
+   cadence: 'End of week and end of cycle',
+   checklist: [
+    'Review gross margin per tray after feed, mortality, medicine, labor, and reject losses—not revenue alone.',
+    'Compare buyer channels by payment speed, volume reliability, and complaint rate.',
+    'Delay expansion until two or three stable cycles show acceptable mortality, shell quality, and cashflow discipline.',
+    'Preserve one operating review pack that could be shown to a partner, lender, or manager takeover.'
+   ],
+   managerNotes: 'Scaling before the record system is clean usually multiplies confusion faster than profit.'
+  }
+ ],
+ broilers: [
+  {
+   title: 'Cycle Planning and Buyer Lock-In',
+   cadence: 'Pre-placement',
+   checklist: [
+    'Define target sale weight, expected harvest window, backup buyers, and transport plan before chicks are ordered.',
+    'Secure feed supply continuity for the whole cycle instead of hoping to buy opportunistically during growth.',
+    'Set one close-cycle review template that tracks mortality, FCR trend, average weight, and realized price by batch.'
+   ],
+   managerNotes: 'The broiler margin is often decided before day 1—by feed security, sale planning, and how disciplined the operator is about timing.'
+  },
+  {
+   title: 'Brooding Precision Command Sheet',
+   cadence: 'Hours 4, 8, 24 and then daily',
+   checklist: [
+    'Measure crop fill and chick spread on a schedule, not only when birds look wrong.',
+    'Adjust heat and airflow from behavior, not from one thermometer reading alone.',
+    'Fix dead zones, drafts, and feeder/drinker crowding before they become invisible growth penalties.'
+   ],
+   managerNotes: 'Professionals know weak brooding shows up later as bad FCR, uneven harvest weights, and unexplained mortality.'
+  },
+  {
+   title: 'Grow-Out Margin Protection',
+   cadence: 'Twice weekly',
+   checklist: [
+    'Sample weights from different house sections and compare with feed consumed so far.',
+    'Correct feeder height, overfilling, water leaks, and wet litter before blaming the ration.',
+    'Map afternoon heat-stress risk and adjust airflow, shade, or cool-water timing before birds slow down.'
+   ],
+   managerNotes: 'Every unnoticed litter, airflow, or stocking issue quietly taxes the margin.'
+  },
+  {
+   title: 'Emergency Disease and Mortality Response',
+   cadence: 'Immediate when triggered',
+   checklist: [
+    'Record first signs, affected age, recent changes, and dead-bird count before treatment decisions get noisy.',
+    'Stop unnecessary movement between houses and isolate weak birds fast.',
+    'Review vaccination timing, water quality, litter condition, and recent weather stress while veterinary escalation is underway.'
+   ],
+   managerNotes: 'The first disciplined 2 hours usually matter more than the tenth opinion on what the disease might be.'
+  },
+  {
+   title: 'Harvest, Settlement, and Next-Cycle Upgrade',
+   cadence: 'End of cycle',
+   checklist: [
+    'Harvest in weight classes so stronger birds are not priced down by weaker birds.',
+    'Capture transport shrink, loading losses, and buyer deductions in the close-out review.',
+    'Carry one proven correction into the next cycle instead of restarting the system from zero.'
+   ],
+   managerNotes: 'A strong broiler operator learns the same cycle twice: once while growing it, once while reviewing it.'
+  }
+ ],
+ guinea: [
+  {
+   title: 'Guinea Business Model Discipline',
+   cadence: 'Pre-placement and monthly',
+   checklist: [
+    'Commit to meat, breeder, or mixed-market positioning before flock size increases.',
+    'Buy only from sources that can explain hatch quality, age, and prior handling.',
+    'Plan predator control and return-to-house routine as core infrastructure, not optional extras.'
+   ],
+   managerNotes: 'Guinea farms get into trouble when enthusiasm outruns handling systems.'
+  },
+  {
+   title: 'Keet Survival Control Board',
+   cadence: 'Daily in the first weeks',
+   checklist: [
+    'Confirm brooder warmth, dryness, shallow drinkers, and feed access before keets settle.',
+    'Watch for shy or under-consuming keets that still look active at a distance.',
+    'Treat any chill, draft, or crowding issue as urgent because guinea losses compound quickly.'
+   ],
+   managerNotes: 'The premium guinea operator protects survival first and growth second.'
+  },
+  {
+   title: 'Behavior, Stress, and Range Management',
+   cadence: 'Daily + weekly review',
+   checklist: [
+    'Keep fixed feeding times and a stable return-to-house pattern.',
+    'Split aggressive or weak groups early so panic behavior does not become a repeated loss source.',
+    'Audit afternoon shade, water distance, and fence integrity before seasonal heat or predation worsens.'
+   ],
+   managerNotes: 'Behavior management is commercial management in guinea systems.'
+  },
+  {
+   title: 'Health and Biosecurity Enforcement',
+   cadence: 'Weekly with immediate response triggers',
+   checklist: [
+    'Pair local veterinary vaccine guidance with strong sanitation, perimeter hygiene, and wild-bird exclusion.',
+    'Monitor parasite pressure and deworm from risk plus symptoms instead of random routine.',
+    'Escalate wet-housing, damp feed, respiratory stress, or sudden piling behavior immediately.'
+   ],
+   managerNotes: 'Most preventable guinea setbacks start as “small” housing or perimeter problems.'
+  },
+  {
+   title: 'Premium Sales and Controlled Scaling',
+   cadence: 'Per batch review',
+   checklist: [
+    'Sort breeder-quality, meat birds, and culls before sale conversations begin.',
+    'Sell consistency—age band, average size, survival discipline—not just bird count.',
+    'Scale only after losses, predator control, and buyer repeatability are stable.'
+   ],
+   managerNotes: 'Premium pricing depends on consistency and trust more than one lucky festive sale.'
+  }
+ ]
+}
+
+const poultryProQaPrompts = [
+ 'Why did mortality rise after rain even though feed did not change?',
+ 'What should I check first when birds are panting heavily at noon?',
+ 'How do I know if a drop in egg production is feed, water, heat, or disease?',
+ 'What records should I show a buyer or lender before scaling my flock?',
+ 'When should I hold expansion and fix management before buying another batch?'
 ]
 
 const poultryGuidancePlaybooks = {
@@ -4242,10 +4501,12 @@ function AppInner() {
  {!locked && openPoultryModule===i && <div className='list' style={{marginTop:6}}>
  {m.details.map((d)=><div className='list-row' key={d}><span>{d}</span></div>)}
  {poultryTier === 'pro' && <div className='panel' style={{marginTop:8,padding:8,background:'#fffbeb',border:'1px solid #fde68a'}}>
- <strong>Professional Deep-Dive:</strong>
- <div className='list-row'><span>Execution checklist by day/week</span></div>
- <div className='list-row'><span>Margin-risk triggers and corrective actions</span></div>
- <div className='list-row'><span>Scale-up criteria before adding next cycle</span></div>
+ <strong>{(poultryProModuleDeepDives[poultryTrack] || [])[i]?.title || 'Professional Deep-Dive'}</strong>
+ <div className='helper-text' style={{marginTop:4}}>Cadence: {(poultryProModuleDeepDives[poultryTrack] || [])[i]?.cadence || 'Weekly operator review'}</div>
+ <div className='list' style={{marginTop:6}}>
+ {((poultryProModuleDeepDives[poultryTrack] || [])[i]?.checklist || []).map((step)=><div className='list-row' key={step}><span>{step}</span></div>)}
+ </div>
+ {!!((poultryProModuleDeepDives[poultryTrack] || [])[i]?.managerNotes) && <div style={{marginTop:6,fontSize:'.85rem',color:'#92400e'}}><strong>Manager note:</strong> {(poultryProModuleDeepDives[poultryTrack] || [])[i]?.managerNotes}</div>}
  </div>}
  </div>}
  </div>
@@ -4273,6 +4534,17 @@ function AppInner() {
  <div className='list-row'><span>Printable vaccination schedules</span></div>
  <div className='list-row'><span>Expert Q&A access</span></div>
  <div className='list-row'><span>Progress tracking dashboard</span></div>
+ <div className='list-row'><span>Benchmark scorecards and report-card print path</span></div>
+ </div>
+
+ <div className='panel' style={{marginTop:8,padding:10,background:'#fff7ed',border:'1px solid #fdba74'}}>
+ <strong>Premium Operations Desk</strong>
+ <div className='helper-text' style={{marginTop:4}}>This area is built to feel like a real working desk: module-by-module execution notes, downloadable operating packs, guided troubleshooting, and print-ready review assets.</div>
+ <div className='list' style={{marginTop:8}}>
+ <div className='list-row'><span>Current track</span><strong>{poultryTracks[poultryTrack].title}</strong></div>
+ <div className='list-row'><span>Operating zone</span><strong>{poultryZone === 'dry' ? 'Dry / Savanna Zone' : 'Humid / Forest Zone'}</strong></div>
+ <div className='list-row'><span>Open professional module</span><strong>{openPoultryModule >= 0 ? poultryTracks[poultryTrack].modules[openPoultryModule]?.name : 'Open a module to load its pro checklist'}</strong></div>
+ </div>
  </div>
 
  <div className='poultry-tool-grid' style={{marginTop:8}}>
@@ -4288,6 +4560,14 @@ function AppInner() {
  <strong>{asset.title}</strong>
  <span>Download this premium operating asset.</span>
  </a>)}
+ </div>
+
+ <div className='panel' style={{marginTop:8,padding:10,background:'#fff'}}>
+ <strong>Expert Q&A Prompt Bank</strong>
+ <div className='helper-text' style={{marginTop:6}}>Tap a serious operator question to preload the workspace, then adapt it with your own flock details.</div>
+ <div className='poultry-tool-grid' style={{marginTop:8}}>
+ {poultryProQaPrompts.map((prompt)=><button key={prompt} className={`poultry-tool-card ${poultryQuestion===prompt ? 'active' : ''}`} onClick={()=>setPoultryQuestion(prompt)}><strong>Use prompt</strong><span>{prompt}</span></button>)}
+ </div>
  </div>
 
  <div className='panel' style={{marginTop:8,padding:10,background:'#fff'}}>
@@ -4338,6 +4618,8 @@ function AppInner() {
  </div>
  </div>
  </article>}
+
+ {poultryTier === 'pro' && <ProfessionalAssets product='poultry' progress={poultryProgress} setProgress={setPoultryProgress} trackKey={poultryTrack} openModule={openPoultryModule} />}
 
  {poultryTier === 'pro' && (poultryProgress.completed||[]).length >= 3 && <article className='panel' style={{marginTop:10, border:'2px solid #eab308', background:'#fefce8'}}>
  <h4 style={{marginTop:0}}>🎓 Certificate of Completion</h4>
