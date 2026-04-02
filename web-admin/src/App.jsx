@@ -2803,6 +2803,12 @@ function AppInner() {
   const callUrl = mode === 'video'
    ? `https://meet.jit.si/${room}`
    : `https://meet.jit.si/${room}#config.startWithVideoMuted=true`
+  const latestOwn = [...(communityMessageView?.messages || [])].reverse().find(m => m?.is_mine)
+  const latestText = String(latestOwn?.text || '')
+  if (latestText.includes(callUrl) && typeof window !== 'undefined') {
+   window.open(callUrl, '_blank', 'noopener,noreferrer')
+   return
+  }
   const inviteText = `${mode === 'video' ? '📹' : '📞'} Join my ${mode} call: ${callUrl}`
   try {
    setCommunityMessageSending(true)
@@ -7102,7 +7108,20 @@ function AppInner() {
  <div ref={communityMessageListRef} className='community-message-scroll'>
  {(communityMessageView.messages || []).map((msg)=><div key={`community-dm-${msg.id}`} style={{display:'flex', justifyContent: msg.is_mine ? 'flex-end' : 'flex-start'}}>
  <div className={`community-message-bubble ${msg.is_mine ? 'mine' : ''}`}>
- <div style={{whiteSpace:'pre-wrap'}}>{msg.text}</div>
+ {(()=>{
+ const text = String(msg?.text || '')
+ const callUrlMatch = text.match(/https?:\/\/meet\.jit\.si\/[^\s]+/i)
+ if (!callUrlMatch) return <div style={{whiteSpace:'pre-wrap'}}>{text}</div>
+ const callUrl = callUrlMatch[0]
+ const isVideo = !String(callUrl).includes('startWithVideoMuted=true')
+ return <div style={{display:'grid', gap:8}}>
+ <div style={{fontWeight:700}}>{isVideo ? '📹 Video call invite' : '📞 Audio call invite'}</div>
+ <div style={{fontSize:'.82rem', color:'#475569', wordBreak:'break-all'}}>{callUrl}</div>
+ <div>
+ <button type='button' className='btn btn-dark' onClick={()=>{ if (typeof window !== 'undefined') window.open(callUrl, '_blank', 'noopener,noreferrer') }}>Join call</button>
+ </div>
+ </div>
+ })()}
  <div className='community-message-meta'>{String(msg.created_at || '').replace('T',' ').slice(0,16)}</div>
  </div>
  </div>)}
