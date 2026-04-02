@@ -2615,7 +2615,11 @@ function AppInner() {
  const forcePublicView = searchParams.get('public') === '1'
  const authPrompt = searchParams.get('auth') || ''
  const initialCommunityProfileUserId = searchParams.get('communityProfile') || ''
- const initialSection = (searchParams.get('go') === 'poultry-academy' ? 'poultry-university' : (searchParams.get('go') === 'sheep-academy' ? 'sheep-university' : (searchParams.get('go') === 'goat-academy' ? 'goat-university' : (searchParams.get('go') === 'cattle-academy' ? 'cattle-university' : (searchParams.get('go') || 'home')))))
+ const explicitGo = searchParams.get('go') || ''
+ const mappedGo = (explicitGo === 'poultry-academy' ? 'poultry-university' : (explicitGo === 'sheep-academy' ? 'sheep-university' : (explicitGo === 'goat-academy' ? 'goat-university' : (explicitGo === 'cattle-academy' ? 'cattle-university' : explicitGo))))
+ const stickySections = new Set(['onboarding','payments','livestock-records','poultry-university','sheep-university','goat-university','cattle-university'])
+ const lastSection = (typeof window !== 'undefined' ? (localStorage.getItem('farmsavior_last_active_section') || '') : '')
+ const initialSection = mappedGo || (stickySections.has(lastSection) ? lastSection : 'home')
  const [token, setToken] = useState(localStorage.getItem('farmsavior_token'))
  const [authMode, setAuthMode] = useState('login')
  const [portalType, setPortalType] = useState('main')
@@ -2635,6 +2639,13 @@ function AppInner() {
  const [servicesView, setServicesView] = useState('list')
  const [lightbox, setLightbox] = useState({ open: false, images: [], index: 0, title: '' })
  const [savedListings, setSavedListings] = useState(() => { try { return JSON.parse(localStorage.getItem('farmsavior_saved_listings') || '[]') } catch { return [] } })
+ useEffect(() => {
+  try {
+   const stickySections = new Set(['onboarding','payments','livestock-records','poultry-university','sheep-university','goat-university','cattle-university'])
+   if (stickySections.has(active)) localStorage.setItem('farmsavior_last_active_section', active)
+   else localStorage.removeItem('farmsavior_last_active_section')
+  } catch {}
+ }, [active])
  const [publicDetail, setPublicDetail] = useState(null)
  const [homeQuery, setHomeQuery] = useState('')
  const [publicQuery, setPublicQuery] = useState('')
