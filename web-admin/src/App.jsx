@@ -2746,12 +2746,9 @@ function AppInner() {
  }
  const openCommunityInbox = async () => {
  setCommunityInboxOpen(true)
+ setCommunityMessageView({ open: false, loading: false, error: '', user: null, messages: [] })
  const threads = await api.fetchCommunityMessageThreads().catch(() => communityMessageThreads || [])
  setCommunityMessageThreads(threads || [])
- if ((threads || []).length === 1) {
-  const firstUser = threads?.[0]?.user
-  if (firstUser?.user_id || firstUser?.id) openCommunityMessages(firstUser)
- }
  return threads || []
  }
  const openCommunityMessages = async (user) => {
@@ -2867,6 +2864,8 @@ function AppInner() {
   if (!looksLikeCallInvite) return
   const marker = String(latest.id || latest.created_at || lowerText)
   if (communityLastCallAlertRef.current === marker) return
+  const createdMs = latest?.created_at ? new Date(latest.created_at).getTime() : Date.now()
+  if (!Number.isFinite(createdMs) || (Date.now() - createdMs) > 90 * 1000) return
   communityLastCallAlertRef.current = marker
   const callUrl = (text.match(/https?:\/\/meet\.jit\.si\/[^\s]+/i) || [])[0] || ''
   const mode = lowerText.includes('video') ? 'video' : 'audio'
@@ -7156,7 +7155,7 @@ function AppInner() {
  <button type='button' className='btn btn-dark' disabled={communityMessageSending || !String(communityMessageDraft || '').trim()} onClick={sendActiveCommunityMessage}>{communityMessageSending ? 'Sending…' : 'Send'}</button>
  </div>
  <div style={{marginTop:6, fontSize:'.76rem', color:'#64748b'}}>If this grower changes inbox privacy, new sends can be blocked even if the thread still appears here.</div>
- <div style={{marginTop:4, fontSize:'.76rem', color:'#64748b'}}>Tip: tap “Enable Mic/Camera/Alerts” once so your phone/browser can prompt for call permissions and notifications.</div>
+ <div style={{marginTop:4, fontSize:'.76rem', color:'#64748b'}}>Calls work best when microphone/camera permissions are allowed in browser settings.</div>
  </>}
  </>}
  </div>
