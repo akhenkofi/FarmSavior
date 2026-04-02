@@ -4536,13 +4536,41 @@ function AppInner() {
  <article className='panel'>
  <h3>Subscriptions & Billing</h3>
  <div className='list'>
- {(billingOverview.active_subscriptions || []).slice(0, 6).map((sub) => <div className='list-row' key={`active-sub-${sub.reference}`}><span>{paymentSectionLabel(sub.product)} • {String(sub.plan_code || '').toUpperCase()} • {sub.billing_cycle}</span><strong>{sub.status}</strong></div>)}
+ {(billingOverview.active_subscriptions || []).slice(0, 6).map((sub) => <div className='list-row' key={`active-sub-${sub.reference}`}>
+   <span>
+    <strong>{paymentSectionLabel(sub.product)}</strong><br/>
+    <small>{String(sub.plan_code || '').toUpperCase()} plan • {String(sub.billing_cycle || '').toLowerCase()} billing</small>
+   </span>
+   <strong>{sub.status}</strong>
+  </div>)}
  {!(billingOverview.active_subscriptions || []).length && <div className='list-row'><span>No active paid subscriptions yet.</span></div>}
  </div>
  <div className='panel' style={{marginTop:10, padding:10, background:'#f8fafc'}}>
  <strong style={{display:'block', marginBottom:6}}>Billing history</strong>
  <div className='list' style={{maxHeight:220, overflow:'auto'}}>
- {[...(billingOverview.subscriptions || []).map((sub) => ({ kind: 'subscription', reference: sub.reference, title: `${paymentSectionLabel(sub.product)} • ${String(sub.plan_code || '').toUpperCase()}`, status: sub.status, amount: formatMoney(sub.amount, sub.currency), when: sub.created_at || sub.started_at })), ...(billingOverview.payments || []).map((pay) => ({ kind: 'payment', reference: pay.reference, title: `${pay.method || 'Payment'} • ${pay.provider || 'FarmSavior'}`, status: pay.status, amount: formatMoney(pay.amount, pay.currency), when: pay.created_at }))].sort((a,b) => new Date(b.when || 0) - new Date(a.when || 0)).slice(0, 12).map((row) => <div className='list-row' key={`${row.kind}-${row.reference}`}><span>{row.title}<br/><small>{formatDateTime(row.when)} • Ref: {row.reference || '—'}</small></span><strong>{row.amount} • {row.status}</strong></div>)}
+ {[...(billingOverview.subscriptions || []).map((sub) => ({
+   kind: 'subscription',
+   reference: sub.reference,
+   title: paymentSectionLabel(sub.product),
+   subtitle: `${String(sub.plan_code || '').toUpperCase()} plan • ${String(sub.billing_cycle || '').toLowerCase()} billing`,
+   status: sub.status,
+   amount: formatMoney(sub.amount, sub.currency),
+   when: sub.created_at || sub.started_at
+  })), ...(billingOverview.payments || []).map((pay) => ({
+   kind: 'payment',
+   reference: pay.reference,
+   title: paymentSectionLabel(pay.product || ''),
+   subtitle: `${pay.method || 'Payment'} • ${pay.provider || 'FarmSavior'}`,
+   status: pay.status,
+   amount: formatMoney(pay.amount, pay.currency),
+   when: pay.created_at
+  }))].sort((a,b) => new Date(b.when || 0) - new Date(a.when || 0)).slice(0, 12).map((row) => <div className='list-row' key={`${row.kind}-${row.reference}`}>
+   <span>
+    <strong>{row.title || 'Payment'}</strong><br/>
+    <small>{row.subtitle}{row.when ? ` • ${formatDateTime(row.when)}` : ''}{row.reference ? ` • Ref: ${row.reference}` : ''}</small>
+   </span>
+   <strong>{row.amount} • {row.status}</strong>
+  </div>)}
  {!((billingOverview.subscriptions || []).length || (billingOverview.payments || []).length) && <div className='list-row'><span>No billing history yet.</span></div>}
  </div>
  </div>
