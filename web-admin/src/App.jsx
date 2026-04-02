@@ -6342,6 +6342,8 @@ function AppInner() {
        const [label, value, action] = row
        const clickable = action === 'notes' || action === 'add-note' || action === 'add-weight' || action === 'medicines' || action === 'add-medicine' || action === 'famacha' || action === 'ancestor-tree' || action === 'share-pdf' || action === 'offspring-report' || action === 'offspring-list' || action === 'add-mark' || action === 'add-flush'
        return <button type='button' key={`history-${label}-${idx}`} className={`records-detail-row ${clickable ? 'clickable' : ''}`} onClick={() => {
+        if (!clickable) return
+        setRecordsSectionOpen(prev => ({ ...prev, details: false }))
         if (action === 'notes') setNotesScreenOpen(true)
         if (action === 'add-note') { setDraftNote(''); setNotesComposerOpen(true) }
         if (action === 'add-weight') { setDraftWeight(''); setWeightComposerOpen(true) }
