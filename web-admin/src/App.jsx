@@ -6812,7 +6812,10 @@ function AppInner() {
  <span><strong>{communityProfile.following_count || communityFollowState.following_count || 0}</strong> following</span>
  <span><strong>{communityPosts.filter(p => String(p.user_id) === String(me?.id)).length}</strong> posts</span>
  </div>
- <div style={{marginTop:10}}><button type='button' className='btn' disabled={communityProfileOpeningUserId === me?.id} onClick={()=>openCommunityProfileView(me?.id)}>{communityProfileOpeningUserId === me?.id ? 'Opening…' : 'View Public Profile'}</button></div>
+ <div style={{marginTop:10, display:'flex', gap:8, flexWrap:'wrap'}}>
+ <button type='button' className='btn' disabled={communityProfileOpeningUserId === me?.id} onClick={()=>openCommunityProfileView(me?.id)}>{communityProfileOpeningUserId === me?.id ? 'Opening…' : 'View Public Profile'}</button>
+ <button type='button' className='btn btn-dark' onClick={()=>openCommunityInbox()}>{communityMessageThreads.length ? `Messages (${communityMessageThreads.length})` : 'Messages'}</button>
+ </div>
  </div>
  <div style={{marginTop:14, border:'1px solid #dbe6df', borderRadius:16, overflow:'hidden', background:'#f8fafc'}}>
  <button
