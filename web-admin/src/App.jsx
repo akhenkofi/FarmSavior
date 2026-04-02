@@ -2849,6 +2849,10 @@ function AppInner() {
   node.scrollTop = node.scrollHeight
  }, [communityInboxOpen, communityMessageView.open, communityMessageView.messages, communityMessageView.loading])
  useEffect(() => {
+  if (!communityInboxOpen) return
+  enableCommunityCallPermissions({ silent: true })
+ }, [communityInboxOpen])
+ useEffect(() => {
   if (!communityMessageView.open || communityMessageView.loading) return
   const latest = (communityMessageView.messages || []).slice(-1)[0]
   if (!latest || latest.is_mine) return
