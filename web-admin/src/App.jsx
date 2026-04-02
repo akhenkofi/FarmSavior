@@ -7112,8 +7112,8 @@ function AppInner() {
  </div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
  {communityMessageView.open && <button type='button' className='btn community-mobile-back-btn' onClick={()=>setCommunityMessageView({ open: false, loading: false, error: '', user: null, messages: [] })}>Back to inbox</button>}
- {communityMessageView.open && <button type='button' className='btn' disabled={communityMessageSending} onClick={()=>sendCommunityCallInvite('audio')}>{communityMessageSending ? 'Starting…' : 'Audio Call'}</button>}
- {communityMessageView.open && <button type='button' className='btn' disabled={communityMessageSending} onClick={()=>sendCommunityCallInvite('video')}>{communityMessageSending ? 'Starting…' : 'Video Call'}</button>}
+ {communityMessageView.open && <button type='button' className='btn' disabled={communityMessageSending} onClick={()=>sendCommunityCallInvite('audio')}>{communityMessageSending ? 'Starting…' : 'Audio'}</button>}
+ {communityMessageView.open && <button type='button' className='btn' disabled={communityMessageSending} onClick={()=>sendCommunityCallInvite('video')}>{communityMessageSending ? 'Starting…' : 'Video'}</button>}
  {communityMessageView.open && <button type='button' className='btn' disabled={communityCallPermissionBusy} onClick={enableCommunityCallPermissions}>{communityCallPermissionBusy ? 'Enabling…' : 'Enable Mic/Camera/Alerts'}</button>}
  <button type='button' className='btn' onClick={closeCommunityMessages}>Close</button>
  </div>
