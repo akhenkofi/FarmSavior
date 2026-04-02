@@ -1704,6 +1704,424 @@ Strategic operator message
 - Scalable cattle systems are built through measured herd improvement, not one-off large animals.`
 }
 
+
+const productModuleOutcomeSummaries = {
+ poultry: ['Foundation setup defined', 'Breeding / sourcing standard locked', 'Production routine and climate controls clear', 'Health schedule and loss-response system active', 'Commercial scaling rules and records in place'],
+ sheep: ['Breeding objective, flock structure, and ram plan defined', 'Mating groups, flushing plan, and breeder standards locked', 'Pregnancy/lambing routines documented for the next cycle', 'Lamb survival, parasite control, and weak-line response active', 'Sale, retention, and scale rules tied to measurable flock data'],
+ goat: ['Commercial breeding goal and adapted base protected', 'Buck-selection gate and mating groups documented', 'Kidding workflow and doe support system prepared', 'Kid survival, parasite, and respiratory watchpoints active', 'Replacement, market batching, and expansion rules measured'],
+ cattle: ['Foundation cow base and breeding purpose defined', 'Bull assignment, mating season, and replacement logic locked', 'Pregnancy and calving workflow prepared for crews', 'Calf survival and tick-pressure response system active', 'Herd review, culling, and scaling rules tied to business KPIs']
+}
+
+const professionalDownloads = {
+ sheep: [
+  {
+   title: 'Download Sheep Operating Playbook',
+   filename: 'Sheep-Operating-Playbook.txt',
+   content: `Sheep University Professional
+Operating Playbook
+
+This playbook is designed for the owner, flock manager, or lead stockperson who needs a practical weekly rhythm for breeding, lamb survival, parasite control, and market preparation.
+
+1. Weekly flock review
+- Confirm ewe count, ram count, lamb count, deaths, culls, and isolated animals.
+- Review body condition by breeding group instead of judging the whole flock as one average.
+- Check grazing pressure, pen hygiene, water reliability, and mineral access.
+- Note abortions, weak lambs, repeat heats, lameness, coughing, and poor appetite immediately.
+
+2. Breeding-season routine
+- Keep mating groups intentional and written down.
+- Review ram readiness through feet, condition, libido, and visible health before service.
+- Remove problem breeders early instead of carrying them for hope.
+- Match replacement decisions to fertility, lamb survival, mothering, and growth history.
+
+3. Lamb survival priorities
+- Confirm lambing kit, clean pens, colostrum timing, and weak-lamb response plan before the peak lambing window.
+- Recheck twins, weak lambs, and poor-milking ewes more than once per day when risk is high.
+- Record preventable lamb losses by cause so the next season improves on evidence.
+
+4. Parasite and health discipline
+- Treat worm pressure, hoof issues, and vaccination timing as commercial performance risks.
+- In humid zones, tighten rotation, drainage, and early treatment triggers.
+- Escalate quickly when coat quality, appetite, weight gain, or flock thriftiness drop.
+
+5. Margin protection rules
+- Grade sale lambs by true market readiness, not by guesswork or emotion.
+- Delay expansion when survival, fertility, or forage security are unstable.
+- Review one expensive loss source every cycle and carry one correction into the next round.`
+  },
+  {
+   title: 'Download Sheep Breeding Calendar',
+   filename: 'Sheep-Breeding-Lambing-Calendar.txt',
+   content: `Sheep University Professional
+Breeding + Lambing Calendar
+
+Pre-breeding
+- Body condition scoring
+- Deworm and mineral correction by risk
+- Ram soundness checks and mating-group assignments
+
+Breeding window
+- Controlled exposure dates recorded
+- Returns to heat logged
+- Water, shade, and handling stress kept low
+
+Mid-gestation
+- Trimester feed review
+- Hoof, parasite, and housing checks
+- Weak breeder review
+
+Pre-lambing
+- Lambing pens cleaned and stocked
+- Birth kit ready
+- Night-watch or high-risk supervision plan confirmed
+
+Lambing phase
+- Colostrum within hours
+- Weak-lamb intervention notes
+- Dam mothering review
+
+Post-lambing
+- Growth sampling
+- Replacement and cull notes
+- Sale candidate grouping`
+  },
+  {
+   title: 'Download Sheep Flock Review Workbook',
+   filename: 'Sheep-Flock-Review-Workbook.txt',
+   content: `Sheep University Professional
+Flock Review Workbook
+
+Use this before meeting a buyer, lender, manager, or veterinary advisor.
+
+1. Flock snapshot
+- Ewes exposed:
+- Rams used:
+- Lambs born:
+- Lambs weaned:
+- Deaths / culls:
+
+2. Breeding review
+- Which sire groups conceived best?
+- Which ewe lines repeatedly underperform?
+- What one trait are we improving next cycle?
+
+3. Survival review
+- Most expensive preventable loss:
+- Main lamb weakness trigger:
+- What changed after intervention?
+
+4. Commercial review
+- Average sale class:
+- Best buyer channel:
+- Slowest-moving animals:
+- One correction before scaling:`
+  }
+ ],
+ goat: [
+  {
+   title: 'Download Goat Operating Playbook',
+   filename: 'Goat-Operating-Playbook.txt',
+   content: `Goat University Professional
+Operating Playbook
+
+This playbook gives the farm manager a practical way to run breeding, kidding, browse planning, parasite control, and market batching as one operating system.
+
+1. Weekly herd review
+- Confirm doe, buck, kid, and isolated-animal counts.
+- Review body condition, appetite, coat quality, feet, and browse pressure.
+- Check water reliability, pen dryness, and shade or airflow stress.
+- Flag coughing, bottle jaw, diarrhea, poor growth, and weak kids immediately.
+
+2. Breeding management
+- Assign each buck one improvement purpose: frame, maternal value, twinning, or terminal finish.
+- Avoid random buck exposure that destroys record quality.
+- Track returns to heat and weak-conception lines early.
+
+3. Kidding and kid-survival control
+- Prepare kidding pens, colostrum plan, weak-kid supplies, and doe observation routine before kidding starts.
+- Support twins aggressively where milk, weather, or parasite pressure increase risk.
+- Record causes of kid loss so the next cycle is smarter than the last one.
+
+4. Parasite and respiratory control
+- Haemonchus pressure should trigger routine body-condition and membrane checks.
+- CCPP risk needs fast separation, observation, and escalation.
+- In humid zones, shelter dryness and browse rotation protect more margin than late treatment alone.
+
+5. Scale rules
+- Build sale groups by weight class, thriftiness, and buyer fit.
+- Do not expand off one good festive market if kidding survival and worm control are still unstable.
+- Protect the adapted maternal base while improving frame and sale value.`
+  },
+  {
+   title: 'Download Goat Kidding + Health Calendar',
+   filename: 'Goat-Kidding-Health-Calendar.txt',
+   content: `Goat University Professional
+Kidding + Health Calendar
+
+Pre-breeding
+- Score does and bucks
+- Correct minerals and parasite burden
+- Repair pens and kidding areas
+
+Breeding window
+- Controlled buck rotation
+- Mating groups recorded
+- Watch return-to-heat animals
+
+Pregnancy
+- Trimester feeding plan
+- Low-stress handling
+- Kidding kit prep
+
+Kidding phase
+- Colostrum assurance
+- Twin-kid support
+- Doe recovery monitoring
+
+Grow-out
+- Weigh sample kids
+- Watch Haemonchus pressure
+- Grade sale and replacement candidates`
+  },
+  {
+   title: 'Download Goat Margin Review Workbook',
+   filename: 'Goat-Margin-Review-Workbook.txt',
+   content: `Goat University Professional
+Margin Review Workbook
+
+1. Reproduction snapshot
+- Does exposed:
+- Does kidded:
+- Kids born:
+- Kids weaned:
+
+2. Health snapshot
+- Parasite problem group:
+- Respiratory cases:
+- Losses this cycle:
+
+3. Commercial review
+- Best sale weight band:
+- Buyer type:
+- Margin per doe exposed:
+- Margin per kid weaned:
+
+4. Next-cycle decision
+- One line to strengthen:
+- One line to remove:
+- One management correction before scaling:`
+  }
+ ],
+ cattle: [
+  {
+   title: 'Download Cattle Operating Playbook',
+   filename: 'Cattle-Operating-Playbook.txt',
+   content: `Cattle University Professional
+Operating Playbook
+
+This playbook is built for herd owners and supervisors managing breeding, calving, feed-water resilience, health pressure, and market preparation across seasons.
+
+1. Weekly herd review
+- Confirm breeding cows, bulls, calves, sick animals, deaths, and culls.
+- Review body condition, grazing pressure, water reliability, mineral access, and shade.
+- Flag calving trouble, calf weakness, tick burden, coughing, and poor growth immediately.
+
+2. Breeding-season management
+- Assign each bull a clear improvement purpose and cow group.
+- Review service records, returns, and bull soundness before the season gets away.
+- Remove repeated problem breeders early instead of hoping feed alone will fix them.
+
+3. Calf-survival priorities
+- Prepare calving-watch routine, colostrum response, weak-calf support, and isolation plan before peak calving.
+- Review every calf death for preventable management causes.
+- Track mothering and calf vigor by cow line so weak genetics do not hide in herd averages.
+
+4. Tick and disease pressure
+- Treat tick load, water contamination, and respiratory/digestive issues as production threats.
+- In humid zones, drainage and vector pressure deserve weekly attention.
+- In dry zones, water stress and forage gaps drive the health picture.
+
+5. Margin and scale rules
+- Build sale groups by real weight and market class.
+- Expand only after calving interval, calf survival, and feed security are stable.
+- Convert every season into a measurable business review.`
+  },
+  {
+   title: 'Download Cattle Breeding + Calving Calendar',
+   filename: 'Cattle-Breeding-Calving-Calendar.txt',
+   content: `Cattle University Professional
+Breeding + Calving Calendar
+
+Pre-breeding
+- Cow condition review
+- Bull soundness checks
+- Water and mineral planning
+
+Breeding season
+- Controlled bull assignments
+- Service records
+- Return-to-heat review
+
+Pregnancy period
+- Stage-based feeding
+- Vaccination and parasite review
+- Calving area prep
+
+Calving phase
+- Colostrum check
+- Calf vigor and mothering notes
+- Postpartum observation
+
+Post-calving / grow-out
+- Tick-control review
+- Calf growth sampling
+- Replacement vs sale decisions`
+  },
+  {
+   title: 'Download Cattle Herd Review Workbook',
+   filename: 'Cattle-Herd-Review-Workbook.txt',
+   content: `Cattle University Professional
+Herd Review Workbook
+
+1. Herd snapshot
+- Breeding cows:
+- Bulls active:
+- Calves born:
+- Calves weaned:
+- Deaths / culls:
+
+2. Fertility review
+- Which groups conceived best?
+- Which cows need removal?
+- Is calving interval improving?
+
+3. Health and resilience review
+- Tick-pressure hotspots:
+- Dry-season feed gap:
+- Most expensive preventable loss:
+
+4. Commercial review
+- Sale class ready now:
+- Average market weight:
+- Buyer timing risk:
+- One correction before herd expansion:`
+  }
+ ]
+}
+
+const professionalModuleDeepDives = {
+ sheep: [
+  { title: 'Breeding Objective Lock-In', cadence: 'Before mating season', checklist: ['Write the flock objective in one sentence: replacement females, market lambs, hardiness, or cross improvement.', 'Match ram groups to that objective instead of letting convenience decide the season.', 'Define the traits that cause automatic retention, observation, or culling before exposure begins.'], managerNotes: 'A disciplined sheep enterprise gets clearer every season; a casual one gets noisier.' },
+  { title: 'Mating Window and Flock Setup', cadence: 'Weekly during breeding prep', checklist: ['Score ewe condition and flush only where body condition and feed support it.', 'Check ram feet, body condition, libido, and visible health before service.', 'Prepare one simple mating ledger that any supervisor can update accurately.'], managerNotes: 'Breeding control beats breeding excitement.' },
+  { title: 'Pregnancy and Lambing Readiness', cadence: 'Trimester + pre-lambing', checklist: ['Adjust feed and handling pressure by pregnancy stage.', 'Prepare lambing pens, hygiene supplies, and weak-lamb tools before the first busy week.', 'Identify high-risk ewes and assign closer observation.'], managerNotes: 'Good lambing seasons look calm because the stress was handled before the births started.' },
+  { title: 'Lamb Survival and Parasite Response', cadence: 'Daily during high-risk periods', checklist: ['Check colostrum success, lamb vigor, and dam mothering fast.', 'Treat parasite pressure, lamb weakness, and post-lambing maternal failure as same-day management issues.', 'Write down the likely cause for every preventable loss.'], managerNotes: 'Lamb survival is where breeding plans either become profit or excuses.' },
+  { title: 'Market Grading and Scale Gate', cadence: 'End of cycle', checklist: ['Sort lambs by sale readiness instead of carrying weak animals in hope.', 'Compare buyers by reliability, payment speed, and complaint rate.', 'Expand only after fertility, survival, and feed security stay stable across seasons.'], managerNotes: 'A premium flock is built through repeated clean reviews, not one lucky batch.' }
+ ],
+ goat: [
+  { title: 'Adapted Base Protection Plan', cadence: 'Before breeding decisions', checklist: ['Protect the adapted maternal base and avoid chasing frame at the cost of resilience.', 'Write the role of each buck line before mating begins.', 'Set one commercial priority per season: fertility, kid survival, frame, or terminal finish.'], managerNotes: 'The strongest goat systems know what not to dilute.' },
+  { title: 'Buck Gate and Mating Control', cadence: 'Pre-breeding and weekly', checklist: ['Rank bucks for health, structure, libido, and target trait fit.', 'Keep mating groups controlled and recorded.', 'Remove bucks that are visually impressive but commercially unproven.'], managerNotes: 'Buck choice is a business decision wearing an animal face.' },
+  { title: 'Kidding Readiness and Doe Support', cadence: 'Late pregnancy through kidding', checklist: ['Prep kidding pens, kid-warming tools, and colostrum backups.', 'Watch twin-heavy or weak does more closely.', 'Support doe recovery so the next breeding cycle is not quietly damaged.'], managerNotes: 'Kid survival improves when labor and preparation show up before the births.' },
+  { title: 'Parasite and Respiratory Control SOP', cadence: 'Weekly with red-flag triggers', checklist: ['Check anemia signs, body condition, appetite, and coat thriftiness routinely.', 'Escalate respiratory spread, persistent coughing, or fast condition loss immediately.', 'Review browse pressure, shelter dryness, and pen hygiene alongside treatments.'], managerNotes: 'Parasites and respiratory disease punish sloppy systems first.' },
+  { title: 'Market Batching and Margin Review', cadence: 'End of cycle', checklist: ['Grade kids and growers by weight class, thriftiness, and buyer fit.', 'Review margin per doe exposed, per kid weaned, and per batch sold.', 'Only scale after kidding survival and parasite control are repeatable.'], managerNotes: 'Good goat businesses scale the system, not just the headcount.' }
+ ],
+ cattle: [
+  { title: 'Cow-Base and Herd Purpose Definition', cadence: 'Pre-season', checklist: ['Write the herd purpose clearly: replacement females, feeder calves, breeding stock, or terminal finish.', 'Keep adapted cows that prove fertility, mothering, and resilience under local conditions.', 'Cull sentimentality out of replacement decisions.'], managerNotes: 'A herd improves fastest when the cow base is chosen on performance instead of appearance.' },
+  { title: 'Bull Assignment and Breeding Control', cadence: 'Pre-breeding and during service', checklist: ['Assign each bull one defined improvement job and cow group.', 'Track returns and weak-conception groups while the season is still recoverable.', 'Check feet, condition, behavior, and obvious health before and during service.'], managerNotes: 'Uncontrolled breeding creates expensive ambiguity.' },
+  { title: 'Pregnancy and Calving Workflow', cadence: 'By stage', checklist: ['Adjust feed, minerals, and stress handling by pregnancy stage.', 'Prepare calving response tools, pens, and who-does-what instructions before due dates cluster.', 'Flag high-risk cows for closer observation.'], managerNotes: 'Calving pressure is easier to carry when the workflow is already written.' },
+  { title: 'Calf Survival and Tick-Pressure Response', cadence: 'Daily in risk windows', checklist: ['Check calf vigor, suckling, and dam bonding quickly after birth.', 'Treat tick pressure, weak calves, and water-related stress as immediate production issues.', 'Write down preventable death causes and weak-line patterns.'], managerNotes: 'Calf survival is the real test of herd discipline.' },
+  { title: 'Commercial Herd Review and Expansion Gate', cadence: 'Season close', checklist: ['Review conception, calf survival, weight gain, and margin together.', 'Compare dry-season preparedness against actual losses.', 'Scale only when fertility, survival, and feed-water resilience are stable.'], managerNotes: 'Big herds without review discipline are just bigger mistakes.' }
+ ]
+}
+
+const professionalQaPrompts = {
+ sheep: ['How do I tell if poor lamb growth is feed, parasite pressure, or weak mothering?', 'What should I review before replacing a ram that looks good but underperforms?', 'How do I know when a flock is ready to scale instead of just surviving?', 'What records should I show a lender or partner before expanding my sheep unit?'],
+ goat: ['How do I separate parasite losses from feed shortage in a goat unit?', 'When should I keep WAD resilience instead of chasing bigger frame?', 'What should I check first when kid survival drops during a humid spell?', 'How do I know if my buck strategy is improving profit or just appearance?'],
+ cattle: ['How do I know if poor calf growth is feed, water, tick pressure, or weak genetics?', 'What should I review first when calving interval stays too long?', 'How do I decide whether a bull is truly improving the herd?', 'What records should I show before expanding the herd or seeking financing?']
+}
+
+const professionalGuidancePlaybooks = {
+ sheep: {
+  parasite: { title: 'Parasite pressure reset', focus: 'Stabilize body condition and grazing pressure before the flock drifts into silent loss.', actions: ['Check body condition, coat thriftiness, appetite, and group-specific decline rather than waiting for obvious collapse.', 'Review grazing pressure, drainage, rotation discipline, and mineral support.', 'Separate weak or heavily affected animals and document what changed in the last two weeks.', 'Escalate fast if lambs are weakening or multiple groups are sliding together.'], escalate: 'Escalate when lamb thriftiness drops quickly, anemia signs show, or routine control is no longer holding.' },
+  breeding: { title: 'Breeding performance review', focus: 'Treat poor conception or weak lamb crop as a system problem until proven otherwise.', actions: ['Check ram readiness, ewe condition, heat timing, and mating-group clarity.', 'Review whether the breeding objective was clear enough to guide selection.', 'Flag repeat offenders early and remove lines that keep draining progress.', 'Write one correction before the next exposure window.'], escalate: 'Escalate when multiple ewe groups return open or abortions, weakness, or fertility failure spread.' },
+  market: { title: 'Sale-readiness plan', focus: 'Turn flock performance into cleaner sale classes and fewer slow-moving animals.', actions: ['Grade lambs by true market readiness, not age guesswork.', 'Track buyer timing, complaint rate, and payment speed.', 'Separate replacement candidates before sale pressure confuses the decision.', 'Do not carry weak lambs too long without a defined recovery margin.'], escalate: 'Escalate when buyers repeatedly discount animals for thriftiness, unevenness, or visible health weakness.' },
+  general: { title: 'Operator guidance', focus: 'Use a simple sheep-farm root-cause sequence before making a big change.', actions: ['Describe the problem as fertility, survival, parasite, growth, or market issue.', 'Check feed, water, breeder quality, and records before changing multiple things.', 'Apply one correction, then re-measure quickly.', 'Keep the review clear enough for a supervisor or advisor to follow.'], escalate: 'Escalate when losses accelerate or the issue is no longer explainable by routine flock management.' }
+ },
+ goat: {
+  parasite: { title: 'Goat parasite-control reset', focus: 'Protect kid growth and doe condition before worm pressure turns into a hidden margin leak.', actions: ['Check anemia signs, body condition, appetite, and coat quality by group.', 'Review browse pressure, rotation gaps, shelter dryness, and recent weather.', 'Separate weak animals and tighten observation immediately.', 'Document what changed before the decline started.'], escalate: 'Escalate when bottle jaw, severe weakness, rapid condition loss, or repeated kid decline appears.' },
+  breeding: { title: 'Buck and doe strategy review', focus: 'Make sure the breeding system is improving the unit instead of just producing animals.', actions: ['Check whether each buck had a written improvement purpose.', 'Review conception pattern, kidding spread, and doe recovery.', 'Protect the adapted maternal base while reviewing frame and market goals.', 'Cull lines that repeatedly disappoint under your actual conditions.'], escalate: 'Escalate when kidding spread is poor, conception drops, or too many weak kids appear together.' },
+  market: { title: 'Goat market-batch readiness', focus: 'Convert herd progress into sale groups that buyers trust.', actions: ['Grade animals by weight class, thriftiness, and buyer type.', 'Do not mix breeder-quality candidates with sale animals by accident.', 'Track margin per doe exposed and per kid weaned.', 'Use market feedback to improve buck choice, not just sale timing.'], escalate: 'Escalate when buyers repeatedly complain about unevenness, thriftiness, or respiratory signs.' },
+  general: { title: 'Operator guidance', focus: 'Use a practical root-cause sequence and avoid random fixes.', actions: ['Describe the issue as parasite, respiratory, kidding, growth, or market problem.', 'Check browse, water, pen hygiene, and records first.', 'Make one correction, then review fast.', 'Write down what the unit should look like when the correction is working.'], escalate: 'Escalate when symptoms spread or the herd is sliding faster than routine management can explain.' }
+ },
+ cattle: {
+  fertility: { title: 'Herd fertility reset', focus: 'Treat poor conception or long calving interval as a whole-system problem first.', actions: ['Check cow condition, bull soundness, water reliability, and breeding-group logic.', 'Review service records and returns while the season can still be corrected.', 'Identify whether the problem is one group or herd-wide.', 'Write a corrective action for the next 30 days.'], escalate: 'Escalate when open cows accumulate, abortions rise, or bull failure is suspected.' },
+  calf: { title: 'Calf survival and growth response', focus: 'Stabilize calf vigor, dam support, and disease pressure before losses spread.', actions: ['Check colostrum success, dam behavior, calf appetite, and housing or paddock exposure.', 'Review tick burden, water quality, and recent weather or feed disruption.', 'Separate weak calves and increase observation frequency.', 'Record the likely trigger before treatment noise hides the sequence.'], escalate: 'Escalate when multiple calves weaken together or mortality starts rising.' },
+  market: { title: 'Commercial herd readiness', focus: 'Move from owning animals to running saleable classes with measured timing.', actions: ['Group animals by true market class and weight readiness.', 'Review feed carry cost before holding for more size.', 'Compare buyers by timing, deductions, and payment reliability.', 'Keep replacement decisions separate from sale pressure.'], escalate: 'Escalate when dry-season carry cost, buyer discounting, or weak weights keep eroding margin.' },
+  general: { title: 'Operator guidance', focus: 'Use a business-first troubleshooting sequence.', actions: ['Define the issue as fertility, calf survival, feed-water resilience, tick pressure, or market problem.', 'Check body condition, water, records, and pressure points before changing many variables.', 'Make one correction and assign an owner.', 'Re-measure against one biological KPI and one financial KPI.'], escalate: 'Escalate when herd decline continues or the cause cannot be separated by routine review.' }
+ }
+}
+
+const getProfessionalGuidancePlaybook = (product, question='') => {
+ const q = String(question || '').toLowerCase()
+ const guideSet = professionalGuidancePlaybooks[product] || {}
+ let key = 'general'
+ if (product === 'sheep') key = q.includes('parasite') || q.includes('worm') || q.includes('weak') ? 'parasite' : (q.includes('breed') || q.includes('ram') || q.includes('conception')) ? 'breeding' : (q.includes('market') || q.includes('sell') || q.includes('buyer')) ? 'market' : 'general'
+ else if (product === 'goat') key = q.includes('parasite') || q.includes('worm') || q.includes('haemonchus') ? 'parasite' : (q.includes('buck') || q.includes('breed') || q.includes('kidding')) ? 'breeding' : (q.includes('market') || q.includes('sell') || q.includes('buyer')) ? 'market' : 'general'
+ else if (product === 'cattle') key = q.includes('fertility') || q.includes('open cow') || q.includes('calving interval') || q.includes('breed') ? 'fertility' : (q.includes('calf') || q.includes('tick') || q.includes('growth')) ? 'calf' : (q.includes('market') || q.includes('sell') || q.includes('buyer') || q.includes('weight')) ? 'market' : 'general'
+ return guideSet[key] || guideSet.general || { title: 'Operator guidance', focus: 'Use a simple structured review.', actions: ['Describe the issue clearly.', 'Check records and operating conditions.', 'Make one correction and re-measure.'], escalate: 'Escalate when losses accelerate.' }
+}
+
+function UniversityExecutiveToolkit({ product, progress, setProgress, trackKey, openModule, question, setQuestion, answer, setAnswer }) {
+ const downloads = professionalDownloads[product] || []
+ const deepDives = professionalModuleDeepDives[product] || []
+ const prompts = professionalQaPrompts[product] || []
+ const activeDive = deepDives[Math.max(0, openModule)] || deepDives[0]
+ const moduleName = product === 'sheep' ? sheepTracks[trackKey]?.modules?.[openModule]?.name : product === 'goat' ? goatTracks[trackKey]?.modules?.[openModule]?.name : cattleTracks[trackKey]?.modules?.[openModule]?.name
+ return <article className='panel poultry-pro-shell' style={{marginTop:10, border: product === 'sheep' ? '1.5px solid #7c3aed' : product === 'goat' ? '1.5px solid #0d9488' : '1.5px solid #d97706', background: product === 'sheep' ? '#faf5ff' : product === 'goat' ? '#ecfeff' : '#fff7ed'}}>
+  <h4 style={{marginTop:0}}>🏆 Executive Tools</h4>
+  <div className='list'>
+   <div className='list-row'><span>Open professional module</span><strong>{moduleName || 'Open a module to load its pro checklist'}</strong></div>
+   <div className='list-row'><span>Deep-dive execution notes</span><strong>{deepDives.length} operating packs</strong></div>
+   <div className='list-row'><span>Downloadable playbooks and workbooks</span><strong>{downloads.length} files</strong></div>
+   <div className='list-row'><span>Guided expert prompts</span><strong>{prompts.length} prompts ready</strong></div>
+   <div className='list-row'><span>Progress tracking dashboard</span><strong>{(progress.completed || []).length} checkpoints logged</strong></div>
+  </div>
+  <div className='helper-text' style={{marginTop:4}}>This area is built to feel complete when opened: operating playbooks, downloadable packs, guided troubleshooting, and module-by-module execution notes.</div>
+  {activeDive && <div className='panel' style={{marginTop:10, background:'#fff'}}>
+   <div className='list-row'><span>Current deep dive</span><strong>{activeDive.title}</strong></div>
+   <div className='helper-text'>Cadence: {activeDive.cadence}</div>
+   <div className='list' style={{marginTop:8}}>{activeDive.checklist.map((item)=><div key={item} className='list-row'><span>{item}</span></div>)}</div>
+   <div className='helper-text' style={{marginTop:8}}>{activeDive.managerNotes}</div>
+  </div>}
+  <div className='inlineForm' style={{marginTop:8, flexWrap:'wrap'}}>
+   {downloads.map((asset)=><a key={asset.filename} className='poultry-tool-card' download={asset.filename} href={'data:text/plain;charset=utf-8,'+encodeURIComponent(asset.content)}><strong>{asset.title}</strong><span>{asset.filename}</span></a>)}
+  </div>
+  <div className='inlineForm' style={{marginTop:8, flexWrap:'wrap'}}>
+   {prompts.map((prompt)=><button key={prompt} className={`poultry-tool-card ${question===prompt ? 'active' : ''}`} onClick={()=>setQuestion(prompt)}><strong>Use prompt</strong><span>{prompt}</span></button>)}
+  </div>
+  <div className='panel' style={{marginTop:10, background:'#fff'}}>
+   <div className='helper-text' style={{marginBottom:6}}>Guided troubleshooting / strategy builder</div>
+   <input className='input' placeholder='Describe the issue or decision you want to work through' value={question} onChange={(e)=>setQuestion(e.target.value)} />
+   <div className='inlineForm' style={{marginTop:8, flexWrap:'wrap'}}>
+    <button className='btn btn-dark' onClick={()=>setAnswer(JSON.stringify(getProfessionalGuidancePlaybook(product, question)))}>Generate guidance</button>
+    <button className='btn' disabled={openModule < 0} onClick={()=>{
+      if (openModule < 0) return
+      const checkpoint = `${trackKey}:${openModule}`
+      setProgress((s)=>({ ...s, completed: Array.from(new Set([...(s.completed||[]), checkpoint])) }))
+    }}>Mark Current Module Complete</button>
+   </div>
+   {!!answer && (() => {
+    const guide = JSON.parse(answer)
+    return <div className='panel' style={{marginTop:10, background:'#f8fafc'}}>
+     <h5 style={{marginTop:0, marginBottom:6}}>{guide.title}</h5>
+     <div className='helper-text' style={{marginBottom:8}}>{guide.focus}</div>
+     <div className='list'>{(guide.actions || []).map((item)=><div key={item} className='list-row'><span>{item}</span></div>)}</div>
+     <div className='helper-text' style={{marginTop:8}}><strong>Escalate:</strong> {guide.escalate}</div>
+    </div>
+   })()}
+  </div>
+ </article>
+}
+
 function ProfessionalAssets({ product, progress, setProgress, trackKey, openModule }) {
  const completed = (progress?.completed || []).length
  return <>
@@ -1724,11 +2142,7 @@ function ProfessionalAssets({ product, progress, setProgress, trackKey, openModu
  <article className='panel' style={{marginTop:10}}>
  <h4 style={{marginTop:0}}>✅ Module Outcome Summary</h4>
  <div className='list'>
- <div className='list-row'><span>Module 1 outcome</span><strong>Foundation setup defined</strong></div>
- <div className='list-row'><span>Module 2 outcome</span><strong>Breeding / sourcing standard locked</strong></div>
- <div className='list-row'><span>Module 3 outcome</span><strong>Production routine and climate controls clear</strong></div>
- <div className='list-row'><span>Module 4 outcome</span><strong>Health schedule and loss-response system active</strong></div>
- <div className='list-row'><span>Module 5 outcome</span><strong>Commercial scaling rules and records in place</strong></div>
+ {(productModuleOutcomeSummaries[product] || productModuleOutcomeSummaries.poultry).map((item, idx) => <div className='list-row' key={`${product}-outcome-${idx}`}><span>{`Module ${idx + 1} outcome`}</span><strong>{item}</strong></div>)}
  </div>
  </article>
  {completed >= 3 && <article className='panel' style={{marginTop:10, border:'2px solid #0f766e', background:'#ecfdf5'}}>
@@ -2158,18 +2572,24 @@ function AppInner() {
  const [openSheepModule, setOpenSheepModule] = useState(0)
  const [sheepTier, setSheepTier] = useState('free')
  const [sheepProgress, setSheepProgress] = useState({ completed: [] })
+ const [sheepQuestion, setSheepQuestion] = useState('')
+ const [sheepAnswer, setSheepAnswer] = useState('')
  const [goatPlanPreview, setGoatPlanPreview] = useState('basic')
  const [goatTrack, setGoatTrack] = useState('sahelianCross')
  const [goatZone, setGoatZone] = useState('humid')
  const [openGoatModule, setOpenGoatModule] = useState(0)
  const [goatTier, setGoatTier] = useState('free')
  const [goatProgress, setGoatProgress] = useState({ completed: [] })
+ const [goatQuestion, setGoatQuestion] = useState('')
+ const [goatAnswer, setGoatAnswer] = useState('')
  const [cattlePlanPreview, setCattlePlanPreview] = useState('basic')
  const [cattleTrack, setCattleTrack] = useState('wadSanga')
  const [cattleZone, setCattleZone] = useState('humid')
  const [openCattleModule, setOpenCattleModule] = useState(0)
  const [cattleTier, setCattleTier] = useState('free')
  const [cattleProgress, setCattleProgress] = useState({ completed: [] })
+ const [cattleQuestion, setCattleQuestion] = useState('')
+ const [cattleAnswer, setCattleAnswer] = useState('')
 
  const universityTierSetter = {
  poultry: setPoultryTier,
@@ -4726,22 +5146,7 @@ function AppInner() {
  </div>
  </article>}
 
- {sheepTier === 'pro' && <article className='panel' style={{marginTop:10,border:'1.5px solid #7c3aed',background:'#faf5ff'}}>
- <h4 style={{marginTop:0}}>🏆 Executive Tools</h4>
- <div className='list'>
- <div className='list-row'><span>Expanded breeding decision frameworks</span></div>
- <div className='list-row'><span>Printable mating + lambing calendars</span></div>
- <div className='list-row'><span>Weekly flock management templates</span></div>
- <div className='list-row'><span>Progress tracking dashboard</span></div>
- </div>
- <div className='inlineForm' style={{marginTop:8, flexWrap:'wrap'}}>
- <a className='btn' download='Sheep-Breeding-Decision-Framework.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Sheep University Professional\nExpanded Breeding Decision Frameworks\n\n1. Breeding Objective\n- Define whether flock goal is meat, breeding stock, hardiness, or cross improvement.\n- Select rams and ewes only after ranking fertility, growth, mothering, and survival history.\n\n2. Ewe Selection Gate\n- Keep only ewes with strong conception history, good mothering, healthy udder/teat structure, and acceptable body condition.\n- Cull low-fertility, repeated-abortion, chronic-foot, or poor-mothering lines.\n\n3. Ram Selection Gate\n- Prioritize structural soundness, growth rate, fertility signs, feet/legs, and line consistency.\n- Use only one improvement target per season: size, hardiness, carcass, or maternal performance.\n\n4. Mating Group Logic\n- Match rams to ewe groups by breeding objective and avoid random mixing.\n- Track sire-to-group allocation and target lambing windows.\n\n5. Replacement Logic\n- Retain replacement females from top-performing dams only.\n- Remove weak-line animals early to avoid hidden cost buildup.\n\n6. Performance Review\n- Review conception rate, lamb survival, weaning weights, and margin before next mating cycle.\n- Expand only after two stable cycles with acceptable mortality and fertility.`)}>Download Decision Frameworks</a>
- <a className='btn' download='Sheep-Mating-Lambing-Calendar.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Sheep University Professional\nPrintable Mating + Lambing Calendar\n\nMonth 1\n- Body condition scoring\n- Flush ewes\n- Health check and parasite control\n- Confirm ram readiness\n\nMonth 2\n- Controlled mating window opens\n- Record mating groups and dates\n- Remove weak or non-performing breeders\n\nMonth 3\n- Pregnancy observation and nutrition adjustment\n- Track returns to heat\n\nMonth 4\n- Mid-pregnancy health review\n- Mineral and water consistency\n\nMonth 5\n- Pre-lambing housing prep\n- Birth kit and isolation pen ready\n\nMonth 6\n- Lambing supervision\n- Colostrum checks\n- Neonatal survival log\n\nMonth 7\n- Lamb growth review\n- Dam recovery assessment\n\nMonth 8\n- Weaning and replacement selection\n- Sale/retention decisions\n\nUse this calendar as a printable cycle tracker and adapt months to your actual breeding season.`)}>Download Mating + Lambing Calendar</a>
- <a className='btn' download='Sheep-Weekly-Flock-Management-Template.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Sheep University Professional\nWeekly Flock Management Template\n\nWeek Of: __________\nFarm/Unit: __________\nManager: __________\n\n1. Stock Summary\n- Total ewes: _____\n- Total rams: _____\n- Lambs/kids: _____\n- Sick animals: _____\n- Deaths this week: _____\n\n2. Breeding Notes\n- Heat observed: _____\n- Matings recorded: _____\n- Suspected returns: _____\n\n3. Health Checks\n- Parasite signs: Yes / No\n- Lameness cases: _____\n- Treatments given: __________\n\n4. Nutrition & Water\n- Feed quality acceptable: Yes / No\n- Water reliability acceptable: Yes / No\n- Mineral supplementation: Yes / No\n\n5. Housing & Biosecurity\n- Pens cleaned: Yes / No\n- Isolation pen used: Yes / No\n- Fence/perimeter checked: Yes / No\n\n6. Growth & Performance\n- Sample weights taken: Yes / No\n- Weak animals flagged: Yes / No\n\n7. Action Items Next Week\n- __________________________________\n- __________________________________\n- __________________________________`)}>Download Weekly Flock Template</a>
- <button className='btn' onClick={()=>setSheepProgress((s)=>({ ...s, completed: Array.from(new Set([...(s.completed||[]), `${sheepTrack}:${openSheepModule}`])) }))}>Mark Current Module Complete</button>
- <div className='list-row' style={{padding:'6px 10px', background:'#fff'}}><span>Completed checkpoints</span><strong>{(sheepProgress.completed||[]).length}</strong></div>
- </div>
- </article>}
+ {sheepTier === 'pro' && <UniversityExecutiveToolkit product='sheep' progress={sheepProgress} setProgress={setSheepProgress} trackKey={sheepTrack} openModule={openSheepModule} question={sheepQuestion} setQuestion={setSheepQuestion} answer={sheepAnswer} setAnswer={setSheepAnswer} />}
 
  {sheepTier === 'pro' && <ProfessionalAssets product='sheep' progress={sheepProgress} setProgress={setSheepProgress} trackKey={sheepTrack} openModule={openSheepModule} />}
 
@@ -4851,23 +5256,7 @@ function AppInner() {
  <p style={{fontSize:'.82rem',color:'#64748b',marginTop:8}}>Goat-specific warning: CCPP and Haemonchus risks require strict routine monitoring.</p>
  </article>}
 
- {goatTier === 'pro' && <article className='panel' style={{marginTop:10,border:'1.5px solid #0d9488',background:'#ecfeff'}}>
- <h4 style={{marginTop:0}}>🏆 Executive Tools</h4>
- <div className='list'>
- <div className='list-row'><span>Browse resource mapping toolkit</span></div>
- <div className='list-row'><span>Printable breeding + health templates</span></div>
- <div className='list-row'><span>Advanced terminal-sire selection framework</span></div>
- <div className='list-row'><span>Progress tracking dashboard</span></div>
- <div className='list-row'><span>Advanced expansion notes for breed, market, and climate decisions</span></div>
- </div>
- <div className='inlineForm' style={{marginTop:8,flexWrap:'wrap'}}>
- <a className='btn' download='Goat-Breed-Strategy-Framework.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Goat University Professional\nExpanded Breed Strategy Framework\n\n1. Commercial objective\n- Decide whether the unit is targeting breeding stock, festive meat, female replacement sales, or terminal finishing.\n- Match the breeding objective to one dominant KPI: fertility, kid survival, frame growth, or carcass value.\n\n2. Foundation-doe selection\n- Keep only does with reliable kidding history, acceptable udder structure, parasite resilience, and strong mothering.\n- Separate survival genetics from feeding advantage: high-performing does under poor conditions are more valuable than animals that only perform under expensive feeding.\n\n3. Buck strategy\n- Sahelian-type bucks: use when frame and height are the immediate target.\n- Red Sokoto/Maradi-type bucks: use when market preference, twinning tendency, and maternal productivity matter.\n- Boer/Kalahari/Savannah terminal sires: use only after the adapted maternal base is stable.\n\n4. Climate discipline\n- Humid systems must prioritize parasite control, hoof health, shelter dryness, and browse rotation.\n- Dry systems must prioritize water security, heat stress relief, drought feed buffers, and respiratory control.\n\n5. Scale rule\n- Expand only after two kidding cycles show acceptable kid survival, parasite control, and sale margins.`)}>Download Breed Strategy Framework</a>
- <a className='btn' download='Goat-Breeding-Health-Calendar.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Goat University Professional\nBreeding + Health Calendar\n\nPre-breeding\n- Body condition score all does and bucks\n- Correct mineral gaps and parasite burden\n- Repair pens, kidding areas, and water points\n\nBreeding window\n- Controlled buck rotation\n- Record mating groups by line\n- Remove weak breeders and note returns to heat\n\nPregnancy phase\n- Trimester feeding plan\n- Low-stress handling and housing review\n- Prepare kidding kits and isolation pens\n\nKidding phase\n- Colostrum checks within hours\n- Twin-kid support and weak-kid watch\n- Doe recovery monitoring\n\nPost-kidding / grow-out\n- Parasite checks, CCPP watch, growth sampling\n- Weaning by weight + health, not age alone\n- Replacement and sale grading decisions`)}>Download Breeding + Health Calendar</a>
- <a className='btn' download='Goat-Professional-Operating-Guide.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Goat University Professional\nProfessional Operating Guide\n\nModule expansion notes\n- Module 1: Build a target genotype map and define the role of each line before mating.\n- Module 2: Treat buck selection as a profit decision, not a beauty contest.\n- Module 3: Kidding survival rises when labor, pen hygiene, and doe energy status are controlled before birth.\n- Module 4: In humid systems, Haemonchus control discipline determines whether the enterprise scales safely.\n- Module 5: Track margin per doe exposed, per kid weaned, and per kilogram sold.\n\nExecutive decision rules\n1. Replace does from your best dams, not from random survivors.\n2. Never use terminal sires to mask weak management.\n3. Build market batches by weight class and body condition, not by age guesswork.\n4. Keep a seasonal drought or parasite contingency plan written down before trouble starts.`)}>Download Professional Operating Guide</a>
- <button className='btn' onClick={()=>setGoatProgress((s)=>({ ...s, completed: Array.from(new Set([...(s.completed||[]), `${goatTrack}:${openGoatModule}`])) }))}>Mark Current Module Complete</button>
- <div className='list-row' style={{padding:'6px 10px', background:'#fff'}}><span>Completed checkpoints</span><strong>{(goatProgress.completed||[]).length}</strong></div>
- </div>
- </article>}
+ {goatTier === 'pro' && <UniversityExecutiveToolkit product='goat' progress={goatProgress} setProgress={setGoatProgress} trackKey={goatTrack} openModule={openGoatModule} question={goatQuestion} setQuestion={setGoatQuestion} answer={goatAnswer} setAnswer={setGoatAnswer} />}
 
  {goatTier === 'pro' && <ProfessionalAssets product='goat' progress={goatProgress} setProgress={setGoatProgress} trackKey={goatTrack} openModule={openGoatModule} />}
 
@@ -4975,22 +5364,7 @@ function AppInner() {
  </div>
  </article>}
 
- {cattleTier === 'pro' && <article className='panel' style={{marginTop:10,border:'1.5px solid #d97706',background:'#fff7ed'}}>
- <h4 style={{marginTop:0}}>🏆 Executive Tools</h4>
- <div className='list'>
- <div className='list-row'><span>Advanced herd selection matrix</span></div>
- <div className='list-row'><span>Printable breeding and calving templates</span></div>
- <div className='list-row'><span>Progress tracking dashboard</span></div>
- <div className='list-row'><span>Expanded operating brief for planning and review</span></div>
- </div>
- <div className='inlineForm' style={{marginTop:8,flexWrap:'wrap'}}>
- <a className='btn' download='Cattle-Herd-Selection-Matrix.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Cattle University Professional\nAdvanced Herd Selection Matrix\n\n1. Cow base selection\n- Retain cows with reliable calving history, mothering ability, acceptable fertility, and resilience under local feed pressure.\n- Separate survival genetics from subsidy feeding effects. A cow that breeds and raises calves consistently under field conditions is more valuable than a high-cost show animal.\n\n2. Bull decision framework\n- Sahelian/Zebu influence: frame and growth improvement.\n- White Fulani/Sudanese influence: dual-purpose market appeal and structure.\n- Brahman/Gudali terminal sires: use only when maternal base and management are already stable.\n\n3. Herd replacement logic\n- Keep heifers from top-calving cows with strong weaning results.\n- Cull repeated calving trouble, weak mothering, poor fertility, or chronic disease lines.\n\n4. Scale logic\n- Expand only after calving interval, calf survival, and feed security are stable across seasons.`)}>Download Herd Selection Matrix</a>
- <a className='btn' download='Cattle-Breeding-Calving-Playbook.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Cattle University Professional\nBreeding + Calving Playbook\n\nPre-breeding\n- Body condition review\n- Bull soundness and fertility checks\n- Water, mineral, and fodder planning\n\nBreeding season\n- Controlled bull groups and service records\n- Heat observation and re-service notes\n- Remove poor breeders quickly\n\nPregnancy management\n- Stage-based nutrition and stress control\n- Vaccination and parasite schedule by veterinary guidance\n- Calving pen and labor prep before due dates cluster\n\nCalving phase\n- Calving watch, colostrum assurance, and calf vigor checks\n- Postpartum recovery and mastitis watch\n- Early calf disease response plan\n\nPost-calving growth period\n- Tick and blood-parasite control\n- Sample weight tracking and weak-line intervention\n- Replacement vs sale decision review`)}>Download Breeding + Calving Playbook</a>
- <a className='btn' download='Cattle-Operating-Brief.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Cattle University Professional\nOperating Brief\n\nThis program helps herd builders develop a Ghana-adapted commercial cattle line with stronger carcass performance, resilience, and disciplined breeding records.\n\nOperating priorities\n- Convert every breeding season into a measurable economic review.\n- Track conception, calving interval, calf survival, growth, and margin by cohort.\n- Build feed and water buffers before the dry season rather than reacting during crisis.\n- Treat disease surveillance as a core performance measure, not only as a veterinary issue.\n\nSystem goals\n- Protect local adaptation while improving output.\n- Improve business performance through lower mortality, tighter selection, and market-class consistency.\n- Build long-run value through repeatable herd performance, not one-off large animals.\n\nSummary\n- A disciplined cattle system combines genetics, climate adaptation, health scheduling, and market records into one measurable production strategy.`)}>Download Brief</a>
- <button className='btn' onClick={()=>setCattleProgress((s)=>({ ...s, completed: Array.from(new Set([...(s.completed||[]), `${cattleTrack}:${openCattleModule}`])) }))}>Mark Current Module Complete</button>
- <div className='list-row' style={{padding:'6px 10px', background:'#fff'}}><span>Completed checkpoints</span><strong>{(cattleProgress.completed||[]).length}</strong></div>
- </div>
- </article>}
+ {cattleTier === 'pro' && <UniversityExecutiveToolkit product='cattle' progress={cattleProgress} setProgress={setCattleProgress} trackKey={cattleTrack} openModule={openCattleModule} question={cattleQuestion} setQuestion={setCattleQuestion} answer={cattleAnswer} setAnswer={setCattleAnswer} />}
 
  {cattleTier === 'pro' && <ProfessionalAssets product='cattle' progress={cattleProgress} setProgress={setCattleProgress} trackKey={cattleTrack} openModule={openCattleModule} />}
 
