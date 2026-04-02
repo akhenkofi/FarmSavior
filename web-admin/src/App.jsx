@@ -2800,8 +2800,8 @@ function AppInner() {
   const pairSeed = [meId, otherId].filter(Boolean).sort().join('-') || 'pair'
   const room = `farmsavior-${pairSeed}-${Date.now()}`
   const callUrl = mode === 'video'
-   ? `https://meet.jit.si/${room}#config.prejoinPageEnabled=false&config.disableDeepLinking=true`
-   : `https://meet.jit.si/${room}#config.startWithVideoMuted=true&config.prejoinPageEnabled=false&config.disableDeepLinking=true`
+   ? `https://meet.jit.si/${room}#config.prejoinConfig.enabled=false&config.prejoinPageEnabled=false&config.requireDisplayName=false&config.disableDeepLinking=true`
+   : `https://meet.jit.si/${room}#config.startWithVideoMuted=true&config.prejoinConfig.enabled=false&config.prejoinPageEnabled=false&config.requireDisplayName=false&config.disableDeepLinking=true`
   const inviteText = `${mode === 'video' ? '📹' : '📞'} Join my ${mode} call: ${callUrl}`
   try {
    setCommunityMessageSending(true)
