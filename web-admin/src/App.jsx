@@ -2665,6 +2665,7 @@ function AppInner() {
  const [editingCommunityPostId, setEditingCommunityPostId] = useState(null)
  const [communityCommentText, setCommunityCommentText] = useState({})
  const [communityComments, setCommunityComments] = useState({})
+ const [communityProfileView, setCommunityProfileView] = useState({ open: false, loading: false, data: null, error: '', userId: null })
 
  useEffect(() => {
  try { localStorage.setItem('farmsavior_community_profile_cache', JSON.stringify(communityProfile || {})) } catch {}
@@ -2682,6 +2683,23 @@ function AppInner() {
  : item
  ))
  }
+ const openCommunityProfileView = async (userId) => {
+ if (!userId) return
+ setCommunityProfileView({ open: true, loading: true, data: null, error: '', userId })
+ try {
+ const data = await api.fetchCommunityUserProfile(userId, 24)
+ setCommunityProfileView({ open: true, loading: false, data: data || null, error: '', userId })
+ } catch (err) {
+ setCommunityProfileView({ open: true, loading: false, data: null, error: errMsg(err), userId })
+ }
+ }
+
+ const closeCommunityProfileView = () => setCommunityProfileView({ open: false, loading: false, data: null, error: '', userId: null })
+ const viewedCommunityProfile = communityProfileView.data?.profile || null
+ const viewedCommunityPosts = communityProfileView.data?.posts || []
+ const viewedCommunityViewer = communityProfileView.data?.viewer || {}
+ const communityProfileHeadline = (profile) => profile?.bio || profile?.farm_life || (profile?.interests ? `Interested in ${profile.interests}.` : 'This grower has not added a profile story yet.')
+
  const syncCommunityUserMute = (userId, muted) => {
  setCommunityUserResults(prev => (prev || []).map(user => String(user.user_id) === String(userId)
  ? { ...user, is_muted: muted }
@@ -6493,6 +6511,7 @@ function AppInner() {
  <span><strong>{communityProfile.following_count || communityFollowState.following_count || 0}</strong> following</span>
  <span><strong>{communityPosts.filter(p => String(p.user_id) === String(me?.id)).length}</strong> posts</span>
  </div>
+ <div style={{marginTop:10}}><button type='button' className='btn' onClick={()=>openCommunityProfileView(me?.id)}>View Public Profile</button></div>
  </div>
  <form className='list' onSubmit={async(e)=>{
  e.preventDefault()
@@ -6631,6 +6650,7 @@ function AppInner() {
  </div>}
  </div>
  <div style={{fontSize:'.86rem',color:'#475569',marginTop:6}}>{user.bio || user.farm_life || `Interested in ${user.interests || 'farming'}.`}</div>
+ <div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:8}}><button type='button' className='btn' onClick={()=>openCommunityProfileView(user.user_id)}>View Profile</button></div>
  <div style={{display:'flex',gap:12,flexWrap:'wrap',marginTop:8,fontSize:'.78rem',color:'#64748b'}}>
  <span><strong>{user.followers_count || 0}</strong> followers</span>
  <span><strong>{user.following_count || 0}</strong> following</span>
@@ -6671,6 +6691,7 @@ function AppInner() {
  </div>
  <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
  {canFollow && communityFeedMode !== 'reels' && <button className={`btn ${isFollowingUser(actor.user_id) ? 'btn-dark' : ''}`} onClick={()=>toggleFollowUser(actor.user_id)}>{isFollowingUser(actor.user_id) ? 'Following' : 'Follow'}</button>}
+ {actor?.user_id && <button type='button' className='btn' onClick={()=>openCommunityProfileView(actor.user_id)}>View Profile</button>}
  <span style={{fontSize:'.78rem', color:'#64748b'}}>{String(item.created_at || '').replace('T',' ').slice(0,16)}</span>
  </div>
  </div>
@@ -6733,6 +6754,78 @@ function AppInner() {
  )}
  </div>
  </article>
+
+ {communityProfileView.open && <article className='panel' style={{marginTop:12, border:'1px solid #cbd5e1', boxShadow:'0 12px 30px rgba(15,23,42,.08)'}}>
+ <div className='list-row' style={{alignItems:'flex-start', gap:12, flexWrap:'wrap'}}>
+ <div>
+ <div style={{fontSize:'.75rem', fontWeight:700, letterSpacing:'.08em', color:'#0284c7', textTransform:'uppercase'}}>Public profile view</div>
+ <h4 style={{margin:'4px 0 0 0'}}>{viewedCommunityViewer?.is_me ? 'How others see your community profile' : 'Community profile'}</h4>
+ <div className='helper-text' style={{marginTop:4}}>Read-only preview with no setup or edit controls.</div>
+ </div>
+ <button type='button' className='btn' onClick={closeCommunityProfileView}>Close</button>
+ </div>
+ {communityProfileView.loading && <div className='panel' style={{marginTop:10, background:'#f8fafc'}}>Loading profile…</div>}
+ {!communityProfileView.loading && communityProfileView.error && <div className='panel' style={{marginTop:10, background:'#fff7ed', color:'#9a3412'}}>{communityProfileView.error}</div>}
+ {!communityProfileView.loading && !communityProfileView.error && viewedCommunityProfile && <>
+ <div style={{position:'relative', marginTop:12}}>
+ {isUserImage(viewedCommunityProfile.cover_image_url)
+ ? <img src={viewedCommunityProfile.cover_image_url} alt='Public cover' style={{width:'100%',height:220,objectFit:'cover',borderRadius:16,border:'1px solid #e2e8f0'}} />
+ : <div style={{width:'100%',height:220,borderRadius:16,border:'1px solid #e2e8f0',background:'linear-gradient(135deg,#e0f2fe,#dcfce7)',display:'grid',placeItems:'center',color:'#0f172a',fontWeight:700}}>FarmSavior Community</div>}
+ <div style={{position:'absolute',inset:0,borderRadius:16,background:'linear-gradient(180deg,rgba(15,23,42,0) 28%, rgba(15,23,42,.55) 100%)'}} />
+ {isUserImage(viewedCommunityProfile.avatar_url)
+ ? <img src={viewedCommunityProfile.avatar_url} alt='Public avatar' style={{position:'absolute',left:18,bottom:-36,width:110,height:110,objectFit:'cover',borderRadius:'50%',border:'5px solid #fff',boxShadow:'0 10px 24px rgba(15,23,42,.18)'}} />
+ : <div style={{position:'absolute',left:18,bottom:-36,width:110,height:110,borderRadius:'50%',border:'5px solid #fff',background:'#e2e8f0',display:'grid',placeItems:'center',color:'#64748b',fontWeight:700}}>No DP</div>}
+ </div>
+ <div style={{padding:'48px 4px 0 4px'}}>
+ <div style={{display:'flex',justifyContent:'space-between',gap:12,flexWrap:'wrap',alignItems:'flex-start'}}>
+ <div>
+ <div style={{fontSize:'1.35rem',fontWeight:800,color:'#0f172a'}}>{viewedCommunityProfile.full_name || `User ${viewedCommunityProfile.user_id}`}{viewedCommunityViewer?.is_me ? verificationBadge(me) : ''}</div>
+ <div style={{fontSize:'.92rem',color:'#0284c7',fontWeight:700}}>{viewedCommunityProfile.username ? `@${viewedCommunityProfile.username}` : 'No username yet'}{viewedCommunityProfile.region ? ` • ${viewedCommunityProfile.region}` : ''}</div>
+ <div style={{fontSize:'.9rem',color:'#475569',marginTop:8,maxWidth:720,whiteSpace:'pre-wrap'}}>{communityProfileHeadline(viewedCommunityProfile)}</div>
+ </div>
+ <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+ {!viewedCommunityViewer?.is_me && viewedCommunityProfile?.user_id && <button type='button' className={`btn ${isFollowingUser(viewedCommunityProfile.user_id) ? 'btn-dark' : ''}`} onClick={async()=>{ await toggleFollowUser(viewedCommunityProfile.user_id); await openCommunityProfileView(viewedCommunityProfile.user_id) }}>{isFollowingUser(viewedCommunityProfile.user_id) ? 'Following' : 'Follow'}</button>}
+ {!viewedCommunityViewer?.is_me && viewedCommunityProfile?.user_id && <button type='button' className={`btn ${isMutedUser(viewedCommunityProfile.user_id) ? 'btn-dark' : ''}`} onClick={async()=>{ await toggleMuteUser(viewedCommunityProfile.user_id); if (isMutedUser(viewedCommunityProfile.user_id)) closeCommunityProfileView() }}>{isMutedUser(viewedCommunityProfile.user_id) ? 'Unmute' : 'Mute / Hide'}</button>}
+ </div>
+ </div>
+ <div style={{display:'flex',gap:12,flexWrap:'wrap',marginTop:12,fontSize:'.82rem',color:'#475569'}}>
+ <span><strong>{viewedCommunityProfile.followers_count || 0}</strong> followers</span>
+ <span><strong>{viewedCommunityProfile.following_count || 0}</strong> following</span>
+ <span><strong>{viewedCommunityProfile.posts_count || viewedCommunityPosts.length || 0}</strong> posts</span>
+ <span>{viewedCommunityProfile.role || 'Grower'}{viewedCommunityProfile.country ? ` • ${viewedCommunityProfile.country}` : ''}</span>
+ </div>
+ {!viewedCommunityViewer?.can_view_full_profile && <div className='panel' style={{marginTop:12, background:'#fff7ed', color:'#9a3412'}}>This profile is set to followers only. Follow this grower to unlock their full profile and posts.</div>}
+ {(viewedCommunityProfile.farm_life || viewedCommunityProfile.interests) && viewedCommunityViewer?.can_view_full_profile && <div className='two-col' style={{marginTop:12}}>
+ <div className='panel' style={{background:'#f8fafc'}}>
+ <strong>Farm life</strong>
+ <div style={{marginTop:6, color:'#475569', whiteSpace:'pre-wrap'}}>{viewedCommunityProfile.farm_life || 'No farm-life details shared yet.'}</div>
+ </div>
+ <div className='panel' style={{background:'#f8fafc'}}>
+ <strong>Interests</strong>
+ <div style={{marginTop:6, color:'#475569'}}>{viewedCommunityProfile.interests || 'No interests shared yet.'}</div>
+ </div>
+ </div>}
+ <div style={{marginTop:14}}>
+ <h5 style={{margin:'0 0 8px 0'}}>Recent community posts</h5>
+ <div className='list'>
+ {viewedCommunityPosts.map(post => <div key={`view-profile-post-${post.id}`} className='panel' style={{padding:10,border:'1px solid #dbe6df'}}>
+ <div style={{fontSize:'.78rem', color:'#64748b'}}>{String(post.created_at || '').replace('T',' ').slice(0,16)}</div>
+ {!!post.text && <div style={{marginTop:6, whiteSpace:'pre-wrap'}}>{post.text}</div>}
+ {!!post.media_url && (String(post.media_type || '').toUpperCase() === 'VIDEO'
+ ? <video src={post.media_url} controls style={{width:'100%', maxHeight:320, borderRadius:12, marginTop:8, background:'#000'}} />
+ : <img src={post.media_url} alt='Profile post' style={{width:'100%', maxHeight:320, objectFit:'cover', borderRadius:12, marginTop:8}} />)}
+ {!!post.tags && <div style={{fontSize:'.82rem', color:'#0284c7', marginTop:8}}>#{String(post.tags).split(',').map(s=>s.trim()).filter(Boolean).join(' #')}</div>}
+ <div style={{display:'flex',gap:12,flexWrap:'wrap',marginTop:8,fontSize:'.78rem',color:'#64748b'}}>
+ <span>{post.likes_count || 0} likes</span>
+ <span>{post.comments_count || 0} comments</span>
+ </div>
+ </div>)}
+ {!viewedCommunityPosts.length && viewedCommunityViewer?.can_view_full_profile && <div className='panel' style={{background:'#f8fafc'}}>No public posts yet.</div>}
+ </div>
+ </div>
+ </div>
+ </>}
+ </article>}
  </section>}
 
  {active === 'ai-disease' && <section className='disease-shell'>

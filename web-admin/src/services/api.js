@@ -247,6 +247,7 @@ export const sanctionWorldChatUser = async (userId, payload) => (await api.post(
 
 export const fetchCommunityProfileMe = async () => (await api.get('/community/profile/me')).data
 export const saveCommunityProfileMe = async (payload) => (await api.post('/community/profile/me', payload)).data
+export const fetchCommunityUserProfile = async (userId, postsLimit = 24) => (await api.get(`/community/users/${userId}/profile`, { params: { posts_limit: postsLimit } })).data
 export const searchCommunityUsers = async (q = '', limit = 20) => (await api.get('/community/users/search', { params: { q, limit } })).data
 export const fetchCommunityFollowState = async () => (await api.get('/community/follows/me')).data
 export const toggleCommunityFollow = async (userId) => (await api.post(`/community/users/${userId}/follow`, {})).data

@@ -3024,6 +3024,48 @@ def _community_user_card(db: Session, user: User, viewer_id: Optional[int] = Non
     }
 
 
+def _community_can_view_full_profile(db: Session, target_user_id: int, viewer_id: int, profile: Optional[CommunityProfile] = None) -> bool:
+    if viewer_id == target_user_id:
+        return True
+    profile = profile or db.query(CommunityProfile).filter(CommunityProfile.user_id == target_user_id).first()
+    visibility = str(getattr(profile, 'visibility', 'PUBLIC') or 'PUBLIC').upper()
+    if visibility != 'FOLLOWERS':
+        return True
+    return db.query(CommunityFollow.id).filter(
+        CommunityFollow.follower_user_id == viewer_id,
+        CommunityFollow.followed_user_id == target_user_id,
+    ).first() is not None
+
+
+def _serialize_community_post(db: Session, post: CommunityPost, viewer_id: Optional[int] = None) -> dict:
+    profile = db.query(CommunityProfile).filter(CommunityProfile.user_id == post.user_id).first()
+    user = db.query(User).filter(User.id == post.user_id).first()
+    liked_by_me = False
+    if viewer_id:
+        liked_by_me = db.query(CommunityPostLike.id).filter(
+            CommunityPostLike.post_id == post.id,
+            CommunityPostLike.user_id == viewer_id,
+        ).first() is not None
+    return {
+        'id': post.id,
+        'user_id': post.user_id,
+        'author_name': post.author_name,
+        'author_country': post.author_country,
+        'author_full_name': user.full_name if user else post.author_name,
+        'author_username': profile.username if profile else None,
+        'author_avatar_url': profile.avatar_url if profile else None,
+        'author_cover_image_url': profile.cover_image_url if profile else None,
+        'text': _mask_contact_info(post.text),
+        'media_url': post.media_url,
+        'media_type': post.media_type,
+        'tags': post.tags,
+        'created_at': post.created_at,
+        'likes_count': db.query(func.count(CommunityPostLike.id)).filter(CommunityPostLike.post_id == post.id).scalar() or 0,
+        'comments_count': db.query(func.count(CommunityPostComment.id)).filter(CommunityPostComment.post_id == post.id).scalar() or 0,
+        'liked_by_me': liked_by_me,
+    }
+
+
 @router.get('/community/profile/me')
 def community_profile_me(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
     u = _current_user_from_auth(authorization, db)
@@ -3096,6 +3138,43 @@ def community_profile_upsert(payload: CommunityProfileIn, authorization: Optiona
         'visibility': p.visibility,
         'followers_count': followers_count,
         'following_count': following_count,
+    }
+
+
+@router.get('/community/users/{target_user_id}/profile')
+def community_user_profile_view(target_user_id: int, posts_limit: int = 24, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    viewer = _current_user_from_auth(authorization, db)
+    target = db.query(User).filter(User.id == target_user_id, User.is_deleted == False).first()
+    if not target:
+        raise HTTPException(status_code=404, detail='User not found')
+
+    profile = db.query(CommunityProfile).filter(CommunityProfile.user_id == target_user_id).first()
+    card = _community_user_card(db, target, viewer.id)
+    can_view_full_profile = _community_can_view_full_profile(db, target_user_id, viewer.id, profile)
+    rows = db.query(CommunityPost).filter(
+        CommunityPost.user_id == target_user_id,
+        CommunityPost.status == 'VISIBLE'
+    ).order_by(CommunityPost.created_at.desc(), CommunityPost.id.desc()).limit(max(1, min(posts_limit, 60))).all()
+    posts = [_serialize_community_post(db, row, viewer.id) for row in rows]
+
+    if not can_view_full_profile:
+        card = {
+            **card,
+            'bio': '',
+            'farm_life': '',
+            'interests': '',
+        }
+        posts = []
+
+    return {
+        'profile': card,
+        'viewer': {
+            'user_id': viewer.id,
+            'is_me': viewer.id == target_user_id,
+            'is_following': card.get('is_following', False),
+            'can_view_full_profile': can_view_full_profile,
+        },
+        'posts': posts,
     }
 
 
@@ -3324,34 +3403,7 @@ def community_posts(limit: int = 60, authorization: Optional[str] = Header(None)
     rows = db.query(CommunityPost).filter(CommunityPost.status == 'VISIBLE').order_by(CommunityPost.id.desc()).limit(n).all()
     out = []
     for r in rows:
-        likes = db.query(func.count(CommunityPostLike.id)).filter(CommunityPostLike.post_id == r.id).scalar() or 0
-        comments = db.query(func.count(CommunityPostComment.id)).filter(CommunityPostComment.post_id == r.id).scalar() or 0
-        liked_by_me = False
-        if viewer:
-            liked_by_me = db.query(CommunityPostLike.id).filter(
-                CommunityPostLike.post_id == r.id,
-                CommunityPostLike.user_id == viewer.id,
-            ).first() is not None
-        profile = db.query(CommunityProfile).filter(CommunityProfile.user_id == r.user_id).first()
-        user = db.query(User).filter(User.id == r.user_id).first()
-        out.append({
-            'id': r.id,
-            'user_id': r.user_id,
-            'author_name': r.author_name,
-            'author_country': r.author_country,
-            'author_full_name': user.full_name if user else r.author_name,
-            'author_username': profile.username if profile else None,
-            'author_avatar_url': profile.avatar_url if profile else None,
-            'author_cover_image_url': profile.cover_image_url if profile else None,
-            'text': _mask_contact_info(r.text),
-            'media_url': r.media_url,
-            'media_type': r.media_type,
-            'tags': r.tags,
-            'created_at': r.created_at,
-            'likes_count': likes,
-            'comments_count': comments,
-            'liked_by_me': liked_by_me,
-        })
+        out.append(_serialize_community_post(db, r, viewer.id if viewer else None))
     return out
 
 
