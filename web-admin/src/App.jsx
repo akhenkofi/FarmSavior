@@ -2785,6 +2785,30 @@ function AppInner() {
    setCommunityMessageSending(false)
   }
  }
+ const sendCommunityCallInvite = async (mode = 'audio') => {
+  const targetUserId = communityMessageView?.user?.user_id
+  if (!targetUserId || communityMessageSending) return
+  const meId = String(me?.id || '')
+  const otherId = String(targetUserId || '')
+  const roomSeed = [meId, otherId].filter(Boolean).sort().join('-') || `${Date.now()}`
+  const room = `farmsavior-${roomSeed}`
+  const callUrl = mode === 'video'
+   ? `https://meet.jit.si/${room}`
+   : `https://meet.jit.si/${room}#config.startWithVideoMuted=true`
+  const inviteText = `${mode === 'video' ? '📹' : '📞'} Join my ${mode} call: ${callUrl}`
+  try {
+   setCommunityMessageSending(true)
+   const sent = await api.sendCommunityMessage(targetUserId, { text: inviteText })
+   setCommunityMessageView(prev => ({ ...prev, messages: [ ...(prev?.messages || []), sent ].filter(Boolean) }))
+   const threads = await api.fetchCommunityMessageThreads().catch(() => [])
+   setCommunityMessageThreads(threads || [])
+   if (typeof window !== 'undefined') window.open(callUrl, '_blank', 'noopener,noreferrer')
+  } catch (err) {
+   alert(errMsg(err))
+  } finally {
+   setCommunityMessageSending(false)
+  }
+ }
  useEffect(() => {
   if (!communityInboxOpen || !communityMessageView.open) return
   const node = communityMessageListRef.current
@@ -7005,6 +7029,8 @@ function AppInner() {
  </div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
  {communityMessageView.open && <button type='button' className='btn community-mobile-back-btn' onClick={()=>setCommunityMessageView({ open: false, loading: false, error: '', user: null, messages: [] })}>Back to inbox</button>}
+ {communityMessageView.open && <button type='button' className='btn' disabled={communityMessageSending} onClick={()=>sendCommunityCallInvite('audio')}>{communityMessageSending ? 'Starting…' : 'Audio Call'}</button>}
+ {communityMessageView.open && <button type='button' className='btn' disabled={communityMessageSending} onClick={()=>sendCommunityCallInvite('video')}>{communityMessageSending ? 'Starting…' : 'Video Call'}</button>}
  <button type='button' className='btn' onClick={closeCommunityMessages}>Close</button>
  </div>
  </div>
