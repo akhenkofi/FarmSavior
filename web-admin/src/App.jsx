@@ -2824,7 +2824,8 @@ function AppInner() {
    setCommunityMessageSending(false)
   }
  }
- const enableCommunityCallPermissions = async () => {
+ const enableCommunityCallPermissions = async (options = {}) => {
+  const { silent = false } = options
   if (communityCallPermissionBusy) return
   try {
    setCommunityCallPermissionBusy(true)
@@ -2835,9 +2836,8 @@ function AppInner() {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
     ;(stream.getTracks?.() || []).forEach(track => track.stop())
    }
-   alert('Call permissions updated. You can now receive call alerts and use mic/camera for calls.')
   } catch (err) {
-   alert(errMsg(err))
+   if (!silent) alert(errMsg(err))
   } finally {
    setCommunityCallPermissionBusy(false)
   }
@@ -6717,7 +6717,7 @@ function AppInner() {
  <h4 style={{margin:'0 0 4px 0'}}>Enable call permissions</h4>
  <div className='helper-text'>To receive rings and answer calls smoothly, enable notifications + mic/camera permissions.</div>
  </div>
- <button type='button' className='btn btn-dark' disabled={communityCallPermissionBusy} onClick={()=>enableCommunityCallPermissions()}>{communityCallPermissionBusy ? 'Enabling…' : 'Enable now'}</button>
+ <button type='button' className='btn btn-dark' disabled={communityCallPermissionBusy} onClick={()=>enableCommunityCallPermissions()}>Enable now</button>
  </div>
  </article>}
 
@@ -7120,7 +7120,7 @@ function AppInner() {
  {communityMessageView.open && <button type='button' className='btn community-mobile-back-btn' onClick={()=>setCommunityMessageView({ open: false, loading: false, error: '', user: null, messages: [] })}>Back to inbox</button>}
  {communityMessageView.open && <button type='button' className='btn' disabled={communityMessageSending} onClick={()=>sendCommunityCallInvite('audio')}>{communityMessageSending ? 'Starting…' : 'Audio'}</button>}
  {communityMessageView.open && <button type='button' className='btn' disabled={communityMessageSending} onClick={()=>sendCommunityCallInvite('video')}>{communityMessageSending ? 'Starting…' : 'Video'}</button>}
- {communityMessageView.open && <button type='button' className='btn' disabled={communityCallPermissionBusy} onClick={enableCommunityCallPermissions}>{communityCallPermissionBusy ? 'Enabling…' : 'Enable Mic/Camera/Alerts'}</button>}
+ {communityMessageView.open && <button type='button' className='btn' disabled={communityCallPermissionBusy} onClick={enableCommunityCallPermissions}>Enable Mic/Camera/Alerts</button>}
  <button type='button' className='btn' onClick={closeCommunityMessages}>Close</button>
  </div>
  </div>
