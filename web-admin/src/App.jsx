@@ -3050,6 +3050,7 @@ function AppInner() {
  const [livestockRecordsFilter, setLivestockRecordsFilter] = useState('ALL')
  const [recordsSectionOpen, setRecordsSectionOpen] = useState({ create: false, edit: false, batch: false, details: false })
  const [batchMedicationForm, setBatchMedicationForm] = useState({ species:'ALL', animal_type:'ALL', health_status:'ALL', cull_keep_status:'ALL', minStars:'', pen_location:'', medication:'', dose:'', days:'' })
+ const ATTACHMENT_MARKER = '\n\n[ATTACHMENTS_JSON]'
  const mapLivestockRecordToEditForm = (r) => ({
  id: r?.id || '',
  user_id: r?.user_id || me?.id || 1,
@@ -3081,7 +3082,7 @@ function AppInner() {
  cull_reason: r?.cull_reason || '',
  health_status: r?.health_status || '',
  pen_location: r?.pen_location || '',
- notes: r?.notes || '',
+ notes: extractAttachmentsFromNotes(r?.notes || '').text || '',
  treatment_entry: ''
  })
  const [logisticsForm, setLogisticsForm] = useState({ requester_id: 1, pickup_location: '', dropoff_location: '', cargo_type: '', weight_kg: '', status: 'PENDING' })
@@ -3273,10 +3274,38 @@ function AppInner() {
  setBreederUploads(prev => ({ ...prev, docs: [...(prev.docs || []), ...mapped] }))
  }
 
+ function extractAttachmentsFromNotes (notesValue) {
+  const raw = String(notesValue || '')
+  const idx = raw.indexOf(ATTACHMENT_MARKER)
+  if (idx < 0) return { text: raw, photos: [], docs: [] }
+  const text = raw.slice(0, idx).trim()
+  const blob = raw.slice(idx + ATTACHMENT_MARKER.length).trim()
+  try {
+   const parsed = JSON.parse(blob)
+   return { text, photos: Array.isArray(parsed?.photos) ? parsed.photos : [], docs: Array.isArray(parsed?.docs) ? parsed.docs : [] }
+  } catch {
+   return { text: raw, photos: [], docs: [] }
+  }
+ }
+ function mergeNotesWithAttachments (notesValue, uploads) {
+  const base = extractAttachmentsFromNotes(notesValue)
+  const photos = Array.isArray(uploads?.photos) ? uploads.photos : []
+  const docs = Array.isArray(uploads?.docs) ? uploads.docs : []
+  if (!photos.length && !docs.length) return base.text || ''
+  return `${base.text || ''}${ATTACHMENT_MARKER}${JSON.stringify({ photos, docs })}`
+ }
+
  const handleAnimalPhotoFiles = async (fileList) => {
  const files = Array.from(fileList || []).filter(Boolean)
  if (!files.length) return
- const mapped = files.map((file) => ({ name: file.name, type: file.type || 'image/*', size: file.size }))
+ const mapped = await Promise.all(files.map(async (file) => {
+  try {
+   const data_url = await compressImageFileToDataUrl(file, { maxDim: 1280, quality: 0.75, maxChars: 850000 })
+   return { name: file.name, type: file.type || 'image/*', size: file.size, data_url }
+  } catch {
+   return { name: file.name, type: file.type || 'image/*', size: file.size }
+  }
+ }))
  setAnimalUploads(prev => ({ ...prev, photos: [...(prev.photos || []), ...mapped] }))
  }
 
@@ -6194,6 +6223,7 @@ function AppInner() {
         sale_date: form.sale_date || null,
         died_date: form.died_date || null,
        }
+       normalizedPayload.notes = mergeNotesWithAttachments(normalizedPayload.notes, animalUploads)
        if (recordsSectionOpen.edit) await api.updateLivestockRecord(Number(form.id), normalizedPayload)
        else await api.createLivestockRecord(normalizedPayload)
        await loadLivestockRecords()
@@ -6243,7 +6273,7 @@ function AppInner() {
         <label className='records-field'><span>Sold to</span><input className='input' placeholder='Buyer / market / processor' value={form.sold_to} onChange={e => setForm({ ...form, sold_to: e.target.value })} /></label>
         <label className='records-field'><span>Died date</span><input className='input' type='date' value={form.died_date} onChange={e => setForm({ ...form, died_date: e.target.value })} /></label>
         <label className='records-field records-field-wide'><span>Medicine / treatment note</span><input className='input' placeholder='Initial medicine, dosage, or treatment note' value={form.treatment_entry} onChange={e => setForm({ ...form, treatment_entry: e.target.value })} /></label>
-        <label className='records-field records-field-wide'><span>Draft attachments</span><div style={{display:'grid', gap:8}}><div className='row2' style={{gap:10}}><label className='upload-field'><span className='helper-text'>Animal photos</span><input type='file' accept='image/*' multiple onChange={e => { handleAnimalPhotoFiles(e.target.files).catch(console.error); e.target.value = '' }} /></label><label className='upload-field'><span className='helper-text'>Animal documents</span><input type='file' multiple onChange={e => { handleAnimalDocFiles(e.target.files); e.target.value = '' }} /></label></div><div className='helper-text'>{animalUploads.photos.length} photo(s) · {animalUploads.docs.length} document(s) selected. Backend persistence for record attachments is not wired yet.</div>{!!animalUploads.photos.length && <div className='helper-text'>Photos: {animalUploads.photos.map(file => file.name).join(', ')}</div>}{!!animalUploads.docs.length && <div className='helper-text'>Docs: {animalUploads.docs.map(file => file.name).join(', ')}</div>}</div></label>
+        <label className='records-field records-field-wide'><span>Draft attachments</span><div style={{display:'grid', gap:8}}><div className='row2' style={{gap:10}}><label className='upload-field'><span className='helper-text'>Animal photos</span><input type='file' accept='image/*' multiple onChange={e => { handleAnimalPhotoFiles(e.target.files).catch(console.error); e.target.value = '' }} /></label><label className='upload-field'><span className='helper-text'>Animal documents</span><input type='file' multiple onChange={e => { handleAnimalDocFiles(e.target.files); e.target.value = '' }} /></label></div><div className='helper-text'>{animalUploads.photos.length} photo(s) · {animalUploads.docs.length} document(s) selected.</div>{!!animalUploads.photos.length && <div className='helper-text'>Photos: {animalUploads.photos.map(file => file.name).join(', ')}</div>}{!!animalUploads.docs.length && <div className='helper-text'>Docs: {animalUploads.docs.map(file => file.name).join(', ')}</div>}</div></label>
         <label className='records-field records-field-wide'><span>Notes</span><textarea className='input' rows='4' placeholder='Anything useful about lineage, treatment, temperament, or special handling.' value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></label>
        </>
       })()}
@@ -6281,6 +6311,30 @@ function AppInner() {
        </button>
       })}
      </div>
+
+     {(() => {
+      const attachmentMeta = extractAttachmentsFromNotes(currentLivestockRecord?.notes)
+      if (!(attachmentMeta.photos || []).length && !(attachmentMeta.docs || []).length) return null
+      return <>
+       <div className='records-detail-section'>Attachments</div>
+       <div className='records-detail-grid'>
+        {(attachmentMeta.photos || []).map((photo, idx)=><div key={`record-photo-${idx}`} className='records-detail-row' style={{display:'grid', gap:8}}><span>{photo?.name || `Photo ${idx+1}`}</span>{photo?.data_url ? <img src={photo.data_url} alt={photo?.name || `Animal photo ${idx+1}`} style={{width:'100%', maxHeight:220, objectFit:'cover', borderRadius:10}} /> : <strong>Image saved</strong>}</div>)}
+        {(attachmentMeta.docs || []).map((doc, idx)=><div key={`record-doc-${idx}`} className='records-detail-row'><span>Document</span><strong>{doc?.name || `Document ${idx+1}`}</strong></div>)}
+       </div>
+      </>
+     })()}
+
+     {(() => {
+      const at = extractAttachmentsFromNotes(currentLivestockRecord?.notes)
+      if (!at.photos.length && !at.docs.length) return null
+      return <>
+       <div className='records-detail-section'>Attachments</div>
+       <div className='panel' style={{background:'#fff', border:'1px solid #dbe6df', marginBottom:10}}>
+        {!!at.photos.length && <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(120px,1fr))',gap:8}}>{at.photos.map((p, idx)=><button type='button' key={`animal-photo-${idx}`} className='btn' style={{padding:0,overflow:'hidden',height:120}} onClick={()=>{ const url = p?.data_url || p?.url || ''; if (url) setLightbox({ open:true, images:[url], index:0, title:p?.name || 'Animal photo' }) }}>{(p?.data_url || p?.url) ? <img src={p.data_url || p.url} alt={p?.name || 'Animal photo'} style={{width:'100%',height:'100%',objectFit:'cover'}} /> : <span style={{padding:8}}>{p?.name || `Photo ${idx+1}`}</span>}</button>)}</div>}
+        {!!at.docs.length && <div className='list' style={{marginTop:10}}>{at.docs.map((d, idx)=><div key={`animal-doc-${idx}`} className='list-row'><span>{d?.name || `Document ${idx+1}`}</span></div>)}</div>}
+       </div>
+      </>
+     })()}
 
      <div className='records-detail-section'>History</div>
      <div className='records-detail-grid'>
