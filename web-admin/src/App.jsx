@@ -2811,8 +2811,7 @@ function AppInner() {
    setCommunityMessageSending(false)
   }
  }
- const enableCommunityCallPermissions = async (options = {}) => {
-  const { silent = false } = options
+ const enableCommunityCallPermissions = async () => {
   if (communityCallPermissionBusy) return
   try {
    setCommunityCallPermissionBusy(true)
@@ -2823,9 +2822,9 @@ function AppInner() {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
     ;(stream.getTracks?.() || []).forEach(track => track.stop())
    }
-   if (!silent) alert('Call permissions updated. You can now receive call alerts and use mic/camera for calls.')
+   alert('Call permissions updated. You can now receive call alerts and use mic/camera for calls.')
   } catch (err) {
-   if (!silent) alert(errMsg(err))
+   alert(errMsg(err))
   } finally {
    setCommunityCallPermissionBusy(false)
   }
@@ -2852,13 +2851,6 @@ function AppInner() {
    new Notification('Incoming FarmSavior call invite', { body: `${sender} sent a call invite. Open Community messages to join.`, silent: false })
   }
  }, [communityMessageView.open, communityMessageView.loading, communityMessageView.messages, communityMessageView?.user?.full_name])
- useEffect(() => {
-  if (!communityMessageView.open || communityMessageView.loading) return
-  const hasNotification = typeof window !== 'undefined' && 'Notification' in window
-  const needsNotification = hasNotification && Notification.permission !== 'granted'
-  if (!needsNotification) return
-  enableCommunityCallPermissions({ silent: true })
- }, [communityMessageView.open, communityMessageView.loading])
  useEffect(() => {
  if (active !== 'community') return
  const routeUserId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('communityProfile') : ''
