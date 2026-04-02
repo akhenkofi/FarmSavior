@@ -2673,7 +2673,9 @@ function AppInner() {
  const [communityMessageDraft, setCommunityMessageDraft] = useState('')
  const [communityMessageSending, setCommunityMessageSending] = useState(false)
  const [communityMessageOpeningUserId, setCommunityMessageOpeningUserId] = useState(null)
+ const [communityCallPermissionBusy, setCommunityCallPermissionBusy] = useState(false)
  const communityMessageListRef = useRef(null)
+ const communityLastCallAlertRef = useRef(null)
  const [editingCommunityPostId, setEditingCommunityPostId] = useState(null)
  const [communityCommentText, setCommunityCommentText] = useState({})
  const [communityComments, setCommunityComments] = useState({})
@@ -2809,12 +2811,46 @@ function AppInner() {
    setCommunityMessageSending(false)
   }
  }
+ const enableCommunityCallPermissions = async () => {
+  if (communityCallPermissionBusy) return
+  try {
+   setCommunityCallPermissionBusy(true)
+   if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission !== 'granted') {
+    await Notification.requestPermission()
+   }
+   if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+    ;(stream.getTracks?.() || []).forEach(track => track.stop())
+   }
+   alert('Call permissions updated. You can now receive call alerts and use mic/camera for calls.')
+  } catch (err) {
+   alert(errMsg(err))
+  } finally {
+   setCommunityCallPermissionBusy(false)
+  }
+ }
  useEffect(() => {
   if (!communityInboxOpen || !communityMessageView.open) return
   const node = communityMessageListRef.current
   if (!node) return
   node.scrollTop = node.scrollHeight
  }, [communityInboxOpen, communityMessageView.open, communityMessageView.messages, communityMessageView.loading])
+ useEffect(() => {
+  if (!communityMessageView.open || communityMessageView.loading) return
+  const latest = (communityMessageView.messages || []).slice(-1)[0]
+  if (!latest || latest.is_mine) return
+  const text = String(latest.text || '').toLowerCase()
+  const looksLikeCallInvite = text.includes('join my audio call:') || text.includes('join my video call:') || text.includes('meet.jit.si/')
+  if (!looksLikeCallInvite) return
+  const marker = String(latest.id || latest.created_at || text)
+  if (communityLastCallAlertRef.current === marker) return
+  communityLastCallAlertRef.current = marker
+  if (typeof document !== 'undefined' && document.visibilityState === 'visible') return
+  if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+   const sender = communityMessageView?.user?.full_name || 'A user'
+   new Notification('Incoming FarmSavior call invite', { body: `${sender} sent a call invite. Open Community messages to join.`, silent: false })
+  }
+ }, [communityMessageView.open, communityMessageView.loading, communityMessageView.messages, communityMessageView?.user?.full_name])
  useEffect(() => {
  if (active !== 'community') return
  const routeUserId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('communityProfile') : ''
@@ -7031,6 +7067,7 @@ function AppInner() {
  {communityMessageView.open && <button type='button' className='btn community-mobile-back-btn' onClick={()=>setCommunityMessageView({ open: false, loading: false, error: '', user: null, messages: [] })}>Back to inbox</button>}
  {communityMessageView.open && <button type='button' className='btn' disabled={communityMessageSending} onClick={()=>sendCommunityCallInvite('audio')}>{communityMessageSending ? 'Starting…' : 'Audio Call'}</button>}
  {communityMessageView.open && <button type='button' className='btn' disabled={communityMessageSending} onClick={()=>sendCommunityCallInvite('video')}>{communityMessageSending ? 'Starting…' : 'Video Call'}</button>}
+ {communityMessageView.open && <button type='button' className='btn' disabled={communityCallPermissionBusy} onClick={enableCommunityCallPermissions}>{communityCallPermissionBusy ? 'Enabling…' : 'Enable Mic/Camera/Alerts'}</button>}
  <button type='button' className='btn' onClick={closeCommunityMessages}>Close</button>
  </div>
  </div>
@@ -7057,6 +7094,7 @@ function AppInner() {
  <button type='button' className='btn btn-dark' disabled={communityMessageSending || !String(communityMessageDraft || '').trim()} onClick={sendActiveCommunityMessage}>{communityMessageSending ? 'Sending…' : 'Send'}</button>
  </div>
  <div style={{marginTop:6, fontSize:'.76rem', color:'#64748b'}}>If this grower changes inbox privacy, new sends can be blocked even if the thread still appears here.</div>
+ <div style={{marginTop:4, fontSize:'.76rem', color:'#64748b'}}>Tip: tap “Enable Mic/Camera/Alerts” once so your phone/browser can prompt for call permissions and notifications.</div>
  </>}
  </>}
  </div>
