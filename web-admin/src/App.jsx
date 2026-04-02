@@ -2612,14 +2612,14 @@ function DataTable({ columns, rows, filterKey, onEdit, onRowClick }) {
 
 function AppInner() {
  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams('')
- const forcePublicView = searchParams.get('public') !== '0'
+ const resumeSection = (typeof window !== 'undefined' ? (localStorage.getItem('farmsavior_resume_section') || '') : '')
+ const forcePublicView = (searchParams.get('public') !== '0') && !resumeSection
  const authPrompt = searchParams.get('auth') || ''
  const initialCommunityProfileUserId = searchParams.get('communityProfile') || ''
  const explicitGo = searchParams.get('go') || ''
  const mappedGo = (explicitGo === 'poultry-academy' ? 'poultry-university' : (explicitGo === 'sheep-academy' ? 'sheep-university' : (explicitGo === 'goat-academy' ? 'goat-university' : (explicitGo === 'cattle-academy' ? 'cattle-university' : explicitGo))))
- const stickySections = new Set(['payments','livestock-records','poultry-university','sheep-university','goat-university','cattle-university'])
- const lastSection = (typeof window !== 'undefined' ? (sessionStorage.getItem('farmsavior_last_active_section_session') || '') : '')
- const initialSection = (mappedGo && mappedGo !== 'onboarding' ? mappedGo : (stickySections.has(lastSection) ? lastSection : 'home'))
+ const stickySections = new Set(['payments','livestock-records','poultry-university','sheep-university','goat-university','cattle-university','community','world-chat','ai-disease'])
+ const initialSection = (mappedGo && mappedGo !== 'onboarding' ? mappedGo : (stickySections.has(resumeSection) ? resumeSection : 'home'))
  const [token, setToken] = useState(localStorage.getItem('farmsavior_token'))
  const [authMode, setAuthMode] = useState('login')
  const [portalType, setPortalType] = useState('main')
@@ -2641,9 +2641,9 @@ function AppInner() {
  const [savedListings, setSavedListings] = useState(() => { try { return JSON.parse(localStorage.getItem('farmsavior_saved_listings') || '[]') } catch { return [] } })
  useEffect(() => {
   try {
-   const stickySections = new Set(['payments','livestock-records','poultry-university','sheep-university','goat-university','cattle-university'])
-   if (stickySections.has(active)) sessionStorage.setItem('farmsavior_last_active_section_session', active)
-   else sessionStorage.removeItem('farmsavior_last_active_section_session')
+   const stickySections = new Set(['payments','livestock-records','poultry-university','sheep-university','goat-university','cattle-university','community','world-chat','ai-disease'])
+   if (stickySections.has(active)) localStorage.setItem('farmsavior_resume_section', active)
+   else if (active === 'home' || active === 'onboarding') localStorage.removeItem('farmsavior_resume_section')
   } catch {}
  }, [active])
  const [publicDetail, setPublicDetail] = useState(null)
@@ -3748,6 +3748,7 @@ function AppInner() {
  }
 
  const goToPublicHomepage = () => {
+ try { localStorage.removeItem('farmsavior_resume_section') } catch {}
  window.location.href = '/?public=1'
  }
 
