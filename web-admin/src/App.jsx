@@ -4457,7 +4457,7 @@ function AppInner() {
  : `You are on the free livestock tier${effectiveLivestockSubscription?.record_limit ? ` with up to ${effectiveLivestockSubscription.record_limit} animals` : ''}. Upgrade to unlock unlimited records and a more complete herd-management workspace.`}
  </div>
  <div className='card-actions'>
- <button className={`btn ${effectiveLivestockSubscription?.tier === 'premium' ? '' : 'btn-dark'}`} onClick={() => setActive('livestock-records')}>{effectiveLivestockSubscription?.tier === 'premium' ? 'Open records' : 'View upgrade plans'}</button>
+ <button className={`btn ${effectiveLivestockSubscription?.tier === 'premium' ? '' : 'btn-dark'}`} onClick={() => { if (token) window.location.href='/?public=0&go=livestock-records'; else setActive('livestock-records') }}>{effectiveLivestockSubscription?.tier === 'premium' ? 'Open records' : 'View upgrade plans'}</button>
  <button className='btn' onClick={() => setActive('onboarding')}>My billing</button>
  </div>
  </div>}
