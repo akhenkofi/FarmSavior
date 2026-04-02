@@ -2674,6 +2674,7 @@ function AppInner() {
  const [communityMessageSending, setCommunityMessageSending] = useState(false)
  const [communityMessageOpeningUserId, setCommunityMessageOpeningUserId] = useState(null)
  const [communityCallPermissionBusy, setCommunityCallPermissionBusy] = useState(false)
+ const [communityIncomingCall, setCommunityIncomingCall] = useState(null)
  const communityMessageListRef = useRef(null)
  const communityLastCallAlertRef = useRef(null)
  const [editingCommunityPostId, setEditingCommunityPostId] = useState(null)
@@ -2851,16 +2852,23 @@ function AppInner() {
   if (!communityMessageView.open || communityMessageView.loading) return
   const latest = (communityMessageView.messages || []).slice(-1)[0]
   if (!latest || latest.is_mine) return
-  const text = String(latest.text || '').toLowerCase()
-  const looksLikeCallInvite = text.includes('join my audio call:') || text.includes('join my video call:') || text.includes('meet.jit.si/')
+  const text = String(latest.text || '')
+  const lowerText = text.toLowerCase()
+  const looksLikeCallInvite = lowerText.includes('join my audio call:') || lowerText.includes('join my video call:') || lowerText.includes('meet.jit.si/')
   if (!looksLikeCallInvite) return
-  const marker = String(latest.id || latest.created_at || text)
+  const marker = String(latest.id || latest.created_at || lowerText)
   if (communityLastCallAlertRef.current === marker) return
   communityLastCallAlertRef.current = marker
-  if (typeof document !== 'undefined' && document.visibilityState === 'visible') return
+  const callUrl = (text.match(/https?:\/\/meet\.jit\.si\/[^\s]+/i) || [])[0] || ''
+  const mode = lowerText.includes('video') ? 'video' : 'audio'
+  const sender = communityMessageView?.user?.full_name || 'A user'
+  if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+   try { if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([400, 200, 400, 200, 400]) } catch {}
+   setCommunityIncomingCall({ from: sender, mode, url: callUrl })
+   return
+  }
   if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-   const sender = communityMessageView?.user?.full_name || 'A user'
-   new Notification('Incoming FarmSavior call invite', { body: `${sender} sent a call invite. Open Community messages to join.`, silent: false })
+   new Notification('Incoming FarmSavior call invite', { body: `${sender} is calling you (${mode}). Open Community messages to answer.`, silent: false })
   }
  }, [communityMessageView.open, communityMessageView.loading, communityMessageView.messages, communityMessageView?.user?.full_name])
  useEffect(() => {
@@ -7135,6 +7143,18 @@ function AppInner() {
  <div style={{marginTop:4, fontSize:'.76rem', color:'#64748b'}}>Tip: tap “Enable Mic/Camera/Alerts” once so your phone/browser can prompt for call permissions and notifications.</div>
  </>}
  </>}
+ </div>
+ </div>
+ </div>}
+
+ {communityIncomingCall?.url && <div className='community-messenger-overlay' style={{zIndex: 220}}>
+ <div className='panel' style={{maxWidth:420, width:'92vw', border:'2px solid #0ea5e9', boxShadow:'0 20px 40px rgba(15,23,42,.25)'}}>
+ <div style={{fontSize:'.78rem', fontWeight:700, color:'#0284c7', letterSpacing:'.08em', textTransform:'uppercase'}}>Incoming call</div>
+ <h4 style={{margin:'6px 0 4px 0'}}>{communityIncomingCall.from} is calling you</h4>
+ <div className='helper-text' style={{marginBottom:10}}>{communityIncomingCall.mode === 'video' ? 'Video call' : 'Audio call'} — answer now?</div>
+ <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+ <button type='button' className='btn btn-dark' onClick={()=>{ const url = communityIncomingCall.url; setCommunityIncomingCall(null); if (typeof window !== 'undefined') window.open(url, '_blank', 'noopener,noreferrer') }}>Answer</button>
+ <button type='button' className='btn' onClick={()=>setCommunityIncomingCall(null)}>Decline</button>
  </div>
  </div>
  </div>}
