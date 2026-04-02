@@ -4465,8 +4465,8 @@ function AppInner() {
  <div className='aadu-home-copy'>
  <div className='aadu-home-eyebrow'>Flagship learning platform</div>
  <h3>{AADU_FULL_NAME} (AADU)</h3>
- <p>{AADU_FULL_NAME} is FarmSavior’s flagship digital livestock training platform. Across the app, we shorten it to AADU so the umbrella brand stays clear without crowding the interface. It brings Poultry University, Sheep University, Goat University, and Cattle University together under one clear umbrella so farmers, operators, and livestock teams can move straight into the right school.</p>
- <p>Each AADU school is organized around practical operating needs — production setup, breed development, herd or flock health, and commercial decision-making — presented in a clean format for field use rather than hype.</p>
+ <p>{AADU_FULL_NAME} (AADU) is FarmSavior’s livestock learning hub, combining Poultry, Sheep, Goat, and Cattle University in one place.</p>
+ <p>Practical lessons only: setup, breed improvement, health, and performance.</p>
  </div>
  <div className='aadu-home-aside'>
  <div className='aadu-home-aside-label'>Inside AADU</div>
