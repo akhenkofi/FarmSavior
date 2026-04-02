@@ -2796,17 +2796,11 @@ function AppInner() {
   if (!targetUserId || communityMessageSending) return
   const meId = String(me?.id || '')
   const otherId = String(targetUserId || '')
-  const roomSeed = [meId, otherId].filter(Boolean).sort().join('-') || `${Date.now()}`
-  const room = `farmsavior-${roomSeed}`
+  const pairSeed = [meId, otherId].filter(Boolean).sort().join('-') || 'pair'
+  const room = `farmsavior-${pairSeed}-${Date.now()}`
   const callUrl = mode === 'video'
    ? `https://meet.jit.si/${room}#config.prejoinPageEnabled=false&config.disableDeepLinking=true`
    : `https://meet.jit.si/${room}#config.startWithVideoMuted=true&config.prejoinPageEnabled=false&config.disableDeepLinking=true`
-  const latestOwn = [...(communityMessageView?.messages || [])].reverse().find(m => m?.is_mine)
-  const latestText = String(latestOwn?.text || '')
-  if (latestText.includes(callUrl) && typeof window !== 'undefined') {
-   window.open(callUrl, '_blank', 'noopener,noreferrer')
-   return
-  }
   const inviteText = `${mode === 'video' ? '📹' : '📞'} Join my ${mode} call: ${callUrl}`
   try {
    setCommunityMessageSending(true)
