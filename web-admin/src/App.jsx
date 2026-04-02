@@ -1117,6 +1117,260 @@ const professionalOutcomeBenchmarks = {
  cattle: ['Herd fertility score', 'Calf survival score', 'Tick-control score', 'Commercial growth review']
 }
 
+const poultryProDownloads = [
+ {
+  title: 'Download Operating Playbook',
+  filename: 'Poultry-Operating-Playbook.txt',
+  content: `Poultry University Professional
+Operating Playbook
+
+This playbook is meant to sit beside the manager or owner during a live cycle. It is not motivational copy. It is a practical operating document for keeping the flock stable, protecting margin, and knowing what to review before a small issue becomes an expensive one.
+
+1. Weekly operating review
+- Confirm total birds placed, current live count, mortality to date, and culls this week.
+- Compare feed delivered versus feed consumed and inspect for wastage at feeder level.
+- Check water reliability, drinker cleanliness, and any time periods with weak pressure.
+- Review litter condition, smell, wet spots, and ammonia complaints by pen or section.
+- Record temperature and ventilation observations by time of day, not only once.
+- Note any egg-quality change, drop in lay, slow gain, or uneven birds.
+
+2. House walk routine
+- Enter quietly and watch bird behavior before disturbing the flock.
+- Look for crowding, panting, wing spreading, huddling, isolated weak birds, and empty feeder lines.
+- Walk all corners, not just the center aisle.
+- Check drinker height, feeder height, leaks, and dark or poorly ventilated spots.
+- Pull a sample of birds by hand to judge crop fill, body condition, feather cover, and leg quality.
+
+3. Track-specific operating focus
+Layers
+- Protect pullet uniformity before first lay; do not chase early eggs with weak body frame.
+- Review tray count, shell quality, cracked eggs, feed intake, and water intake together.
+- Investigate a drop in production with light program, heat stress, disease signs, and feed consistency before blaming breed.
+
+Broilers
+- Monitor daily gain, FCR trend, floor condition, and mortality pattern by house section.
+- Fast growth is only useful when legs, airflow, and litter quality stay under control.
+- If birds are sitting excessively, check heat load, wet litter, feeder crowding, and waterline access immediately.
+
+Guinea fowl
+- Keet survival discipline matters more than ambitious expansion.
+- Review shelter security, predator exposure, return-to-house routine, and weather protection every day.
+- Separate timid or weaker groups early so feed competition does not hide poor birds.
+
+4. Traffic-light decision system
+Green
+- Mortality on target, feed intake normal, birds evenly spread, no major litter or shell-quality complaints.
+- Action: continue current routine and log the week cleanly.
+
+Amber
+- Slight mortality rise, uneven growth, damp litter zones, slower egg pickup, noisy birds at night, or minor heat signs.
+- Action: inspect water, feeder space, ventilation, and disease signals the same day. Re-check within 24-72 hours.
+
+Red
+- Sharp mortality spike, birds off feed, sudden shell-quality collapse, repeated panting, strong ammonia, or visible neurological/respiratory signs.
+- Action: isolate weak birds, tighten biosecurity, document symptoms, and escalate to veterinary support quickly.
+
+5. Margin protection rules
+- Do not change too many things at once. Make one correction, then re-measure.
+- Count losses in money terms: mortality cost, wasted feed, downgraded eggs, undersized birds, delayed sales.
+- Delay expansion when one cycle is unstable; scaling a weak system only multiplies loss.
+- Keep weekly notes good enough for a lender, partner, or manager handover.
+
+6. End-of-cycle review
+- Compare plan versus actual for placement, survival, feed use, output, and sales.
+- List the three most expensive mistakes and the three best decisions.
+- Carry one management improvement into the next cycle instead of changing everything at once.`
+ },
+ {
+  title: 'Download Layer Cashflow Pack',
+  filename: 'Poultry-Layer-Cashflow-Pack.txt',
+  content: `Poultry University Professional
+Layer Cashflow + Egg Quality Pack
+
+1. Daily dashboard
+- Birds in lay:
+- Eggs collected today:
+- Trays sold today:
+- Cracks / rejects:
+- Feed used today:
+- Water interruptions:
+- Mortality today:
+- Peak house temperature:
+
+2. Egg quality watchpoints
+- Thin shells: review calcium source, water intake, heat load, and flock age.
+- Dirty eggs: inspect nest hygiene, litter carryover, crowding, and collection frequency.
+- Small eggs: check flock age, body weight history, feed consistency, and disease pressure.
+- Sudden quality drop: review heat events, vaccination stress, water quality, and ration change timing.
+
+3. Weekly management questions
+- Are pullets entering lay with enough frame and body condition?
+- Is production drop tied to one pen, one feed batch, or the whole house?
+- Are cracked eggs rising because of shell weakness, rough handling, or delayed collection?
+- Did heat or water interruptions happen at the same time as the output decline?
+
+4. Cashflow discipline
+- Separate top-grade trays, mixed-grade trays, and reject eggs in the record book.
+- Track price by buyer channel instead of averaging every sale together.
+- Review whether credit sales are delaying the working capital needed for feed.
+- Protect continuity of supply; dependable weekly delivery often matters more than one high-price day.
+
+5. Corrective sequence when lay weakens
+1. Confirm bird age, body condition, and production history.
+2. Check water intake pattern and line function.
+3. Review light program consistency.
+4. Inspect feed delivery, storage, and particle quality.
+5. Walk the house for heat stress, shell issues, and signs of disease.
+6. Escalate unusual drops with local veterinary support when management checks do not explain the decline.`
+ },
+ {
+  title: 'Download Broiler Margin Recovery Plan',
+  filename: 'Poultry-Broiler-Margin-Recovery-Plan.txt',
+  content: `Poultry University Professional
+Broiler Margin Recovery Plan
+
+1. The four numbers to review first
+- Current liveability
+- Average body weight by sample
+- Feed conversion trend
+- Average realized sale price by batch
+
+2. Where broiler margin usually leaks
+- Feed wastage from wrong feeder height or overfilling
+- Wet litter reducing comfort, growth, and leg quality
+- Delayed sale causing extra feed days without enough price gain
+- Uneven birds forcing discounting at market
+- Heat stress reducing intake during key growth days
+
+3. Fast response checklist
+- Sample weights from different corners of the house
+- Re-check stocking density and feeder/drinker access
+- Fix water leaks before adding litter on top of a wet problem
+- Review ventilation pattern during the hottest part of the day
+- Separate weak birds so they do not hide inside average performance
+
+4. Sale planning rules
+- Build market batches by real weight, not guesswork.
+- Do not hold a full flock for the lightest birds.
+- Negotiate buyer timing early when birds are close to target weight.
+- Keep transport stress and loading losses inside the margin review.
+
+5. Post-mortem review after each cycle
+- Which day range had the biggest performance loss?
+- Was the main issue feed, heat, health, equipment, or market delay?
+- What one correction would most likely improve the next batch?`
+ },
+ {
+  title: 'Download Guinea Fowl Field Guide',
+  filename: 'Poultry-Guinea-Fowl-Field-Guide.txt',
+  content: `Poultry University Professional
+Guinea Fowl Field Guide
+
+1. Keet survival priorities
+- Pre-warm the brooding space and remove drafts before arrival.
+- Keep bedding dry and safe from chilling.
+- Watch shy feeders closely; guinea keets can look active while still under-consuming.
+- Reduce crowding around water and feed points.
+
+2. Behavior management
+- Train birds to a reliable return-to-house routine before allowing wider ranging.
+- Keep predictable feeding times.
+- Avoid rough handling that causes panic piling and injury.
+- Review predator exposure at dusk, not only during daytime.
+
+3. Weather discipline
+Humid conditions
+- Protect against wet litter, moldy feed, and damp night housing.
+- Keep drainage and roof integrity under regular review.
+
+Dry conditions
+- Prioritize shade, water security, and low-stress handling in afternoon heat.
+- Watch for long walking distances that drain condition before sale.
+
+4. Market notes
+- Separate breeder-quality birds, meat birds, and cull birds early.
+- Keep buyers informed about flock age and average size; guinea buyers often pay for consistency.
+- Premium seasonal demand is easiest to capture when mortality and losses are already controlled.
+
+5. Trouble signs that deserve fast action
+- Birds refusing to return to shelter
+- Repeated piling or panic flight
+- Keets appearing active but falling behind in weight
+- Sudden predator losses
+- Wet, cold, or drafty housing after rain`
+ },
+ {
+  title: 'Download Printable Manager Toolkit',
+  filename: 'Poultry-Printable-Manager-Toolkit.txt',
+  content: `Poultry University Professional
+Printable Manager Toolkit
+
+A. Daily house walk sheet
+Date:
+House / batch:
+Bird age:
+Observer:
+
+- Feed available in all lines? Yes / No
+- Water flowing well? Yes / No
+- Birds evenly spread? Yes / No
+- Panting / huddling seen? Yes / No
+- Wet litter or ammonia zone? Yes / No
+- Sick / weak birds isolated? Yes / No
+- Mortality count:
+- Notes:
+
+B. Weekly review sheet
+Week ending:
+- Opening live count:
+- Current live count:
+- Weekly mortality:
+- Feed used:
+- Egg trays / average sale weight:
+- Buyer issues:
+- Equipment issues:
+- Main risk for next week:
+- Action owner:
+
+C. Batch decision log
+- Keep current plan
+- Correct feed / water setup
+- Correct ventilation or litter issue
+- Delay expansion
+- Escalate health concern
+- Prepare sale window
+
+D. Escalation note template
+Problem observed:
+First noticed:
+Affected house / age:
+Immediate actions taken:
+What changed after 24 hours:
+Local vet / advisor contacted:
+Final recommendation:`
+ }
+]
+
+const poultryGuidancePlaybooks = {
+ mortality: { title: 'Mortality spike playbook', focus: 'Stabilize birds first, then separate management, environment, and disease causes.', actions: ['Walk the house immediately and note whether birds are huddling, panting, isolated, or crowding around water.', 'Isolate visibly weak birds, remove dead birds quickly, and tighten traffic control into the house.', 'Check brooding temperature or house heat pattern, water flow, litter condition, and feeder access before changing feed.', 'Review the last 72 hours for feed change, vaccine event, weather swing, transport stress, or water interruption.'], escalate: 'Escalate fast if mortality is rising sharply, birds are off feed, or respiratory / neurological signs are visible.' },
+ feed: { title: 'Feed efficiency and FCR reset', focus: 'Recover margin by fixing access, wastage, and timing before blaming formulation.', actions: ['Sample bird weight and compare it with feed used so far instead of judging by visual size alone.', 'Correct feeder height, overfilling, and crowding at busy periods.', 'Inspect for water leaks, wet litter, and heat stress reducing intake discipline.', 'Change one thing at a time and re-measure within 72 hours.'], escalate: 'Escalate when feed intake collapses suddenly or growth keeps slipping after house-level fixes.' },
+ vaccine: { title: 'Vaccination and health compliance check', focus: 'Make sure timing, cold chain, and records are disciplined before assuming vaccine failure.', actions: ['Confirm product, batch, timing, route, and who administered it.', 'Review cold-chain handling and dilution practice.', 'Check whether stress, poor water quality, or concurrent disease pressure may have reduced response.', 'Document the flock signs clearly before asking for veterinary review.'], escalate: 'Escalate when birds are clinically sick, multiple age groups are affected, or vaccination records are incomplete.' },
+ market: { title: 'Market readiness and sale planning', focus: 'Turn the flock into saleable batches with less discounting and less last-minute confusion.', actions: ['Grade birds or eggs by quality band instead of treating the whole output as one class.', 'Confirm buyer timing before birds move past the profitable holding window.', 'Track transport, breakage, and reject losses alongside headline price.', 'Keep one backup buyer channel active for slow market weeks.'], escalate: 'Escalate when you are carrying birds too long or quality complaints are repeatedly cutting price.' },
+ general: { title: 'Operator guidance', focus: 'Use a simple root-cause sequence and avoid random fixes.', actions: ['Describe the problem in one sentence: mortality, growth, egg quality, heat stress, or market issue.', 'Check environment, water, feed access, and records before making a big change.', 'Apply one correction, then re-measure quickly.', 'Write down what changed so the next decision is based on evidence.'], escalate: 'Escalate when symptoms are spreading, birds are off feed, or the issue is no longer explainable by routine management.' }
+}
+
+const getPoultryGuidancePlaybook = (question='', track='layers', zone='humid') => {
+ const q = String(question || '').toLowerCase()
+ const key = q.includes('mortality') || q.includes('death') ? 'mortality'
+  : (q.includes('feed') || q.includes('fcr') || q.includes('weight')) ? 'feed'
+  : (q.includes('vaccine') || q.includes('vaccin') || q.includes('disease') || q.includes('cough')) ? 'vaccine'
+  : (q.includes('market') || q.includes('sell') || q.includes('price') || q.includes('tray')) ? 'market'
+  : 'general'
+ const trackLabel = track === 'broilers' ? 'Broilers' : track === 'guinea' ? 'Guinea Fowl' : 'Layers'
+ const zoneLabel = zone === 'dry' ? 'Dry / Savanna Zone' : 'Humid / Forest Zone'
+ return { ...poultryGuidancePlaybooks[key], trackLabel, zoneLabel }
+}
+
 const executiveBriefs = {
  poultry: `Poultry University Executive Brief
 
@@ -4017,37 +4271,39 @@ function AppInner() {
 
  <div className='inlineForm' style={{marginTop:8,flexWrap:'wrap'}}>
  <button className='btn btn-dark' onClick={()=>{setActive('ai-disease'); api.trackAnalyticsEvent({ event_name:'poultry_pro_action', country: uiCountry, role_hint: me?.role || 'user', properties:{action:'open_ai_disease'} }).catch(()=>{})}}>Open AI Disease Analyzer</button>
- <a className='btn' download='Poultry-Expanded-Professional-Guide.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Poultry University Professional\nExpanded Detailed Module Guide\n\nLayers\n- Target uniformity before lay and treat weekly weight checks as non-negotiable.\n- Do not push birds into lay before frame and body condition are ready.\n\nBroilers\n- Monitor FCR, floor condition, mortality spikes, and thermal stress daily.\n- Correct waterline height, feeder space, and airflow before blaming feed quality.\n\nGuinea Fowl\n- Prioritize keet survival, predator prevention, and disciplined return-to-house routines.\n\nProfessional Decision Rules\n1. Only scale after two stable cycles.\n2. Fix one bottleneck at a time and re-measure.\n3. Track margin per tray or per bird, not just total sales.\n4. Separate disease pressure, feed waste, and management error before changing strategy.`)}>
- Download Expanded Pro Guide
- </a>
- <a className='btn' download='Poultry-Weekly-Checklist.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent('Poultry Weekly Checklist\n- Feed intake check\n- Water quality check\n- Mortality review\n- Biosecurity walk\n- Weight sampling\n- Market prep')}>
- Download Weekly Checklist
- </a>
- <a className='btn' download='Poultry-Farm-Plan.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent('Poultry Farm Plan Template\n1) House setup\n2) Input budget\n3) Health calendar\n4) Sales channel map\n5) Scale trigger metrics')}>
- Download Farm Plan
- </a>
- <a className='btn' download='Poultry-Vaccination-Schedule.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Poultry Professional Vaccination Schedule\n\nPre-placement\n- Wash/disinfect house\n- Rodent control\n- Verify hatchery records\n\nDay 0-1\n- Arrival checks\n- Confirm hatchery vaccination declaration\n\nDay 5-7\n- Newcastle prime\n\nDay 10-14\n- IBD/Gumboro first dose in high-pressure zones\n\nDay 18-24\n- ND/IBD booster per veterinary directive\n\nWeek 6-8\n- Fowl pox or region-specific vaccines where indicated\n\nOngoing\n- Parasite/coccidiosis prevention\n- Cold-chain compliance\n- Maintain lot/time records\n\nFinal vaccine timing and brands must be confirmed with licensed local veterinary authorities.`)}>
- Download Vaccination Schedule
- </a>
- <a className='btn' download='Poultry-Margin-Risk-Guide.txt' href={'data:text/plain;charset=utf-8,'+encodeURIComponent(`Poultry Professional Margin Risk Guide\n\nTop warning signs\n- Mortality spike above target band\n- Feed wastage above expected range\n- Sudden drop in egg quality or daily collection\n- Heat stress patterns at same time each day\n- Litter moisture and ammonia complaints\n\nCorrective sequence\n1. Verify water and feed access\n2. Inspect airflow and temperature behavior\n3. Check disease signs and isolate weak birds\n4. Review 7-day records before changing feed formula\n5. Re-measure within 72 hours`)}>
- Download Margin-Risk Guide
- </a>
+ <button className='btn' onClick={()=>setPoultryQuestion(`${poultryTracks[poultryTrack].title} • ${poultryZone === 'dry' ? 'Dry / Savanna Zone' : 'Humid / Forest Zone'} • review current flock issue`)}>Load track-specific guidance prompt</button>
+ {poultryProDownloads.map((asset)=><a key={asset.filename} className='btn' download={asset.filename} href={'data:text/plain;charset=utf-8,'+encodeURIComponent(asset.content)}>{asset.title}</a>)}
  </div>
 
- <div className='panel' style={{marginTop:8,padding:8,background:'#fff'}}>
- <strong>Operational Guidance</strong>
- <div className='inlineForm' style={{marginTop:6}}>
- <input className='input' placeholder='Ask your poultry operations question...' value={poultryQuestion} onChange={(e)=>setPoultryQuestion(e.target.value)} />
+ <div className='panel' style={{marginTop:8,padding:10,background:'#fff'}}>
+ <strong>Guidance Workspace</strong>
+ <div className='helper-text' style={{marginTop:6}}>Use the current track, zone, and your field notes to get a practical next-step playbook. For symptoms or photos, jump straight into the AI Disease Analyzer.</div>
+ <div className='inlineForm' style={{marginTop:8}}>
+ <input className='input' placeholder='Example: mortality up in week 2 after rain, birds panting at noon' value={poultryQuestion} onChange={(e)=>setPoultryQuestion(e.target.value)} />
  <button className='btn' onClick={()=>{
- const q = String(poultryQuestion||'').toLowerCase()
- if (!q) return
- if (q.includes('mortality')) setPoultryAnswer('Focus first on brooding temperature, water hygiene, and immediate isolation of weak birds. Audit first 14-day logs before changing feed plan.')
- else if (q.includes('feed') || q.includes('fcr')) setPoultryAnswer('Track daily feed intake + weight gain by batch. Correct feeder height, reduce wastage, and align phase feed timing with actual bird weights.')
- else if (q.includes('vaccine')) setPoultryAnswer('Use cold-chain compliant vaccines and maintain lot/time records. Confirm final timing with licensed local veterinary guidance before field execution.')
- else setPoultryAnswer('Use the module SOPs: diagnose root cause from daily records, apply one corrective action at a time, and re-measure within 72 hours.')
- }}>Get Guidance</button>
+ const guide = getPoultryGuidancePlaybook(poultryQuestion, poultryTrack, poultryZone)
+ setPoultryAnswer(JSON.stringify(guide))
+ api.trackAnalyticsEvent({ event_name:'poultry_pro_action', country: uiCountry, role_hint: me?.role || 'user', properties:{action:'generate_guidance_playbook', topic:guide.title, track:poultryTrack, zone:poultryZone} }).catch(()=>{})
+ }}>Build Guidance Playbook</button>
+ <button className='btn btn-dark' onClick={()=>{setActive('ai-disease'); api.trackAnalyticsEvent({ event_name:'poultry_pro_action', country: uiCountry, role_hint: me?.role || 'user', properties:{action:'guidance_to_ai_disease', track:poultryTrack, zone:poultryZone} }).catch(()=>{})}}>Analyze symptoms / photo</button>
  </div>
- {!!poultryAnswer && <p style={{marginTop:8}}>{poultryAnswer}</p>}
+ {!!poultryAnswer && (()=>{ const guide = (()=>{ try { return JSON.parse(poultryAnswer) } catch { return null } })(); return guide ? <div className='poultry-guidance-card'>
+ <div className='poultry-guidance-head'>
+ <div>
+ <div className='poultry-guidance-eyebrow'>Guidance playbook</div>
+ <h5>{guide.title}</h5>
+ </div>
+ <div className='poultry-guidance-tags'>
+ <span>{guide.trackLabel}</span>
+ <span>{guide.zoneLabel}</span>
+ </div>
+ </div>
+ <p className='poultry-guidance-focus'>{guide.focus}</p>
+ <div className='list'>
+ {guide.actions.map((step, idx)=><div className='list-row' key={step}><span>{idx + 1}. {step}</span></div>)}
+ </div>
+ <div className='poultry-guidance-escalate'><strong>Escalate when:</strong> {guide.escalate}</div>
+ </div> : <p style={{marginTop:8}}>{poultryAnswer}</p> })()}
  </div>
 
  <div className='panel' style={{marginTop:8,padding:8,background:'#fff'}}>
