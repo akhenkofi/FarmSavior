@@ -6254,7 +6254,7 @@ function AppInner() {
      </form>
     </article>}
 
-    {!recordsSectionOpen.create && !recordsSectionOpen.edit && currentLivestockRecord && <article className='panel records-panel records-detail-panel'>
+    {!recordsSectionOpen.create && !recordsSectionOpen.edit && currentLivestockRecord && <article className='panel records-panel records-detail-panel' style={{position:'fixed', inset:0, zIndex:220, margin:0, borderRadius:0, overflow:'auto', background:'#f8fafc', padding:'16px 12px 28px'}}>
      <div className='records-detail-hero'>
       <div>
        <div className='records-detail-kicker'>{currentLivestockRecord.species || 'Animal'} · {currentLivestockRecord.animal_type || 'Profile'}</div>
