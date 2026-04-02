@@ -2893,22 +2893,49 @@ function AppInner() {
  const [mapPointInput, setMapPointInput] = useState('')
  const [mapBulkPointsInput, setMapBulkPointsInput] = useState('')
  const [expandedWeatherCountry, setExpandedWeatherCountry] = useState('GH')
- const [showHighDemandProducts, setShowHighDemandProducts] = useState(false)
- const [showHighDemandServices, setShowHighDemandServices] = useState(false)
+ const publicSectionPrefKey = 'farmsavior_public_home_sections_v1'
+ const readPublicSectionPref = (key, fallback) => {
+ try {
+ const raw = localStorage.getItem(publicSectionPrefKey)
+ if (!raw) return fallback
+ const parsed = JSON.parse(raw)
+ return typeof parsed?.[key] === 'boolean' ? parsed[key] : fallback
+ } catch {
+ return fallback
+ }
+ }
+ const [showHighDemandProducts, setShowHighDemandProducts] = useState(() => readPublicSectionPref('showHighDemandProducts', false))
+ const [showHighDemandServices, setShowHighDemandServices] = useState(() => readPublicSectionPref('showHighDemandServices', false))
  const [expandedSpotCommodity, setExpandedSpotCommodity] = useState('')
  const [expandedTradeCommodity, setExpandedTradeCommodity] = useState('')
  const [expandedTradeSections, setExpandedTradeSections] = useState({})
  const [expandedLivestockPlan, setExpandedLivestockPlan] = useState('')
- const [popularActionsOpen, setPopularActionsOpen] = useState(true)
- const [publicRecordsOpen, setPublicRecordsOpen] = useState(true)
- const [publicUniversityOpen, setPublicUniversityOpen] = useState(true)
- const [weatherOpen, setWeatherOpen] = useState(true)
- const [newsOpen, setNewsOpen] = useState(true)
- const [spotTradingOpen, setSpotTradingOpen] = useState(true)
- const [governmentProgramsOpen, setGovernmentProgramsOpen] = useState(true)
- const [tradeStatsOpen, setTradeStatsOpen] = useState(true)
+ const [popularActionsOpen, setPopularActionsOpen] = useState(() => readPublicSectionPref('popularActionsOpen', true))
+ const [publicRecordsOpen, setPublicRecordsOpen] = useState(() => readPublicSectionPref('publicRecordsOpen', true))
+ const [publicUniversityOpen, setPublicUniversityOpen] = useState(() => readPublicSectionPref('publicUniversityOpen', true))
+ const [weatherOpen, setWeatherOpen] = useState(() => readPublicSectionPref('weatherOpen', true))
+ const [newsOpen, setNewsOpen] = useState(() => readPublicSectionPref('newsOpen', true))
+ const [spotTradingOpen, setSpotTradingOpen] = useState(() => readPublicSectionPref('spotTradingOpen', true))
+ const [governmentProgramsOpen, setGovernmentProgramsOpen] = useState(() => readPublicSectionPref('governmentProgramsOpen', true))
+ const [tradeStatsOpen, setTradeStatsOpen] = useState(() => readPublicSectionPref('tradeStatsOpen', true))
  const [livestockSubscription, setLivestockSubscription] = useState({ tier: 'free', status: 'FREE', record_limit: 25, can_create_records: true, subscription: null, plans: [] })
  const [billingOverview, setBillingOverview] = useState({ subscriptions: [], active_subscriptions: [], payments: [] })
+ useEffect(() => {
+ try {
+ localStorage.setItem(publicSectionPrefKey, JSON.stringify({
+ showHighDemandProducts,
+ showHighDemandServices,
+ popularActionsOpen,
+ publicRecordsOpen,
+ publicUniversityOpen,
+ weatherOpen,
+ newsOpen,
+ spotTradingOpen,
+ governmentProgramsOpen,
+ tradeStatsOpen,
+ }))
+ } catch {}
+ }, [showHighDemandProducts, showHighDemandServices, popularActionsOpen, publicRecordsOpen, publicUniversityOpen, weatherOpen, newsOpen, spotTradingOpen, governmentProgramsOpen, tradeStatsOpen])
  const recordsBillingSubscription = useMemo(() => {
  return (billingOverview?.active_subscriptions || []).find((sub) => String(sub?.product || '') === 'livestock-records' && ['ACTIVE', 'TRIAL_ACTIVE'].includes(String(sub?.status || '').toUpperCase())) || null
  }, [billingOverview])
