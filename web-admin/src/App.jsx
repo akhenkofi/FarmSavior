@@ -4070,6 +4070,73 @@ function AppInner() {
 
  </>}
  <p>{authMsg}</p>
+ </article>
+
+ <article className='panel' style={{marginTop:12, background:effectiveLivestockSubscription?.tier === 'premium' ? 'linear-gradient(135deg,#0f172a 0%,#155e75 55%,#16a34a 100%)' : 'linear-gradient(180deg,#ffffff 0%,#f8fafc 100%)', color:effectiveLivestockSubscription?.tier === 'premium' ? '#fff' : '#0f172a', border:effectiveLivestockSubscription?.tier === 'premium' ? '1px solid rgba(255,255,255,.12)' : '1px solid #dbe5ef'}}>
+ <div className='section-header'>
+ <div>
+ <h3 style={{margin:0}}>{t('Livestock Records','Registres du bétail','牲畜档案')}</h3>
+ <div className='helper-text' style={{marginTop:4, color:effectiveLivestockSubscription?.tier === 'premium' ? 'rgba(255,255,255,.82)' : '#64748b'}}>Structured animal records, premium herd-management workflows, and direct access to the records workspace.</div>
+ </div>
+ <button type='button' className='btn' style={{marginLeft:'auto'}} onClick={() => setPublicRecordsOpen(v => !v)}>{publicRecordsOpen ? t('Hide','Masquer','隐藏') : t('Show','Afficher','显示')}</button>
+ </div>
+ {publicRecordsOpen && <div className='list'>
+ <div className='list-row' style={{background:effectiveLivestockSubscription?.tier === 'premium' ? 'rgba(255,255,255,.08)' : '#fff', border:effectiveLivestockSubscription?.tier === 'premium' ? '1px solid rgba(255,255,255,.12)' : '1px solid #e2e8f0'}}>
+ <span>{effectiveLivestockSubscription?.tier === 'premium' ? 'Livestock Records Premium ✓' : 'Unlock Livestock Records Premium'}</span>
+ <strong>{effectiveLivestockSubscription?.tier === 'premium' ? 'Paid tier active' : (effectiveLivestockSubscription?.record_limit ? `Free tier · up to ${effectiveLivestockSubscription.record_limit} animals` : 'Free tier')}</strong>
+ </div>
+ <div style={{maxWidth:760, color:effectiveLivestockSubscription?.tier === 'premium' ? 'rgba(255,255,255,.88)' : '#334155', lineHeight:1.6}}>
+ {effectiveLivestockSubscription?.tier === 'premium'
+ ? `Your account is on the premium tier${effectiveLivestockSubscription?.subscription?.plan_code ? ` • ${String(effectiveLivestockSubscription.subscription.plan_code).toUpperCase()}` : ''}. Enjoy unlimited records, attachment-ready workflows, and a cleaner operator experience.`
+ : `You are on the free livestock tier${effectiveLivestockSubscription?.record_limit ? ` with up to ${effectiveLivestockSubscription.record_limit} animals` : ''}. Upgrade to unlock unlimited records and a more complete herd-management workspace.`}
+ </div>
+ <div className='card-actions'>
+ <button className={`btn ${effectiveLivestockSubscription?.tier === 'premium' ? '' : 'btn-dark'}`} onClick={() => setActive('livestock-records')}>{effectiveLivestockSubscription?.tier === 'premium' ? 'Open records' : 'View upgrade plans'}</button>
+ <button className='btn' onClick={() => setActive('onboarding')}>My billing</button>
+ </div>
+ </div>}
+ </article>
+
+ <article className='panel' style={{marginTop:12, background:'linear-gradient(180deg,#ffffff 0%,#f8fafc 100%)'}}>
+ <div className='section-header'>
+ <div>
+ <h3 style={{margin:0}}>African Agricultural Digital University</h3>
+ <div className='helper-text' style={{marginTop:4}}>FarmSavior’s flagship livestock learning platform, now placed directly on the public homepage.</div>
+ </div>
+ <button type='button' className='btn' style={{marginLeft:'auto'}} onClick={() => setPublicUniversityOpen(v => !v)}>{publicUniversityOpen ? t('Hide','Masquer','隐藏') : t('Show','Afficher','显示')}</button>
+ </div>
+ {publicUniversityOpen && <div className='aadu-public-home'>
+ <div className='aadu-home-hero'>
+ <div className='aadu-home-copy'>
+ <div className='aadu-home-eyebrow'>Flagship learning platform</div>
+ <h3>African Agricultural Digital University</h3>
+ <p>African Agricultural Digital University is FarmSavior’s flagship digital livestock training platform. It brings Poultry University, Sheep University, Goat University, and Cattle University together under one clear umbrella so farmers, operators, and livestock teams can learn by production system and move into the right school directly.</p>
+ <p>Each university is organized around practical operating needs — production setup, breed development, herd or flock health, and commercial decision-making — presented in a clean format for field use rather than hype.</p>
+ </div>
+ <div className='aadu-home-aside'>
+ <div className='aadu-home-aside-label'>Current universities</div>
+ <div className='aadu-home-aside-list'>
+ <div><strong>4</strong><span>live schools</span></div>
+ <div><strong>Livestock-first</strong><span>digital training focus</span></div>
+ <div><strong>Public entry</strong><span>discover on the homepage, then enroll or open</span></div>
+ </div>
+ </div>
+ </div>
+ <div className='aadu-home-grid'>
+ {homeUniversityShowcase.map((school) => (
+ <article key={`public-${school.key}`} className='aadu-school-card'>
+ <div className='aadu-school-label'>African Agricultural Digital University</div>
+ <h4>{school.title}</h4>
+ <p>{school.summary}</p>
+ <div className='aadu-school-actions'>
+ <button type='button' className='btn btn-dark' onClick={() => handleProtectedAction(school.route, school.title)}>{token ? 'Open' : 'Enroll / Open'}</button>
+ <button type='button' className='btn' onClick={() => token ? setActive(school.route) : handleProtectedAction(school.route, school.title)}>{token ? 'Go to school' : 'Preview access'}</button>
+ </div>
+ </article>
+ ))}
+ </div>
+ </div>}
+ </article>
 
  <div className='panel' style={{marginTop:10,padding:12,background:'#f8fafc', border:'1px solid #e2e8f0'}}>
  <div style={{fontSize:'.9rem', color:'#334155', lineHeight:1.5}}>
@@ -4085,6 +4152,7 @@ function AppInner() {
  </div>
  </div>
 
+ <article className='panel' style={{marginTop:10}}>
  <div className='section-header' style={{marginTop:12}}>
  <h3 style={{margin:0}}>{t('📈 Spot Trading (Ghana • Nigeria • Burkina Faso • World Avg)','📈 Trading Spot (Ghana • Nigeria • Burkina Faso • Moyenne mondiale)','📈 现货交易（加纳 • 尼日利亚 • 布基纳法索 • 全球均值）')}</h3>
  <div style={{display:'flex', gap:8, marginLeft:'auto'}}>
@@ -4590,126 +4658,6 @@ function AppInner() {
  </div>
  {active === 'home' && <section>
  <h2>{t('Main App Homepage','Page d’accueil de l’application')}</h2>
- <article className='aadu-home-section'>
- <div className='aadu-home-hero'>
- <div className='aadu-home-copy'>
- <div className='aadu-home-eyebrow'>Flagship learning platform</div>
- <h3>African Agricultural Digital University</h3>
- <p>African Agricultural Digital University is FarmSavior’s flagship digital livestock training platform. It brings Poultry University, Sheep University, Goat University, and Cattle University together under one clear umbrella so farmers, operators, and livestock teams can learn by production system and move into the right school directly.</p>
- <p>Each university is organized around practical operating needs — production setup, breed development, herd or flock health, and commercial decision-making — presented in a clean format for field use rather than hype.</p>
- </div>
- <div className='aadu-home-aside'>
- <div className='aadu-home-aside-label'>Current universities</div>
- <div className='aadu-home-aside-list'>
- <div><strong>4</strong><span>live schools</span></div>
- <div><strong>Livestock-first</strong><span>digital training focus</span></div>
- <div><strong>Open access</strong><span>available from the main app</span></div>
- </div>
- </div>
- </div>
-
- <div className='aadu-home-grid'>
- {homeUniversityShowcase.map((school) => (
- <article key={school.key} className='aadu-school-card'>
- <div className='aadu-school-label'>African Agricultural Digital University</div>
- <h4>{school.title}</h4>
- <p>{school.summary}</p>
- <div className='aadu-school-actions'>
- <button type='button' className='btn btn-dark' onClick={() => handleProtectedAction(school.route, school.title)}>Enroll / Open</button>
- <button type='button' className='btn' onClick={() => setActive(school.route)}>Open Access</button>
- </div>
- </article>
- ))}
- </div>
- </article>
-
- <article className='panel' style={{marginBottom:10, background:effectiveLivestockSubscription?.tier === 'premium' ? 'linear-gradient(135deg,#0f172a 0%,#155e75 55%,#16a34a 100%)' : 'linear-gradient(135deg,#f8fafc 0%,#eff6ff 100%)', color:effectiveLivestockSubscription?.tier === 'premium' ? '#fff' : '#0f172a', border:effectiveLivestockSubscription?.tier === 'premium' ? '1px solid rgba(255,255,255,.12)' : '1px solid #bfdbfe'}}>
- <div style={{display:'flex',justifyContent:'space-between',gap:16,flexWrap:'wrap',alignItems:'center'}}>
- <div>
- <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',opacity:.9}}>{effectiveLivestockSubscription?.tier === 'premium' ? 'Records active' : 'Upgrade available'}</div>
- <h3 style={{margin:'4px 0 6px'}}>
- {effectiveLivestockSubscription?.tier === 'premium' ? 'Livestock Records Premium ✓' : 'Unlock Livestock Records Premium'}
- </h3>
- <div style={{maxWidth:720, color:effectiveLivestockSubscription?.tier === 'premium' ? 'rgba(255,255,255,.88)' : '#334155'}}>
- {effectiveLivestockSubscription?.tier === 'premium'
- ? `Your account is on the premium tier${effectiveLivestockSubscription?.subscription?.plan_code ? ` • ${String(effectiveLivestockSubscription.subscription.plan_code).toUpperCase()}` : ''}. Enjoy unlimited records, attachment-ready workflows, and a cleaner operator experience.`
- : `You are on the free livestock tier${effectiveLivestockSubscription?.record_limit ? ` with up to ${effectiveLivestockSubscription.record_limit} animals` : ''}. Upgrade to unlock unlimited records and a more complete herd-management workspace.`}
- </div>
- </div>
- <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
- {effectiveLivestockSubscription?.tier === 'premium' && <span className='cover-badge' style={{background:'rgba(255,255,255,.16)', color:'#fff', border:'1px solid rgba(255,255,255,.25)'}}>Paid plan</span>}
- <button className={`btn ${effectiveLivestockSubscription?.tier === 'premium' ? '' : 'btn-dark'}`} onClick={() => setActive('livestock-records')}>{effectiveLivestockSubscription?.tier === 'premium' ? 'Open records' : 'View upgrade plans'}</button>
- <button className='btn' onClick={() => setActive('onboarding')}>My billing</button>
- </div>
- </div>
- </article>
-
- <article className='panel' style={{marginTop:12, background:effectiveLivestockSubscription?.tier === 'premium' ? 'linear-gradient(135deg,#0f172a 0%,#155e75 55%,#16a34a 100%)' : 'linear-gradient(180deg,#ffffff 0%,#f8fafc 100%)', color:effectiveLivestockSubscription?.tier === 'premium' ? '#fff' : '#0f172a', border:effectiveLivestockSubscription?.tier === 'premium' ? '1px solid rgba(255,255,255,.12)' : '1px solid #dbe5ef'}}>
- <div className='section-header'>
- <div>
- <h3 style={{margin:0}}>{t('Livestock Records','Registres du bétail','牲畜档案')}</h3>
- <div className='helper-text' style={{marginTop:4, color:effectiveLivestockSubscription?.tier === 'premium' ? 'rgba(255,255,255,.82)' : '#64748b'}}>Structured animal records, premium herd-management workflows, and direct access to the records workspace.</div>
- </div>
- <button type='button' className='btn' style={{marginLeft:'auto'}} onClick={() => setPublicRecordsOpen(v => !v)}>{publicRecordsOpen ? t('Hide','Masquer','隐藏') : t('Show','Afficher','显示')}</button>
- </div>
- {publicRecordsOpen && <div className='list'>
- <div className='list-row' style={{background:effectiveLivestockSubscription?.tier === 'premium' ? 'rgba(255,255,255,.08)' : '#fff', border:effectiveLivestockSubscription?.tier === 'premium' ? '1px solid rgba(255,255,255,.12)' : '1px solid #e2e8f0'}}>
- <span>{effectiveLivestockSubscription?.tier === 'premium' ? 'Livestock Records Premium ✓' : 'Unlock Livestock Records Premium'}</span>
- <strong>{effectiveLivestockSubscription?.tier === 'premium' ? 'Paid tier active' : (effectiveLivestockSubscription?.record_limit ? `Free tier · up to ${effectiveLivestockSubscription.record_limit} animals` : 'Free tier')}</strong>
- </div>
- <div style={{maxWidth:760, color:effectiveLivestockSubscription?.tier === 'premium' ? 'rgba(255,255,255,.88)' : '#334155', lineHeight:1.6}}>
- {effectiveLivestockSubscription?.tier === 'premium'
- ? `Your account is on the premium tier${effectiveLivestockSubscription?.subscription?.plan_code ? ` • ${String(effectiveLivestockSubscription.subscription.plan_code).toUpperCase()}` : ''}. Enjoy unlimited records, attachment-ready workflows, and a cleaner operator experience.`
- : `You are on the free livestock tier${effectiveLivestockSubscription?.record_limit ? ` with up to ${effectiveLivestockSubscription.record_limit} animals` : ''}. Upgrade to unlock unlimited records and a more complete herd-management workspace.`}
- </div>
- <div className='card-actions'>
- <button className={`btn ${effectiveLivestockSubscription?.tier === 'premium' ? '' : 'btn-dark'}`} onClick={() => setActive('livestock-records')}>{effectiveLivestockSubscription?.tier === 'premium' ? 'Open records' : 'View upgrade plans'}</button>
- <button className='btn' onClick={() => setActive('onboarding')}>My billing</button>
- </div>
- </div>}
- </article>
-
- <article className='panel' style={{marginTop:12, background:'linear-gradient(180deg,#ffffff 0%,#f8fafc 100%)'}}>
- <div className='section-header'>
- <div>
- <h3 style={{margin:0}}>African Agricultural Digital University</h3>
- <div className='helper-text' style={{marginTop:4}}>FarmSavior’s flagship livestock learning platform, now placed directly on the public homepage.</div>
- </div>
- <button type='button' className='btn' style={{marginLeft:'auto'}} onClick={() => setPublicUniversityOpen(v => !v)}>{publicUniversityOpen ? t('Hide','Masquer','隐藏') : t('Show','Afficher','显示')}</button>
- </div>
- {publicUniversityOpen && <div className='aadu-public-home'>
- <div className='aadu-home-hero'>
- <div className='aadu-home-copy'>
- <div className='aadu-home-eyebrow'>Flagship learning platform</div>
- <h3>African Agricultural Digital University</h3>
- <p>African Agricultural Digital University is FarmSavior’s flagship digital livestock training platform. It brings Poultry University, Sheep University, Goat University, and Cattle University together under one clear umbrella so farmers, operators, and livestock teams can learn by production system and move into the right school directly.</p>
- <p>Each university is organized around practical operating needs — production setup, breed development, herd or flock health, and commercial decision-making — presented in a clean format for field use rather than hype.</p>
- </div>
- <div className='aadu-home-aside'>
- <div className='aadu-home-aside-label'>Current universities</div>
- <div className='aadu-home-aside-list'>
- <div><strong>4</strong><span>live schools</span></div>
- <div><strong>Livestock-first</strong><span>digital training focus</span></div>
- <div><strong>Public entry</strong><span>discover on the homepage, then enroll or open</span></div>
- </div>
- </div>
- </div>
- <div className='aadu-home-grid'>
- {homeUniversityShowcase.map((school) => (
- <article key={`public-${school.key}`} className='aadu-school-card'>
- <div className='aadu-school-label'>African Agricultural Digital University</div>
- <h4>{school.title}</h4>
- <p>{school.summary}</p>
- <div className='aadu-school-actions'>
- <button type='button' className='btn btn-dark' onClick={() => handleProtectedAction(school.route, school.title)}>{token ? 'Open' : 'Enroll / Open'}</button>
- <button type='button' className='btn' onClick={() => token ? setActive(school.route) : handleProtectedAction(school.route, school.title)}>{token ? 'Go to school' : 'Preview access'}</button>
- </div>
- </article>
- ))}
- </div>
- </div>}
- </article>
-
  <form className='inlineForm' onSubmit={(e) => { e.preventDefault(); addRecentSearch(homeQuery) }}>
  <input className='input' placeholder={t('Search products, livestock, services…','Rechercher produits, élevage, services…')} value={homeQuery} onChange={(e)=>setHomeQuery(e.target.value)} />
  <button className='btn btn-dark' type='submit'>{t('Search','Rechercher','搜索')}</button>
