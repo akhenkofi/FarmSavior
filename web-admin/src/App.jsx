@@ -4465,7 +4465,8 @@ function AppInner() {
  <div className='aadu-home-copy'>
  <div className='aadu-home-eyebrow'>Flagship learning platform</div>
  <h3>{AADU_FULL_NAME} (AADU)</h3>
- <p>AADU brings Poultry, Sheep, Goat, and Cattle University into one simple hub.</p>
+ <p>{AADU_FULL_NAME} (AADU) is FarmSavior’s livestock learning hub, combining Poultry, Sheep, Goat, and Cattle University in one place.</p>
+ <p>Practical lessons only: setup, breed improvement, health, and performance.</p>
  </div>
  <div className='aadu-home-aside'>
  <div className='aadu-home-aside-label'>Inside AADU</div>
