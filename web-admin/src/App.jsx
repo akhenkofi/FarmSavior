@@ -2612,7 +2612,7 @@ function DataTable({ columns, rows, filterKey, onEdit, onRowClick }) {
 
 function AppInner() {
  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams('')
- const forcePublicView = searchParams.get('public') === '1'
+ const forcePublicView = searchParams.get('public') !== '0'
  const authPrompt = searchParams.get('auth') || ''
  const initialCommunityProfileUserId = searchParams.get('communityProfile') || ''
  const explicitGo = searchParams.get('go') || ''
