@@ -7108,7 +7108,7 @@ function AppInner() {
  <span>{String(thread?.last_message?.created_at || '').replace('T',' ').slice(0,16)}</span>
  </div>
  <div style={{fontSize:'.8rem', color:'#0284c7'}}>{thread?.user?.username ? `@${thread.user.username}` : 'No username yet'}</div>
- <div className='community-thread-snippet'>{thread?.last_message?.is_mine ? 'You: ' : ''}{String(thread?.last_message?.text || '').slice(0, 120)}</div>
+ <div className='community-thread-snippet'>{(()=>{ const tx = String(thread?.last_message?.text || ''); const lx = tx.toLowerCase(); if (lx.includes('join my audio call:') || lx.includes('join my video call:') || lx.includes('meet.jit.si/')) return `📞 ${thread?.last_message?.is_mine ? 'Outgoing' : 'Missed'} call activity (see Recent Calls)`; return `${thread?.last_message?.is_mine ? 'You: ' : ''}${tx.slice(0, 120)}` })()}</div>
  </button>)}
  {!communityMessageThreads.length && <div className='community-thread-preview community-thread-preview-empty'>No active conversations yet.</div>}
  </div>
