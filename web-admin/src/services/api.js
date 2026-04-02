@@ -251,7 +251,7 @@ export const fetchCommunityPosts = async (limit = 60) => (await api.get('/commun
 export const createCommunityPost = async (payload) => (await api.post('/community/posts', payload)).data
 export const updateCommunityPost = async (postId, payload) => (await api.put(`/community/posts/${postId}`, payload)).data
 export const deleteCommunityPost = async (postId) => (await api.delete(`/community/posts/${postId}`)).data
-export const toggleCommunityPostLike = async (postId) => (await api.post(`/community/posts/${postId}/like`)).data
+export const toggleCommunityPostLike = async (postId) => (await api.post(`/community/posts/${postId}/like`, {})).data
 export const fetchCommunityPostComments = async (postId) => (await api.get(`/community/posts/${postId}/comments`)).data
 export const addCommunityPostComment = async (postId, payload) => (await api.post(`/community/posts/${postId}/comments`, payload)).data
 

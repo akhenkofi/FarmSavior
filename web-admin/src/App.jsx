@@ -5212,7 +5212,17 @@ function AppInner() {
  )}
  {!!p.tags && <div style={{fontSize:'.82rem', color:'#0284c7', marginTop:6}}>#{String(p.tags).split(',').map(s=>s.trim()).filter(Boolean).join(' #')}</div>}
  <div className='list-row' style={{marginTop:8, flexWrap:'wrap', gap:8}}>
- <button className='btn' onClick={async()=>{ await api.toggleCommunityPostLike(p.id); await loadCommunity(); }}>👍 Like ({p.likes_count || 0})</button>
+ <button className='btn' onClick={async()=>{
+ try {
+ const result = await api.toggleCommunityPostLike(p.id)
+ setCommunityPosts(prev => (prev || []).map(post => String(post.id) === String(p.id)
+ ? { ...post, liked_by_me: !!result?.liked, likes_count: Number(result?.likes_count ?? post.likes_count ?? 0) }
+ : post
+ ))
+ } catch (e) {
+ alert(errMsg(e))
+ }
+ }}>👍 {p.liked_by_me ? 'Unlike' : 'Like'} ({p.likes_count || 0})</button>
  <button className='btn' onClick={async()=>{ const rows=await api.fetchCommunityPostComments(p.id).catch(()=>[]); setCommunityComments(prev=>({...prev,[p.id]:rows||[]})) }}>💬 Comments ({p.comments_count || 0})</button>
  {me?.id === p.user_id && <button className='btn' onClick={()=>{ setEditingCommunityPostId(p.id); setCommunityPostForm({ text: p.text || '', media_url: p.media_url || '', media_type: p.media_type || 'TEXT', tags: p.tags || '' }); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>✏️ Edit</button>}
  {me?.id === p.user_id && <button className='btn' onClick={async()=>{ if (!confirm('Delete this post?')) return; await api.deleteCommunityPost(p.id); if (editingCommunityPostId === p.id) { setEditingCommunityPostId(null); setCommunityPostForm({ text:'', media_url:'', media_type:'TEXT', tags:'' }) } await loadCommunity(); }}>🗑️ Delete</button>}

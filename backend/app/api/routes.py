@@ -3007,13 +3007,26 @@ def community_profile_upsert(payload: CommunityProfileIn, authorization: Optiona
 
 
 @router.get('/community/posts')
-def community_posts(limit: int = 60, db: Session = Depends(get_db)):
+def community_posts(limit: int = 60, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
     n = max(1, min(limit, 200))
+    viewer = None
+    if authorization:
+        try:
+            viewer = _current_user_from_auth(authorization, db)
+        except Exception:
+            viewer = None
+
     rows = db.query(CommunityPost).filter(CommunityPost.status == 'VISIBLE').order_by(CommunityPost.id.desc()).limit(n).all()
     out = []
     for r in rows:
         likes = db.query(func.count(CommunityPostLike.id)).filter(CommunityPostLike.post_id == r.id).scalar() or 0
         comments = db.query(func.count(CommunityPostComment.id)).filter(CommunityPostComment.post_id == r.id).scalar() or 0
+        liked_by_me = False
+        if viewer:
+            liked_by_me = db.query(CommunityPostLike.id).filter(
+                CommunityPostLike.post_id == r.id,
+                CommunityPostLike.user_id == viewer.id,
+            ).first() is not None
         profile = db.query(CommunityProfile).filter(CommunityProfile.user_id == r.user_id).first()
         user = db.query(User).filter(User.id == r.user_id).first()
         out.append({
@@ -3032,6 +3045,7 @@ def community_posts(limit: int = 60, db: Session = Depends(get_db)):
             'created_at': r.created_at,
             'likes_count': likes,
             'comments_count': comments,
+            'liked_by_me': liked_by_me,
         })
     return out
 
@@ -3122,16 +3136,23 @@ def community_like_post(post_id: int, authorization: Optional[str] = Header(None
     if not post:
         raise HTTPException(status_code=404, detail='Post not found')
 
-    existing = db.query(CommunityPostLike).filter(CommunityPostLike.post_id == post_id, CommunityPostLike.user_id == u.id).first()
-    if existing:
-        db.delete(existing)
+    existing_rows = db.query(CommunityPostLike).filter(
+        CommunityPostLike.post_id == post_id,
+        CommunityPostLike.user_id == u.id,
+    ).order_by(CommunityPostLike.id.asc()).all()
+
+    if existing_rows:
+        for row in existing_rows:
+            db.delete(row)
         db.commit()
-        return {'liked': False}
+        likes_count = db.query(func.count(CommunityPostLike.id)).filter(CommunityPostLike.post_id == post_id).scalar() or 0
+        return {'liked': False, 'likes_count': likes_count, 'post_id': post_id}
 
     rec = CommunityPostLike(post_id=post_id, user_id=u.id)
     db.add(rec)
     db.commit()
-    return {'liked': True}
+    likes_count = db.query(func.count(CommunityPostLike.id)).filter(CommunityPostLike.post_id == post_id).scalar() or 0
+    return {'liked': True, 'likes_count': likes_count, 'post_id': post_id}
 
 
 @router.get('/community/posts/{post_id}/comments')

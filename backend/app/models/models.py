@@ -1,6 +1,6 @@
 import enum
 from datetime import datetime, timedelta
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Boolean, Text, Enum
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Boolean, Text, Enum, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 
@@ -488,6 +488,9 @@ class CommunityPost(Base):
 
 class CommunityPostLike(Base):
     __tablename__ = 'community_post_likes'
+    __table_args__ = (
+        UniqueConstraint('post_id', 'user_id', name='uq_community_post_likes_post_user'),
+    )
     id = Column(Integer, primary_key=True)
     post_id = Column(Integer, ForeignKey('community_posts.id'), nullable=False, index=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
