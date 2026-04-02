@@ -766,6 +766,100 @@ const cattlePhaseLabels = ['Phase 1: Foundation Cross', 'Phase 2: Hybrid Consoli
 
 
 
+const livestockHealthGuides = {
+ sheep: {
+  title: 'Practical vaccination + deworming schedule',
+  caution: 'Educational schedule only: confirm diseases covered, product choice, route, booster interval, withdrawal period, and legal use with your local veterinarian or extension officer before dosing.',
+  timing: [
+   'Start-of-wet-season (about 4-6 weeks before heavy rains): clean pens, improve drainage, review pasture rotation, and vaccinate breeder groups early enough for immunity before parasite and pneumonia pressure rises.',
+   'Peak wet season: monitor lambs and late-pregnant ewes twice weekly for anemia, scours, coughing, foot problems, and falling body condition; deworm only animals or groups that trigger need, not the whole flock by habit.',
+   'Late wet / early dry season: review lamb growth, fecal egg counts or FAMACHA-style anemia checks where used, and give boosters only where label or local disease risk indicates.',
+   'Late dry season / pre-breeding: body-condition score ewes, correct minerals, review breeding records, vaccinate and deworm high-risk animals early so mating is not disrupted by avoidable health stress.'
+  ],
+  vaccines: [
+   'Core breeder category: clostridial protection (commonly CDT or broader clostridial products where locally approved). Give the primary series to replacements, then annual booster 2-6 weeks before lambing so colostrum protects lambs.',
+   'Region-specific category: PPR where this is part of the national small-ruminant program; follow government/veterinary campaign timing and revaccination interval used in your area.',
+   'Risk-based category: pasteurellosis / pneumonia-related vaccines where rainy-season respiratory pressure is a known farm problem and a licensed product is available locally.',
+   'Lamb timing guide: if dams were properly boosted pre-lambing, begin the lamb primary series at the age recommended on the label/local protocol, then give the booster on schedule before weaning or high-risk weather.'
+  ],
+  deworm: [
+   'Target the right animals first: lambs after weaning, thin ewes, high-FAMACHA/anemia animals, and groups grazing low wet pasture usually need the closest monitoring.',
+   'Use dewormer categories strategically, not brand-hopping every few weeks: benzimidazoles (white drenches), macrocyclic lactones, and imidazothiazole/tetrahydropyrimidine groups should be rotated by efficacy evidence or seasonal review, not every single treatment date.',
+   'Wet season rule: shorten monitoring intervals because Haemonchus risk climbs fast; move sheep to taller, cleaner pasture and avoid repeatedly grazing the same wet, contaminated paddock.',
+   'Dry season rule: do not keep drenching on a calendar when worm challenge is low; preserve refugia by leaving low-risk, thriving animals untreated when appropriate and advised locally.',
+   'Dose by accurate weight or the heaviest animal in the group if one drench gun setting is used, and calibrate the drench gun before each treatment day.'
+  ],
+  calendar: [
+   'January-February: dry-season review, body condition, mineral support, and targeted deworming only for high-risk groups.',
+   'March-April: prepare for rains; breeder vaccination window, hoof trimming, drainage fixes, and pasture rotation plan.',
+   'May-August: highest wet-season parasite and pneumonia pressure in many areas; monitor anemia, growth, scours, and treat selectively but fast.',
+   'September-October: reassess booster needs, lamb growth, and post-rain worm burden; cull chronic poor performers.',
+   'November-December: pre-breeding checks, replacement review, and annual records cleanup before the next mating cycle.'
+  ]
+ },
+ goat: {
+  title: 'Practical vaccination + deworming schedule',
+  caution: 'Educational guidance only: verify local goat vaccine availability, label age limits, milk/meat withdrawal periods, and dose-by-weight requirements with a licensed veterinarian before treatment.',
+  timing: [
+   '4-6 weeks before the wet season or before kidding concentration periods: repair roofs and drainage, separate age groups, and vaccinate does early enough to protect kids through colostrum.',
+   'Wet season / humid months: monitor goats at least weekly for Haemonchus anemia, bottle jaw, diarrhea, cough, and foot issues; do not wait for severe weight loss before acting.',
+   'Late wet season: review whether your selective treatment approach actually worked by checking body condition, kid growth, deaths, and where possible fecal egg count reduction or other veterinary efficacy checks.',
+   'Dry season / pre-breeding: restore body condition, support browse quality and minerals, and schedule any needed breeder boosters or targeted deworming before mating stress rises.'
+  ],
+  vaccines: [
+   'Core breeder category: clostridial vaccines such as CDT or locally approved equivalents. Replacements need a full primary series; pregnant does are commonly boosted 2-6 weeks before kidding to improve kid protection.',
+   'Region-specific category: PPR vaccination where the disease is present and the product is part of local control programs.',
+   'Risk-based category: contagious caprine pleuropneumonia (CCPP) vaccine in areas where CCPP is endemic or specifically advised by local veterinary services.',
+   'Kid timing guide: start the kid primary series according to label and local veterinary advice, especially if dam vaccination status is unknown or weak.'
+  ],
+  deworm: [
+   'Goats often metabolize some dewormers differently from sheep, so never copy a sheep dose without checking the goat label or veterinary instruction.',
+   'Build selective treatment around anemia scoring, body condition, kid growth, and known worm hotspots instead of whole-herd monthly drenching.',
+   'Recommended dewormer categories to discuss with local vets: benzimidazoles, macrocyclic lactones, and levamisole-class products; rotate based on reduced efficacy or seasonal review, not because the calendar changed.',
+   'Wet season rule: move goats onto browse or taller forage faster, keep sleeping areas dry, and avoid forcing kids to graze the shortest, most contaminated pasture.',
+   'Resistance-control rule: leave some healthy low-risk animals untreated when appropriate, avoid underdosing, and check whether the product still works on your farm before repeating the same active ingredient.'
+  ],
+  calendar: [
+   'January-February: dry-season browse planning, mineral support, selective deworming for thin or anemic groups, and buck readiness checks.',
+   'March-April: pre-rain vaccination window for breeder groups, shelter repair, hoof care, and kidding-area sanitation.',
+   'May-August: highest worm and respiratory risk in many humid systems; weekly anemia checks, rapid separation of cough cases, and targeted treatment.',
+   'September-October: review kid survival, growth, and drench performance; booster only where risk/label requires.',
+   'November-December: pre-breeding condition recovery, culling of chronic parasite losers, and written plan for the next kidding season.'
+  ]
+ },
+ cattle: {
+  title: 'Practical vaccination + parasite-control schedule',
+  caution: 'Use this as a herd-planning guide only: final cattle vaccine program must match your country, production system, pregnancy status, and local disease map. Confirm product labels, withdrawal times, and dosing with a veterinarian.',
+  timing: [
+   '4-8 weeks before the rains or before breeding starts: repair water points, reduce mud around troughs, vaccinate breeding stock early enough for immunity before vector and calf-disease pressure climbs.',
+   'Wet season: inspect calves and breeding females weekly for ticks, diarrhea, pneumonia, pinkeye, foot issues, and falling weight gains; young stock should not disappear into the herd unseen.',
+   'Transition out of rains: review calf survival, tick burden, and whether strategic deworming or ectoparasite control actually improved growth and fertility.',
+   'Late dry season: plan breeder vaccination, mineral supplementation, water security, and bull soundness before the next mating window.'
+  ],
+  vaccines: [
+   'Core calf/breeder category depends on local program but often includes clostridial protection (for example blackleg-type products) with a primary course in young stock and scheduled boosters as labeled.',
+   'Region-specific category: anthrax, lumpy skin disease, CBPP, or other nationally important vaccines where government/veterinary authorities recommend them.',
+   'Breeding-herd category: vaccinate replacement heifers and cows before breeding or calving windows as advised locally so immunity is established before peak exposure.',
+   'Calf timing guide: give first and booster doses according to product label/local protocol, then keep the calf schedule tied to weaning, branding, or seasonal handling dates so it actually gets done.'
+  ],
+  deworm: [
+   'For grazing cattle, combine internal parasite control with tick and fly control instead of treating worms in isolation.',
+   'Recommended internal dewormer categories to review with your vet: benzimidazoles, macrocyclic lactones, and levamisole-class products where approved; choose based on age group, season, and farm efficacy history.',
+   'Wet season rule: calves, weaners, and heavily stocked groups usually need the closest monitoring because worm challenge and vector pressure rise together.',
+   'Dry season rule: focus more on water quality, forage gaps, and body condition; strategic treatment may be enough where parasite challenge falls.',
+   'Pour-ons, injectables, and drenches are not interchangeable by guesswork: select the route for the target parasite problem, weigh animals accurately, and record lot number plus treatment date.'
+  ],
+  calendar: [
+   'January-February: dry-season water and feed stress review, strategic deworming where needed, and bull/cow body-condition checks.',
+   'March-April: pre-rain herd vaccination window, vector-control prep, calving area cleanup, and mineral restocking.',
+   'May-August: wet-season tick, worm, and calf-disease watch; inspect calves weekly and keep treatment records current.',
+   'September-October: post-rain herd review, booster/risk-based vaccines as advised locally, and cull chronic poor mothers or weak growers.',
+   'November-December: breeder readiness, pregnancy/calf survival review, and next-season herd-health budget planning.'
+  ]
+ }
+}
+
+
 Object.values(poultryTracks).forEach(track => {
  track.modules = (track.modules || []).map((m, idx) => ({
  ...m,
@@ -1755,6 +1849,25 @@ This playbook is designed for the owner, flock manager, or lead stockperson who 
    content: `Sheep University Professional
 Breeding + Lambing Calendar
 
+Annual vaccination + deworming guide
+- January-February: dry-season review, body condition scoring, mineral support, and targeted deworming only for high-risk groups.
+- March-April: pre-rain breeder vaccine window, hoof trimming, drainage fixes, and ram soundness checks.
+- May-August: wet-season parasite and pneumonia watch; monitor anemia/scours twice weekly and treat selectively based on need.
+- September-October: review lamb growth, worm pressure, and booster needs where local protocol requires.
+- November-December: pre-breeding correction, cull chronic poor performers, and reset records.
+
+Recommended vaccine categories
+- Core breeder protection: clostridial products (for example CDT or locally approved equivalents) with full primary series for replacements.
+- Pre-lambing booster window: usually 2-6 weeks before lambing so lambs receive colostral protection.
+- Region-specific option: PPR where national/local programs require it.
+- Risk-based option: pneumonia/pasteurellosis vaccination where locally justified.
+
+Recommended deworming approach
+- Use targeted selective treatment: prioritize weaned lambs, thin ewes, anemic animals, and groups on short wet pasture.
+- Rotate dewormer class by efficacy review, not random brand switching.
+- Dose to accurate weight and calibrate drench gun each treatment day.
+- Keep some low-risk healthy animals untreated when locally appropriate to slow resistance.
+
 Pre-breeding
 - Body condition scoring
 - Deworm and mineral correction by risk
@@ -1783,7 +1896,10 @@ Lambing phase
 Post-lambing
 - Growth sampling
 - Replacement and cull notes
-- Sale candidate grouping`
+- Sale candidate grouping
+
+Caution
+- Verify product label, dose, route, booster interval, and withdrawal period with a local veterinarian before treatment.`
   },
   {
    title: 'Download Sheep Flock Review Workbook',
@@ -1858,6 +1974,25 @@ This playbook gives the farm manager a practical way to run breeding, kidding, b
    content: `Goat University Professional
 Kidding + Health Calendar
 
+Annual vaccination + deworming guide
+- January-February: browse planning, mineral support, and selective deworming for thin or anemic groups.
+- March-April: pre-rain breeder vaccination window, hoof care, shelter repair, and kidding-area sanitation.
+- May-August: humid-season Haemonchus and respiratory watch; run weekly anemia checks and separate cough cases quickly.
+- September-October: review kid growth, drench performance, and boosters only where risk/label requires.
+- November-December: pre-breeding condition recovery and cull chronic parasite losers.
+
+Recommended vaccine categories
+- Core breeder protection: clostridial products such as CDT or locally approved equivalents.
+- Pre-kidding booster window: commonly 2-6 weeks before kidding for better kid protection through colostrum.
+- Region-specific option: PPR where part of local control programs.
+- Risk-based option: CCPP vaccination in endemic areas under veterinary guidance.
+
+Recommended deworming approach
+- Base treatment on anemia score, body condition, kid growth, and hotspot groups instead of whole-herd monthly drenching.
+- Review benzimidazole, macrocyclic lactone, and levamisole-class options with your veterinarian and rotate by efficacy evidence.
+- Keep sheds dry and move goats onto cleaner browse/taller forage faster during wet months.
+- Never guess dose from sheep practice; goats may require different label guidance.
+
 Pre-breeding
 - Score does and bucks
 - Correct minerals and parasite burden
@@ -1881,7 +2016,10 @@ Kidding phase
 Grow-out
 - Weigh sample kids
 - Watch Haemonchus pressure
-- Grade sale and replacement candidates`
+- Grade sale and replacement candidates
+
+Caution
+- Confirm goat-specific labels, age limits, dose-by-weight, and withdrawal periods before treatment.`
   },
   {
    title: 'Download Goat Margin Review Workbook',
@@ -1952,6 +2090,25 @@ This playbook is built for herd owners and supervisors managing breeding, calvin
    content: `Cattle University Professional
 Breeding + Calving Calendar
 
+Annual vaccination + parasite-control guide
+- January-February: dry-season water/feed review, strategic deworming where needed, and breeder body-condition checks.
+- March-April: pre-rain herd vaccination window, vector-control prep, calving area cleanup, and mineral restocking.
+- May-August: wet-season tick, worm, and calf-disease watch; inspect calves weekly and record treatments.
+- September-October: post-rain review, booster/risk-based vaccines where locally advised, and cull chronic poor performers.
+- November-December: breeder readiness, pregnancy/calf-survival review, and next-season herd-health budgeting.
+
+Recommended vaccine categories
+- Core young-stock protection commonly includes clostridial products such as blackleg-type vaccines where locally used.
+- Region-specific vaccines may include anthrax, lumpy skin disease, CBPP, or other official program vaccines depending on country.
+- Breeding herd vaccines should be timed before breeding or calving windows so immunity is established before high-risk periods.
+- Calf primary and booster doses should be tied to real handling dates such as branding or weaning so they are not missed.
+
+Recommended parasite-control approach
+- Combine internal deworming with tick and fly control instead of treating worm problems in isolation.
+- Review benzimidazole, macrocyclic lactone, and levamisole-class products with your veterinarian based on farm efficacy history.
+- Focus monitoring on calves, weaners, and heavily stocked wet-season groups.
+- Weigh accurately and choose the correct route; pour-ons, injections, and drenches are not interchangeable by guesswork.
+
 Pre-breeding
 - Cow condition review
 - Bull soundness checks
@@ -1975,7 +2132,10 @@ Calving phase
 Post-calving / grow-out
 - Tick-control review
 - Calf growth sampling
-- Replacement vs sale decisions`
+- Replacement vs sale decisions
+
+Caution
+- Final vaccine choice must match local disease risk, pregnancy status, product label, and withdrawal rules.`
   },
   {
    title: 'Download Cattle Herd Review Workbook',
@@ -5192,6 +5352,16 @@ function AppInner() {
  {(sheepZone === 'humid' ? sheepClimate.humid : sheepClimate.dry).map((p)=><div className='list-row' key={p}><span>{p}</span></div>)}
  {sheepHealthProgram.map((v)=><div className='list-row' key={v}><span>{v}</span></div>)}
  </div>
+ <div className='panel' style={{marginTop:10,padding:10,background:'#fcfbff',border:'1px solid #ddd6fe'}}>
+ <strong>{livestockHealthGuides.sheep.title}</strong>
+ <div className='list' style={{marginTop:8}}>
+ {livestockHealthGuides.sheep.timing.map((item)=><div className='list-row' key={item}><span>{item}</span></div>)}
+ {livestockHealthGuides.sheep.vaccines.map((item)=><div className='list-row' key={item}><span>{item}</span></div>)}
+ {livestockHealthGuides.sheep.deworm.map((item)=><div className='list-row' key={item}><span>{item}</span></div>)}
+ {livestockHealthGuides.sheep.calendar.map((item)=><div className='list-row' key={item}><span>{item}</span></div>)}
+ </div>
+ <p style={{fontSize:'.82rem',color:'#64748b',marginTop:8}}>{livestockHealthGuides.sheep.caution}</p>
+ </div>
  </article>}
 
  {sheepTier === 'pro' && <UniversityExecutiveToolkit product='sheep' progress={sheepProgress} setProgress={setSheepProgress} trackKey={sheepTrack} openModule={openSheepModule} question={sheepQuestion} setQuestion={setSheepQuestion} answer={sheepAnswer} setAnswer={setSheepAnswer} />}
@@ -5301,7 +5471,17 @@ function AppInner() {
  {(goatZone === 'humid' ? goatClimate.humid : goatClimate.dry).map((p)=><div className='list-row' key={p}><span>{p}</span></div>)}
  {goatHealthProgram.map((v)=><div className='list-row' key={v}><span>{v}</span></div>)}
  </div>
+ <div className='panel' style={{marginTop:10,padding:10,background:'#f4fffe',border:'1px solid #99f6e4'}}>
+ <strong>{livestockHealthGuides.goat.title}</strong>
+ <div className='list' style={{marginTop:8}}>
+ {livestockHealthGuides.goat.timing.map((item)=><div className='list-row' key={item}><span>{item}</span></div>)}
+ {livestockHealthGuides.goat.vaccines.map((item)=><div className='list-row' key={item}><span>{item}</span></div>)}
+ {livestockHealthGuides.goat.deworm.map((item)=><div className='list-row' key={item}><span>{item}</span></div>)}
+ {livestockHealthGuides.goat.calendar.map((item)=><div className='list-row' key={item}><span>{item}</span></div>)}
+ </div>
  <p style={{fontSize:'.82rem',color:'#64748b',marginTop:8}}>Goat-specific warning: CCPP and Haemonchus risks require strict routine monitoring.</p>
+ <p style={{fontSize:'.82rem',color:'#64748b',marginTop:8}}>{livestockHealthGuides.goat.caution}</p>
+ </div>
  </article>}
 
  {goatTier === 'pro' && <UniversityExecutiveToolkit product='goat' progress={goatProgress} setProgress={setGoatProgress} trackKey={goatTrack} openModule={openGoatModule} question={goatQuestion} setQuestion={setGoatQuestion} answer={goatAnswer} setAnswer={setGoatAnswer} />}
@@ -5409,6 +5589,16 @@ function AppInner() {
  <div className='list'>
  {(cattleZone === 'humid' ? cattleClimate.humid : cattleClimate.dry).map((p)=><div className='list-row' key={p}><span>{p}</span></div>)}
  {cattleHealthProgram.map((v)=><div className='list-row' key={v}><span>{v}</span></div>)}
+ </div>
+ <div className='panel' style={{marginTop:10,padding:10,background:'#fffaf0',border:'1px solid #fde68a'}}>
+ <strong>{livestockHealthGuides.cattle.title}</strong>
+ <div className='list' style={{marginTop:8}}>
+ {livestockHealthGuides.cattle.timing.map((item)=><div className='list-row' key={item}><span>{item}</span></div>)}
+ {livestockHealthGuides.cattle.vaccines.map((item)=><div className='list-row' key={item}><span>{item}</span></div>)}
+ {livestockHealthGuides.cattle.deworm.map((item)=><div className='list-row' key={item}><span>{item}</span></div>)}
+ {livestockHealthGuides.cattle.calendar.map((item)=><div className='list-row' key={item}><span>{item}</span></div>)}
+ </div>
+ <p style={{fontSize:'.82rem',color:'#64748b',marginTop:8}}>{livestockHealthGuides.cattle.caution}</p>
  </div>
  </article>}
 
