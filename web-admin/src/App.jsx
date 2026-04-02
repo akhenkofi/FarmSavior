@@ -3911,10 +3911,10 @@ function AppInner() {
  {popularActionsOpen && <div className='list'>
  <div className='list-row'><span>{t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('ai-disease', 'AI Disease Analyzer')}>{t('Open','Ouvrir')}</button></div>
  <div className='list-row'><span>{t('Livestock Records Management','Gestion des registres du bétail','牲畜档案管理')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('livestock-records', 'Livestock Records Management')}>{t('Open','Ouvrir')}</button></div>
- <div className='list-row'><span>Poultry University (Layers • Broilers • Guinea Fowl)</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('poultry-university', 'Poultry University')}>{t('Open','Ouvrir')}</button></div>
- <div className='list-row'><span>Sheep University (Ghana Sheep Breed Program)</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('sheep-university', 'Sheep University')}>{t('Open','Ouvrir')}</button></div>
- <div className='list-row'><span>Goat University (Ghana Goat Breed Program)</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('goat-university', 'Goat University')}>{t('Open','Ouvrir')}</button></div>
- <div className='list-row'><span>Cattle University (Ghana Cattle Breed Program)</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('cattle-university', 'Cattle University')}>{t('Open','Ouvrir')}</button></div>
+ <div className='list-row'><span>African Agricultural Digital University · Poultry University (Layers • Broilers • Guinea Fowl)</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('poultry-university', 'Poultry University')}>{t('Open','Ouvrir')}</button></div>
+ <div className='list-row'><span>African Agricultural Digital University · Sheep University (Ghana Sheep Breed Program)</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('sheep-university', 'Sheep University')}>{t('Open','Ouvrir')}</button></div>
+ <div className='list-row'><span>African Agricultural Digital University · Goat University (Ghana Goat Breed Program)</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('goat-university', 'Goat University')}>{t('Open','Ouvrir')}</button></div>
+ <div className='list-row'><span>African Agricultural Digital University · Cattle University (Ghana Cattle Breed Program)</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('cattle-university', 'Cattle University')}>{t('Open','Ouvrir')}</button></div>
  <div className='list-row'><span>{t('List Product','Publier un produit','发布产品')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('products', 'List Product')}>{t('Start','Démarrer')}</button></div>
  <div className='list-row'><span>{t('List Services','Publier des services','发布服务')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'List Services')}>{t('Start','Démarrer')}</button></div>
  <div className='list-row'><span>{t('List Machinery for Rent','Publier des machines à louer','发布机械租赁')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'List Machinery for Rent')}>{t('Start','Démarrer')}</button></div>
@@ -4587,6 +4587,24 @@ function AppInner() {
  </div>
  {active === 'home' && <section>
  <h2>{t('Main App Homepage','Page d’accueil de l’application')}</h2>
+ <article className='panel' style={{marginBottom:10, background:'linear-gradient(135deg,#0f172a 0%,#0f3d2e 45%,#155e75 100%)', color:'#fff', border:'1px solid rgba(255,255,255,.08)', boxShadow:'0 18px 40px rgba(15,23,42,.18)'}}>
+ <div style={{display:'flex',justifyContent:'space-between',gap:16,flexWrap:'wrap',alignItems:'flex-start'}}>
+ <div style={{maxWidth:820}}>
+ <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',opacity:.82}}>Institutional learning platform</div>
+ <h3 style={{margin:'6px 0 8px', fontSize:'1.35rem'}}>African Agricultural Digital University</h3>
+ <div style={{color:'rgba(255,255,255,.88)', lineHeight:1.6}}>A structured digital learning environment for livestock production, breed development, and operational decision-making. Poultry University, Sheep University, Goat University, and Cattle University sit within this umbrella as applied schools for specific production systems.</div>
+ </div>
+ <div className='panel' style={{minWidth:260, padding:10, background:'rgba(255,255,255,.08)', border:'1px solid rgba(255,255,255,.12)'}}>
+ <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',opacity:.82}}>Current schools</div>
+ <div className='list' style={{marginTop:8}}>
+ <div className='list-row'><span>Poultry University</span><strong>Production systems</strong></div>
+ <div className='list-row'><span>Sheep University</span><strong>Breed development</strong></div>
+ <div className='list-row'><span>Goat University</span><strong>Breed development</strong></div>
+ <div className='list-row'><span>Cattle University</span><strong>Herd improvement</strong></div>
+ </div>
+ </div>
+ </div>
+ </article>
 
  <article className='panel' style={{marginBottom:10, background:effectiveLivestockSubscription?.tier === 'premium' ? 'linear-gradient(135deg,#0f172a 0%,#155e75 55%,#16a34a 100%)' : 'linear-gradient(135deg,#f8fafc 0%,#eff6ff 100%)', color:effectiveLivestockSubscription?.tier === 'premium' ? '#fff' : '#0f172a', border:effectiveLivestockSubscription?.tier === 'premium' ? '1px solid rgba(255,255,255,.12)' : '1px solid #bfdbfe'}}>
  <div style={{display:'flex',justifyContent:'space-between',gap:16,flexWrap:'wrap',alignItems:'center'}}>
@@ -5154,7 +5172,11 @@ function AppInner() {
 
  {active === 'poultry-university' && <section>
  <h3>🐔 Poultry University</h3>
- <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Program overview:</strong> Poultry University Professional brings the production system together in one practical reference for operators and teams.</div>
+ <div className='panel' style={{marginBottom:10, background:'linear-gradient(135deg,#eff6ff 0%,#f8fafc 100%)', border:'1px solid #bfdbfe'}}>
+ <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',color:'#1d4ed8'}}>African Agricultural Digital University</div>
+ <strong style={{display:'block',marginTop:4}}>Poultry University</strong>
+ <div style={{marginTop:6,color:'#334155'}}>This school brings brooding, grow-out, layer management, biosecurity, flock health, and commercial discipline into one structured operating reference for serious poultry teams.</div>
+ </div>
  <article className='panel' style={{marginBottom:10}}>
  <h4 style={{marginTop:0}}>Access & Delivery Format</h4>
  <p style={{fontSize:'.85rem',color:'#475569'}}>Standalone professional purchase also available (₵200–₵1,000 depending on package depth).</p>
@@ -5372,7 +5394,7 @@ function AppInner() {
 
  {active === 'sheep-university' && <section>
  <h3>🐑 Sheep University</h3>
- <div className='panel' style={{marginBottom:10, background:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? 'linear-gradient(135deg,#0f172a 0%,#14532d 45%,#0f766e 100%)' : '#eff6ff', color:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? '#fff' : '#0f172a', border:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? '1px solid rgba(255,255,255,.12)' : '1px solid #bfdbfe', boxShadow:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? '0 18px 40px rgba(15,23,42,.24)' : 'none'}}><div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'center',flexWrap:'wrap'}}><div><div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',opacity:.9}}>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? 'Access active' : 'Program overview'}</div><strong style={{display:'block',fontSize:'1.05rem',marginTop:4}}>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? `Sheep University ${String(universitySubscriptions.sheep?.subscription?.plan_code || sheepTier || '').toUpperCase()} ✓` : 'Sheep University Professional'}</strong><div style={{marginTop:6,color:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? 'rgba(255,255,255,.88)' : '#1e3a8a'}}>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? `Your sheep subscription is active${universitySubscriptions.sheep?.subscription?.reference ? ` • Ref ${universitySubscriptions.sheep.subscription.reference}` : ''}. Full modules are unlocked${sheepTier === 'pro' ? ', with advanced tools available,' : ''} and the upgrade prompts are hidden.` : 'Sheep University Professional organizes the breeding and operating system into a clear working reference.'}</div></div>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? <span className='cover-badge' style={{background:'rgba(255,255,255,.14)', color:'#fff', border:'1px solid rgba(255,255,255,.24)'}}>{String(universitySubscriptions.sheep?.subscription?.status || 'ACTIVE').replaceAll('_',' ')}</span> : null}</div></div>
+ <div className='panel' style={{marginBottom:10, background:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? 'linear-gradient(135deg,#0f172a 0%,#14532d 45%,#0f766e 100%)' : 'linear-gradient(135deg,#eff6ff 0%,#faf5ff 100%)', color:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? '#fff' : '#0f172a', border:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? '1px solid rgba(255,255,255,.12)' : '1px solid #bfdbfe', boxShadow:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? '0 18px 40px rgba(15,23,42,.24)' : 'none'}}><div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'center',flexWrap:'wrap'}}><div><div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',opacity:.9}}>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? 'African Agricultural Digital University' : 'African Agricultural Digital University'}</div><strong style={{display:'block',fontSize:'1.05rem',marginTop:4}}>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? `Sheep University · ${String(universitySubscriptions.sheep?.subscription?.plan_code || sheepTier || '').toUpperCase()} ✓` : 'Sheep University'}</strong><div style={{marginTop:6,color:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? 'rgba(255,255,255,.88)' : '#1e3a8a'}}>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? `Your sheep subscription is active${universitySubscriptions.sheep?.subscription?.reference ? ` • Ref ${universitySubscriptions.sheep.subscription.reference}` : ''}. Full modules are unlocked${sheepTier === 'pro' ? ', with advanced tools available,' : ''} and the upgrade prompts are hidden.` : 'Sheep University frames breed development, flock discipline, lamb survival, and commercial performance as one operating system.'}</div></div>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? <span className='cover-badge' style={{background:'rgba(255,255,255,.14)', color:'#fff', border:'1px solid rgba(255,255,255,.24)'}}>{String(universitySubscriptions.sheep?.subscription?.status || 'ACTIVE').replaceAll('_',' ')}</span> : null}</div></div>
  <article className='panel' style={{marginBottom:10,border:'1px solid #ddd6fe',background:'#faf5ff'}}>
  <h4 style={{marginTop:0,color:'#6d28d9'}}>Ghana Sheep Breed Development Framework</h4>
  <div className='list'>
@@ -5491,7 +5513,11 @@ function AppInner() {
 
  {active === 'goat-university' && <section>
  <h3>🐐 Goat University</h3>
- <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Program overview:</strong> Goat University Professional organizes the breeding and operating system into a practical reference for day-to-day use.</div>
+ <div className='panel' style={{marginBottom:10, background:'linear-gradient(135deg,#eff6ff 0%,#f0fdfa 100%)', border:'1px solid #bfdbfe'}}>
+ <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',color:'#0f766e'}}>African Agricultural Digital University</div>
+ <strong style={{display:'block',marginTop:4}}>Goat University</strong>
+ <div style={{marginTop:6,color:'#334155'}}>Goat University organizes breeding strategy, kidding management, parasite control, and market-ready herd development into a practical reference for operators, managers, and technical partners.</div>
+ </div>
  <article className='panel' style={{marginBottom:10,border:'1px solid #99f6e4',background:'#f0fdfa'}}>
  <h4 style={{marginTop:0,color:'#0f766e'}}>Ghana Goat Breed Development Framework</h4>
  <div className='list'>
@@ -5611,7 +5637,11 @@ function AppInner() {
 
  {active === 'cattle-university' && <section>
  <h3>🐄 Cattle University</h3>
- <div className='panel' style={{marginBottom:10, background:'#eff6ff', border:'1px solid #bfdbfe'}}><strong>Program overview:</strong> Cattle University Professional brings the herd-improvement system into one practical reference for operators and managers.</div>
+ <div className='panel' style={{marginBottom:10, background:'linear-gradient(135deg,#eff6ff 0%,#fffbeb 100%)', border:'1px solid #bfdbfe'}}>
+ <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',color:'#92400e'}}>African Agricultural Digital University</div>
+ <strong style={{display:'block',marginTop:4}}>Cattle University</strong>
+ <div style={{marginTop:6,color:'#334155'}}>Cattle University brings herd improvement, calving discipline, health scheduling, and commercial growth management into one working reference for serious cattle operations.</div>
+ </div>
  <article className='panel' style={{marginBottom:10,border:'1px solid #fde68a',background:'#fffbeb'}}>
  <h4 style={{marginTop:0,color:'#92400e'}}>Ghana Cattle Breed Program (3 Phases)</h4>
  <p style={{fontSize:'.85rem',color:'#92400e'}}>Final breeding sires: <strong>Brahman or Gudali</strong>.</p>
