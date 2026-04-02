@@ -2656,6 +2656,8 @@ function AppInner() {
  const [communityProfileBaseline, setCommunityProfileBaseline] = useState(null)
  const [communityProfileDirty, setCommunityProfileDirty] = useState(false)
  const [communityProfileSaving, setCommunityProfileSaving] = useState(false)
+ const [communityProfileEditorOpen, setCommunityProfileEditorOpen] = useState(false)
+ const [communityProfileSectionsOpen, setCommunityProfileSectionsOpen] = useState({ photos: true, identity: true, story: false, privacy: false })
  const [communityPosts, setCommunityPosts] = useState([])
  const [communityFeedMode, setCommunityFeedMode] = useState('for-you')
  const [communityFeedItems, setCommunityFeedItems] = useState([])
@@ -6677,7 +6679,22 @@ function AppInner() {
  </div>
  <div style={{marginTop:10}}><button type='button' className='btn' disabled={communityProfileOpeningUserId === me?.id} onClick={()=>openCommunityProfileView(me?.id)}>{communityProfileOpeningUserId === me?.id ? 'Opening…' : 'View Public Profile'}</button></div>
  </div>
- <form className='list' onSubmit={async(e)=>{
+ <div style={{marginTop:14, border:'1px solid #dbe6df', borderRadius:16, overflow:'hidden', background:'#f8fafc'}}>
+ <button
+ type='button'
+ onClick={()=>setCommunityProfileEditorOpen(open => !open)}
+ style={{width:'100%', border:'none', background:'transparent', padding:'14px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, textAlign:'left', cursor:'pointer'}}
+ >
+ <div>
+ <div style={{fontWeight:700, color:'#0f172a'}}>{communityProfileEditorOpen ? 'Editing your profile' : 'Edit Profile'}</div>
+ <div style={{fontSize:'.82rem', color:'#64748b'}}>{communityProfileDirty ? 'You have unsaved changes.' : 'Clean up photos, identity, story, and privacy settings.'}</div>
+ </div>
+ <div style={{display:'flex', alignItems:'center', gap:8, flexShrink:0}}>
+ {communityProfileDirty && <span style={{fontSize:'.72rem', fontWeight:700, color:'#166534', background:'#dcfce7', padding:'4px 8px', borderRadius:999}}>Unsaved</span>}
+ <span style={{fontSize:'1rem', color:'#475569'}}>{communityProfileEditorOpen ? '▴' : '▾'}</span>
+ </div>
+ </button>
+ {communityProfileEditorOpen && <form className='list' style={{padding:'0 12px 12px 12px', gap:10}} onSubmit={async(e)=>{
  e.preventDefault()
  try {
  setCommunityProfileSaving(true)
@@ -6702,6 +6719,7 @@ function AppInner() {
  : post
  ))
  setCommunityProfileDirty(false)
+ setCommunityProfileEditorOpen(false)
  const meRes = await api.fetchMe().catch(()=>null)
  if (meRes) {
  setMe(meRes)
@@ -6715,7 +6733,12 @@ function AppInner() {
  setCommunityProfileSaving(false)
  }
  }}>
- <label style={{fontSize:'.85rem',color:'#475569'}}>Display picture</label>
+ <div style={{fontSize:'.78rem', color:'#64748b', padding:'0 4px'}}>Make quick updates without losing the profile preview above.</div>
+
+ <details open={communityProfileSectionsOpen.photos} onToggle={(e)=>setCommunityProfileSectionsOpen(prev => ({ ...prev, photos: e.currentTarget.open }))} style={{border:'1px solid #e2e8f0', borderRadius:14, background:'#fff'}}>
+ <summary style={{cursor:'pointer', listStyle:'none', padding:'12px 14px', fontWeight:700, color:'#0f172a'}}>Photos</summary>
+ <div className='list' style={{padding:'0 12px 12px 12px', gap:8}}>
+ <label style={{fontSize:'.82rem',color:'#475569'}}>Display picture</label>
  <input className='input' type='file' accept='image/*' onChange={async (e)=>{
  const f = e.target.files?.[0]
  if (!f) return
@@ -6727,8 +6750,7 @@ function AppInner() {
  alert(`Could not prepare display picture: ${err?.message || err}`)
  }
  }} />
-
- <label style={{fontSize:'.85rem',color:'#475569'}}>Cover image</label>
+ <label style={{fontSize:'.82rem',color:'#475569'}}>Cover image</label>
  <input className='input' type='file' accept='image/*' onChange={async (e)=>{
  const f = e.target.files?.[0]
  if (!f) return
@@ -6740,17 +6762,43 @@ function AppInner() {
  alert(`Could not prepare cover image: ${err?.message || err}`)
  }
  }} />
+ </div>
+ </details>
+
+ <details open={communityProfileSectionsOpen.identity} onToggle={(e)=>setCommunityProfileSectionsOpen(prev => ({ ...prev, identity: e.currentTarget.open }))} style={{border:'1px solid #e2e8f0', borderRadius:14, background:'#fff'}}>
+ <summary style={{cursor:'pointer', listStyle:'none', padding:'12px 14px', fontWeight:700, color:'#0f172a'}}>Identity</summary>
+ <div className='list' style={{padding:'0 12px 12px 12px', gap:8}}>
  <input className='input' placeholder='Main name / display name' value={communityProfile.full_name || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, full_name:e.target.value}) }} />
  <input className='input' placeholder='Username (e.g. akhen_farmer)' value={communityProfile.username || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, username:e.target.value.toLowerCase().replace(/\s+/g,'')}) }} />
- <input className='input' placeholder='Bio' value={communityProfile.bio || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, bio:e.target.value}) }} />
- <input className='input' placeholder='Farm life details' value={communityProfile.farm_life || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, farm_life:e.target.value}) }} />
+ </div>
+ </details>
+
+ <details open={communityProfileSectionsOpen.story} onToggle={(e)=>setCommunityProfileSectionsOpen(prev => ({ ...prev, story: e.currentTarget.open }))} style={{border:'1px solid #e2e8f0', borderRadius:14, background:'#fff'}}>
+ <summary style={{cursor:'pointer', listStyle:'none', padding:'12px 14px', fontWeight:700, color:'#0f172a'}}>Bio & farm details</summary>
+ <div className='list' style={{padding:'0 12px 12px 12px', gap:8}}>
+ <textarea className='input' rows={3} placeholder='Short bio' value={communityProfile.bio || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, bio:e.target.value}) }} />
+ <textarea className='input' rows={3} placeholder='Farm life details' value={communityProfile.farm_life || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, farm_life:e.target.value}) }} />
  <input className='input' placeholder='Interests/tags (comma separated)' value={communityProfile.interests || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, interests:e.target.value}) }} />
+ </div>
+ </details>
+
+ <details open={communityProfileSectionsOpen.privacy} onToggle={(e)=>setCommunityProfileSectionsOpen(prev => ({ ...prev, privacy: e.currentTarget.open }))} style={{border:'1px solid #e2e8f0', borderRadius:14, background:'#fff'}}>
+ <summary style={{cursor:'pointer', listStyle:'none', padding:'12px 14px', fontWeight:700, color:'#0f172a'}}>Privacy</summary>
+ <div className='list' style={{padding:'0 12px 12px 12px', gap:8}}>
  <select className='input' value={communityProfile.visibility || 'PUBLIC'} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, visibility:e.target.value}) }}>
  <option value='PUBLIC'>Public</option>
  <option value='FOLLOWERS'>Followers only</option>
  </select>
+ <div style={{fontSize:'.78rem', color:'#64748b'}}>Choose who can view your community profile details in the public profile screen.</div>
+ </div>
+ </details>
+
+ <div style={{display:'flex', flexDirection:'column', gap:8, padding:'8px 4px 0 4px'}}>
  <button className='btn btn-dark' disabled={communityProfileSaving}>{communityProfileSaving ? 'Saving Profile…' : 'Save Profile'}</button>
- </form>
+ <div style={{fontSize:'.78rem', color:'#64748b', textAlign:'center'}}>{communityProfileDirty ? 'Save to publish your latest profile edits everywhere in Community.' : 'No unsaved changes right now.'}</div>
+ </div>
+ </form>}
+ </div>
  </article>
 
  <article className='panel'>
