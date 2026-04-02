@@ -2836,6 +2836,7 @@ function AppInner() {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
     ;(stream.getTracks?.() || []).forEach(track => track.stop())
    }
+   try { if (typeof window !== 'undefined' && 'localStorage' in window) localStorage.setItem('farmsavior_call_permissions_granted', '1') } catch {}
   } catch (err) {
    if (!silent) alert(errMsg(err))
   } finally {
@@ -2850,6 +2851,10 @@ function AppInner() {
  }, [communityInboxOpen, communityMessageView.open, communityMessageView.messages, communityMessageView.loading])
  useEffect(() => {
   if (!communityInboxOpen) return
+  let alreadyGranted = false
+  try { if (typeof window !== 'undefined' && 'localStorage' in window) alreadyGranted = localStorage.getItem('farmsavior_call_permissions_granted') === '1' } catch {}
+  const notificationsGranted = (typeof window !== 'undefined' && 'Notification' in window) ? Notification.permission === 'granted' : false
+  if (alreadyGranted && notificationsGranted) return
   enableCommunityCallPermissions({ silent: true })
  }, [communityInboxOpen])
  useEffect(() => {
