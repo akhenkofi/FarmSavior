@@ -7091,6 +7091,12 @@ function AppInner() {
  <button type='button' className='btn' onClick={closeCommunityMessages}>Close</button>
  </div>
  <div className='helper-text' style={{marginBottom:10}}>{communityMessageThreads.length ? `${communityMessageThreads.length} conversation${communityMessageThreads.length === 1 ? '' : 's'} ready` : 'No conversations yet — tap Message on a profile, search result, or post to start one.'}</div>
+ {((communityMessageThreads || []).filter(t=>{ const tx = String(t?.last_message?.text || '').toLowerCase(); return tx.includes('join my audio call:') || tx.includes('join my video call:') || tx.includes('meet.jit.si/') }).slice(0,5).length > 0) && <div className='panel' style={{marginBottom:10, background:'#f8fafc', border:'1px solid #dbe6df'}}>
+ <div style={{fontWeight:700, marginBottom:6}}>Recent Calls</div>
+ <div className='list'>
+ {(communityMessageThreads || []).filter(t=>{ const tx = String(t?.last_message?.text || '').toLowerCase(); return tx.includes('join my audio call:') || tx.includes('join my video call:') || tx.includes('meet.jit.si/') }).slice(0,5).map((thread)=>{ const tx = String(thread?.last_message?.text || '').toLowerCase(); const mode = tx.includes('video') ? 'Video' : 'Audio'; return <button key={`recent-call-${thread?.user?.user_id}`} type='button' className='list-row' style={{justifyContent:'space-between', width:'100%', textAlign:'left', background:'#fff', border:'1px solid #e2e8f0', borderRadius:10}} onClick={()=>openCommunityMessages(thread.user)}><span>{mode} • {thread?.user?.full_name || `User ${thread?.user?.user_id || ''}`}</span><span style={{fontSize:'.75rem', color:'#64748b'}}>{String(thread?.last_message?.created_at || '').replace('T',' ').slice(0,16)}</span></button> })}
+ </div>
+ </div>}
  <div className='community-thread-list'>
  {(communityMessageThreads || []).map((thread)=><button key={`community-thread-${thread?.user?.user_id}`} type='button' className={`community-thread-row ${String(communityMessageView?.user?.user_id || '') === String(thread?.user?.user_id || '') ? 'active' : ''}`} onClick={()=>openCommunityMessages(thread.user)}>
  <div className='community-thread-row-top'>
