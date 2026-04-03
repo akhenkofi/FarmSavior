@@ -3042,6 +3042,7 @@ function AppInner() {
  const [medicineChooserSearch, setMedicineChooserSearch] = useState('')
  const [famachaComposerOpen, setFamachaComposerOpen] = useState(false)
  const [famachaRecordsOpen, setFamachaRecordsOpen] = useState(false)
+ const [famachaDetailEntry, setFamachaDetailEntry] = useState('')
  const [ancestorTreeOpen, setAncestorTreeOpen] = useState(false)
  const [ancestorPdfOpen, setAncestorPdfOpen] = useState(false)
  const [offspringReportOpen, setOffspringReportOpen] = useState(false)
@@ -6572,15 +6573,20 @@ function AppInner() {
  <div className='records-shell'>
   <div className='records-hero-card'>
    <div><div className='records-eyebrow'>HEALTH LOG</div><h3>FAMACHA Records</h3><p>{currentLivestockRecord?.name || 'Animal record'}</p></div>
-   <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setFamachaRecordsOpen(false)}>Back</button><button type='button' className='btn btn-dark' onClick={()=>{ setFamachaRecordsOpen(false); setFamachaDraft({ famacha: '--', bodyScore: '', weight: '', notes: '', date: new Date().toISOString().slice(0,10) }); setFamachaComposerOpen(true) }}>Add Entry</button></div>
+   <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>{ setFamachaDetailEntry(''); setFamachaRecordsOpen(false) }}>Back</button><button type='button' className='btn btn-dark' onClick={()=>{ setFamachaRecordsOpen(false); setFamachaDraft({ famacha: '--', bodyScore: '', weight: '', notes: '', date: new Date().toISOString().slice(0,10) }); setFamachaComposerOpen(true) }}>Add Entry</button></div>
   </div>
   <article className='panel records-panel'>
    {(() => {
     const rows = String(extractAttachmentsFromNotes(currentLivestockRecord?.notes || '').text || '').split('\n').filter(line => /FAMACHA:/i.test(line)).reverse()
     if (!rows.length) return <div className='helper-text'>No FAMACHA/body condition records yet.</div>
-    return <div className='list'>{rows.map((row, idx)=><div key={`famacha-row-${idx}`} className='list-row'><span>{row}</span></div>)}</div>
+    return <div className='list'>{rows.map((row, idx)=><button type='button' key={`famacha-row-${idx}`} className='list-row' onClick={()=>setFamachaDetailEntry(String(row))}><span>{row}</span><strong>›</strong></button>)}</div>
    })()}
   </article>
+  {famachaDetailEntry && <article className='panel records-panel' style={{marginTop:10}}>
+   <div className='records-detail-section'>FAMACHA Entry Details</div>
+   <div style={{whiteSpace:'pre-wrap'}}>{famachaDetailEntry}</div>
+   <div style={{marginTop:10, display:'flex', justifyContent:'flex-end'}}><button type='button' className='btn' onClick={()=>setFamachaDetailEntry('')}>Close</button></div>
+  </article>}
  </div>
  </section>}
 
