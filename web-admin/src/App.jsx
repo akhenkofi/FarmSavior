@@ -2862,7 +2862,9 @@ function AppInner() {
     await api.pushCommunityCallSignal(callId, { type, to_user_id: Number(targetUserId || 0), data: payload })
    } catch {}
   }
-  return null
+  if (type !== 'offer') return null
+  const text = `${icon} CALL_SIGNAL:${JSON.stringify(payload)}`
+  return api.sendCommunityMessage(targetUserId, { text })
  }
  const startCommunityCallToUser = async (user, mode = 'audio') => {
   const targetUserId = user?.user_id || user?.id
