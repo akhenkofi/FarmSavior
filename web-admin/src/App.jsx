@@ -6152,7 +6152,6 @@ function AppInner() {
     <p>Run your flock or herd from one clear mobile-first workspace with quick counts, practical record capture, and an easy path from summary to details to edit.</p>
    </div>
    <div className='records-hero-actions'>
-    <button type='button' className='btn' onClick={() => { setSelectedLivestockRecord(null); setSelectedOffspringRecord(null); setRecordsSectionOpen(prev => ({ ...prev, create: false, edit: false, details: false })) }}>Reset view</button>
     <button type='button' className='btn btn-dark' onClick={() => { setSelectedLivestockRecord(null); setSelectedOffspringRecord(null); setRecordsSectionOpen(prev => ({ ...prev, create: true, edit: false, details: false })) }}>Add animal</button>
    </div>
   </div>
