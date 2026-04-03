@@ -8004,7 +8004,7 @@ function AppInner() {
  </div>
  </div>
  <div className='disease-results-column'>
- {diseaseAnalyzing && <div className='panel disease-panel disease-status-card'><div className='list-row'><strong>🌿 FarmSavior</strong><span>Analyzing image…</span></div><div className='helper-text'>Please wait while FarmSavior checks the image, compares likely conditions, and prepares treatment guidance.</div></div>}
+ {diseaseAnalyzing && <div className='panel disease-panel disease-status-card' style={{background:'linear-gradient(135deg,#0b1220 0%,#0f172a 45%,#1e293b 100%)', color:'#e2e8f0', border:'1px solid rgba(103,232,249,.35)', boxShadow:'0 20px 45px rgba(2,6,23,.45)'}}><div style={{display:'flex', alignItems:'center', gap:12}}><img src='/assets/farmsavior-icon-only.png' alt='FarmSavior' style={{width:44, height:44, borderRadius:10, border:'1px solid rgba(103,232,249,.35)'}} /><div><div style={{fontSize:'.72rem', letterSpacing:'.08em', textTransform:'uppercase', color:'#67e8f9', fontWeight:800}}>AI Disease Analyzer</div><strong style={{color:'#fff'}}>Analyzing case…</strong></div></div><div className='helper-text' style={{color:'#cbd5e1', marginTop:8}}>FarmSavior is scanning symptoms + image patterns and preparing differential diagnosis and treatment guidance.</div><div style={{marginTop:10, display:'inline-block', padding:'6px 10px', borderRadius:999, border:'1px solid rgba(103,232,249,.4)', color:'#67e8f9'}}>Medical scan in progress</div></div>}
  {!diseaseAnalyzing && !diseaseResult && <div className='panel disease-panel disease-empty-card'>
  <div className='disease-empty-icon'>🩺</div>
  <strong>No analysis yet</strong>
