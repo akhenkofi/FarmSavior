@@ -3371,7 +3371,7 @@ function AppInner() {
  const startLivestockUpgradeCheckout = async (planCode = 'premium', label = 'Livestock Records upgrade') => {
   try {
    if (!token || !me?.id) { setAuthMode('signup'); setAuthOpen(true); return }
-   const r = await api.checkoutLivestockRecordsPlan({ user_id: Number(me.id), plan_code: planCode, billing_cycle: 'monthly', currency: 'GHS', country: me?.country || uiCountry })
+   const r = await api.checkoutLivestockRecordsPlan({ user_id: Number(me.id), plan_code: planCode, billing_cycle: 'monthly', currency: 'GHS', country: me?.country || uiCountry, force_paid: true })
    cachePendingCheckout({ type: 'livestock', reference: r?.reference, plan_code: planCode })
    if (r?.payment_url) { window.location.href = r.payment_url; return }
    alert(r?.payment_init_error || 'Unable to initialize livestock upgrade payment right now.')
@@ -4573,7 +4573,7 @@ function AppInner() {
  : `You are on the free livestock tier${effectiveLivestockSubscription?.record_limit ? ` with up to ${effectiveLivestockSubscription.record_limit} animals` : ''}. Upgrade to unlock unlimited records and a more complete herd-management workspace.`}
  </div>
  <div className='card-actions'>
- <button className={`btn ${effectiveLivestockSubscription?.tier === 'premium' ? '' : 'btn-dark'}`} onClick={() => { if (effectiveLivestockSubscription?.tier === 'premium') { if (token) window.location.href='/?public=0&go=livestock-records'; else { setAuthMode('login'); setAuthOpen(true) } return } if (!token) { setAuthMode('signup'); setAuthOpen(true); return } startLivestockUpgradeCheckout('premium', 'Livestock Records upgrade') }}>{effectiveLivestockSubscription?.tier === 'premium' ? 'Open records' : 'View upgrade plans'}</button>
+ <button className={`btn ${effectiveLivestockSubscription?.tier === 'premium' ? '' : 'btn-dark'}`} onClick={() => { if (effectiveLivestockSubscription?.tier === 'premium') { if (token) window.location.href='/?public=0&go=livestock-records'; else { setAuthMode('login'); setAuthOpen(true) } return } if (!token) { setAuthMode('signup'); setAuthOpen(true); return } startLivestockUpgradeCheckout('premium', 'Livestock Records upgrade') }}>{effectiveLivestockSubscription?.tier === 'premium' ? 'Open records' : 'Upgrade'}</button>
  <button className='btn' onClick={() => { if (!token) { setAuthMode('login'); setAuthOpen(true); return } window.location.href='/?public=0&go=payments' }}>My billing</button>
  </div>
  </div>}
