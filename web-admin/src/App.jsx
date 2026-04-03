@@ -2714,6 +2714,8 @@ function AppInner() {
  const [communityIncomingCall, setCommunityIncomingCall] = useState(null)
  const [communityActiveCall, setCommunityActiveCall] = useState(null)
  const [communityCallSeconds, setCommunityCallSeconds] = useState(0)
+ const [communityCallMuted, setCommunityCallMuted] = useState(false)
+ const [communityCallCameraOff, setCommunityCallCameraOff] = useState(false)
  const communityMessageListRef = useRef(null)
  const communityLastCallAlertRef = useRef(null)
  const communityLastSignalIdRef = useRef('')
@@ -2942,6 +2944,16 @@ function AppInner() {
    osc.stop(ctx.currentTime + 0.28)
    setTimeout(() => { try { ctx.close() } catch {} }, 400)
   } catch {}
+ }
+ const toggleCommunityMute = () => {
+  const next = !communityCallMuted
+  try { (communityLocalStreamRef.current?.getAudioTracks?.() || []).forEach(t => { t.enabled = !next }) } catch {}
+  setCommunityCallMuted(next)
+ }
+ const toggleCommunityCamera = () => {
+  const next = !communityCallCameraOff
+  try { (communityLocalStreamRef.current?.getVideoTracks?.() || []).forEach(t => { t.enabled = !next }) } catch {}
+  setCommunityCallCameraOff(next)
  }
  const closeCommunityPeer = () => {
   try { communityPcRef.current?.getSenders?.().forEach(s => { try { s.replaceTrack?.(null) } catch {} }) } catch {}
@@ -3299,6 +3311,8 @@ function AppInner() {
 
  useEffect(() => {
   if (communityActiveCall) return
+  setCommunityCallMuted(false)
+  setCommunityCallCameraOff(false)
   closeCommunityPeer()
  }, [communityActiveCall])
 
@@ -8343,7 +8357,9 @@ function AppInner() {
  <div style={{width:'100vw', height:'100vh', background:'#000', display:'grid', gridTemplateRows:'auto 1fr', position:'relative'}}>
  <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 12px', background:'rgba(2,6,23,.86)', color:'#fff'}}>
  <strong>{communityActiveCall?.mode === 'video' ? 'Video Call' : 'Audio Call'}{communityActiveCall?.status === 'connected' ? ` • ${String(Math.floor(communityCallSeconds/60)).padStart(2,'0')}:${String(communityCallSeconds%60).padStart(2,'0')}` : ''}</strong>
- <div style={{display:'flex', gap:8}}>
+ <div style={{display:'flex', gap:8, flexWrap:'wrap', justifyContent:'flex-end'}}>
+  <button type='button' className='btn' onClick={toggleCommunityMute}>{communityCallMuted ? 'Unmute' : 'Mute'}</button>
+  {communityActiveCall?.mode === 'video' && <button type='button' className='btn' onClick={toggleCommunityCamera}>{communityCallCameraOff ? 'Camera On' : 'Camera Off'}</button>}
   <button type='button' className='btn' onClick={async()=>{ const current = communityActiveCall; try { if (current?.peerUserId) await sendCallSignal(current.peerUserId, { v:1, type:'end', mode:current.mode || 'audio', callId:current.callId || '', fromUserId:Number(me?.id || 0), toUserId:Number(current.peerUserId || 0), ts:Date.now() }, '📞') } catch {} returnToCommunityPhone() }}>Back</button>
   <button type='button' className='btn' onClick={async()=>{ const current = communityActiveCall; try { if (current?.peerUserId) await sendCallSignal(current.peerUserId, { v:1, type:'end', mode:current.mode || 'audio', callId:current.callId || '', fromUserId:Number(me?.id || 0), toUserId:Number(current.peerUserId || 0), ts:Date.now() }, '📞') } catch {} returnToCommunityPhone() }}>End Call</button>
  </div>
