@@ -2705,6 +2705,7 @@ function AppInner() {
  const [communityPostForm, setCommunityPostForm] = useState({ text: '', media_url: '', media_type: 'TEXT', tags: '' })
  const [communityMessageThreads, setCommunityMessageThreads] = useState([])
  const [communityInboxOpen, setCommunityInboxOpen] = useState(false)
+ const [communityInboxSection, setCommunityInboxSection] = useState('messages')
  const [communityMessageView, setCommunityMessageView] = useState({ open: false, loading: false, error: '', user: null, messages: [] })
  const [communityMessageDraft, setCommunityMessageDraft] = useState('')
  const [communityMessageSending, setCommunityMessageSending] = useState(false)
@@ -2721,6 +2722,7 @@ function AppInner() {
  const communityRemoteAudioRef = useRef(null)
  const communityLocalVideoRef = useRef(null)
  const communityRemoteVideoRef = useRef(null)
+ const communityHandledCallIdsRef = useRef(new Set())
  const [editingCommunityPostId, setEditingCommunityPostId] = useState(null)
  const [communityCommentText, setCommunityCommentText] = useState({})
  const [communityComments, setCommunityComments] = useState({})
@@ -2787,6 +2789,15 @@ function AppInner() {
  window.scrollTo({ top: 0, behavior: 'smooth' })
  }
  const openCommunityInbox = async () => {
+ setCommunityInboxSection('messages')
+ setCommunityInboxOpen(true)
+ setCommunityMessageView({ open: false, loading: false, error: '', user: null, messages: [] })
+ const threads = await api.fetchCommunityMessageThreads().catch(() => communityMessageThreads || [])
+ setCommunityMessageThreads(threads || [])
+ return threads || []
+ }
+ const openCommunityCalls = async () => {
+ setCommunityInboxSection('calls')
  setCommunityInboxOpen(true)
  setCommunityMessageView({ open: false, loading: false, error: '', user: null, messages: [] })
  const threads = await api.fetchCommunityMessageThreads().catch(() => communityMessageThreads || [])
@@ -3028,6 +3039,8 @@ function AppInner() {
   if (Number(signal.toUserId || 0) && Number(signal.fromUserId || 0) === Number(signal.toUserId || 0)) return
   const marker = String(signal.callId || latest.id || latest.created_at || lowerText)
   if (communityLastCallAlertRef.current === marker) return
+  if (communityHandledCallIdsRef.current.has(String(signal.callId || marker))) return
+  if (communityIncomingCall || communityActiveCall) return
   const createdMs = latest?.created_at ? new Date(latest.created_at).getTime() : Date.now()
   if (!Number.isFinite(createdMs) || (Date.now() - createdMs) > 90 * 1000) return
   communityLastCallAlertRef.current = marker
@@ -3071,6 +3084,8 @@ function AppInner() {
     const signalType = String(signal.type || '')
     if (signalType === 'offer') {
      const mode = signal.mode === 'video' ? 'video' : 'audio'
+     const callKey = String(signal.callId || '')
+     if (!callKey || communityHandledCallIdsRef.current.has(callKey) || communityIncomingCall || communityActiveCall) return
      try { sendCallSignal(signal.fromUserId, { v:1, type:'ringing', mode, callId: signal.callId || '', fromUserId:Number(me?.id || 0), toUserId:Number(signal.fromUserId || 0), ts:Date.now() }, mode === 'video' ? '📹' : '📞').catch(()=>{}) } catch {}
      setCommunityIncomingCall({ from: candidate?.user?.full_name || 'A user', mode, callId: signal.callId || '', fromUserId: signal.fromUserId || null })
      return
@@ -7915,7 +7930,8 @@ function AppInner() {
  <h4 style={{marginTop:0}}>Messages & Calls</h4>
  <div className='helper-text' style={{marginBottom:8}}>Quick access to your inbox, calls, and active conversations.</div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
- <button type='button' className='btn btn-dark' onClick={()=>openCommunityInbox()}>{communityMessageThreads.length ? `Open Inbox (${communityMessageThreads.length})` : 'Open Inbox'}</button>
+ <button type='button' className='btn btn-dark' onClick={()=>openCommunityInbox()}>{communityMessageThreads.length ? `Messages (${communityMessageThreads.length})` : 'Messages'}</button>
+ <button type='button' className='btn' onClick={()=>openCommunityCalls()}>Call Log</button>
  {communityMessageView?.user?.user_id && <button type='button' className='btn' onClick={()=>openCommunityMessages(communityMessageView.user)}>Resume last chat</button>}
  </div>
  </article>
@@ -8002,7 +8018,8 @@ function AppInner() {
  <div className='helper-text'>Tap Message from any profile, search result, or post to jump straight into a focused conversation view with loading, send, and close states.</div>
  </div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
- <button type='button' className='btn btn-dark' onClick={()=>openCommunityInbox()}>{communityMessageThreads.length ? `Open Inbox (${communityMessageThreads.length})` : 'Open Inbox'}</button>
+ <button type='button' className='btn btn-dark' onClick={()=>openCommunityInbox()}>{communityMessageThreads.length ? `Messages (${communityMessageThreads.length})` : 'Messages'}</button>
+ <button type='button' className='btn' onClick={()=>openCommunityCalls()}>Call Log</button>
  {communityMessageView?.user?.user_id && <button type='button' className='btn' onClick={()=>openCommunityMessages(communityMessageView.user)}>Resume chat</button>}
  </div>
  </div>
@@ -8028,14 +8045,18 @@ function AppInner() {
  </div>
  <button type='button' className='btn' onClick={closeCommunityMessages}>Close</button>
  </div>
- <div className='helper-text' style={{marginBottom:10}}>{communityMessageThreads.length ? `${communityMessageThreads.length} conversation${communityMessageThreads.length === 1 ? '' : 's'} ready` : 'No conversations yet - tap Message on a profile, search result, or post to start one.'}</div>
- {((communityMessageThreads || []).filter(t=>{ const tx = String(t?.last_message?.text || '').toLowerCase(); return tx.includes('join my audio call:') || tx.includes('join my video call:') || tx.includes('meet.jit.si/') || tx.includes('call_signal:') }).slice(0,5).length > 0) && <div className='panel' style={{marginBottom:10, background:'#f8fafc', border:'1px solid #dbe6df'}}>
+ <div className='helper-text' style={{marginBottom:10}}>{communityInboxSection === 'calls' ? 'Recent call activity only.' : (communityMessageThreads.length ? `${communityMessageThreads.length} conversation${communityMessageThreads.length === 1 ? '' : 's'} ready` : 'No conversations yet - tap Message on a profile, search result, or post to start one.')}</div>
+ <div className='tabs' style={{marginBottom:8}}>
+  <button className={`tab ${communityInboxSection === 'messages' ? 'active' : ''}`} onClick={()=>setCommunityInboxSection('messages')}>Messages</button>
+  <button className={`tab ${communityInboxSection === 'calls' ? 'active' : ''}`} onClick={()=>setCommunityInboxSection('calls')}>Calls</button>
+ </div>
+ {communityInboxSection === 'calls' && ((communityMessageThreads || []).filter(t=>{ const tx = String(t?.last_message?.text || '').toLowerCase(); return tx.includes('join my audio call:') || tx.includes('join my video call:') || tx.includes('meet.jit.si/') || tx.includes('call_signal:') }).slice(0,5).length > 0) && <div className='panel' style={{marginBottom:10, background:'#f8fafc', border:'1px solid #dbe6df'}}>
  <div style={{fontWeight:700, marginBottom:6}}>Recent Calls</div>
  <div className='list'>
  {(communityMessageThreads || []).filter(t=>{ const tx = String(t?.last_message?.text || '').toLowerCase(); return tx.includes('join my audio call:') || tx.includes('join my video call:') || tx.includes('meet.jit.si/') || tx.includes('call_signal:') }).slice(0,5).map((thread)=>{ const tx = String(thread?.last_message?.text || '').toLowerCase(); const mode = tx.includes('video') ? 'Video' : 'Audio'; const status = thread?.last_message?.is_mine ? 'Outgoing' : 'Missed'; return <button key={`recent-call-${thread?.user?.user_id}`} type='button' className='list-row' style={{justifyContent:'space-between', width:'100%', textAlign:'left', background:'#fff', border:'1px solid #e2e8f0', borderRadius:10}} onClick={()=>openCommunityMessages(thread.user)}><span>{mode} • {status} • {thread?.user?.full_name || `User ${thread?.user?.user_id || ''}`}</span><span style={{fontSize:'.75rem', color:'#64748b'}}>{String(thread?.last_message?.created_at || '').replace('T',' ').slice(0,16)}</span></button> })}
  </div>
  </div>}
- <div className='community-thread-list'>
+ {communityInboxSection === 'messages' && <div className='community-thread-list'>
  {(communityMessageThreads || []).map((thread)=><button key={`community-thread-${thread?.user?.user_id}`} type='button' className={`community-thread-row ${String(communityMessageView?.user?.user_id || '') === String(thread?.user?.user_id || '') ? 'active' : ''}`} onClick={()=>openCommunityMessages(thread.user)}>
  <div className='community-thread-row-top'>
  <strong>{thread?.user?.full_name || `User ${thread?.user?.user_id || ''}`}</strong>
@@ -8045,23 +8066,23 @@ function AppInner() {
  <div className='community-thread-snippet'>{(()=>{ const tx = String(thread?.last_message?.text || ''); const lx = tx.toLowerCase(); if (lx.includes('join my audio call:') || lx.includes('join my video call:') || lx.includes('meet.jit.si/') || lx.includes('call_signal:')) return `📞 ${thread?.last_message?.is_mine ? 'Outgoing' : 'Missed'} call activity (see Recent Calls)`; return `${thread?.last_message?.is_mine ? 'You: ' : ''}${tx.slice(0, 120)}` })()}</div>
  </button>)}
  {!communityMessageThreads.length && <div className='community-thread-preview community-thread-preview-empty'>No active conversations yet.</div>}
- </div>
+ </div>}
  </div>
  <div className='community-messenger-main'>
  <div className='community-messenger-main-head'>
  <div>
- <div className='community-inbox-kicker'>Conversation</div>
- <h4 style={{margin:'4px 0 0 0'}}>{communityMessageView?.user?.full_name || 'Select a conversation'}</h4>
- <div className='helper-text'>{communityMessageView?.user?.username ? `@${communityMessageView.user.username}` : (communityMessageView.loading ? 'Opening chat…' : 'Choose someone to start messaging.')}</div>
+ <div className='community-inbox-kicker'>{communityInboxSection === 'calls' ? 'Call Log' : 'Conversation'}</div>
+ <h4 style={{margin:'4px 0 0 0'}}>{communityInboxSection === 'calls' ? 'Recent Calls' : (communityMessageView?.user?.full_name || 'Select a conversation')}</h4>
+ <div className='helper-text'>{communityInboxSection === 'calls' ? 'Calls only (no messages).' : (communityMessageView?.user?.username ? `@${communityMessageView.user.username}` : (communityMessageView.loading ? 'Opening chat…' : 'Choose someone to start messaging.'))}</div>
  </div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
- {communityMessageView.open && <button type='button' className='btn community-mobile-back-btn' onClick={()=>setCommunityMessageView({ open: false, loading: false, error: '', user: null, messages: [] })}>Back to inbox</button>}
- {communityMessageView.open && <button type='button' className='btn' disabled={communityMessageSending} onClick={()=>sendCommunityCallInvite('audio')}>{communityMessageSending ? 'Starting…' : 'Audio'}</button>}
- {communityMessageView.open && <button type='button' className='btn' disabled={communityMessageSending} onClick={()=>sendCommunityCallInvite('video')}>{communityMessageSending ? 'Starting…' : 'Video'}</button>}
+ {communityInboxSection === 'messages' && communityMessageView.open && <button type='button' className='btn community-mobile-back-btn' onClick={()=>setCommunityMessageView({ open: false, loading: false, error: '', user: null, messages: [] })}>Back to inbox</button>}
+ {communityInboxSection === 'messages' && communityMessageView.open && <button type='button' className='btn' disabled={communityMessageSending} onClick={()=>sendCommunityCallInvite('audio')}>{communityMessageSending ? 'Starting…' : 'Audio'}</button>}
+ {communityInboxSection === 'messages' && communityMessageView.open && <button type='button' className='btn' disabled={communityMessageSending} onClick={()=>sendCommunityCallInvite('video')}>{communityMessageSending ? 'Starting…' : 'Video'}</button>}
  <button type='button' className='btn' onClick={closeCommunityMessages}>Close</button>
  </div>
  </div>
- {!communityMessageView.open && <div className='community-messenger-empty'>
+ {communityInboxSection === 'messages' && !communityMessageView.open && <div className='community-messenger-empty'>
  <div className='empty-emoji'>💬</div>
  <strong>Pick a conversation from the inbox</strong>
  <span>Start a new conversation from any profile, then use Audio or Video call instantly from the header.</span>
@@ -8071,7 +8092,7 @@ function AppInner() {
  <button type='button' className='btn' disabled title='Select a conversation first'>Video Call</button>
  </div>
  </div>}
- {communityMessageView.open && <>
+ {communityInboxSection === 'messages' && communityMessageView.open && <>
  {communityMessageView.loading && <div className='community-messenger-empty'><div className='empty-emoji'>⏳</div><strong>Opening messages…</strong><span>Loading the latest conversation safely.</span></div>}
  {!!communityMessageView.error && <div className='panel' style={{marginTop:8, background:'#fff7ed', color:'#9a3412'}}>{communityMessageView.error}</div>}
  {!communityMessageView.loading && !communityMessageView.error && <>
@@ -8097,6 +8118,13 @@ function AppInner() {
  <div style={{marginTop:4, fontSize:'.76rem', color:'#64748b'}}>Calls work best when microphone/camera permissions are allowed in browser settings.</div>
  </>}
  </>}
+ {communityInboxSection === 'calls' && <div className='panel' style={{marginTop:8}}>
+  <div style={{fontWeight:700, marginBottom:6}}>Recent Calls</div>
+  <div className='list'>
+   {(communityMessageThreads || []).filter(t=>{ const tx = String(t?.last_message?.text || '').toLowerCase(); return tx.includes('join my audio call:') || tx.includes('join my video call:') || tx.includes('meet.jit.si/') || tx.includes('call_signal:') }).slice(0,20).map((thread)=>{ const tx = String(thread?.last_message?.text || '').toLowerCase(); const mode = tx.includes('video') ? 'Video' : 'Audio'; const status = thread?.last_message?.is_mine ? 'Outgoing' : 'Missed'; return <div key={`recent-call-main-${thread?.user?.user_id}`} className='list-row'><span>{mode} • {status} • {thread?.user?.full_name || `User ${thread?.user?.user_id || ''}`}</span><span style={{fontSize:'.75rem', color:'#64748b'}}>{String(thread?.last_message?.created_at || '').replace('T',' ').slice(0,16)}</span></div> })}
+   {!((communityMessageThreads || []).filter(t=>{ const tx = String(t?.last_message?.text || '').toLowerCase(); return tx.includes('join my audio call:') || tx.includes('join my video call:') || tx.includes('meet.jit.si/') || tx.includes('call_signal:') }).length) && <div className='community-thread-preview community-thread-preview-empty'>No recent calls yet.</div>}
+  </div>
+ </div>}
  </div>
  </div>
  </div>}
@@ -8107,8 +8135,8 @@ function AppInner() {
  <h4 style={{margin:'6px 0 4px 0'}}>{communityIncomingCall.from} is calling you</h4>
  <div className='helper-text' style={{marginBottom:10}}>{communityIncomingCall.mode === 'video' ? 'Video call' : 'Audio call'} - answer now?</div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
- <button type='button' className='btn btn-dark' onClick={async()=>{ const mode = communityIncomingCall.mode; const callId = communityIncomingCall.callId; const peerUserId = communityIncomingCall.fromUserId; try { await sendCallSignal(peerUserId, { v:1, type:'answer', mode, callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now() }, mode === 'video' ? '📹' : '📞') } catch {} setCommunityIncomingCall(null); setCommunityActiveCall({ callId, mode, status: 'connected', isCaller: false, peerUserId }) }}>Answer</button>
- <button type='button' className='btn' onClick={async()=>{ const peerUserId = communityIncomingCall.fromUserId; const callId = communityIncomingCall.callId; const mode = communityIncomingCall.mode || 'audio'; try { await sendCallSignal(peerUserId, { v:1, type:'decline', mode, callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now() }, '📞') } catch {} setCommunityIncomingCall(null) }}>Decline</button>
+ <button type='button' className='btn btn-dark' onClick={async()=>{ const mode = communityIncomingCall.mode; const callId = communityIncomingCall.callId; const peerUserId = communityIncomingCall.fromUserId; try { await sendCallSignal(peerUserId, { v:1, type:'answer', mode, callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now() }, mode === 'video' ? '📹' : '📞') } catch {} communityHandledCallIdsRef.current.add(String(callId || '')); setCommunityIncomingCall(null); setCommunityActiveCall({ callId, mode, status: 'connected', isCaller: false, peerUserId }) }}>Answer</button>
+ <button type='button' className='btn' onClick={async()=>{ const peerUserId = communityIncomingCall.fromUserId; const callId = communityIncomingCall.callId; const mode = communityIncomingCall.mode || 'audio'; try { await sendCallSignal(peerUserId, { v:1, type:'decline', mode, callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now() }, '📞') } catch {} communityHandledCallIdsRef.current.add(String(callId || '')); setCommunityIncomingCall(null) }}>Decline</button>
  </div>
  </div>
  </div>}
