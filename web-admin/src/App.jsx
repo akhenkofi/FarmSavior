@@ -6492,7 +6492,7 @@ function AppInner() {
      setDraftWeight('')
      setDraftWeightDate(new Date().toISOString().slice(0,10))
      setWeightComposerOpen(false)
-     setNotesScreenOpen(true)
+     setWeightsScreenOpen(true)
     } catch (err) {
      alert(`Save weight failed: ${errMsg(err)}`)
     }
