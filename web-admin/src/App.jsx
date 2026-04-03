@@ -7998,8 +7998,7 @@ function AppInner() {
  try {
  const data = await compressImageFileToDataUrl(f, { maxDim: 960, quality: 0.7, maxChars: 450000 })
  setDiseaseImagePreview(data)
- const lightweightImageRef = `uploaded-image://${encodeURIComponent(f.name || 'animal-photo.jpg')}`
- setDiseaseForm(prev => ({ ...prev, category:'animal', image_url: lightweightImageRef }))
+ setDiseaseForm(prev => ({ ...prev, category:'animal', image_url: data }))
  } catch (err) {
  alert(`Could not prepare image: ${err?.message || err}`)
  }
@@ -8110,7 +8109,7 @@ function AppInner() {
     <div style={{display:'flex', justifyContent:'flex-end'}}><button type='button' className='btn' onClick={async()=>{ if (!confirm('Delete this analyzer history entry?')) return; await api.deleteDiseaseScan(row.id); const rows = await api.fetchDiseaseScans().catch(()=>[]); setState(prev => ({ ...prev, diseaseScans: rows || [] })) }}>Delete entry</button></div>
     <div className='list-row'><span>Image</span><strong style={{maxWidth:'65%', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{String(row.image_url || '').replace('uploaded-image://','')}</strong></div>
     {!!row.image_url && <div style={{marginTop:8}}>
-     <button type='button' className='btn' onClick={()=>window.open(String(row.image_url), '_blank', 'noopener,noreferrer')}>View analyzed image</button>
+     <button type='button' className='btn' onClick={()=>{ const src = String(row.image_url || ''); if (src.startsWith('uploaded-image://')) { alert('This older scan only stored a filename reference, so image preview is unavailable. New scans now store viewable images.'); return } window.open(src, '_blank', 'noopener,noreferrer') }}>View analyzed image</button>
      {String(row.image_url).startsWith('data:image/') && <img src={String(row.image_url)} alt='Analyzed' style={{display:'block', marginTop:8, maxWidth:'100%', maxHeight:260, borderRadius:10, border:'1px solid #e2e8f0'}} onClick={()=>window.open(String(row.image_url), '_blank', 'noopener,noreferrer')} />}
     </div>}
     <div className='list-row'><span>Result details</span><strong>{parsed ? 'Structured' : 'Raw text'}</strong></div>
