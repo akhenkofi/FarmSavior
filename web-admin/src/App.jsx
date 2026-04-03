@@ -2688,14 +2688,7 @@ function AppInner() {
  const [worldChatMsg, setWorldChatMsg] = useState('')
  const [worldChatQueue, setWorldChatQueue] = useState([])
 
- const [communityProfile, setCommunityProfile] = useState(() => {
- try {
- const raw = localStorage.getItem('farmsavior_community_profile_cache')
- return raw ? JSON.parse(raw) : { full_name: '', username: '', avatar_url: '', cover_image_url: '', bio: '', farm_life: '', interests: 'farming,gardening', visibility: 'PUBLIC' }
- } catch {
- return { full_name: '', username: '', avatar_url: '', cover_image_url: '', bio: '', farm_life: '', interests: 'farming,gardening', visibility: 'PUBLIC' }
- }
- })
+ const [communityProfile, setCommunityProfile] = useState({ full_name: '', username: '', avatar_url: '', cover_image_url: '', bio: '', farm_life: '', interests: 'farming,gardening', visibility: 'PUBLIC' })
  const [communityProfileBaseline, setCommunityProfileBaseline] = useState(null)
  const [communityProfileDirty, setCommunityProfileDirty] = useState(false)
  const [communityProfileSaving, setCommunityProfileSaving] = useState(false)
@@ -2728,8 +2721,17 @@ function AppInner() {
  const [communityProfileOpeningUserId, setCommunityProfileOpeningUserId] = useState(null)
 
  useEffect(() => {
- try { localStorage.setItem('farmsavior_community_profile_cache', JSON.stringify(communityProfile || {})) } catch {}
- }, [communityProfile])
+  if (!me?.id) return
+  try {
+   const raw = localStorage.getItem(`farmsavior_community_profile_cache_${me.id}`)
+   if (raw) setCommunityProfile(JSON.parse(raw))
+  } catch {}
+ }, [me?.id])
+
+ useEffect(() => {
+  if (!me?.id) return
+  try { localStorage.setItem(`farmsavior_community_profile_cache_${me.id}`, JSON.stringify(communityProfile || {})) } catch {}
+ }, [communityProfile, me?.id])
 
  const isFollowingUser = (userId) => (communityFollowState?.following_ids || []).map(String).includes(String(userId))
  const isMutedUser = (userId) => (communityFollowState?.muted_ids || []).map(String).includes(String(userId))
