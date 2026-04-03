@@ -4561,7 +4561,7 @@ function AppInner() {
     setAuthLoading(true)
     const phoneValue = normalizePhone(signup.phone || '')
     const emailValue = String(signup.email || '').trim().toLowerCase()
-    await api.registerUser({
+    await api.register({
      full_name: signup.full_name || 'FarmSavior User',
      signup_method: signup.signup_method,
      phone: signup.signup_method === 'phone' ? phoneValue : undefined,
