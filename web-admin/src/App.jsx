@@ -3010,7 +3010,7 @@ function AppInner() {
    return
   }
   if (signalType !== 'offer') return
-  if (Number(signal.toUserId || 0) && Number(signal.toUserId || 0) !== Number(me?.id || 0)) return
+  if (Number(signal.toUserId || 0) && Number(signal.fromUserId || 0) === Number(signal.toUserId || 0)) return
   const marker = String(signal.callId || latest.id || latest.created_at || lowerText)
   if (communityLastCallAlertRef.current === marker) return
   const createdMs = latest?.created_at ? new Date(latest.created_at).getTime() : Date.now()
@@ -3029,7 +3029,7 @@ function AppInner() {
  }, [communityMessageView.open, communityMessageView.loading, communityMessageView.messages, communityMessageView?.user?.full_name])
 
  useEffect(() => {
-  if (active !== 'community' || !token || !me?.id) return
+  if (active !== 'community' || !token) return
   let stopped = false
   const run = async () => {
    try {
@@ -3043,7 +3043,7 @@ function AppInner() {
      if (!signal) return false
      const tpe = String(signal.type || '')
      if (!['offer','answer','decline','end','rtc_offer','rtc_answer','rtc_ice'].includes(tpe)) return false
-     if (Number(signal.toUserId || 0) && Number(signal.toUserId || 0) !== Number(me?.id || 0)) return false
+     if (Number(signal.toUserId || 0) && Number(signal.fromUserId || 0) === Number(signal.toUserId || 0)) return false
      const createdMs = msg?.created_at ? new Date(msg.created_at).getTime() : Date.now()
      return Number.isFinite(createdMs) && (Date.now() - createdMs) < 90 * 1000
     })
