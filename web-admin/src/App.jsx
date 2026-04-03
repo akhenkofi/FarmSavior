@@ -3050,7 +3050,7 @@ function AppInner() {
  const [markDraft, setMarkDraft] = useState({ sire: '', dam: '', markDate: '', dueDate: '', fertilizationType: 'Natural' })
  const [flushComposerOpen, setFlushComposerOpen] = useState(false)
  const [flushDraft, setFlushDraft] = useState({ ram: '', date: '', cidrIn: '', cidrOut: '', notes: '' })
- const [famachaDraft, setFamachaDraft] = useState({ famacha: '--', bodyScore: '', weight: '', notes: '' })
+ const [famachaDraft, setFamachaDraft] = useState({ famacha: '--', bodyScore: '', weight: '', notes: '', date: new Date().toISOString().slice(0,10) })
  const [customMedicineComposerOpen, setCustomMedicineComposerOpen] = useState(false)
  const [customMedicineName, setCustomMedicineName] = useState('')
  const [actionBusy, setActionBusy] = useState('')
@@ -6377,7 +6377,7 @@ function AppInner() {
         if (action === 'medicines') { setMedicineSearch(''); setMedicinesScreenOpen(true) }
         if (action === 'add-medicine') { setMedicineShotDraft({ medicine: '', dosage: '', notes: '', date: new Date().toISOString().slice(0,10) }); setMedicineShotOpen(true) }
         if (action === 'share-pdf') setAncestorPdfOpen(true)
-        if (action === 'famacha') { setFamachaDraft({ famacha: '--', bodyScore: '', weight: '', notes: '' }); setFamachaComposerOpen(true) }
+        if (action === 'famacha') { setFamachaDraft({ famacha: '--', bodyScore: '', weight: '', notes: '', date: new Date().toISOString().slice(0,10) }); setFamachaComposerOpen(true) }
         if (action === 'ancestor-tree') setAncestorTreeOpen(true)
         if (action === 'offspring-report') setOffspringReportOpen(true)
         if (action === 'offspring-list') setOffspringListOpen(true)
@@ -6561,6 +6561,46 @@ function AppInner() {
      alert(`Save medicine failed: ${errMsg(err)}`)
     }
    }}>Save Medicine</button></div>
+  </article>
+ </div>
+ </section>}
+
+ {famachaComposerOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:274, margin:0, background:'#f8fafc', overflow:'auto'}}>
+ <div className='records-shell'>
+  <div className='records-hero-card'>
+   <div><div className='records-eyebrow'>HEALTH ENTRY</div><h3>Add FAMACHA / Body Condition</h3><p>{currentLivestockRecord?.name || 'Animal record'}</p></div>
+   <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setFamachaComposerOpen(false)}>Cancel</button></div>
+  </div>
+  <article className='panel records-panel'>
+   <div className='row2' style={{gap:10}}>
+    <input className='input' type='date' value={famachaDraft.date || ''} onChange={e=>setFamachaDraft(prev=>({ ...prev, date:e.target.value }))} />
+    <select className='input' value={famachaDraft.famacha || '--'} onChange={e=>setFamachaDraft(prev=>({ ...prev, famacha:e.target.value }))}>
+     <option value='--'>FAMACHA score</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option><option value='4'>4</option><option value='5'>5</option>
+    </select>
+    <input className='input' placeholder='Body condition score' value={famachaDraft.bodyScore || ''} onChange={e=>setFamachaDraft(prev=>({ ...prev, bodyScore:e.target.value }))} />
+   </div>
+   <div className='row2' style={{gap:10, marginTop:10}}>
+    <input className='input' placeholder='Weight (optional)' value={famachaDraft.weight || ''} onChange={e=>setFamachaDraft(prev=>({ ...prev, weight:e.target.value }))} />
+   </div>
+   <textarea className='input' rows={4} placeholder='Notes (optional)' value={famachaDraft.notes || ''} onChange={e=>setFamachaDraft(prev=>({ ...prev, notes:e.target.value }))} style={{marginTop:10}} />
+   <div style={{marginTop:10, display:'flex', justifyContent:'flex-end'}}><button type='button' className='btn btn-dark' onClick={async()=>{
+    if (!currentLivestockRecord?.id) return
+    const fam = String(famachaDraft.famacha || '').trim()
+    const bcs = String(famachaDraft.bodyScore || '').trim()
+    if ((fam === '--' || !fam) && !bcs) { alert('Enter FAMACHA or body condition score before saving.'); return }
+    const wt = String(famachaDraft.weight || '').trim()
+    const extra = String(famachaDraft.notes || '').trim()
+    const date = String(famachaDraft.date || new Date().toISOString().slice(0,10))
+    const stamped = `[${date}] FAMACHA: ${fam === '--' ? 'N/A' : fam}${bcs ? ` | Body score: ${bcs}` : ''}${wt ? ` | Weight: ${wt}` : ''}${extra ? ` | Notes: ${extra}` : ''}`
+    try {
+     await api.appendLivestockNote(Number(currentLivestockRecord.id), stamped)
+     await loadLivestockRecords()
+     setFamachaDraft({ famacha: '--', bodyScore: '', weight: '', notes: '', date: new Date().toISOString().slice(0,10) })
+     setFamachaComposerOpen(false)
+    } catch (err) {
+     alert(`Save health entry failed: ${errMsg(err)}`)
+    }
+   }}>Save Entry</button></div>
   </article>
  </div>
  </section>}
