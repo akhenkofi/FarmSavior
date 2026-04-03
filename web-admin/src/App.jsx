@@ -2715,6 +2715,9 @@ function AppInner() {
  const communityMessageListRef = useRef(null)
  const communityLastCallAlertRef = useRef(null)
  const communityLastSignalIdRef = useRef('')
+ const communityPcRef = useRef(null)
+ const communityLocalStreamRef = useRef(null)
+ const communityRemoteAudioRef = useRef(null)
  const [editingCommunityPostId, setEditingCommunityPostId] = useState(null)
  const [communityCommentText, setCommunityCommentText] = useState({})
  const [communityComments, setCommunityComments] = useState({})
@@ -2865,6 +2868,37 @@ function AppInner() {
   if (i < 0) return null
   try { return JSON.parse(text.slice(i + marker.length)) } catch { return null }
  }
+ const closeCommunityPeer = () => {
+  try { communityPcRef.current?.getSenders?.().forEach(s => { try { s.track?.stop?.() } catch {} }) } catch {}
+  try { communityPcRef.current?.close?.() } catch {}
+  communityPcRef.current = null
+  try { communityLocalStreamRef.current?.getTracks?.().forEach(t => t.stop()) } catch {}
+  communityLocalStreamRef.current = null
+  if (communityRemoteAudioRef.current) communityRemoteAudioRef.current.srcObject = null
+ }
+ const waitIceDone = (pc) => new Promise((resolve) => {
+  if (!pc || pc.iceGatheringState === 'complete') return resolve()
+  const onChange = () => { if (pc.iceGatheringState === 'complete') { pc.removeEventListener('icegatheringstatechange', onChange); resolve() } }
+  pc.addEventListener('icegatheringstatechange', onChange)
+  setTimeout(() => { try { pc.removeEventListener('icegatheringstatechange', onChange) } catch {}; resolve() }, 1800)
+ })
+ const ensureCommunityPeer = async ({ mode = 'audio', callId, peerUserId }) => {
+  if (communityPcRef.current) return communityPcRef.current
+  const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] })
+  const local = await navigator.mediaDevices.getUserMedia({ audio: true, video: mode === 'video' })
+  communityLocalStreamRef.current = local
+  local.getTracks().forEach(track => pc.addTrack(track, local))
+  const remoteStream = new MediaStream()
+  pc.ontrack = (ev) => {
+   ;(ev.streams?.[0]?.getTracks?.() || []).forEach(t => remoteStream.addTrack(t))
+   if (communityRemoteAudioRef.current) {
+    communityRemoteAudioRef.current.srcObject = remoteStream
+    communityRemoteAudioRef.current.play?.().catch(()=>{})
+   }
+  }
+  communityPcRef.current = pc
+  return pc
+ }
 
  const enableCommunityCallPermissions = async (options = {}) => {
   const { silent = false } = options
@@ -2913,10 +2947,42 @@ function AppInner() {
   if (!signal) return
   const signalType = String(signal.type || '')
   if (signalType === 'answer') {
-   setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? { ...prev, status: 'connected' } : prev))
+   const peerUserId = signal.fromUserId || communityMessageView?.user?.user_id
+   const mode = signal.mode === 'video' ? 'video' : 'audio'
+   ;(async()=>{
+    try {
+     const pc = await ensureCommunityPeer({ mode, callId: signal.callId, peerUserId })
+     const offer = await pc.createOffer()
+     await pc.setLocalDescription(offer)
+     await waitIceDone(pc)
+     await sendCallSignal(peerUserId, { v:1, type:'rtc_offer', mode, callId:signal.callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now(), sdp: pc.localDescription }, mode === 'video' ? '📹' : '📞')
+     setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? { ...prev, status: 'connecting-media', peerUserId } : prev))
+    } catch {}
+   })()
+   return
+  }
+  if (signalType === 'rtc_offer') {
+   const peerUserId = signal.fromUserId || communityMessageView?.user?.user_id
+   const mode = signal.mode === 'video' ? 'video' : 'audio'
+   ;(async()=>{
+    try {
+     const pc = await ensureCommunityPeer({ mode, callId: signal.callId, peerUserId })
+     await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp))
+     const answer = await pc.createAnswer()
+     await pc.setLocalDescription(answer)
+     await waitIceDone(pc)
+     await sendCallSignal(peerUserId, { v:1, type:'rtc_answer', mode, callId:signal.callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now(), sdp: pc.localDescription }, mode === 'video' ? '📹' : '📞')
+     setCommunityActiveCall(prev => ({ ...(prev || {}), callId: signal.callId, mode, status: 'connected', peerUserId, isCaller: false }))
+    } catch {}
+   })()
+   return
+  }
+  if (signalType === 'rtc_answer') {
+   ;(async()=>{ try { if (communityPcRef.current && signal?.sdp) { await communityPcRef.current.setRemoteDescription(new RTCSessionDescription(signal.sdp)); setCommunityActiveCall(prev => prev ? { ...prev, status: 'connected' } : prev) } } catch {} })()
    return
   }
   if (signalType === 'decline' || signalType === 'end') {
+   closeCommunityPeer()
    setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? null : prev))
    return
   }
@@ -2953,7 +3019,7 @@ function AppInner() {
      const signal = parseCallSignal(msg.text)
      if (!signal) return false
      const tpe = String(signal.type || '')
-     if (!['offer','answer','decline','end'].includes(tpe)) return false
+     if (!['offer','answer','decline','end','rtc_offer','rtc_answer'].includes(tpe)) return false
      if (Number(signal.toUserId || 0) && Number(signal.toUserId || 0) !== Number(me?.id || 0)) return false
      const createdMs = msg?.created_at ? new Date(msg.created_at).getTime() : Date.now()
      return Number.isFinite(createdMs) && (Date.now() - createdMs) < 90 * 1000
@@ -2969,10 +3035,15 @@ function AppInner() {
      return
     }
     if (signalType === 'answer') {
-     setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? { ...prev, status: 'connected' } : prev))
+     setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? { ...prev, status: 'connecting-media' } : prev))
+     return
+    }
+    if (signalType === 'rtc_offer' || signalType === 'rtc_answer') {
+     setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? { ...prev, status: 'connecting-media' } : prev))
      return
     }
     if (signalType === 'decline' || signalType === 'end') {
+     closeCommunityPeer()
      setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? null : prev))
     }
    } catch {}
@@ -2981,6 +3052,11 @@ function AppInner() {
   const timer = setInterval(run, 4000)
   return () => { stopped = true; clearInterval(timer) }
  }, [active, token])
+
+ useEffect(() => {
+  if (communityActiveCall) return
+  closeCommunityPeer()
+ }, [communityActiveCall])
 
  useEffect(() => {
  if (active !== 'community') return
@@ -7963,7 +8039,8 @@ function AppInner() {
  </div>
  {communityActiveCall?.url
   ? <iframe title='FarmSavior Call' src={communityActiveCall.url} allow='camera; microphone; fullscreen; display-capture; autoplay' style={{width:'100%', height:'100%', border:'0'}} />
-  : <div style={{display:'grid', placeItems:'center', padding:24, color:'#e2e8f0'}}><div style={{textAlign:'center'}}><div style={{fontSize:'2rem'}}>🔄</div><div style={{fontWeight:700}}>Call is connecting…</div><div style={{fontSize:'.85rem', opacity:.85, marginTop:6}}>Signaling succeeded. Media channel setup is next.</div></div></div>}
+  : <div style={{display:'grid', placeItems:'center', padding:24, color:'#e2e8f0'}}><div style={{textAlign:'center'}}><div style={{fontSize:'2rem'}}>🔄</div><div style={{fontWeight:700}}>Call is {communityActiveCall?.status === 'connected' ? 'connected' : 'connecting'}…</div><div style={{fontSize:'.85rem', opacity:.85, marginTop:6}}>Status: {communityActiveCall?.status || 'initializing'}</div></div></div>}
+ <audio ref={communityRemoteAudioRef} autoPlay playsInline style={{display:'none'}} />
  </div>
  </div>}
 
