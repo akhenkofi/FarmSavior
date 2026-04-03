@@ -6385,7 +6385,7 @@ function AppInner() {
         if (action === 'ancestor-tree') setAncestorTreeOpen(true)
         if (action === 'offspring-report') setOffspringReportOpen(true)
         if (action === 'offspring-list') setOffspringListOpen(true)
-        if (action === 'add-mark') setMarkDraft({ sire: currentLivestockRecord?.sire_id || '', dam: currentLivestockRecord?.dam_id || currentLivestockRecord?.id || '', markDate: new Date().toISOString().slice(0,10), dueDate: '2026-08-26', fertilizationType: 'Natural' })
+        if (action === 'add-mark') setMarkDraft({ sire: currentLivestockRecord?.sire_id || '', dam: currentLivestockRecord?.dam_id || currentLivestockRecord?.id || '', markDate: new Date().toISOString().slice(0,10), dueDate: '2026-08-26', fertilizationType: 'Natural', name: '', ear_tag: '', animal_type: 'LAMB', initial_weight_kg: '' })
         if (action === 'add-mark') setMarkComposerOpen(true)
         if (action === 'add-flush') setFlushDraft({ ram: currentLivestockRecord?.sire_id || '', date: new Date().toISOString().slice(0,10), cidrIn: '', cidrOut: '', notes: '' })
         if (action === 'add-flush') setFlushComposerOpen(true)
@@ -6565,6 +6565,55 @@ function AppInner() {
      alert(`Save medicine failed: ${errMsg(err)}`)
     }
    }}>Save Medicine</button></div>
+  </article>
+ </div>
+ </section>}
+
+ {markComposerOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:269, margin:0, background:'#f8fafc', overflow:'auto'}}>
+ <div className='records-shell'>
+  <div className='records-hero-card'>
+   <div><div className='records-eyebrow'>OFFSPRING ENTRY</div><h3>Add Lamb</h3><p>{currentLivestockRecord?.name || 'Parent record'}</p></div>
+   <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setMarkComposerOpen(false)}>Cancel</button></div>
+  </div>
+  <article className='panel records-panel'>
+   <div className='row2' style={{gap:10}}>
+    <input className='input' type='date' value={markDraft.markDate || ''} onChange={e=>setMarkDraft(prev=>({ ...prev, markDate:e.target.value }))} />
+    <input className='input' placeholder='Lamb name' value={markDraft.name || ''} onChange={e=>setMarkDraft(prev=>({ ...prev, name:e.target.value }))} />
+    <input className='input' placeholder='Ear tag' value={markDraft.ear_tag || ''} onChange={e=>setMarkDraft(prev=>({ ...prev, ear_tag:e.target.value }))} />
+   </div>
+   <div className='row2' style={{gap:10, marginTop:10}}>
+    <select className='input' value={markDraft.animal_type || 'LAMB'} onChange={e=>setMarkDraft(prev=>({ ...prev, animal_type:e.target.value }))}>
+     <option value='LAMB'>Lamb</option><option value='RAM LAMB'>Ram Lamb</option><option value='EWE LAMB'>Ewe Lamb</option>
+    </select>
+    <input className='input' placeholder='Birth weight (kg, optional)' value={markDraft.initial_weight_kg || ''} onChange={e=>setMarkDraft(prev=>({ ...prev, initial_weight_kg:e.target.value }))} />
+   </div>
+   <div style={{marginTop:10, display:'flex', justifyContent:'flex-end'}}><button type='button' className='btn btn-dark' onClick={async()=>{
+    if (!currentLivestockRecord?.id) return
+    const payload = {
+      user_id: Number(currentLivestockRecord.user_id || 1),
+      ownership: currentLivestockRecord.ownership || 'Owned by Me',
+      species: currentLivestockRecord.species || 'SHEEP',
+      animal_type: markDraft.animal_type || 'LAMB',
+      name: String(markDraft.name || '').trim(),
+      ear_tag: String(markDraft.ear_tag || '').trim(),
+      date_of_birth: markDraft.markDate || new Date().toISOString().slice(0,10),
+      sire_id: currentLivestockRecord.animal_type?.toUpperCase().includes('RAM') ? Number(currentLivestockRecord.id) : (markDraft.sire ? Number(markDraft.sire) : null),
+      dam_id: currentLivestockRecord.animal_type?.toUpperCase().includes('EWE') ? Number(currentLivestockRecord.id) : (markDraft.dam ? Number(markDraft.dam) : null),
+      litter_size: 1,
+      initial_weight_kg: markDraft.initial_weight_kg ? Number(markDraft.initial_weight_kg) : null,
+      breeding_type: 'Natural',
+      cull_keep_status: 'KEEP',
+      purchased_from_type: 'BREEDER'
+    }
+    try {
+      await api.createLivestockRecord(payload)
+      await loadLivestockRecords()
+      setMarkComposerOpen(false)
+      setOffspringListOpen(true)
+    } catch (err) {
+      alert(`Add lamb failed: ${errMsg(err)}`)
+    }
+   }}>Save Lamb</button></div>
   </article>
  </div>
  </section>}
