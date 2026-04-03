@@ -1285,7 +1285,12 @@ const livestockHistoryRows = (record) => {
  }
 }
 
-const DEFAULT_MEDICINE_LIBRARY = ['5-Way','Blackleg 7-Way','BO-SE','Brucellosis','CDT','Dexamethasone','Excenel','LA-200/Oxytetracycline','Nuflor','Penicillin','Pinkeye','Trichomoniasis']
+const DEFAULT_MEDICINE_LIBRARY_BY_SPECIES = {
+ SHEEP: ['CDT','BO-SE','LA-200/Oxytetracycline','Nuflor','Penicillin','Dexamethasone','Dewormer (Albendazole)','Dewormer (Ivermectin)'],
+ GOAT: ['CDT','BO-SE','LA-200/Oxytetracycline','Nuflor','Penicillin','Dexamethasone','Dewormer (Albendazole)','Dewormer (Ivermectin)'],
+ CATTLE: ['5-Way','Blackleg 7-Way','Brucellosis','Excenel','LA-200/Oxytetracycline','Nuflor','Penicillin','Pinkeye','Trichomoniasis'],
+ POULTRY: ['Newcastle vaccine','Gumboro vaccine','Fowl pox vaccine','Amprolium','Tylosin','Oxytetracycline (poultry)','Vitamin/electrolyte mix','Coccidiostat']
+}
 
 const livestockDetailRows = (record) => {
  if (!record) return []
@@ -6514,7 +6519,9 @@ function AppInner() {
    <input className='input' placeholder='Search medicines' value={medicineSearch} onChange={e=>setMedicineSearch(e.target.value)} />
    <div className='records-detail-section' style={{marginTop:10}}>Available medicines</div>
    <div className='list'>
-    {DEFAULT_MEDICINE_LIBRARY.filter(name => name.toLowerCase().includes(String(medicineSearch || '').toLowerCase())).map((name)=><button type='button' key={`med-lib-${name}`} className='list-row' onClick={()=>{ setMedicineShotDraft({ medicine: name, dosage: '', notes: '' }); setMedicinesScreenOpen(false); setMedicineShotOpen(true) }}><span>{name}</span><strong>＋</strong></button>)}
+    {(DEFAULT_MEDICINE_LIBRARY_BY_SPECIES[String(currentLivestockRecord?.species || 'SHEEP').toUpperCase()] || DEFAULT_MEDICINE_LIBRARY_BY_SPECIES.SHEEP)
+      .filter(name => name.toLowerCase().includes(String(medicineSearch || '').toLowerCase()))
+      .map((name)=><button type='button' key={`med-lib-${name}`} className='list-row' onClick={()=>{ setMedicineShotDraft({ medicine: name, dosage: '', notes: '' }); setMedicinesScreenOpen(false); setMedicineShotOpen(true) }}><span>{name}</span><strong>＋</strong></button>)}
    </div>
    <div className='records-detail-section' style={{marginTop:12}}>Saved medicine log</div>
    {(() => {
