@@ -3126,7 +3126,19 @@ function AppInner() {
      return
     }
     if (signalType === 'rtc_offer') {
-     setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? { ...prev, status: 'connecting-media' } : prev))
+     const peerUserId = signal.fromUserId || candidate?.user?.user_id
+     const mode = signal.mode === 'video' ? 'video' : 'audio'
+     ;(async()=>{
+      try {
+       const pc = await ensureCommunityPeer({ mode, callId: signal.callId, peerUserId })
+       await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp))
+       const answer = await pc.createAnswer()
+       await pc.setLocalDescription(answer)
+       await waitIceDone(pc)
+       await sendCallSignal(peerUserId, { v:1, type:'rtc_answer', mode, callId:signal.callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now(), sdp: pc.localDescription }, mode === 'video' ? '📹' : '📞')
+       setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? { ...prev, status: 'connected', peerUserId } : prev))
+      } catch {}
+     })()
      return
     }
     if (signalType === 'rtc_answer') {
