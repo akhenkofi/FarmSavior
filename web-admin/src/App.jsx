@@ -6501,6 +6501,54 @@ function AppInner() {
  </div>
  </section>}
 
+ {medicinesScreenOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:272, margin:0, background:'#f8fafc', overflow:'auto'}}>
+ <div className='records-shell'>
+  <div className='records-hero-card'>
+   <div><div className='records-eyebrow'>MEDICINE LOG</div><h3>Medicines</h3><p>{currentLivestockRecord?.name || 'Animal record'}</p></div>
+   <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setMedicinesScreenOpen(false)}>Back</button><button type='button' className='btn btn-dark' onClick={()=>{ setMedicinesScreenOpen(false); setMedicineShotDraft({ medicine: '', dosage: '', notes: '' }); setMedicineShotOpen(true) }}>Add Medicine</button></div>
+  </div>
+  <article className='panel records-panel'>
+   {(() => {
+    const rows = String(extractAttachmentsFromNotes(currentLivestockRecord?.notes || '').text || '').split('\n').filter(line => /Medicine:/i.test(line)).reverse()
+    if (!rows.length) return <div className='helper-text'>No medicines logged yet.</div>
+    return <div className='list'>{rows.map((row, idx)=><div key={`med-row-${idx}`} className='list-row'><span>{row}</span></div>)}</div>
+   })()}
+  </article>
+ </div>
+ </section>}
+
+ {medicineShotOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:273, margin:0, background:'#f8fafc', overflow:'auto'}}>
+ <div className='records-shell'>
+  <div className='records-hero-card'>
+   <div><div className='records-eyebrow'>MEDICINE ENTRY</div><h3>Add Medicine</h3><p>{currentLivestockRecord?.name || 'Animal record'}</p></div>
+   <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setMedicineShotOpen(false)}>Cancel</button></div>
+  </div>
+  <article className='panel records-panel'>
+   <div className='row2' style={{gap:10}}>
+    <input className='input' placeholder='Medicine name' value={medicineShotDraft.medicine} onChange={e=>setMedicineShotDraft(prev=>({ ...prev, medicine:e.target.value }))} />
+    <input className='input' placeholder='Dosage' value={medicineShotDraft.dosage} onChange={e=>setMedicineShotDraft(prev=>({ ...prev, dosage:e.target.value }))} />
+   </div>
+   <textarea className='input' rows={4} placeholder='Notes (optional)' value={medicineShotDraft.notes} onChange={e=>setMedicineShotDraft(prev=>({ ...prev, notes:e.target.value }))} style={{marginTop:10}} />
+   <div style={{marginTop:10, display:'flex', justifyContent:'flex-end'}}><button type='button' className='btn btn-dark' onClick={async()=>{
+    const med = String(medicineShotDraft.medicine || '').trim()
+    if (!med || !currentLivestockRecord?.id) { alert('Enter medicine name before saving.'); return }
+    const dose = String(medicineShotDraft.dosage || '').trim()
+    const extra = String(medicineShotDraft.notes || '').trim()
+    const stamped = `[${new Date().toISOString().slice(0,16).replace('T',' ')}] Medicine: ${med}${dose ? ` | Dose: ${dose}` : ''}${extra ? ` | Notes: ${extra}` : ''}`
+    try {
+     await api.appendLivestockNote(Number(currentLivestockRecord.id), stamped)
+     await loadLivestockRecords()
+     setMedicineShotDraft({ medicine: '', dosage: '', notes: '' })
+     setMedicineShotOpen(false)
+     setMedicinesScreenOpen(true)
+    } catch (err) {
+     alert(`Save medicine failed: ${errMsg(err)}`)
+    }
+   }}>Save Medicine</button></div>
+  </article>
+ </div>
+ </section>}
+
  {active === 'services' && <section>
  <div className='section-header'>
  <div>
