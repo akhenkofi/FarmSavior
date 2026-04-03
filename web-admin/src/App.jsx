@@ -2857,7 +2857,7 @@ function AppInner() {
    setCommunityMessageView(prev => ({ ...prev, messages: [ ...(prev?.messages || []), sent ].filter(Boolean) }))
    const threads = await api.fetchCommunityMessageThreads().catch(() => [])
    setCommunityMessageThreads(threads || [])
-   setCommunityActiveCall({ callId, mode, status: 'ringing', peerUserId: targetUserId, isCaller: true })
+   setCommunityActiveCall({ callId, mode, status: 'calling', peerUserId: targetUserId, isCaller: true })
   } catch (err) {
    alert(errMsg(err))
   } finally {
@@ -2965,6 +2965,10 @@ function AppInner() {
   try { signal = JSON.parse(text.slice(signalIndex + markerPrefix.length)) } catch {}
   if (!signal) return
   const signalType = String(signal.type || '')
+  if (signalType === 'ringing') {
+   setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? { ...prev, status: 'ringing' } : prev))
+   return
+  }
   if (signalType === 'answer') {
    const peerUserId = signal.fromUserId || communityMessageView?.user?.user_id
    const mode = signal.mode === 'video' ? 'video' : 'audio'
@@ -3020,6 +3024,7 @@ function AppInner() {
   const sender = communityMessageView?.user?.full_name || 'A user'
   if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
    try { if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([400, 200, 400, 200, 400]) } catch {}
+   try { sendCallSignal(signal.fromUserId, { v:1, type:'ringing', mode, callId: signal.callId || '', fromUserId:Number(me?.id || 0), toUserId:Number(signal.fromUserId || 0), ts:Date.now() }, mode === 'video' ? '📹' : '📞').catch(()=>{}) } catch {}
    setCommunityIncomingCall({ from: sender, mode, callId: signal.callId || '', fromUserId: signal.fromUserId || null })
    return
   }
@@ -3042,7 +3047,7 @@ function AppInner() {
      const signal = parseCallSignal(msg.text)
      if (!signal) return false
      const tpe = String(signal.type || '')
-     if (!['offer','answer','decline','end','rtc_offer','rtc_answer','rtc_ice'].includes(tpe)) return false
+     if (!['offer','ringing','answer','decline','end','rtc_offer','rtc_answer','rtc_ice'].includes(tpe)) return false
      if (Number(signal.toUserId || 0) && Number(signal.fromUserId || 0) === Number(signal.toUserId || 0)) return false
      const createdMs = msg?.created_at ? new Date(msg.created_at).getTime() : Date.now()
      return Number.isFinite(createdMs) && (Date.now() - createdMs) < 90 * 1000
@@ -3054,7 +3059,13 @@ function AppInner() {
     communityLastSignalIdRef.current = marker
     const signalType = String(signal.type || '')
     if (signalType === 'offer') {
-     setCommunityIncomingCall({ from: candidate?.user?.full_name || 'A user', mode: signal.mode === 'video' ? 'video' : 'audio', callId: signal.callId || '', fromUserId: signal.fromUserId || null })
+     const mode = signal.mode === 'video' ? 'video' : 'audio'
+     try { sendCallSignal(signal.fromUserId, { v:1, type:'ringing', mode, callId: signal.callId || '', fromUserId:Number(me?.id || 0), toUserId:Number(signal.fromUserId || 0), ts:Date.now() }, mode === 'video' ? '📹' : '📞').catch(()=>{}) } catch {}
+     setCommunityIncomingCall({ from: candidate?.user?.full_name || 'A user', mode, callId: signal.callId || '', fromUserId: signal.fromUserId || null })
+     return
+    }
+    if (signalType === 'ringing') {
+     setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? { ...prev, status: 'ringing' } : prev))
      return
     }
     if (signalType === 'answer') {
@@ -8081,8 +8092,8 @@ function AppInner() {
   <button type='button' className='btn' onClick={async()=>{ const current = communityActiveCall; try { if (current?.peerUserId) await sendCallSignal(current.peerUserId, { v:1, type:'end', mode:current.mode || 'audio', callId:current.callId || '', fromUserId:Number(me?.id || 0), toUserId:Number(current.peerUserId || 0), ts:Date.now() }, '📞') } catch {} setCommunityActiveCall(null) }}>End Call</button>
  </div>
  </div>
- {communityActiveCall?.status === 'ringing'
-  ? <div style={{display:'grid', placeItems:'center', padding:24, color:'#e2e8f0'}}><div style={{textAlign:'center'}}><div style={{fontSize:'2rem'}}>📞</div><div style={{fontWeight:700}}>Ringing…</div><div style={{fontSize:'.85rem', opacity:.85, marginTop:6}}>Waiting for the other user to answer.</div></div></div>
+ {(communityActiveCall?.status === 'calling' || communityActiveCall?.status === 'ringing')
+  ? <div style={{display:'grid', placeItems:'center', padding:24, color:'#e2e8f0'}}><div style={{textAlign:'center'}}><div style={{fontSize:'2rem'}}>📞</div><div style={{fontWeight:700}}>{communityActiveCall?.status === 'calling' ? 'Calling…' : 'Ringing…'}</div><div style={{fontSize:'.85rem', opacity:.85, marginTop:6}}>{communityActiveCall?.status === 'calling' ? 'Trying to reach the other user.' : 'Other user is receiving your call now.'}</div></div></div>
   : (communityActiveCall?.url
     ? <iframe title='FarmSavior Call' src={communityActiveCall.url} allow='camera; microphone; fullscreen; display-capture; autoplay' style={{width:'100%', height:'100%', border:'0'}} />
     : <div style={{display:'grid', placeItems:'center', padding:24, color:'#e2e8f0'}}><div style={{textAlign:'center'}}><div style={{fontSize:'2rem'}}>🔄</div><div style={{fontWeight:700}}>Call is {communityActiveCall?.status === 'connected' ? 'connected' : 'connecting'}…</div><div style={{fontSize:'.85rem', opacity:.85, marginTop:6}}>Status: {communityActiveCall?.status || 'initializing'}</div></div></div>)}
