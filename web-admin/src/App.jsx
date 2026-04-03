@@ -3285,6 +3285,10 @@ function AppInner() {
         const caller = (communityMessageThreads || []).find(x => Number(x?.user?.user_id || 0) === fromUserId)?.user?.full_name || 'A user'
         setCommunityIncomingCall({ from: caller, mode: signal.mode === 'video' ? 'video' : 'audio', callId: String(signal.callId || ev?.call_id || ''), fromUserId })
       }
+      if (t === 'missed') {
+        const caller = (communityMessageThreads || []).find(x => Number(x?.user?.user_id || 0) === Number(signal.fromUserId || ev?.from_user_id || 0))?.user?.full_name || 'A user'
+        alert(`Missed call from ${caller}`)
+      }
     }
    } catch {}
   }
@@ -3312,6 +3316,7 @@ function AppInner() {
       if (t === 'ringing') setCommunityActiveCall(prev => prev && String(prev.callId||'')===callId ? { ...prev, status: 'ringing' } : prev)
       if (t === 'answer') setCommunityActiveCall(prev => prev && String(prev.callId||'')===callId ? { ...prev, status: 'connecting-media' } : prev)
       if (t === 'decline' || t === 'end') { closeCommunityPeer(); returnToCommunityPhone() }
+      if (t === 'missed') { closeCommunityPeer(); returnToCommunityPhone(); alert('Call missed (no answer).') }
       if (t === 'rtc_offer' && signal?.sdp) {
         const peerUserId = Number(signal.fromUserId || 0)
         const mode = signal.mode === 'video' ? 'video' : 'audio'
