@@ -2723,6 +2723,7 @@ function AppInner() {
  const communityLocalVideoRef = useRef(null)
  const communityRemoteVideoRef = useRef(null)
  const communityHandledCallIdsRef = useRef(new Set())
+ const communityRingingTimerRef = useRef(null)
  const [editingCommunityPostId, setEditingCommunityPostId] = useState(null)
  const [communityCommentText, setCommunityCommentText] = useState({})
  const [communityComments, setCommunityComments] = useState({})
@@ -2903,6 +2904,25 @@ function AppInner() {
   const i = text.indexOf(marker)
   if (i < 0) return null
   try { return JSON.parse(text.slice(i + marker.length)) } catch { return null }
+ }
+ const playRingPulse = () => {
+  try {
+   const Ctx = window.AudioContext || window.webkitAudioContext
+   if (!Ctx) return
+   const ctx = new Ctx()
+   const osc = ctx.createOscillator()
+   const gain = ctx.createGain()
+   osc.type = 'sine'
+   osc.frequency.value = 880
+   gain.gain.value = 0.001
+   osc.connect(gain)
+   gain.connect(ctx.destination)
+   osc.start()
+   gain.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.02)
+   gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25)
+   osc.stop(ctx.currentTime + 0.28)
+   setTimeout(() => { try { ctx.close() } catch {} }, 400)
+  } catch {}
  }
  const closeCommunityPeer = () => {
   try { communityPcRef.current?.getSenders?.().forEach(s => { try { s.replaceTrack?.(null) } catch {} }) } catch {}
@@ -3192,6 +3212,23 @@ function AppInner() {
   if (communityActiveCall) return
   closeCommunityPeer()
  }, [communityActiveCall])
+
+ useEffect(() => {
+  if (communityRingingTimerRef.current) {
+   clearInterval(communityRingingTimerRef.current)
+   communityRingingTimerRef.current = null
+  }
+  if (communityActiveCall?.status === 'ringing') {
+   playRingPulse()
+   communityRingingTimerRef.current = setInterval(() => playRingPulse(), 1800)
+  }
+  return () => {
+   if (communityRingingTimerRef.current) {
+    clearInterval(communityRingingTimerRef.current)
+    communityRingingTimerRef.current = null
+   }
+  }
+ }, [communityActiveCall?.status])
 
  useEffect(() => {
   if (!communityActiveCall) return
