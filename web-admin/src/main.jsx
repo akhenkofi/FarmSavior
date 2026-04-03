@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import './styles.css'
 
-const BUILD_ID = '2026-04-03-phone-pane-v3'
+const BUILD_ID = '2026-04-03-phone-pane-v4'
 
 async function forceFreshClient() {
   try {
