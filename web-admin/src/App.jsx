@@ -3600,6 +3600,13 @@ function AppInner() {
    overriddenByTopMatch: !!useTop
   }
  }, [diseaseResult])
+
+ useEffect(() => {
+  if (active !== 'ai-disease') return
+  api.fetchDiseaseScans()
+   .then(rows => setState(prev => ({ ...prev, diseaseScans: rows || [] })))
+   .catch(() => {})
+ }, [active])
  const [plantIdForm, setPlantIdForm] = useState({ user_id: 1, image_url: '', file_name: '', context_hint: '', target_livestock: 'goats' })
  const [plantIdPreview, setPlantIdPreview] = useState('')
  const [plantIdResult, setPlantIdResult] = useState(null)
