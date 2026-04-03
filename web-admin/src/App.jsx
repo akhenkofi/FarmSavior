@@ -6579,6 +6579,18 @@ function AppInner() {
     </select>
     <input className='input' placeholder='Body condition score' value={famachaDraft.bodyScore || ''} onChange={e=>setFamachaDraft(prev=>({ ...prev, bodyScore:e.target.value }))} />
    </div>
+   <div className='records-detail-section' style={{marginTop:10}}>FAMACHA quick color guide (tap to choose)</div>
+   <div className='list'>
+    {[['1','#f56b82','Red / optimal'],['2','#f39a9f','Red-pink / good'],['3','#f2c3b9','Pink / monitor'],['4','#ead3c0','Pale pink / treat'],['5','#ddd9cf','Very pale / urgent']].map(([score,color,label]) => (
+     <button type='button' key={`famacha-${score}`} className='list-row' onClick={()=>setFamachaDraft(prev=>({ ...prev, famacha:String(score) }))}>
+      <span style={{display:'inline-flex',alignItems:'center',gap:8}}>
+       <span style={{display:'inline-block',width:16,height:16,borderRadius:999,background:String(color),border:'1px solid #cbd5e1'}} />
+       <strong>{String(score)}</strong> {String(label)}
+      </span>
+      <strong>{String(famachaDraft.famacha)===String(score) ? '✓' : 'Choose'}</strong>
+     </button>
+    ))}
+   </div>
    <div className='row2' style={{gap:10, marginTop:10}}>
     <input className='input' placeholder='Weight (optional)' value={famachaDraft.weight || ''} onChange={e=>setFamachaDraft(prev=>({ ...prev, weight:e.target.value }))} />
    </div>
