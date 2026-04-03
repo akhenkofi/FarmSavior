@@ -7919,7 +7919,6 @@ function AppInner() {
  <p>Upload a clear livestock photo, add symptoms if you have them, and get a structured first-pass assessment with prevention, treatment, and follow-up guidance.</p>
  </div>
  <div className='disease-hero-actions'>
- <button className='btn' type='button' onClick={() => { setDiseaseResult(null); setDiseaseImagePreview(''); setDiseaseImageFileName(''); setDiseaseForm(prev => ({ ...prev, target: '', image_url: '', context_note: '' })) }}>Start fresh</button>
 
  </div>
  </div>
