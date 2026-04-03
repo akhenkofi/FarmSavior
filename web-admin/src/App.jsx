@@ -6413,6 +6413,22 @@ function AppInner() {
        </button>
       })}
      </div>
+
+     <div className='records-detail-section'>Breeding</div>
+     <div className='records-detail-grid'>
+      {livestockHistoryRows(currentLivestockRecord).marks.map(([label, _value, action], idx) => <button type='button' key={`marks-${label}-${idx}`} className='records-detail-row clickable' onClick={() => {
+       if (action === 'add-mark') { setMarkDraft({ sire: currentLivestockRecord?.sire_id || '', dam: currentLivestockRecord?.dam_id || currentLivestockRecord?.id || '', markDate: new Date().toISOString().slice(0,10), dueDate: '2026-08-26', fertilizationType: 'Natural', name: '', ear_tag: '', animal_type: 'LAMB', initial_weight_kg: '' }); setMarkComposerOpen(true) }
+       if (action === 'add-flush') { setFlushDraft({ sire: currentLivestockRecord?.sire_id || '', dam: currentLivestockRecord?.dam_id || currentLivestockRecord?.id || '', markDate: new Date().toISOString().slice(0,10), dueDate: '', fertilizationType: 'Natural', flushDate: '', recipient: '', cidrIn: '', cidrOut: '', notes: '' }); setFlushComposerOpen(true) }
+       if (action === 'add-ultrasound') { setUltrasoundDraft({ date: new Date().toISOString().slice(0,10), result: '', notes: '' }); setUltrasoundComposerOpen(true) }
+      }}><span>{label}</span><strong>›</strong></button>)}
+     </div>
+
+     <div className='records-detail-section'>Herd</div>
+     <div className='records-detail-grid'>
+      {livestockHistoryRows(currentLivestockRecord).herd.map(([label, _value, action], idx) => <button type='button' key={`herd-${label}-${idx}`} className='records-detail-row clickable' onClick={() => {
+       if (action === 'move-herd') { setMoveHerdDraft({ herd: currentLivestockRecord?.pen_location || '', notes: '' }); setMoveHerdOpen(true) }
+      }}><span>{label}</span><strong>›</strong></button>)}
+     </div>
     </article>}
 
     {!recordsSectionOpen.create && !recordsSectionOpen.edit && !currentLivestockRecord && <article className='panel records-panel records-empty-detail'>
