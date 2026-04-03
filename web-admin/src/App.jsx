@@ -6393,6 +6393,45 @@ function AppInner() {
  </div>
 </section>}
 
+ {notesScreenOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:260, margin:0, background:'#f8fafc', overflow:'auto'}}>
+ <div className='records-shell'>
+  <div className='records-hero-card'>
+   <div><div className='records-eyebrow'>ANIMAL NOTES</div><h3>Notes</h3><p>{currentLivestockRecord?.name || 'Animal record'}</p></div>
+   <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setNotesScreenOpen(false)}>Back</button><button type='button' className='btn btn-dark' onClick={()=>{ setNotesScreenOpen(false); setDraftNote(''); setNotesComposerOpen(true) }}>Add Note</button></div>
+  </div>
+  <article className='panel records-panel'>
+   <div style={{whiteSpace:'pre-wrap'}}>{extractAttachmentsFromNotes(currentLivestockRecord?.notes || '').text || 'No notes yet.'}</div>
+  </article>
+ </div>
+ </section>}
+
+ {notesComposerOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:270, margin:0, background:'#f8fafc', overflow:'auto'}}>
+ <div className='records-shell'>
+  <div className='records-hero-card'>
+   <div><div className='records-eyebrow'>ANIMAL NOTES</div><h3>Add Note</h3><p>{currentLivestockRecord?.name || 'Animal record'}</p></div>
+   <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setNotesComposerOpen(false)}>Cancel</button></div>
+  </div>
+  <article className='panel records-panel'>
+   <textarea className='input' rows={8} placeholder='Write note...' value={draftNote} onChange={e=>setDraftNote(e.target.value)} />
+   <div style={{marginTop:10, display:'flex', justifyContent:'flex-end'}}><button type='button' className='btn btn-dark' onClick={async()=>{
+    const txt = String(draftNote || '').trim();
+    if (!txt || !currentLivestockRecord?.id) { setNotesComposerOpen(false); return }
+    const base = extractAttachmentsFromNotes(currentLivestockRecord?.notes || '')
+    const stamped = `[${new Date().toISOString().slice(0,16).replace('T',' ')}] ${txt}`
+    const merged = `${base.text ? `${base.text}\n` : ''}${stamped}`
+    const nextNotes = mergeNotesWithAttachments(merged, { photos: base.photos || [], docs: base.docs || [] })
+    const payload = { ...mapLivestockRecordToEditForm(currentLivestockRecord), notes: nextNotes }
+    delete payload.id
+    await api.updateLivestockRecord(Number(currentLivestockRecord.id), payload)
+    await loadLivestockRecords()
+    setDraftNote('')
+    setNotesComposerOpen(false)
+    setNotesScreenOpen(true)
+   }}>Save Note</button></div>
+  </article>
+ </div>
+ </section>}
+
  {active === 'services' && <section>
  <div className='section-header'>
  <div>
