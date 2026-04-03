@@ -3069,11 +3069,30 @@ function AppInner() {
      return
     }
     if (signalType === 'answer') {
+     const peerUserId = signal.fromUserId || candidate?.user?.user_id
+     const mode = signal.mode === 'video' ? 'video' : 'audio'
+     ;(async()=>{
+      try {
+       const pc = await ensureCommunityPeer({ mode, callId: signal.callId, peerUserId })
+       const offer = await pc.createOffer()
+       await pc.setLocalDescription(offer)
+       await waitIceDone(pc)
+       await sendCallSignal(peerUserId, { v:1, type:'rtc_offer', mode, callId:signal.callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now(), sdp: pc.localDescription }, mode === 'video' ? '📹' : '📞')
+       setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? { ...prev, status: 'connecting-media', peerUserId } : prev))
+      } catch {}
+     })()
+     return
+    }
+    if (signalType === 'rtc_offer') {
      setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? { ...prev, status: 'connecting-media' } : prev))
      return
     }
-    if (signalType === 'rtc_offer' || signalType === 'rtc_answer') {
-     setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? { ...prev, status: 'connecting-media' } : prev))
+    if (signalType === 'rtc_answer') {
+     ;(async()=>{ try { if (communityPcRef.current && signal?.sdp) { await communityPcRef.current.setRemoteDescription(new RTCSessionDescription(signal.sdp)); setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? { ...prev, status: 'connected' } : prev)) } } catch {} })()
+     return
+    }
+    if (signalType === 'rtc_ice') {
+     ;(async()=>{ try { if (communityPcRef.current && signal?.candidate) await communityPcRef.current.addIceCandidate(new RTCIceCandidate(signal.candidate)) } catch {} })()
      return
     }
     if (signalType === 'decline' || signalType === 'end') {
