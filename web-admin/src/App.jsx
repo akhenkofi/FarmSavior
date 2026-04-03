@@ -2829,21 +2829,24 @@ function AppInner() {
  const sendCommunityCallInvite = async (mode = 'audio') => {
   const targetUserId = communityMessageView?.user?.user_id
   if (!targetUserId || communityMessageSending) return
-  const meId = String(me?.id || '')
-  const otherId = String(targetUserId || '')
-  const pairSeed = [meId, otherId].filter(Boolean).sort().join('-') || 'pair'
-  const room = `farmsavior-${pairSeed}-${Date.now()}`
-  const callUrl = mode === 'video'
-   ? `https://meet.jit.si/${room}#config.prejoinConfig.enabled=false&config.prejoinPageEnabled=false&config.requireDisplayName=false&config.disableDeepLinking=true`
-   : `https://meet.jit.si/${room}#config.startWithVideoMuted=true&config.prejoinConfig.enabled=false&config.prejoinPageEnabled=false&config.requireDisplayName=false&config.disableDeepLinking=true`
-  const inviteText = `${mode === 'video' ? '📹' : '📞'} Join my ${mode} call: ${callUrl}`
+  const callId = `fs-call-${Date.now()}-${Math.floor(Math.random()*1000)}`
+  const signalPayload = {
+   v: 1,
+   type: 'offer',
+   mode,
+   callId,
+   fromUserId: Number(me?.id || 0),
+   toUserId: Number(targetUserId || 0),
+   ts: Date.now()
+  }
+  const inviteText = `${mode === 'video' ? '📹' : '📞'} CALL_SIGNAL:${JSON.stringify(signalPayload)}`
   try {
    setCommunityMessageSending(true)
    const sent = await api.sendCommunityMessage(targetUserId, { text: inviteText })
    setCommunityMessageView(prev => ({ ...prev, messages: [ ...(prev?.messages || []), sent ].filter(Boolean) }))
    const threads = await api.fetchCommunityMessageThreads().catch(() => [])
    setCommunityMessageThreads(threads || [])
-   setCommunityActiveCall({ url: callUrl, mode })
+   setCommunityActiveCall({ callId, mode, status: 'ringing', peerUserId: targetUserId, isCaller: true })
   } catch (err) {
    alert(errMsg(err))
   } finally {
@@ -2889,23 +2892,27 @@ function AppInner() {
   if (!latest || latest.is_mine) return
   const text = String(latest.text || '')
   const lowerText = text.toLowerCase()
-  const looksLikeCallInvite = lowerText.includes('join my audio call:') || lowerText.includes('join my video call:') || lowerText.includes('meet.jit.si/')
-  if (!looksLikeCallInvite) return
-  const marker = String(latest.id || latest.created_at || lowerText)
+  const markerPrefix = 'call_signal:'
+  const signalIndex = lowerText.indexOf(markerPrefix)
+  if (signalIndex < 0) return
+  let signal = null
+  try { signal = JSON.parse(text.slice(signalIndex + markerPrefix.length)) } catch {}
+  if (!signal || String(signal.type || '') !== 'offer') return
+  if (Number(signal.toUserId || 0) && Number(signal.toUserId || 0) !== Number(me?.id || 0)) return
+  const marker = String(signal.callId || latest.id || latest.created_at || lowerText)
   if (communityLastCallAlertRef.current === marker) return
   const createdMs = latest?.created_at ? new Date(latest.created_at).getTime() : Date.now()
   if (!Number.isFinite(createdMs) || (Date.now() - createdMs) > 90 * 1000) return
   communityLastCallAlertRef.current = marker
-  const callUrl = (text.match(/https?:\/\/meet\.jit\.si\/[^\s]+/i) || [])[0] || ''
-  const mode = lowerText.includes('video') ? 'video' : 'audio'
+  const mode = signal.mode === 'video' ? 'video' : 'audio'
   const sender = communityMessageView?.user?.full_name || 'A user'
   if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
    try { if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([400, 200, 400, 200, 400]) } catch {}
-   setCommunityIncomingCall({ from: sender, mode, url: callUrl })
+   setCommunityIncomingCall({ from: sender, mode, callId: signal.callId || '', fromUserId: signal.fromUserId || null })
    return
   }
   if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-   new Notification('Incoming FarmSavior call invite', { body: `${sender} is calling you (${mode}). Open Community messages to answer.`, silent: false })
+   new Notification('Incoming FarmSavior call', { body: `${sender} is calling you (${mode}).`, silent: false })
   }
  }, [communityMessageView.open, communityMessageView.loading, communityMessageView.messages, communityMessageView?.user?.full_name])
  useEffect(() => {
