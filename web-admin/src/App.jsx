@@ -1261,6 +1261,7 @@ const livestockHistoryRows = (record) => {
  ['Add Weight', '›', 'add-weight'],
  ['Medicines', `(${medsCount})`, 'medicines'],
  ['Add Medicine', '›', 'add-medicine'],
+ ['FAMACHA Records', '›', 'famacha-records'],
  ['Add FAMACHA/Body Condition Score', '›', 'famacha'],
  ['View Ancestor Tree', '›', 'ancestor-tree'],
  ['Share PDF Report', '›', 'share-pdf'],
@@ -3040,6 +3041,7 @@ function AppInner() {
  const [medicineChooserOpen, setMedicineChooserOpen] = useState(false)
  const [medicineChooserSearch, setMedicineChooserSearch] = useState('')
  const [famachaComposerOpen, setFamachaComposerOpen] = useState(false)
+ const [famachaRecordsOpen, setFamachaRecordsOpen] = useState(false)
  const [ancestorTreeOpen, setAncestorTreeOpen] = useState(false)
  const [ancestorPdfOpen, setAncestorPdfOpen] = useState(false)
  const [offspringReportOpen, setOffspringReportOpen] = useState(false)
@@ -3054,7 +3056,7 @@ function AppInner() {
  const [customMedicineComposerOpen, setCustomMedicineComposerOpen] = useState(false)
  const [customMedicineName, setCustomMedicineName] = useState('')
  const [actionBusy, setActionBusy] = useState('')
- const appScreenOpen = notesComposerOpen || weightsScreenOpen || weightComposerOpen || medicinesScreenOpen || medicineShotOpen || medicineChooserOpen || customMedicineComposerOpen || famachaComposerOpen || ancestorTreeOpen || ancestorPdfOpen || offspringReportOpen || offspringListOpen || markComposerOpen || flushComposerOpen || ultrasoundComposerOpen || moveHerdOpen || selectedBreederDetail || breederReportOpen || notesScreenOpen || communityInboxOpen
+ const appScreenOpen = notesComposerOpen || weightsScreenOpen || weightComposerOpen || medicinesScreenOpen || medicineShotOpen || medicineChooserOpen || customMedicineComposerOpen || famachaComposerOpen || famachaRecordsOpen || ancestorTreeOpen || ancestorPdfOpen || offspringReportOpen || offspringListOpen || markComposerOpen || flushComposerOpen || ultrasoundComposerOpen || moveHerdOpen || selectedBreederDetail || breederReportOpen || notesScreenOpen || communityInboxOpen
  const [notesSearch, setNotesSearch] = useState('')
  const [draftNote, setDraftNote] = useState('')
  const [draftWeight, setDraftWeight] = useState('')
@@ -6366,7 +6368,7 @@ function AppInner() {
      <div className='records-detail-grid'>
       {livestockHistoryRows(currentLivestockRecord).history.map((row, idx) => {
        const [label, value, action] = row
-       const clickable = action === 'notes' || action === 'add-note' || action === 'weights-log' || action === 'add-weight' || action === 'medicines' || action === 'add-medicine' || action === 'famacha' || action === 'ancestor-tree' || action === 'share-pdf' || action === 'offspring-report' || action === 'offspring-list' || action === 'add-mark' || action === 'add-flush'
+       const clickable = action === 'notes' || action === 'add-note' || action === 'weights-log' || action === 'add-weight' || action === 'medicines' || action === 'add-medicine' || action === 'famacha-records' || action === 'famacha' || action === 'ancestor-tree' || action === 'share-pdf' || action === 'offspring-report' || action === 'offspring-list' || action === 'add-mark' || action === 'add-flush'
        return <button type='button' key={`history-${label}-${idx}`} className={`records-detail-row ${clickable ? 'clickable' : ''}`} onClick={() => {
         if (!clickable) return
         setRecordsSectionOpen(prev => ({ ...prev, details: false }))
@@ -6376,6 +6378,7 @@ function AppInner() {
         if (action === 'add-weight') { setDraftWeight(''); setDraftWeightDate(new Date().toISOString().slice(0,10)); setWeightComposerOpen(true) }
         if (action === 'medicines') { setMedicineSearch(''); setMedicinesScreenOpen(true) }
         if (action === 'add-medicine') { setMedicineShotDraft({ medicine: '', dosage: '', notes: '', date: new Date().toISOString().slice(0,10) }); setMedicineShotOpen(true) }
+        if (action === 'famacha-records') setFamachaRecordsOpen(true)
         if (action === 'share-pdf') setAncestorPdfOpen(true)
         if (action === 'famacha') { setFamachaDraft({ famacha: '--', bodyScore: '', weight: '', notes: '', date: new Date().toISOString().slice(0,10) }); setFamachaComposerOpen(true) }
         if (action === 'ancestor-tree') setAncestorTreeOpen(true)
@@ -6561,6 +6564,22 @@ function AppInner() {
      alert(`Save medicine failed: ${errMsg(err)}`)
     }
    }}>Save Medicine</button></div>
+  </article>
+ </div>
+ </section>}
+
+ {famachaRecordsOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:273, margin:0, background:'#f8fafc', overflow:'auto'}}>
+ <div className='records-shell'>
+  <div className='records-hero-card'>
+   <div><div className='records-eyebrow'>HEALTH LOG</div><h3>FAMACHA Records</h3><p>{currentLivestockRecord?.name || 'Animal record'}</p></div>
+   <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setFamachaRecordsOpen(false)}>Back</button><button type='button' className='btn btn-dark' onClick={()=>{ setFamachaRecordsOpen(false); setFamachaDraft({ famacha: '--', bodyScore: '', weight: '', notes: '', date: new Date().toISOString().slice(0,10) }); setFamachaComposerOpen(true) }}>Add Entry</button></div>
+  </div>
+  <article className='panel records-panel'>
+   {(() => {
+    const rows = String(extractAttachmentsFromNotes(currentLivestockRecord?.notes || '').text || '').split('\n').filter(line => /FAMACHA:/i.test(line)).reverse()
+    if (!rows.length) return <div className='helper-text'>No FAMACHA/body condition records yet.</div>
+    return <div className='list'>{rows.map((row, idx)=><div key={`famacha-row-${idx}`} className='list-row'><span>{row}</span></div>)}</div>
+   })()}
   </article>
  </div>
  </section>}
