@@ -3341,6 +3341,21 @@ function AppInner() {
  }, [communityActiveCall?.callId, communityActiveCall?.status])
 
  useEffect(() => {
+  if (!communityActiveCall || String(communityActiveCall?.status || '') !== 'calling') return
+  const timeout = setTimeout(async () => {
+   const current = communityActiveCall
+   try {
+    if (current?.peerUserId) {
+      await sendCallSignal(current.peerUserId, { v:1, type:'missed', mode: current.mode || 'audio', callId: current.callId || '', fromUserId:Number(me?.id || 0), toUserId:Number(current.peerUserId || 0), ts:Date.now() }, '📞')
+      await sendCallSignal(current.peerUserId, { v:1, type:'end', mode: current.mode || 'audio', callId: current.callId || '', fromUserId:Number(me?.id || 0), toUserId:Number(current.peerUserId || 0), ts:Date.now() }, '📞')
+    }
+   } catch {}
+   returnToCommunityPhone()
+  }, 30000)
+  return () => clearTimeout(timeout)
+ }, [communityActiveCall?.callId, communityActiveCall?.status])
+
+ useEffect(() => {
   if (!communityActiveCall || communityActiveCall.mode !== 'video' || communityActiveCall.url) return
   if (!['connecting-media','connected'].includes(String(communityActiveCall.status || ''))) return
   const timer = setTimeout(() => {
