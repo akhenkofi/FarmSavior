@@ -3053,6 +3053,7 @@ function AppInner() {
  const [batchMedicationForm, setBatchMedicationForm] = useState({ species:'ALL', animal_type:'ALL', health_status:'ALL', cull_keep_status:'ALL', minStars:'', pen_location:'', medication:'', dose:'', days:'' })
  const ATTACHMENT_MARKER = '\n\n[ATTACHMENTS_JSON]'
  const mapLivestockRecordToEditForm = (r) => ({
+
  id: r?.id || '',
  user_id: r?.user_id || me?.id || 1,
  ownership: r?.ownership || 'Owned by Me',
@@ -3085,6 +3086,19 @@ function AppInner() {
  pen_location: r?.pen_location || '',
  notes: extractAttachmentsFromNotes(r?.notes || '').text || '',
  treatment_entry: ''
+ })
+ const normalizeLivestockPayload = (payload = {}) => ({
+  ...payload,
+  user_id: Number(payload.user_id || me?.id || 0),
+  stars: Number(payload.stars || 0),
+  purchase_price: payload.purchase_price === '' ? null : Number(payload.purchase_price),
+  litter_size: payload.litter_size === '' ? null : Number(payload.litter_size),
+  initial_weight_kg: payload.initial_weight_kg === '' ? null : Number(payload.initial_weight_kg),
+  sale_price: payload.sale_price === '' ? null : Number(payload.sale_price),
+  date_of_birth: payload.date_of_birth || null,
+  acquisition_date: payload.acquisition_date || null,
+  sale_date: payload.sale_date || null,
+  died_date: payload.died_date || null,
  })
  const [logisticsForm, setLogisticsForm] = useState({ requester_id: 1, pickup_location: '', dropoff_location: '', cargo_type: '', weight_kg: '', status: 'PENDING' })
  const [logisticsEdit, setLogisticsEdit] = useState({ id: '', requester_id: 1, pickup_location: '', dropoff_location: '', cargo_type: '', weight_kg: '', status: 'PENDING' })
@@ -6422,7 +6436,7 @@ function AppInner() {
      const stamped = `[${new Date().toISOString().slice(0,16).replace('T',' ')}] ${txt}`
      const merged = `${base.text ? `${base.text}\n` : ''}${stamped}`
      const nextNotes = mergeNotesWithAttachments(merged, { photos: base.photos || [], docs: base.docs || [] })
-     const payload = { ...mapLivestockRecordToEditForm(currentLivestockRecord), notes: nextNotes }
+     const payload = normalizeLivestockPayload({ ...mapLivestockRecordToEditForm(currentLivestockRecord), notes: nextNotes })
      delete payload.id
      await api.updateLivestockRecord(Number(currentLivestockRecord.id), payload)
      await loadLivestockRecords()
@@ -6457,7 +6471,7 @@ function AppInner() {
      const stamped = `[${dateLabel}] Weight: ${txt} kg`
      const merged = `${base.text ? `${base.text}\n` : ''}${stamped}`
      const nextNotes = mergeNotesWithAttachments(merged, { photos: base.photos || [], docs: base.docs || [] })
-     const payload = { ...mapLivestockRecordToEditForm(currentLivestockRecord), notes: nextNotes }
+     const payload = normalizeLivestockPayload({ ...mapLivestockRecordToEditForm(currentLivestockRecord), notes: nextNotes })
      delete payload.id
      await api.updateLivestockRecord(Number(currentLivestockRecord.id), payload)
      await loadLivestockRecords()
