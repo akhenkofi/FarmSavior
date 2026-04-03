@@ -2717,7 +2717,10 @@ function AppInner() {
  const communityLastSignalIdRef = useRef('')
  const communityPcRef = useRef(null)
  const communityLocalStreamRef = useRef(null)
+ const communityRemoteStreamRef = useRef(null)
  const communityRemoteAudioRef = useRef(null)
+ const communityLocalVideoRef = useRef(null)
+ const communityRemoteVideoRef = useRef(null)
  const [editingCommunityPostId, setEditingCommunityPostId] = useState(null)
  const [communityCommentText, setCommunityCommentText] = useState({})
  const [communityComments, setCommunityComments] = useState({})
@@ -2874,7 +2877,10 @@ function AppInner() {
   communityPcRef.current = null
   try { communityLocalStreamRef.current?.getTracks?.().forEach(t => t.stop()) } catch {}
   communityLocalStreamRef.current = null
+  communityRemoteStreamRef.current = null
   if (communityRemoteAudioRef.current) communityRemoteAudioRef.current.srcObject = null
+  if (communityLocalVideoRef.current) communityLocalVideoRef.current.srcObject = null
+  if (communityRemoteVideoRef.current) communityRemoteVideoRef.current.srcObject = null
  }
  const waitIceDone = (pc) => new Promise((resolve) => {
   if (!pc || pc.iceGatheringState === 'complete') return resolve()
@@ -2887,14 +2893,27 @@ function AppInner() {
   const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] })
   const local = await navigator.mediaDevices.getUserMedia({ audio: true, video: mode === 'video' })
   communityLocalStreamRef.current = local
+  if (communityLocalVideoRef.current && mode === 'video') {
+   communityLocalVideoRef.current.srcObject = local
+   communityLocalVideoRef.current.play?.().catch(()=>{})
+  }
   local.getTracks().forEach(track => pc.addTrack(track, local))
   const remoteStream = new MediaStream()
+  communityRemoteStreamRef.current = remoteStream
   pc.ontrack = (ev) => {
    ;(ev.streams?.[0]?.getTracks?.() || []).forEach(t => remoteStream.addTrack(t))
    if (communityRemoteAudioRef.current) {
     communityRemoteAudioRef.current.srcObject = remoteStream
     communityRemoteAudioRef.current.play?.().catch(()=>{})
    }
+   if (communityRemoteVideoRef.current) {
+    communityRemoteVideoRef.current.srcObject = remoteStream
+    communityRemoteVideoRef.current.play?.().catch(()=>{})
+   }
+  }
+  pc.onicecandidate = async (ev) => {
+   if (!ev.candidate || !peerUserId) return
+   try { await sendCallSignal(peerUserId, { v:1, type:'rtc_ice', mode, callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now(), candidate: ev.candidate }) } catch {}
   }
   communityPcRef.current = pc
   return pc
@@ -2981,6 +3000,10 @@ function AppInner() {
    ;(async()=>{ try { if (communityPcRef.current && signal?.sdp) { await communityPcRef.current.setRemoteDescription(new RTCSessionDescription(signal.sdp)); setCommunityActiveCall(prev => prev ? { ...prev, status: 'connected' } : prev) } } catch {} })()
    return
   }
+  if (signalType === 'rtc_ice') {
+   ;(async()=>{ try { if (communityPcRef.current && signal?.candidate) await communityPcRef.current.addIceCandidate(new RTCIceCandidate(signal.candidate)) } catch {} })()
+   return
+  }
   if (signalType === 'decline' || signalType === 'end') {
    closeCommunityPeer()
    setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? null : prev))
@@ -3019,7 +3042,7 @@ function AppInner() {
      const signal = parseCallSignal(msg.text)
      if (!signal) return false
      const tpe = String(signal.type || '')
-     if (!['offer','answer','decline','end','rtc_offer','rtc_answer'].includes(tpe)) return false
+     if (!['offer','answer','decline','end','rtc_offer','rtc_answer','rtc_ice'].includes(tpe)) return false
      if (Number(signal.toUserId || 0) && Number(signal.toUserId || 0) !== Number(me?.id || 0)) return false
      const createdMs = msg?.created_at ? new Date(msg.created_at).getTime() : Date.now()
      return Number.isFinite(createdMs) && (Date.now() - createdMs) < 90 * 1000
@@ -8032,7 +8055,7 @@ function AppInner() {
  </div>}
 
  {communityActiveCall && <div className='community-messenger-overlay' style={{zIndex: 240, padding: 0}}>
- <div style={{width:'100vw', height:'100vh', background:'#000', display:'grid', gridTemplateRows:'auto 1fr'}}>
+ <div style={{width:'100vw', height:'100vh', background:'#000', display:'grid', gridTemplateRows:'auto 1fr', position:'relative'}}>
  <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 12px', background:'rgba(2,6,23,.86)', color:'#fff'}}>
  <strong>{communityActiveCall?.mode === 'video' ? 'Video Call' : 'Audio Call'}</strong>
  <button type='button' className='btn' onClick={async()=>{ const current = communityActiveCall; try { if (current?.peerUserId) await sendCallSignal(current.peerUserId, { v:1, type:'end', mode:current.mode || 'audio', callId:current.callId || '', fromUserId:Number(me?.id || 0), toUserId:Number(current.peerUserId || 0), ts:Date.now() }, '📞') } catch {} setCommunityActiveCall(null) }}>End Call</button>
@@ -8040,6 +8063,10 @@ function AppInner() {
  {communityActiveCall?.url
   ? <iframe title='FarmSavior Call' src={communityActiveCall.url} allow='camera; microphone; fullscreen; display-capture; autoplay' style={{width:'100%', height:'100%', border:'0'}} />
   : <div style={{display:'grid', placeItems:'center', padding:24, color:'#e2e8f0'}}><div style={{textAlign:'center'}}><div style={{fontSize:'2rem'}}>🔄</div><div style={{fontWeight:700}}>Call is {communityActiveCall?.status === 'connected' ? 'connected' : 'connecting'}…</div><div style={{fontSize:'.85rem', opacity:.85, marginTop:6}}>Status: {communityActiveCall?.status || 'initializing'}</div></div></div>}
+ {communityActiveCall?.mode === 'video' && <div style={{position:'absolute', inset:0, pointerEvents:'none', display:'grid', gridTemplateColumns:'1fr', gridTemplateRows:'1fr'}}>
+  <video ref={communityRemoteVideoRef} autoPlay playsInline style={{width:'100%', height:'100%', objectFit:'cover', background:'#000'}} />
+  <video ref={communityLocalVideoRef} autoPlay playsInline muted style={{position:'absolute', right:12, bottom:12, width:120, height:160, objectFit:'cover', borderRadius:10, border:'1px solid rgba(255,255,255,.35)', background:'#111'}} />
+ </div>}
  <audio ref={communityRemoteAudioRef} autoPlay playsInline style={{display:'none'}} />
  </div>
  </div>}
