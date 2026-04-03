@@ -2834,6 +2834,7 @@ function AppInner() {
  setCommunityMessageOpeningUserId(null)
  }
  const returnToCommunityPhone = () => {
+  playEndedTone()
   setCommunityActiveCall(null)
   setCommunityInboxOpen(true)
   setCommunityInboxSection('calls')
@@ -2943,6 +2944,25 @@ function AppInner() {
    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25)
    osc.stop(ctx.currentTime + 0.28)
    setTimeout(() => { try { ctx.close() } catch {} }, 400)
+  } catch {}
+ }
+ const playEndedTone = () => {
+  try {
+   const Ctx = window.AudioContext || window.webkitAudioContext
+   if (!Ctx) return
+   const ctx = new Ctx()
+   const osc = ctx.createOscillator()
+   const gain = ctx.createGain()
+   osc.type = 'triangle'
+   osc.frequency.value = 520
+   gain.gain.value = 0.001
+   osc.connect(gain)
+   gain.connect(ctx.destination)
+   osc.start()
+   gain.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.02)
+   gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35)
+   osc.stop(ctx.currentTime + 0.38)
+   setTimeout(() => { try { ctx.close() } catch {} }, 500)
   } catch {}
  }
  const toggleCommunityMute = () => {
