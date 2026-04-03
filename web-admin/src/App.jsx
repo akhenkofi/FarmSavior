@@ -7881,18 +7881,18 @@ function AppInner() {
  <div className='community-messenger-main'>
  <div className='community-messenger-main-head'>
  <div>
- <div className='community-inbox-kicker'>{communityInboxSection === 'calls' ? 'Calls' : 'Conversation'}</div>
- <h4 style={{margin:'4px 0 0 0'}}>{communityInboxSection === 'calls' ? 'Recent call log' : (communityMessageView?.user?.full_name || 'Select a conversation')}</h4>
- <div className='helper-text'>{communityInboxSection === 'calls' ? 'Audio and video call activity only.' : (communityMessageView?.user?.username ? `@${communityMessageView.user.username}` : (communityMessageView.loading ? 'Opening chat…' : 'Choose someone to start messaging.'))}</div>
+ <div className='community-inbox-kicker'>Conversation</div>
+ <h4 style={{margin:'4px 0 0 0'}}>{communityMessageView?.user?.full_name || 'Select a conversation'}</h4>
+ <div className='helper-text'>{communityMessageView?.user?.username ? `@${communityMessageView.user.username}` : (communityMessageView.loading ? 'Opening chat…' : 'Choose someone to start messaging.')}</div>
  </div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
- {communityInboxSection === 'messages' && communityMessageView.open && <button type='button' className='btn community-mobile-back-btn' onClick={()=>setCommunityMessageView({ open: false, loading: false, error: '', user: null, messages: [] })}>Back to inbox</button>}
- {communityInboxSection === 'messages' && communityMessageView.open && <button type='button' className='btn' disabled={communityMessageSending} onClick={()=>sendCommunityCallInvite('audio')}>{communityMessageSending ? 'Starting…' : 'Audio'}</button>}
- {communityInboxSection === 'messages' && communityMessageView.open && <button type='button' className='btn' disabled={communityMessageSending} onClick={()=>sendCommunityCallInvite('video')}>{communityMessageSending ? 'Starting…' : 'Video'}</button>}
+ {communityMessageView.open && <button type='button' className='btn community-mobile-back-btn' onClick={()=>setCommunityMessageView({ open: false, loading: false, error: '', user: null, messages: [] })}>Back to inbox</button>}
+ {communityMessageView.open && <button type='button' className='btn' disabled={communityMessageSending} onClick={()=>sendCommunityCallInvite('audio')}>{communityMessageSending ? 'Starting…' : 'Audio'}</button>}
+ {communityMessageView.open && <button type='button' className='btn' disabled={communityMessageSending} onClick={()=>sendCommunityCallInvite('video')}>{communityMessageSending ? 'Starting…' : 'Video'}</button>}
  <button type='button' className='btn' onClick={closeCommunityMessages}>Close</button>
  </div>
  </div>
- {communityInboxSection === 'messages' && !communityMessageView.open && <div className='community-messenger-empty'>
+ {!communityMessageView.open && <div className='community-messenger-empty'>
  <div className='empty-emoji'>💬</div>
  <strong>Pick a conversation from the inbox</strong>
  <span>Start a new conversation from any profile, then use Audio or Video call instantly from the header.</span>
@@ -7902,7 +7902,7 @@ function AppInner() {
  <button type='button' className='btn' disabled title='Select a conversation first'>Video Call</button>
  </div>
  </div>}
- {communityInboxSection === 'messages' && communityMessageView.open && <>
+ {communityMessageView.open && <>
  {communityMessageView.loading && <div className='community-messenger-empty'><div className='empty-emoji'>⏳</div><strong>Opening messages…</strong><span>Loading the latest conversation safely.</span></div>}
  {!!communityMessageView.error && <div className='panel' style={{marginTop:8, background:'#fff7ed', color:'#9a3412'}}>{communityMessageView.error}</div>}
  {!communityMessageView.loading && !communityMessageView.error && <>
@@ -7928,13 +7928,6 @@ function AppInner() {
  <div style={{marginTop:4, fontSize:'.76rem', color:'#64748b'}}>Calls work best when microphone/camera permissions are allowed in browser settings.</div>
  </>}
  </>}
- {communityInboxSection === 'calls' && <div className='panel' style={{marginTop:8}}>
-  <div style={{fontWeight:700, marginBottom:6}}>Call Log</div>
-  <div className='list'>
-   {(communityMessageThreads || []).filter(t=>{ const tx = String(t?.last_message?.text || '').toLowerCase(); return tx.includes('join my audio call:') || tx.includes('join my video call:') || tx.includes('meet.jit.si/') || tx.includes('call_signal:') }).slice(0,20).map((thread)=>{ const tx = String(thread?.last_message?.text || '').toLowerCase(); const mode = tx.includes('video') ? 'Video' : 'Audio'; const status = thread?.last_message?.is_mine ? 'Outgoing' : 'Missed'; return <div key={`call-log-main-${thread?.user?.user_id}`} className='list-row'><span>{mode} • {status} • {thread?.user?.full_name || `User ${thread?.user?.user_id || ''}`}</span><span style={{fontSize:'.75rem', color:'#64748b'}}>{String(thread?.last_message?.created_at || '').replace('T',' ').slice(0,16)}</span></div> })}
-   {!((communityMessageThreads || []).filter(t=>{ const tx = String(t?.last_message?.text || '').toLowerCase(); return tx.includes('join my audio call:') || tx.includes('join my video call:') || tx.includes('meet.jit.si/') || tx.includes('call_signal:') }).length) && <div className='community-thread-preview community-thread-preview-empty'>No call history yet.</div>}
-  </div>
- </div>}
  </div>
  </div>
  </div>}
