@@ -8068,7 +8068,7 @@ function AppInner() {
  {!communityMessageThreads.length && <div className='community-thread-preview community-thread-preview-empty'>No active conversations yet.</div>}
  </div>}
  </div>
- <div className='community-messenger-main'>
+ {communityInboxSection === 'messages' && <div className='community-messenger-main'>
  <div className='community-messenger-main-head'>
  <div>
  <div className='community-inbox-kicker'>{communityInboxSection === 'calls' ? 'Phone' : 'Conversation'}</div>
@@ -8118,11 +8118,7 @@ function AppInner() {
  <div style={{marginTop:4, fontSize:'.76rem', color:'#64748b'}}>Calls work best when microphone/camera permissions are allowed in browser settings.</div>
  </>}
  </>}
- {communityInboxSection === 'calls' && <div className='panel' style={{marginTop:8}}>
-  <div style={{fontWeight:700, marginBottom:6}}>Phone</div>
-  <div className='helper-text'>Use the Phone list on the left for clean call history. Open any row to jump to that user's Messages thread and start voice/video.</div>
  </div>}
- </div>
  </div>
  </div>}
 
