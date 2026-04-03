@@ -8046,9 +8046,9 @@ function AppInner() {
  <button type='button' className='btn' onClick={closeCommunityMessages}>Close</button>
  </div>
  <div className='helper-text' style={{marginBottom:10}}>{communityInboxSection === 'calls' ? 'Phone activity only.' : (communityMessageThreads.length ? `${communityMessageThreads.length} conversation${communityMessageThreads.length === 1 ? '' : 's'} ready` : 'No conversations yet - tap Message on a profile, search result, or post to start one.')}</div>
- <div className='tabs' style={{marginBottom:8}}>
-  <button className={`tab ${communityInboxSection === 'messages' ? 'active' : ''}`} onClick={()=>setCommunityInboxSection('messages')}>Messages</button>
-  <button className={`tab ${communityInboxSection === 'calls' ? 'active' : ''}`} onClick={()=>setCommunityInboxSection('calls')}>Phone</button>
+ <div style={{display:'flex', gap:8, marginBottom:8}}>
+  <button type='button' className={`btn ${communityInboxSection === 'messages' ? 'btn-dark' : ''}`} onClick={()=>setCommunityInboxSection('messages')}>Messages</button>
+  <button type='button' className={`btn ${communityInboxSection === 'calls' ? 'btn-dark' : ''}`} onClick={()=>setCommunityInboxSection('calls')}>Phone</button>
  </div>
  {communityInboxSection === 'calls' && ((communityMessageThreads || []).filter(t=>{ const tx = String(t?.last_message?.text || '').toLowerCase(); return tx.includes('join my audio call:') || tx.includes('join my video call:') || tx.includes('meet.jit.si/') || tx.includes('call_signal:') }).slice(0,5).length > 0) && <div className='panel' style={{marginBottom:10, background:'#f8fafc', border:'1px solid #dbe6df'}}>
  <div style={{fontWeight:700, marginBottom:6}}>Recent Calls</div>
