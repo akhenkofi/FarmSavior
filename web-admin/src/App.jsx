@@ -7921,7 +7921,7 @@ function AppInner() {
  <div className='disease-hero-actions' style={{alignItems:'flex-end'}}>
   <div style={{display:'inline-flex', alignItems:'center', gap:10, background:'rgba(127,29,29,.88)', color:'#fff', border:'1px solid rgba(254,202,202,.5)', borderRadius:999, padding:'8px 12px', boxShadow:'0 10px 28px rgba(127,29,29,.35)'}}>
    <span style={{display:'inline-grid', placeItems:'center', width:24, height:24, borderRadius:'50%', background:'#ef4444', fontWeight:900}}>✚</span>
-   <span style={{fontSize:'.76rem', letterSpacing:'.06em', textTransform:'uppercase', fontWeight:800}}>Medical Safety Mode</span>
+   <span style={{fontSize:'.76rem', letterSpacing:'.06em', textTransform:'uppercase', fontWeight:800}}>FarmSavior Medical AI</span>
   </div>
  </div>
  </div>
