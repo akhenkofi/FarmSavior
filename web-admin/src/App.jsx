@@ -2827,6 +2827,12 @@ function AppInner() {
  setCommunityMessageSending(false)
  setCommunityMessageOpeningUserId(null)
  }
+ const returnToCommunityPhone = () => {
+  setCommunityActiveCall(null)
+  setCommunityInboxOpen(true)
+  setCommunityInboxSection('calls')
+  setCommunityMessageView({ open: false, loading: false, error: '', user: null, messages: [] })
+ }
  const sendActiveCommunityMessage = async () => {
   const targetUserId = communityMessageView?.user?.user_id
   const textValue = String(communityMessageDraft || '').trim()
@@ -3052,7 +3058,11 @@ function AppInner() {
   }
   if (signalType === 'decline' || signalType === 'end') {
    closeCommunityPeer()
-   setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? null : prev))
+   setCommunityActiveCall(prev => {
+    if (!(prev && String(prev.callId || '') === String(signal.callId || ''))) return prev
+    setTimeout(() => returnToCommunityPhone(), 0)
+    return null
+   })
    return
   }
   if (signalType !== 'offer') return
@@ -3155,7 +3165,11 @@ function AppInner() {
     }
     if (signalType === 'decline' || signalType === 'end') {
      closeCommunityPeer()
-     setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? null : prev))
+     setCommunityActiveCall(prev => {
+      if (!(prev && String(prev.callId || '') === String(signal.callId || ''))) return prev
+      setTimeout(() => returnToCommunityPhone(), 0)
+      return null
+     })
     }
    } catch {}
   }
@@ -8174,8 +8188,8 @@ function AppInner() {
  <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 12px', background:'rgba(2,6,23,.86)', color:'#fff'}}>
  <strong>{communityActiveCall?.mode === 'video' ? 'Video Call' : 'Audio Call'}</strong>
  <div style={{display:'flex', gap:8}}>
-  <button type='button' className='btn' onClick={async()=>{ const current = communityActiveCall; try { if (current?.peerUserId) await sendCallSignal(current.peerUserId, { v:1, type:'end', mode:current.mode || 'audio', callId:current.callId || '', fromUserId:Number(me?.id || 0), toUserId:Number(current.peerUserId || 0), ts:Date.now() }, '📞') } catch {} setCommunityActiveCall(null) }}>Back</button>
-  <button type='button' className='btn' onClick={async()=>{ const current = communityActiveCall; try { if (current?.peerUserId) await sendCallSignal(current.peerUserId, { v:1, type:'end', mode:current.mode || 'audio', callId:current.callId || '', fromUserId:Number(me?.id || 0), toUserId:Number(current.peerUserId || 0), ts:Date.now() }, '📞') } catch {} setCommunityActiveCall(null) }}>End Call</button>
+  <button type='button' className='btn' onClick={async()=>{ const current = communityActiveCall; try { if (current?.peerUserId) await sendCallSignal(current.peerUserId, { v:1, type:'end', mode:current.mode || 'audio', callId:current.callId || '', fromUserId:Number(me?.id || 0), toUserId:Number(current.peerUserId || 0), ts:Date.now() }, '📞') } catch {} returnToCommunityPhone() }}>Back</button>
+  <button type='button' className='btn' onClick={async()=>{ const current = communityActiveCall; try { if (current?.peerUserId) await sendCallSignal(current.peerUserId, { v:1, type:'end', mode:current.mode || 'audio', callId:current.callId || '', fromUserId:Number(me?.id || 0), toUserId:Number(current.peerUserId || 0), ts:Date.now() }, '📞') } catch {} returnToCommunityPhone() }}>End Call</button>
  </div>
  </div>
  {(communityActiveCall?.status === 'calling' || communityActiveCall?.status === 'ringing')
