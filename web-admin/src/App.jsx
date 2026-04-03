@@ -6569,6 +6569,24 @@ function AppInner() {
  </div>
  </section>}
 
+ {offspringListOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:270, margin:0, background:'#f8fafc', overflow:'auto'}}>
+ <div className='records-shell'>
+  <div className='records-hero-card'>
+   <div><div className='records-eyebrow'>OFFSPRING</div><h3>Offspring</h3><p>{currentLivestockRecord?.name || 'Animal record'}</p></div>
+   <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setOffspringListOpen(false)}>Back</button></div>
+  </div>
+  <article className='panel records-panel'>
+   {(() => {
+    const all = Array.isArray(state?.livestockRecords) ? state.livestockRecords : []
+    const parentId = Number(currentLivestockRecord?.id || 0)
+    const kids = all.filter(r => Number(r?.sire_id) === parentId || Number(r?.dam_id) === parentId)
+    if (!kids.length) return <div className='helper-text'>No offspring records linked yet.</div>
+    return <div className='list'>{kids.map(k => <button type='button' key={`offspring-list-${k.id}`} className='list-row' onClick={()=>{ setSelectedOffspringRecord(k); setOffspringListOpen(false); setRecordsSectionOpen(prev => ({ ...prev, details: true, edit: false, create: false })) }}><span>{k.name || `Animal ${k.id}`} · {k.species || '--'} · {k.animal_type || '--'}</span><strong>Open</strong></button>)}</div>
+   })()}
+  </article>
+ </div>
+ </section>}
+
  {offspringReportOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:271, margin:0, background:'#f8fafc', overflow:'auto'}}>
  <div className='records-shell'>
   <div className='records-hero-card'>
