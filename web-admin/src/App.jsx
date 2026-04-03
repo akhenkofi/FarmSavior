@@ -2921,7 +2921,17 @@ function AppInner() {
  })
  const ensureCommunityPeer = async ({ mode = 'audio', callId, peerUserId }) => {
   if (communityPcRef.current) return communityPcRef.current
-  const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] })
+  const pc = new RTCPeerConnection({
+   iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    {
+     urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turns:openrelay.metered.ca:443'],
+     username: 'openrelayproject',
+     credential: 'openrelayproject'
+    }
+   ],
+   iceTransportPolicy: 'all'
+  })
   let local = communityLocalStreamRef.current
   const needVideo = mode === 'video'
   const hasUsable = !!local && local.getAudioTracks().some(t => t.readyState === 'live') && (!needVideo || local.getVideoTracks().some(t => t.readyState === 'live'))
@@ -2977,7 +2987,7 @@ function AppInner() {
    }
    if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
-    ;(stream.getTracks?.() || []).forEach(track => track.stop())
+    communityLocalStreamRef.current = stream
    }
    try { if (typeof window !== 'undefined' && 'localStorage' in window) localStorage.setItem('farmsavior_call_permissions_granted', '1') } catch {}
   } catch (err) {
