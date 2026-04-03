@@ -7931,7 +7931,7 @@ function AppInner() {
  <div className='helper-text' style={{marginBottom:8}}>Quick access to your inbox, calls, and active conversations.</div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
  <button type='button' className='btn btn-dark' onClick={()=>openCommunityInbox()}>{communityMessageThreads.length ? `Messages (${communityMessageThreads.length})` : 'Messages'}</button>
- <button type='button' className='btn' onClick={()=>openCommunityCalls()}>Call Log</button>
+ <button type='button' className='btn' onClick={()=>openCommunityCalls()}>Phone</button>
  {communityMessageView?.user?.user_id && <button type='button' className='btn' onClick={()=>openCommunityMessages(communityMessageView.user)}>Resume last chat</button>}
  </div>
  </article>
@@ -8019,7 +8019,7 @@ function AppInner() {
  </div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
  <button type='button' className='btn btn-dark' onClick={()=>openCommunityInbox()}>{communityMessageThreads.length ? `Messages (${communityMessageThreads.length})` : 'Messages'}</button>
- <button type='button' className='btn' onClick={()=>openCommunityCalls()}>Call Log</button>
+ <button type='button' className='btn' onClick={()=>openCommunityCalls()}>Phone</button>
  {communityMessageView?.user?.user_id && <button type='button' className='btn' onClick={()=>openCommunityMessages(communityMessageView.user)}>Resume chat</button>}
  </div>
  </div>
@@ -8045,10 +8045,10 @@ function AppInner() {
  </div>
  <button type='button' className='btn' onClick={closeCommunityMessages}>Close</button>
  </div>
- <div className='helper-text' style={{marginBottom:10}}>{communityInboxSection === 'calls' ? 'Recent call activity only.' : (communityMessageThreads.length ? `${communityMessageThreads.length} conversation${communityMessageThreads.length === 1 ? '' : 's'} ready` : 'No conversations yet - tap Message on a profile, search result, or post to start one.')}</div>
+ <div className='helper-text' style={{marginBottom:10}}>{communityInboxSection === 'calls' ? 'Phone activity only.' : (communityMessageThreads.length ? `${communityMessageThreads.length} conversation${communityMessageThreads.length === 1 ? '' : 's'} ready` : 'No conversations yet - tap Message on a profile, search result, or post to start one.')}</div>
  <div className='tabs' style={{marginBottom:8}}>
   <button className={`tab ${communityInboxSection === 'messages' ? 'active' : ''}`} onClick={()=>setCommunityInboxSection('messages')}>Messages</button>
-  <button className={`tab ${communityInboxSection === 'calls' ? 'active' : ''}`} onClick={()=>setCommunityInboxSection('calls')}>Calls</button>
+  <button className={`tab ${communityInboxSection === 'calls' ? 'active' : ''}`} onClick={()=>setCommunityInboxSection('calls')}>Phone</button>
  </div>
  {communityInboxSection === 'calls' && ((communityMessageThreads || []).filter(t=>{ const tx = String(t?.last_message?.text || '').toLowerCase(); return tx.includes('join my audio call:') || tx.includes('join my video call:') || tx.includes('meet.jit.si/') || tx.includes('call_signal:') }).slice(0,5).length > 0) && <div className='panel' style={{marginBottom:10, background:'#f8fafc', border:'1px solid #dbe6df'}}>
  <div style={{fontWeight:700, marginBottom:6}}>Recent Calls</div>
@@ -8071,9 +8071,9 @@ function AppInner() {
  <div className='community-messenger-main'>
  <div className='community-messenger-main-head'>
  <div>
- <div className='community-inbox-kicker'>{communityInboxSection === 'calls' ? 'Call Log' : 'Conversation'}</div>
- <h4 style={{margin:'4px 0 0 0'}}>{communityInboxSection === 'calls' ? 'Recent Calls' : (communityMessageView?.user?.full_name || 'Select a conversation')}</h4>
- <div className='helper-text'>{communityInboxSection === 'calls' ? 'Calls only (no messages).' : (communityMessageView?.user?.username ? `@${communityMessageView.user.username}` : (communityMessageView.loading ? 'Opening chat…' : 'Choose someone to start messaging.'))}</div>
+ <div className='community-inbox-kicker'>{communityInboxSection === 'calls' ? 'Phone' : 'Conversation'}</div>
+ <h4 style={{margin:'4px 0 0 0'}}>{communityInboxSection === 'calls' ? 'Phone' : (communityMessageView?.user?.full_name || 'Select a conversation')}</h4>
+ <div className='helper-text'>{communityInboxSection === 'calls' ? 'Phone only (no messages).' : (communityMessageView?.user?.username ? `@${communityMessageView.user.username}` : (communityMessageView.loading ? 'Opening chat…' : 'Choose someone to start messaging.'))}</div>
  </div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
  {communityInboxSection === 'messages' && communityMessageView.open && <button type='button' className='btn community-mobile-back-btn' onClick={()=>setCommunityMessageView({ open: false, loading: false, error: '', user: null, messages: [] })}>Back to inbox</button>}
@@ -8119,11 +8119,8 @@ function AppInner() {
  </>}
  </>}
  {communityInboxSection === 'calls' && <div className='panel' style={{marginTop:8}}>
-  <div style={{fontWeight:700, marginBottom:6}}>Recent Calls</div>
-  <div className='list'>
-   {(communityMessageThreads || []).filter(t=>{ const tx = String(t?.last_message?.text || '').toLowerCase(); return tx.includes('join my audio call:') || tx.includes('join my video call:') || tx.includes('meet.jit.si/') || tx.includes('call_signal:') }).slice(0,20).map((thread)=>{ const tx = String(thread?.last_message?.text || '').toLowerCase(); const mode = tx.includes('video') ? 'Video' : 'Audio'; const status = thread?.last_message?.is_mine ? 'Outgoing' : 'Missed'; return <div key={`recent-call-main-${thread?.user?.user_id}`} className='list-row'><span>{mode} • {status} • {thread?.user?.full_name || `User ${thread?.user?.user_id || ''}`}</span><span style={{fontSize:'.75rem', color:'#64748b'}}>{String(thread?.last_message?.created_at || '').replace('T',' ').slice(0,16)}</span></div> })}
-   {!((communityMessageThreads || []).filter(t=>{ const tx = String(t?.last_message?.text || '').toLowerCase(); return tx.includes('join my audio call:') || tx.includes('join my video call:') || tx.includes('meet.jit.si/') || tx.includes('call_signal:') }).length) && <div className='community-thread-preview community-thread-preview-empty'>No recent calls yet.</div>}
-  </div>
+  <div style={{fontWeight:700, marginBottom:6}}>Phone</div>
+  <div className='helper-text'>Use the Phone list on the left for clean call history. Open any row to jump to that user's Messages thread and start voice/video.</div>
  </div>}
  </div>
  </div>
