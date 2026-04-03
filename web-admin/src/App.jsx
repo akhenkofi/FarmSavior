@@ -5579,8 +5579,9 @@ function AppInner() {
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Full pillar access, both operating zones, health schedules, and structured implementation guidance.</div>
  <button className={`btn ${hasActiveUniversityAccess('poultry') ? '' : 'btn-dark'}`} onClick={(e)=>{ e.stopPropagation(); if (hasActiveUniversityAccess('poultry')) { showAlreadyActiveMessage('poultry'); openUniversityProduct('poultry'); return } startUniversityCheckout('poultry', 'basic', 'Poultry University Basic checkout') }}>{hasActiveUniversityAccess('poultry') ? 'Access active ✓' : 'Buy Basic'}</button>
  </div>
- <div className='panel' style={{padding:10, border:poultryTier==='pro' || poultryPlanPreview==='pro'?'2px solid #f59e0b':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setPoultryPlanPreview('pro')}>
- <strong>🏆 Professional — ₵120/mo</strong>
+ <div className='panel' style={{padding:10, border:poultryTier==='pro' || poultryPlanPreview==='pro'?'2px solid #f59e0b':'1px solid #e2e8f0', cursor:'pointer', background:poultryTier==='pro'?'linear-gradient(135deg,#fff7ed 0%,#fffbeb 50%,#ecfeff 100%)':'#fff', boxShadow:poultryTier==='pro'?'0 12px 28px rgba(245,158,11,.18)':'none'}} onClick={()=>setPoultryPlanPreview('pro')}>
+ <strong>🏆 Professional — ₵120/mo {poultryTier==='pro' ? '✓' : ''}</strong>
+ {poultryTier==='pro' && <div style={{fontSize:'.72rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',marginTop:4,color:'#92400e'}}>PRO MEMBER BADGE</div>}
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus operating briefs, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
  <button className={`btn ${hasActiveUniversityAccess('poultry') ? '' : 'btn-dark'}`} onClick={(e)=>{ e.stopPropagation(); if (hasActiveUniversityAccess('poultry')) { showAlreadyActiveMessage('poultry'); openUniversityProduct('poultry'); return } startUniversityCheckout('poultry', 'pro', 'Poultry University Professional checkout') }}>{hasActiveUniversityAccess('poultry') ? 'Professional access active ✓' : 'Buy Professional'}</button>
  </div>
@@ -5804,8 +5805,9 @@ function AppInner() {
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Full pillar access, both operating zones, and health schedule guidance.</div>
  <button className={`btn ${sheepTier==='basic' || sheepTier==='pro' ? '' : 'btn-dark'}`} onClick={(e)=>{e.stopPropagation(); if (sheepTier==='basic' || sheepTier==='pro') { setOpenSheepModule(1); return } startUniversityCheckout('sheep', 'basic', 'Sheep University Basic checkout')}}>{sheepTier==='basic' ? 'Current plan ✓' : sheepTier==='pro' ? 'Included in Professional ✓' : 'Unlock Basic'}</button>
  </div>
- <div className='panel' style={{padding:10, border:sheepTier==='pro' || sheepPlanPreview==='pro'?'2px solid #7c3aed':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setSheepPlanPreview('pro')}>
- <strong>🏆 Professional — ₵120/mo</strong>
+ <div className='panel' style={{padding:10, border:sheepTier==='pro' || sheepPlanPreview==='pro'?'2px solid #7c3aed':'1px solid #e2e8f0', cursor:'pointer', background:sheepTier==='pro'?'linear-gradient(135deg,#f5f3ff 0%,#faf5ff 55%,#fdf4ff 100%)':'#fff', boxShadow:sheepTier==='pro'?'0 12px 28px rgba(124,58,237,.18)':'none'}} onClick={()=>setSheepPlanPreview('pro')}>
+ <strong>🏆 Professional — ₵120/mo {sheepTier==='pro' ? '✓' : ''}</strong>
+ {sheepTier==='pro' && <div style={{fontSize:'.72rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',marginTop:4,color:'#6d28d9'}}>PRO MEMBER BADGE</div>}
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus operating briefs, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
  <button className={`btn ${sheepTier==='pro' ? '' : 'btn-dark'}`} onClick={(e)=>{e.stopPropagation(); if (sheepTier==='pro') return; startUniversityCheckout('sheep', 'pro', 'Sheep University Professional checkout')}}>{sheepTier==='pro' ? 'Professional active ✓' : 'Go Professional'}</button>
  </div>
@@ -5927,8 +5929,9 @@ function AppInner() {
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Full pillar access, both operating zones, and health schedule guidance.</div>
  <button className={`btn ${hasActiveUniversityAccess('goat') ? '' : 'btn-dark'}`} onClick={(e)=>{e.stopPropagation(); if (hasActiveUniversityAccess('goat')) { showAlreadyActiveMessage('goat'); openUniversityProduct('goat'); return } startUniversityCheckout('goat', 'basic', 'Goat University Basic checkout')}}>{hasActiveUniversityAccess('goat') ? 'Access active ✓' : 'Unlock Basic'}</button>
  </div>
- <div className='panel' style={{padding:10, border:goatTier==='pro' || goatPlanPreview==='pro'?'2px solid #0d9488':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setGoatPlanPreview('pro')}>
- <strong>🏆 Professional — ₵120/mo</strong>
+ <div className='panel' style={{padding:10, border:goatTier==='pro' || goatPlanPreview==='pro'?'2px solid #0d9488':'1px solid #e2e8f0', cursor:'pointer', background:goatTier==='pro'?'linear-gradient(135deg,#f0fdfa 0%,#ecfeff 55%,#f5fffb 100%)':'#fff', boxShadow:goatTier==='pro'?'0 12px 28px rgba(13,148,136,.18)':'none'}} onClick={()=>setGoatPlanPreview('pro')}>
+ <strong>🏆 Professional — ₵120/mo {goatTier==='pro' ? '✓' : ''}</strong>
+ {goatTier==='pro' && <div style={{fontSize:'.72rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',marginTop:4,color:'#0f766e'}}>PRO MEMBER BADGE</div>}
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus operating briefs, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
  <button className={`btn ${hasActiveUniversityAccess('goat') ? '' : 'btn-dark'}`} onClick={(e)=>{e.stopPropagation(); if (hasActiveUniversityAccess('goat')) { showAlreadyActiveMessage('goat'); openUniversityProduct('goat'); return } startUniversityCheckout('goat', 'pro', 'Goat University Professional checkout')}}>{hasActiveUniversityAccess('goat') ? 'Professional access active ✓' : 'Go Professional'}</button>
  </div>
@@ -6051,8 +6054,9 @@ function AppInner() {
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Full pillar access, both operating zones, and health schedule guidance.</div>
  <button className={`btn ${hasActiveUniversityAccess('cattle') ? '' : 'btn-dark'}`} onClick={(e)=>{e.stopPropagation(); if (hasActiveUniversityAccess('cattle')) { showAlreadyActiveMessage('cattle'); openUniversityProduct('cattle'); return } startUniversityCheckout('cattle', 'basic', 'Cattle University Basic checkout')}}>{hasActiveUniversityAccess('cattle') ? 'Access active ✓' : 'Unlock Basic'}</button>
  </div>
- <div className='panel' style={{padding:10, border:cattleTier==='pro' || cattlePlanPreview==='pro'?'2px solid #d97706':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setCattlePlanPreview('pro')}>
- <strong>🏆 Professional — ₵120/mo</strong>
+ <div className='panel' style={{padding:10, border:cattleTier==='pro' || cattlePlanPreview==='pro'?'2px solid #d97706':'1px solid #e2e8f0', cursor:'pointer', background:cattleTier==='pro'?'linear-gradient(135deg,#fffbeb 0%,#fff7ed 55%,#fef3c7 100%)':'#fff', boxShadow:cattleTier==='pro'?'0 12px 28px rgba(217,119,6,.18)':'none'}} onClick={()=>setCattlePlanPreview('pro')}>
+ <strong>🏆 Professional — ₵120/mo {cattleTier==='pro' ? '✓' : ''}</strong>
+ {cattleTier==='pro' && <div style={{fontSize:'.72rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',marginTop:4,color:'#92400e'}}>PRO MEMBER BADGE</div>}
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus operating briefs, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
  <button className={`btn ${hasActiveUniversityAccess('cattle') ? '' : 'btn-dark'}`} onClick={(e)=>{e.stopPropagation(); if (hasActiveUniversityAccess('cattle')) { showAlreadyActiveMessage('cattle'); openUniversityProduct('cattle'); return } startUniversityCheckout('cattle', 'pro', 'Cattle University Professional checkout')}}>{hasActiveUniversityAccess('cattle') ? 'Professional access active ✓' : 'Go Professional'}</button>
  </div>
