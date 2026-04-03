@@ -8068,7 +8068,7 @@ function AppInner() {
  {!communityMessageThreads.length && <div className='community-thread-preview community-thread-preview-empty'>No active conversations yet.</div>}
  </div>}
  </div>
- <div className='community-messenger-main'>
+ {communityInboxSection === 'messages' && <div className='community-messenger-main'>
  <div className='community-messenger-main-head'>
  <div>
  <div className='community-inbox-kicker'>{communityInboxSection === 'calls' ? 'Phone' : 'Conversation'}</div>
@@ -8118,8 +8118,7 @@ function AppInner() {
  <div style={{marginTop:4, fontSize:'.76rem', color:'#64748b'}}>Calls work best when microphone/camera permissions are allowed in browser settings.</div>
  </>}
  </>}
- {communityInboxSection === 'calls' && <div className='community-messenger-empty'><div className='empty-emoji'>📞</div><strong>Phone is selected</strong><span>Call log is shown on the left. Tap any row to open that contact in Messages.</span></div>}
- </div>
+ </div>}
  </div>
  </div>}
 
