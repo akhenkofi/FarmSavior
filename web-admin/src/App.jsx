@@ -6446,20 +6446,24 @@ function AppInner() {
    </div>
    <div style={{marginTop:10, display:'flex', justifyContent:'flex-end'}}><button type='button' className='btn btn-dark' onClick={async()=>{
     const txt = String(draftWeight || '').trim();
-    if (!txt || !currentLivestockRecord?.id) { setWeightComposerOpen(false); return }
-    const base = extractAttachmentsFromNotes(currentLivestockRecord?.notes || '')
-    const dateLabel = draftWeightDate || new Date().toISOString().slice(0,10)
-    const stamped = `[${dateLabel}] Weight: ${txt} kg`
-    const merged = `${base.text ? `${base.text}\n` : ''}${stamped}`
-    const nextNotes = mergeNotesWithAttachments(merged, { photos: base.photos || [], docs: base.docs || [] })
-    const payload = { ...mapLivestockRecordToEditForm(currentLivestockRecord), notes: nextNotes }
-    delete payload.id
-    await api.updateLivestockRecord(Number(currentLivestockRecord.id), payload)
-    await loadLivestockRecords()
-    setDraftWeight('')
-    setDraftWeightDate(new Date().toISOString().slice(0,10))
-    setWeightComposerOpen(false)
-    setNotesScreenOpen(true)
+    if (!txt || !currentLivestockRecord?.id) { alert('Enter a weight before saving.'); return }
+    try {
+     const base = extractAttachmentsFromNotes(currentLivestockRecord?.notes || '')
+     const dateLabel = draftWeightDate || new Date().toISOString().slice(0,10)
+     const stamped = `[${dateLabel}] Weight: ${txt} kg`
+     const merged = `${base.text ? `${base.text}\n` : ''}${stamped}`
+     const nextNotes = mergeNotesWithAttachments(merged, { photos: base.photos || [], docs: base.docs || [] })
+     const payload = { ...mapLivestockRecordToEditForm(currentLivestockRecord), notes: nextNotes }
+     delete payload.id
+     await api.updateLivestockRecord(Number(currentLivestockRecord.id), payload)
+     await loadLivestockRecords()
+     setDraftWeight('')
+     setDraftWeightDate(new Date().toISOString().slice(0,10))
+     setWeightComposerOpen(false)
+     setNotesScreenOpen(true)
+    } catch (err) {
+     alert(`Save weight failed: ${errMsg(err)}`)
+    }
    }}>Save Weight</button></div>
   </article>
  </div>
