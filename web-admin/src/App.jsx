@@ -6516,20 +6516,9 @@ function AppInner() {
    <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setMedicinesScreenOpen(false)}>Back</button><button type='button' className='btn btn-dark' onClick={()=>{ setMedicinesScreenOpen(false); setMedicineShotDraft({ medicine: '', dosage: '', notes: '', date: new Date().toISOString().slice(0,10) }); setMedicineShotOpen(true) }}>Add Medicine</button></div>
   </div>
   <article className='panel records-panel'>
-   <input className='input' placeholder='Search medicines' value={medicineSearch} onChange={e=>setMedicineSearch(e.target.value)} />
-   <div className='records-detail-section' style={{marginTop:10}}>Available medicines</div>
-   <div className='list'>
-    {(() => {
-      const meds = (DEFAULT_MEDICINE_LIBRARY_BY_SPECIES[String(currentLivestockRecord?.species || 'SHEEP').toUpperCase()] || DEFAULT_MEDICINE_LIBRARY_BY_SPECIES.SHEEP)
-        .filter(name => name.toLowerCase().includes(String(medicineSearch || '').toLowerCase()))
-      if (!meds.length) return <div className='helper-text'>No matches. Clear search to see full medicine list.</div>
-      return meds.map((name)=><button type='button' key={`med-lib-${name}`} className='list-row' onClick={()=>{ setMedicineShotDraft({ medicine: name, dosage: '', notes: '' }); setMedicinesScreenOpen(false); setMedicineShotOpen(true) }}><span>{name}</span><strong>＋</strong></button>)
-    })()}
-   </div>
-   <div className='records-detail-section' style={{marginTop:12}}>Saved medicine log</div>
    {(() => {
     const rows = String(extractAttachmentsFromNotes(currentLivestockRecord?.notes || '').text || '').split('\n').filter(line => /Medicine:/i.test(line)).reverse()
-    if (!rows.length) return <div className='helper-text'>No medicines logged yet.</div>
+    if (!rows.length) return <div className='helper-text'>No administered medicines logged yet.</div>
     return <div className='list'>{rows.map((row, idx)=><div key={`med-row-${idx}`} className='list-row'><span>{row}</span></div>)}</div>
    })()}
   </article>
