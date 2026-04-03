@@ -7934,16 +7934,11 @@ function AppInner() {
  <strong>{diseaseForm.target ? (animalOptions.find(x => x.value === diseaseForm.target)?.label || diseaseForm.target) : 'None'}</strong>
  <small>Choose the closest animal type before you submit a photo.</small>
  </div>
- <div className='disease-stat-card'>
- <span>Evidence strength</span>
- <strong>{diseaseResult?.analysis_signal || 'Pending'}</strong>
- <small>{diseaseResult?.insufficient_evidence ? 'Low evidence detected. Add clearer images or more context.' : 'Clear images improve confidence and treatment guidance.'}</small>
- </div>
- <div className='disease-stat-card'>
- <span>Latest confidence</span>
- <strong>{diseaseResult ? `${Math.round((diseaseResult.confidence || 0) * 100)}%` : '—'}</strong>
- <small>{diseaseResult?.diagnosis || 'Results will appear here after an analysis completes.'}</small>
- </div>
+ {diseaseResult && <div className='disease-stat-card'>
+ <span>Latest diagnosis</span>
+ <strong>{diseasePrimary.diagnosis}</strong>
+ <small>{Math.round((diseasePrimary.confidence || 0) * 100)}% confidence</small>
+ </div>}
  </div>
  <div className='disease-main-grid'>
  <div className='disease-form-column'>
