@@ -6369,7 +6369,7 @@ function AppInner() {
      <div className='records-detail-grid'>
       {livestockHistoryRows(currentLivestockRecord).history.map((row, idx) => {
        const [label, value, action] = row
-       const clickable = action === 'notes' || action === 'add-note' || action === 'weights-log' || action === 'add-weight' || action === 'medicines' || action === 'add-medicine' || action === 'famacha-records' || action === 'famacha' || action === 'ancestor-tree' || action === 'share-pdf' || action === 'offspring-report' || action === 'offspring-list' || action === 'add-mark' || action === 'add-flush'
+       const clickable = action === 'notes' || action === 'add-note' || action === 'weights-log' || action === 'add-weight' || action === 'medicines' || action === 'add-medicine' || action === 'famacha-records' || action === 'famacha' || action === 'ancestor-tree' || action === 'share-pdf' || action === 'offspring-report' || action === 'offspring-list' || action === 'add-mark' || action === 'add-flush' || action === 'add-ultrasound' || action === 'move-herd'
        return <button type='button' key={`history-${label}-${idx}`} className={`records-detail-row ${clickable ? 'clickable' : ''}`} onClick={() => {
         if (!clickable) return
         setRecordsSectionOpen(prev => ({ ...prev, details: false }))
@@ -6389,6 +6389,8 @@ function AppInner() {
         if (action === 'add-mark') setMarkComposerOpen(true)
         if (action === 'add-flush') setFlushDraft({ sire: currentLivestockRecord?.sire_id || '', dam: currentLivestockRecord?.dam_id || currentLivestockRecord?.id || '', markDate: new Date().toISOString().slice(0,10), dueDate: '', fertilizationType: 'Natural', flushDate: '', recipient: '', cidrIn: '', cidrOut: '', notes: '' })
         if (action === 'add-flush') setFlushComposerOpen(true)
+        if (action === 'add-ultrasound') { setUltrasoundDraft({ date: new Date().toISOString().slice(0,10), result: '', notes: '' }); setUltrasoundComposerOpen(true) }
+        if (action === 'move-herd') { setMoveHerdDraft({ herd: currentLivestockRecord?.pen_location || '', notes: '' }); setMoveHerdOpen(true) }
        }}>
         <span>{label}</span>
         <strong>{String(value).startsWith('(') ? '›' : value}</strong>
@@ -6565,6 +6567,64 @@ function AppInner() {
      alert(`Save medicine failed: ${errMsg(err)}`)
     }
    }}>Save Medicine</button></div>
+  </article>
+ </div>
+ </section>}
+
+ {moveHerdOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:266, margin:0, background:'#f8fafc', overflow:'auto'}}>
+ <div className='records-shell'>
+  <div className='records-hero-card'>
+   <div><div className='records-eyebrow'>LOCATION UPDATE</div><h3>Move to Different Herd</h3><p>{currentLivestockRecord?.name || 'Animal record'}</p></div>
+   <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setMoveHerdOpen(false)}>Cancel</button></div>
+  </div>
+  <article className='panel records-panel'>
+   <input className='input' placeholder='New herd/pen location' value={moveHerdDraft.herd || ''} onChange={e=>setMoveHerdDraft(prev=>({ ...prev, herd:e.target.value }))} />
+   <textarea className='input' rows={4} placeholder='Notes (optional)' value={moveHerdDraft.notes || ''} onChange={e=>setMoveHerdDraft(prev=>({ ...prev, notes:e.target.value }))} style={{marginTop:10}} />
+   <div style={{marginTop:10, display:'flex', justifyContent:'flex-end'}}><button type='button' className='btn btn-dark' onClick={async()=>{
+    if (!currentLivestockRecord?.id) return
+    const herd = String(moveHerdDraft.herd || '').trim()
+    if (!herd) { alert('Enter herd/pen location before saving.'); return }
+    try {
+     const payload = { ...mapLivestockRecordToEditForm(currentLivestockRecord), pen_location: herd }
+     await api.updateLivestockRecord(Number(currentLivestockRecord.id), payload)
+     await api.appendLivestockNote(Number(currentLivestockRecord.id), `[${new Date().toISOString().slice(0,10)}] Moved to herd/pen: ${herd}${moveHerdDraft.notes ? ` | Notes: ${moveHerdDraft.notes}` : ''}`)
+     await loadLivestockRecords()
+     setMoveHerdOpen(false)
+    } catch (err) {
+     alert(`Move herd failed: ${errMsg(err)}`)
+    }
+   }}>Save Move</button></div>
+  </article>
+ </div>
+ </section>}
+
+ {ultrasoundComposerOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:267, margin:0, background:'#f8fafc', overflow:'auto'}}>
+ <div className='records-shell'>
+  <div className='records-hero-card'>
+   <div><div className='records-eyebrow'>BREEDING ENTRY</div><h3>Add Ultrasound</h3><p>{currentLivestockRecord?.name || 'Animal record'}</p></div>
+   <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setUltrasoundComposerOpen(false)}>Cancel</button></div>
+  </div>
+  <article className='panel records-panel'>
+   <div className='row2' style={{gap:10}}>
+    <input className='input' type='date' value={ultrasoundDraft.date || ''} onChange={e=>setUltrasoundDraft(prev=>({ ...prev, date:e.target.value }))} />
+    <select className='input' value={ultrasoundDraft.result || ''} onChange={e=>setUltrasoundDraft(prev=>({ ...prev, result:e.target.value }))}>
+     <option value=''>Result</option><option value='Pregnant'>Pregnant</option><option value='Open'>Open</option><option value='Needs Recheck'>Needs Recheck</option>
+    </select>
+   </div>
+   <textarea className='input' rows={4} placeholder='Notes (optional)' value={ultrasoundDraft.notes || ''} onChange={e=>setUltrasoundDraft(prev=>({ ...prev, notes:e.target.value }))} style={{marginTop:10}} />
+   <div style={{marginTop:10, display:'flex', justifyContent:'flex-end'}}><button type='button' className='btn btn-dark' onClick={async()=>{
+    if (!currentLivestockRecord?.id) return
+    if (!ultrasoundDraft.result) { alert('Select ultrasound result before saving.'); return }
+    const stamped = `[${ultrasoundDraft.date || new Date().toISOString().slice(0,10)}] Ultrasound: ${ultrasoundDraft.result}${ultrasoundDraft.notes ? ` | Notes: ${ultrasoundDraft.notes}` : ''}`
+    try {
+     await api.appendLivestockNote(Number(currentLivestockRecord.id), stamped)
+     await loadLivestockRecords()
+     setUltrasoundDraft({ date: new Date().toISOString().slice(0,10), result: '', notes: '' })
+     setUltrasoundComposerOpen(false)
+    } catch (err) {
+     alert(`Save ultrasound failed: ${errMsg(err)}`)
+    }
+   }}>Save Ultrasound</button></div>
   </article>
  </div>
  </section>}
