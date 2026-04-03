@@ -5548,7 +5548,13 @@ function AppInner() {
   setLivestockView('list')
   alert('Livestock listing published successfully.')
  } catch (err) {
-  alert(`Could not publish listing: ${errMsg(err)}`)
+  const msg = String(errMsg(err) || '')
+  if (msg.toLowerCase().includes('verification')) {
+   const goNow = confirm('To publish livestock listings, complete ID verification first.\n\nGo to My Account → Verification now?')
+   if (goNow) setActive('onboarding')
+   return
+  }
+  alert(`Could not publish listing: ${msg}`)
  }
  }}>
  <div className='panel' style={{padding:10, background:'#f8fafc', border:'1px solid #e2e8f0'}}>
