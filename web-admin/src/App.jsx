@@ -7929,9 +7929,9 @@ function AppInner() {
  <article className='panel' style={{border:'1px solid #dbeafe', background:'linear-gradient(180deg,#eff6ff 0%,#f8fafc 100%)'}}>
  <h4 style={{marginTop:0}}>Messages & Calls</h4>
  <div className='helper-text' style={{marginBottom:8}}>Quick access to your inbox, calls, and active conversations.</div>
- <div style={{display:'flex', gap:8, flexWrap:'wrap', width:'100%'}}>
- <button type='button' className='btn btn-dark' style={{flex:'1 1 0', minWidth:120}} onClick={()=>openCommunityInbox()}>{communityMessageThreads.length ? `Messages (${communityMessageThreads.length})` : 'Messages'}</button>
- <button type='button' className='btn' style={{flex:'1 1 0', minWidth:120}} onClick={()=>openCommunityCalls()}>Phone</button>
+ <div style={{display:'flex', gap:8, flexWrap:'nowrap', width:'100%', alignItems:'center'}}>
+ <button type='button' className='btn btn-dark' style={{flex:'1 1 0', minWidth:120, height:44, minHeight:44, maxHeight:44}} onClick={()=>openCommunityInbox()}>{communityMessageThreads.length ? `Messages (${communityMessageThreads.length})` : 'Messages'}</button>
+ <button type='button' className='btn' style={{flex:'1 1 0', minWidth:120, height:44, minHeight:44, maxHeight:44}} onClick={()=>openCommunityCalls()}>Phone</button>
  {communityMessageView?.user?.user_id && <button type='button' className='btn' onClick={()=>openCommunityMessages(communityMessageView.user)}>Resume last chat</button>}
  </div>
  </article>
@@ -8017,9 +8017,9 @@ function AppInner() {
  <h4 style={{margin:'4px 0 6px 0'}}>Open a real inbox, not a hidden thread.</h4>
  <div className='helper-text'>Tap Message from any profile, search result, or post to jump straight into a focused conversation view with loading, send, and close states.</div>
  </div>
- <div style={{display:'flex', gap:8, flexWrap:'wrap', width:'100%'}}>
- <button type='button' className='btn btn-dark' style={{flex:'1 1 0', minWidth:120}} onClick={()=>openCommunityInbox()}>{communityMessageThreads.length ? `Messages (${communityMessageThreads.length})` : 'Messages'}</button>
- <button type='button' className='btn' style={{flex:'1 1 0', minWidth:120}} onClick={()=>openCommunityCalls()}>Phone</button>
+ <div style={{display:'flex', gap:8, flexWrap:'nowrap', width:'100%', alignItems:'center'}}>
+ <button type='button' className='btn btn-dark' style={{flex:'1 1 0', minWidth:120, height:44, minHeight:44, maxHeight:44}} onClick={()=>openCommunityInbox()}>{communityMessageThreads.length ? `Messages (${communityMessageThreads.length})` : 'Messages'}</button>
+ <button type='button' className='btn' style={{flex:'1 1 0', minWidth:120, height:44, minHeight:44, maxHeight:44}} onClick={()=>openCommunityCalls()}>Phone</button>
  {communityMessageView?.user?.user_id && <button type='button' className='btn' onClick={()=>openCommunityMessages(communityMessageView.user)}>Resume chat</button>}
  </div>
  </div>
