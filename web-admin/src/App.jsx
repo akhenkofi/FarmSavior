@@ -2910,10 +2910,21 @@ function AppInner() {
     communityRemoteVideoRef.current.srcObject = remoteStream
     communityRemoteVideoRef.current.play?.().catch(()=>{})
    }
+   setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(callId || '') ? { ...prev, status: 'connected' } : prev))
   }
   pc.onicecandidate = async (ev) => {
    if (!ev.candidate || !peerUserId) return
    try { await sendCallSignal(peerUserId, { v:1, type:'rtc_ice', mode, callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now(), candidate: ev.candidate }) } catch {}
+  }
+  pc.onconnectionstatechange = () => {
+   const st = String(pc.connectionState || '')
+   if (st === 'connected') {
+    setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(callId || '') ? { ...prev, status: 'connected' } : prev))
+   }
+   if (st === 'failed' || st === 'disconnected' || st === 'closed') {
+    closeCommunityPeer()
+    setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(callId || '') ? null : prev))
+   }
   }
   communityPcRef.current = pc
   return pc
