@@ -6419,7 +6419,11 @@ function AppInner() {
    <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setNotesScreenOpen(false)}>Back</button><button type='button' className='btn btn-dark' onClick={()=>{ setNotesScreenOpen(false); setDraftNote(''); setNotesComposerOpen(true) }}>Add Note</button></div>
   </div>
   <article className='panel records-panel'>
-   <div style={{whiteSpace:'pre-wrap'}}>{extractAttachmentsFromNotes(currentLivestockRecord?.notes || '').text || 'No notes yet.'}</div>
+   <div style={{whiteSpace:'pre-wrap'}}>{(() => {
+    const text = String(extractAttachmentsFromNotes(currentLivestockRecord?.notes || '').text || '')
+    const lines = text.split('\n').filter(line => line.trim() && !/Weight:\s*[0-9.]+\s*kg/i.test(line))
+    return lines.length ? lines.join('\n') : 'No notes yet.'
+   })()}</div>
   </article>
  </div>
  </section>}
