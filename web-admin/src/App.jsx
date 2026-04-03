@@ -5543,16 +5543,29 @@ function AppInner() {
  await load();
  setLivestockView('list')
  }}>
- <div className='row2' style={{gap:10}}>
- <input className='input' placeholder='Livestock type' value={livestockForm.livestock_type} onChange={e => setLivestockForm({ ...livestockForm, livestock_type: e.target.value })} required />
- <input className='input' placeholder='Location' value={livestockForm.location} onChange={e => setLivestockForm({ ...livestockForm, location: e.target.value })} />
+ <div className='panel' style={{padding:10, background:'#f8fafc', border:'1px solid #e2e8f0'}}>
+  <div style={{fontSize:'.75rem', textTransform:'uppercase', letterSpacing:'.08em', color:'#334155', fontWeight:800}}>Step 1 • Animal details</div>
+  <div className='row2' style={{gap:10, marginTop:8}}>
+   <input className='input' list='livestock-type-options' placeholder='Livestock type (e.g., Sheep, Goat, Cattle)' value={livestockForm.livestock_type} onChange={e => setLivestockForm({ ...livestockForm, livestock_type: e.target.value })} required />
+   <input className='input' placeholder='Location / area' value={livestockForm.location} onChange={e => setLivestockForm({ ...livestockForm, location: e.target.value })} />
+  </div>
+  <datalist id='livestock-type-options'>
+   {['Sheep','Goat','Cattle','Poultry','Pig','Rabbit'].map(x => <option key={`livestock-type-${x}`} value={x} />)}
+  </datalist>
  </div>
- <div className='row2' style={{gap:10}}>
- <input className='input' placeholder='Quantity' value={livestockForm.quantity} onChange={e => setLivestockForm({ ...livestockForm, quantity: e.target.value })} required />
- <input className='input' placeholder='Unit price' value={livestockForm.unit_price} onChange={e => setLivestockForm({ ...livestockForm, unit_price: e.target.value })} required />
+ <div className='panel' style={{padding:10, background:'#f8fafc', border:'1px solid #e2e8f0'}}>
+  <div style={{fontSize:'.75rem', textTransform:'uppercase', letterSpacing:'.08em', color:'#334155', fontWeight:800}}>Step 2 • Pricing & stock</div>
+  <div className='row2' style={{gap:10, marginTop:8}}>
+   <input className='input' type='number' min='1' placeholder='Quantity available' value={livestockForm.quantity} onChange={e => setLivestockForm({ ...livestockForm, quantity: e.target.value })} required />
+   <input className='input' type='number' min='0' placeholder='Unit price (GHS)' value={livestockForm.unit_price} onChange={e => setLivestockForm({ ...livestockForm, unit_price: e.target.value })} required />
+  </div>
  </div>
- <ListingImagePicker label='Livestock photos' limit={MAX_IMAGE_COUNTS.livestock} images={livestockImages} setImages={setLivestockImages} />
- <button className='btn btn-dark'>Create Livestock Listing</button>
+ <div className='panel' style={{padding:10, background:'#f8fafc', border:'1px solid #e2e8f0'}}>
+  <div style={{fontSize:'.75rem', textTransform:'uppercase', letterSpacing:'.08em', color:'#334155', fontWeight:800}}>Step 3 • Photos</div>
+  <div className='helper-text' style={{marginTop:4}}>Clear front + side shots improve buyer trust and close rate.</div>
+  <ListingImagePicker label='Livestock photos' limit={MAX_IMAGE_COUNTS.livestock} images={livestockImages} setImages={setLivestockImages} />
+ </div>
+ <button className='btn btn-dark'>Publish Livestock Listing</button>
  </form>
  </article>}
 
