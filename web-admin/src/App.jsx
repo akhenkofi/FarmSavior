@@ -7889,6 +7889,14 @@ function AppInner() {
  </section>}
 
  {active === 'ai-disease' && <section className='disease-shell'>
+ {diseaseAnalyzing && <div style={{position:'fixed', inset:0, zIndex:520, background:'rgba(2,6,23,.72)', display:'flex', alignItems:'center', justifyContent:'center', padding:20}}>
+  <div style={{width:'min(420px, 100%)', background:'linear-gradient(135deg,#020617 0%,#0f172a 50%,#1d4ed8 100%)', border:'1px solid rgba(103,232,249,.38)', borderRadius:18, padding:'24px 20px', textAlign:'center', color:'#e2e8f0', boxShadow:'0 24px 60px rgba(2,6,23,.6)'}}>
+   <img src='/assets/farmsavior-icon-only.png' alt='FarmSavior' style={{width:76, height:76, borderRadius:14, margin:'0 auto 12px', display:'block'}} />
+   <div style={{fontSize:'.72rem', letterSpacing:'.1em', textTransform:'uppercase', color:'#67e8f9', fontWeight:800}}>FarmSavior Medical AI</div>
+   <h4 style={{margin:'8px 0 6px', color:'#fff'}}>Analyzing Case…</h4>
+   <p style={{margin:0, color:'#cbd5e1'}}>Scanning clinical patterns, comparing disease signatures, and generating guided treatment pathways.</p>
+  </div>
+ </div>}
  <div className='disease-hero'>
  <div>
  <div className='disease-eyebrow'>AI LIVESTOCK HEALTH</div>
