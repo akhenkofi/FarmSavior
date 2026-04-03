@@ -1252,10 +1252,12 @@ const livestockHistoryRows = (record) => {
  const notesCount = record.notes ? 1 : 0
  const medsCount = record.treatment_entry ? 1 : 0
  const offspringCount = Number(record.litter_size || 0)
+ const weightCount = ((String(record.notes || '').match(/Weight:\s*[0-9.]+\s*kg/gi)) || []).length
  return {
  history: [
  ['Notes', `(${notesCount})`, 'notes'],
  ['Add Note', '›', 'add-note'],
+ ['Weights', `(${weightCount})`, 'weights-log'],
  ['Add Weight', '›', 'add-weight'],
  ['Medicines', `(${medsCount})`, 'medicines'],
  ['Add Medicine', '›', 'add-medicine'],
@@ -3020,6 +3022,7 @@ function AppInner() {
  const [breederUploads, setBreederUploads] = useState({ photos: [], docs: [] })
  const [breederReportOpen, setBreederReportOpen] = useState(false)
  const [notesScreenOpen, setNotesScreenOpen] = useState(false)
+ const [weightsScreenOpen, setWeightsScreenOpen] = useState(false)
  const [notesComposerOpen, setNotesComposerOpen] = useState(false)
  const [weightComposerOpen, setWeightComposerOpen] = useState(false)
  const [medicinesScreenOpen, setMedicinesScreenOpen] = useState(false)
@@ -3043,7 +3046,7 @@ function AppInner() {
  const [customMedicineComposerOpen, setCustomMedicineComposerOpen] = useState(false)
  const [customMedicineName, setCustomMedicineName] = useState('')
  const [actionBusy, setActionBusy] = useState('')
- const appScreenOpen = notesComposerOpen || weightComposerOpen || medicinesScreenOpen || medicineShotOpen || medicineChooserOpen || customMedicineComposerOpen || famachaComposerOpen || ancestorTreeOpen || ancestorPdfOpen || offspringReportOpen || offspringListOpen || markComposerOpen || flushComposerOpen || ultrasoundComposerOpen || moveHerdOpen || selectedBreederDetail || breederReportOpen || notesScreenOpen || communityInboxOpen
+ const appScreenOpen = notesComposerOpen || weightsScreenOpen || weightComposerOpen || medicinesScreenOpen || medicineShotOpen || medicineChooserOpen || customMedicineComposerOpen || famachaComposerOpen || ancestorTreeOpen || ancestorPdfOpen || offspringReportOpen || offspringListOpen || markComposerOpen || flushComposerOpen || ultrasoundComposerOpen || moveHerdOpen || selectedBreederDetail || breederReportOpen || notesScreenOpen || communityInboxOpen
  const [notesSearch, setNotesSearch] = useState('')
  const [draftNote, setDraftNote] = useState('')
  const [draftWeight, setDraftWeight] = useState('')
@@ -6361,6 +6364,7 @@ function AppInner() {
         setRecordsSectionOpen(prev => ({ ...prev, details: false }))
         if (action === 'notes') setNotesScreenOpen(true)
         if (action === 'add-note') { setDraftNote(''); setNotesComposerOpen(true) }
+        if (action === 'weights-log') setWeightsScreenOpen(true)
         if (action === 'add-weight') { setDraftWeight(''); setDraftWeightDate(new Date().toISOString().slice(0,10)); setWeightComposerOpen(true) }
         if (action === 'medicines') setMedicinesScreenOpen(true)
         if (action === 'add-medicine') { setMedicineShotDraft({ medicine: '', dosage: '', notes: '' }); setMedicineShotOpen(true) }
@@ -6416,6 +6420,22 @@ function AppInner() {
   </div>
   <article className='panel records-panel'>
    <div style={{whiteSpace:'pre-wrap'}}>{extractAttachmentsFromNotes(currentLivestockRecord?.notes || '').text || 'No notes yet.'}</div>
+  </article>
+ </div>
+ </section>}
+
+ {weightsScreenOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:265, margin:0, background:'#f8fafc', overflow:'auto'}}>
+ <div className='records-shell'>
+  <div className='records-hero-card'>
+   <div><div className='records-eyebrow'>WEIGHT HISTORY</div><h3>Weights</h3><p>{currentLivestockRecord?.name || 'Animal record'}</p></div>
+   <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setWeightsScreenOpen(false)}>Back</button><button type='button' className='btn btn-dark' onClick={()=>{ setWeightsScreenOpen(false); setDraftWeight(''); setDraftWeightDate(new Date().toISOString().slice(0,10)); setWeightComposerOpen(true) }}>Add Weight</button></div>
+  </div>
+  <article className='panel records-panel'>
+   {(() => {
+    const rows = String(extractAttachmentsFromNotes(currentLivestockRecord?.notes || '').text || '').split('\n').filter(line => /Weight:\s*[0-9.]+\s*kg/i.test(line)).reverse()
+    if (!rows.length) return <div className='helper-text'>No saved weights yet.</div>
+    return <div className='list'>{rows.map((row, idx)=><div key={`weight-row-${idx}`} className='list-row'><span>{row}</span></div>)}</div>
+   })()}
   </article>
  </div>
  </section>}
