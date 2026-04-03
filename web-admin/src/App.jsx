@@ -5565,9 +5565,9 @@ function AppInner() {
  <strong style={{display:'block',marginTop:4}}>{((poultryTier==='pro') || String(poultrySubscription?.subscription?.plan_code || '').toLowerCase()==='pro') ? 'Poultry University · PRO ✓' : 'Poultry University'}</strong>
  <div style={{marginTop:6,color:((poultryTier==='pro') || String(poultrySubscription?.subscription?.plan_code || '').toLowerCase()==='pro') ? 'rgba(255,255,255,.88)' : '#334155'}}>{((poultryTier==='pro') || String(poultrySubscription?.subscription?.plan_code || '').toLowerCase()==='pro') ? 'Professional access is active. Full Poultry University modules and premium execution tools are unlocked.' : 'This school brings brooding, grow-out, layer management, biosecurity, flock health, and commercial discipline into one structured operating reference for serious poultry teams.'}</div>
  </div>
- <article className='panel' style={{marginBottom:10}}>
- <h4 style={{marginTop:0}}>Access & Delivery Format</h4>
- <p style={{fontSize:'.85rem',color:'#475569'}}>Standalone professional purchase also available (₵200–₵1,000 depending on package depth).</p>
+ <details className='panel' style={{marginBottom:10}}>
+ <summary style={{fontWeight:700, cursor:'pointer'}}>Access & Delivery Format</summary>
+ <p style={{fontSize:'.85rem',color:'#475569',marginTop:8}}>Standalone professional purchase also available (₵200–₵1,000 depending on package depth).</p>
  <div className='three-col'>
  <div className='panel' style={{padding:10, border:poultryTier==='free' || poultryPlanPreview==='free'?'2px solid #64748b':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setPoultryPlanPreview('free')}>
  <strong>🆓 Preview Access</strong>
@@ -5597,7 +5597,7 @@ function AppInner() {
  {poultrySubscription?.subscription?.status === 'PENDING_PAYMENT' && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}><strong>Payment pending.</strong> Reference: {poultrySubscription.subscription.reference}. <button className='btn btn-dark' style={{marginLeft:8}} onClick={async()=>{ const v = await api.verifyPoultryUniversitySubscription(poultrySubscription.subscription.reference); const tier = v.tier || 'free'; setPoultryTier(tier); const meSub = await api.fetchPoultryUniversitySubscriptionMe().catch(()=>({ tier, subscription: poultrySubscription.subscription })); setPoultrySubscription(prev => ({ ...prev, tier: meSub.tier || tier, subscription: meSub.subscription || prev.subscription })); setPoultryBillingMsg(v.message || 'Verification checked.'); }}>Verify Payment</button></div>}
  {poultrySubscription?.subscription?.status === 'ACTIVE' && <div className='panel' style={{marginTop:8,padding:8,background:'#ecfeff',border:'1px solid #99f6e4'}}><strong>{String(poultrySubscription.subscription.plan_code || '').toUpperCase()} active.</strong> Server-side subscription verified.</div>}
  {poultryBillingMsg && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}>{poultryBillingMsg}</div>}
- </article>
+ </details>
  {poultryTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#f5f3ff',border:'1px solid #ddd6fe'}}><strong>Preview access active.</strong> The opening pillar is available now; the full operating program unlocks with the higher plan.</div>}
 
  <div className='panel'>
@@ -5792,9 +5792,9 @@ function AppInner() {
  <p style={{fontSize:'.85rem',color:'#6b21a8'}}>Boboji hardiness + Balami/Uda growth + Ladoum/Dorper finish = Ghana Sheep Breed target line.</p>
  </article>
 
- <article className='panel' style={{marginBottom:10}}>
- <h4 style={{marginTop:0}}>Access & Delivery Format</h4>
- <div className='three-col'>
+ <details className='panel' style={{marginBottom:10}}>
+ <summary style={{fontWeight:700, cursor:'pointer'}}>Access & Delivery Format</summary>
+ <div className='three-col' style={{marginTop:8}}>
  <div className='panel' style={{padding:10, border:sheepTier==='free' || sheepPlanPreview==='free'?'2px solid #7c3aed':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setSheepPlanPreview('free')}>
  <strong>🆓 Preview Access</strong>
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Program overview, breed cards, KPIs, and opening pillar.</div>
@@ -5819,7 +5819,7 @@ function AppInner() {
  </div>
  {sheepPlanPreview !== 'free' && sheepTier === 'free' && <div style={{marginTop:8}}><button className='btn btn-dark' onClick={()=>startUniversityCheckout('sheep', sheepPlanPreview, `Sheep University ${sheepPlanPreview === 'pro' ? 'Professional' : 'Basic'} checkout`)}>{sheepPlanPreview === 'pro' ? 'Upgrade to Professional' : 'Upgrade to Basic'}</button></div>}
  </div>
- </article>
+ </details>
  {universitySubscriptions.sheep?.subscription?.status === 'PENDING_PAYMENT' && sheepTier === 'free' && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}><strong>Payment pending.</strong> Reference: {universitySubscriptions.sheep.subscription.reference}. <button className='btn btn-dark' style={{marginLeft:8}} onClick={()=>verifyUniversityCheckout('sheep')}>Verify Payment</button></div>}
  {universitySubscriptions.sheep?.subscription?.status === 'ACTIVE' && <div className='panel' style={{marginTop:8,padding:10,background:'linear-gradient(180deg,#ecfeff 0%,#f0fdfa 100%)',border:'1px solid #99f6e4'}}><strong>{String(universitySubscriptions.sheep.subscription.plan_code || '').toUpperCase()} active.</strong> Payment verified, premium content unlocked, and Sheep University is now in paid mode.</div>}
  {!!universityBillingMsg.sheep && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}>{universityBillingMsg.sheep}</div>}
@@ -5916,9 +5916,9 @@ function AppInner() {
  <p style={{fontSize:'.85rem',color:'#0f766e'}}>WAD hardiness + Sahelian height/frame + Boer/Kalahari/Savannah finish.</p>
  </article>
 
- <article className='panel' style={{marginBottom:10}}>
- <h4 style={{marginTop:0}}>Access & Delivery Format</h4>
- <div className='three-col'>
+ <details className='panel' style={{marginBottom:10}}>
+ <summary style={{fontWeight:700, cursor:'pointer'}}>Access & Delivery Format</summary>
+ <div className='three-col' style={{marginTop:8}}>
  <div className='panel' style={{padding:10, border:goatTier==='free' || goatPlanPreview==='free'?'2px solid #0d9488':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setGoatPlanPreview('free')}>
  <strong>🆓 Preview Access</strong>
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Program overview, breed cards, KPIs, and opening pillar.</div>
@@ -5943,7 +5943,7 @@ function AppInner() {
  </div>
  {goatPlanPreview !== 'free' && <div style={{marginTop:8}}><button className={`btn ${hasActiveUniversityAccess('goat') ? '' : 'btn-dark'}`} onClick={()=>{ if (hasActiveUniversityAccess('goat')) { showAlreadyActiveMessage('goat'); openUniversityProduct('goat'); return } startUniversityCheckout('goat', goatPlanPreview, `Goat University ${goatPlanPreview === 'pro' ? 'Professional' : 'Basic'} checkout`) }}>{hasActiveUniversityAccess('goat') ? 'Access active ✓' : (goatPlanPreview === 'pro' ? 'Upgrade to Professional' : 'Upgrade to Basic')}</button></div>}
  </div>
- </article>
+ </details>
  {universitySubscriptions.goat?.subscription?.status === 'PENDING_PAYMENT' && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}><strong>Payment pending.</strong> Reference: {universitySubscriptions.goat.subscription.reference}. <button className='btn btn-dark' style={{marginLeft:8}} onClick={()=>verifyUniversityCheckout('goat')}>Verify Payment</button></div>}
  {universitySubscriptions.goat?.subscription?.status === 'ACTIVE' && <div className='panel' style={{marginTop:8,padding:8,background:'#ecfeff',border:'1px solid #99f6e4'}}><strong>{String(universitySubscriptions.goat.subscription.plan_code || '').toUpperCase()} active.</strong> All Goat University modules are unlocked for your plan.</div>}
  {!!universityBillingMsg.goat && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}>{universityBillingMsg.goat}</div>}
@@ -6041,9 +6041,9 @@ function AppInner() {
  </div>
  </article>
 
- <article className='panel' style={{marginBottom:10}}>
- <h4 style={{marginTop:0}}>Access & Delivery Format</h4>
- <div className='three-col'>
+ <details className='panel' style={{marginBottom:10}}>
+ <summary style={{fontWeight:700, cursor:'pointer'}}>Access & Delivery Format</summary>
+ <div className='three-col' style={{marginTop:8}}>
  <div className='panel' style={{padding:10, border:cattleTier==='free' || cattlePlanPreview==='free'?'2px solid #d97706':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setCattlePlanPreview('free')}>
  <strong>🆓 Preview Access</strong>
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Program overview, breed cards, KPIs, and opening pillar.</div>
@@ -6068,7 +6068,7 @@ function AppInner() {
  </div>
  {cattlePlanPreview !== 'free' && <div style={{marginTop:8}}><button className={`btn ${hasActiveUniversityAccess('cattle') ? '' : 'btn-dark'}`} onClick={()=>{ if (hasActiveUniversityAccess('cattle')) { showAlreadyActiveMessage('cattle'); openUniversityProduct('cattle'); return } startUniversityCheckout('cattle', cattlePlanPreview, `Cattle University ${cattlePlanPreview === 'pro' ? 'Professional' : 'Basic'} checkout`) }}>{hasActiveUniversityAccess('cattle') ? 'Access active ✓' : (cattlePlanPreview === 'pro' ? 'Upgrade to Professional' : 'Upgrade to Basic')}</button></div>}
  </div>
- </article>
+ </details>
  {universitySubscriptions.cattle?.subscription?.status === 'PENDING_PAYMENT' && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}><strong>Payment pending.</strong> Reference: {universitySubscriptions.cattle.subscription.reference}. <button className='btn btn-dark' style={{marginLeft:8}} onClick={()=>verifyUniversityCheckout('cattle')}>Verify Payment</button></div>}
  {universitySubscriptions.cattle?.subscription?.status === 'ACTIVE' && <div className='panel' style={{marginTop:8,padding:8,background:'#ecfeff',border:'1px solid #99f6e4'}}><strong>{String(universitySubscriptions.cattle.subscription.plan_code || '').toUpperCase()} active.</strong> Server-side subscription verified.</div>}
  {!!universityBillingMsg.cattle && <div className='panel' style={{marginTop:8,padding:8,background:'#eff6ff',border:'1px solid #bfdbfe'}}>{universityBillingMsg.cattle}</div>}
