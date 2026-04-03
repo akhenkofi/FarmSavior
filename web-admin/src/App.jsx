@@ -3585,6 +3585,21 @@ function AppInner() {
  const [diseaseImagePreview, setDiseaseImagePreview] = useState('')
  const [diseaseResult, setDiseaseResult] = useState(null)
  const [diseaseAnalyzing, setDiseaseAnalyzing] = useState(false)
+ const diseasePrimary = useMemo(() => {
+  const baseDiagnosis = diseaseResult?.diagnosis || ''
+  const baseConfidence = Number(diseaseResult?.confidence || 0)
+  const top = (Array.isArray(diseaseResult?.top_matches) ? diseaseResult.top_matches : []).reduce((best, item) => {
+   const c = Number(item?.confidence || 0)
+   return c > Number(best?.confidence || -1) ? item : best
+  }, null)
+  const topConfidence = Number(top?.confidence || 0)
+  const useTop = top && topConfidence > baseConfidence
+  return {
+   diagnosis: useTop ? (top?.diagnosis || baseDiagnosis || 'No diagnosis returned') : (baseDiagnosis || top?.diagnosis || 'No diagnosis returned'),
+   confidence: useTop ? topConfidence : (baseConfidence || topConfidence || 0),
+   overriddenByTopMatch: !!useTop
+  }
+ }, [diseaseResult])
  const [plantIdForm, setPlantIdForm] = useState({ user_id: 1, image_url: '', file_name: '', context_hint: '', target_livestock: 'goats' })
  const [plantIdPreview, setPlantIdPreview] = useState('')
  const [plantIdResult, setPlantIdResult] = useState(null)
@@ -8024,14 +8039,14 @@ function AppInner() {
  <div className='disease-panel-title'>Primary assessment</div>
  <div className='helper-text'>Structured result based on the uploaded livestock image and the symptom notes you provided.</div>
  </div>
- <div className='disease-confidence-badge'>{Math.round((diseaseResult.confidence || 0) * 100)}% confidence</div>
+ <div className='disease-confidence-badge'>{Math.round((diseasePrimary.confidence || 0) * 100)}% confidence</div>
  </div>
  <div className='disease-primary-card'>
  <div>
  <div className='disease-primary-label'>Likely condition</div>
- <div className='disease-primary-diagnosis'>{diseaseResult.diagnosis || 'No diagnosis returned'}</div>
+ <div className='disease-primary-diagnosis'>{diseasePrimary.diagnosis}</div>
  </div>
- <div className='disease-signal-chip'>{diseaseResult.analysis_signal || 'unknown'}{diseaseResult.insufficient_evidence ? ' · low evidence' : ''}</div>
+ <div className='disease-signal-chip'>{diseaseResult.analysis_signal || 'unknown'}{diseasePrimary.overriddenByTopMatch ? ' · top-match aligned' : ''}{diseaseResult.insufficient_evidence ? ' · low evidence' : ''}</div>
  </div>
  <div className='disease-detail-grid'>
  <div className='disease-detail-block'>
