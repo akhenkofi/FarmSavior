@@ -6432,6 +6432,33 @@ function AppInner() {
  </div>
  </section>}
 
+ {weightComposerOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:271, margin:0, background:'#f8fafc', overflow:'auto'}}>
+ <div className='records-shell'>
+  <div className='records-hero-card'>
+   <div><div className='records-eyebrow'>WEIGHT UPDATE</div><h3>Add Weight</h3><p>{currentLivestockRecord?.name || 'Animal record'}</p></div>
+   <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setWeightComposerOpen(false)}>Cancel</button></div>
+  </div>
+  <article className='panel records-panel'>
+   <input className='input' inputMode='decimal' placeholder='Weight in kg' value={draftWeight} onChange={e=>setDraftWeight(e.target.value)} />
+   <div style={{marginTop:10, display:'flex', justifyContent:'flex-end'}}><button type='button' className='btn btn-dark' onClick={async()=>{
+    const txt = String(draftWeight || '').trim();
+    if (!txt || !currentLivestockRecord?.id) { setWeightComposerOpen(false); return }
+    const base = extractAttachmentsFromNotes(currentLivestockRecord?.notes || '')
+    const stamped = `[${new Date().toISOString().slice(0,16).replace('T',' ')}] Weight: ${txt} kg`
+    const merged = `${base.text ? `${base.text}\n` : ''}${stamped}`
+    const nextNotes = mergeNotesWithAttachments(merged, { photos: base.photos || [], docs: base.docs || [] })
+    const payload = { ...mapLivestockRecordToEditForm(currentLivestockRecord), notes: nextNotes }
+    delete payload.id
+    await api.updateLivestockRecord(Number(currentLivestockRecord.id), payload)
+    await loadLivestockRecords()
+    setDraftWeight('')
+    setWeightComposerOpen(false)
+    setNotesScreenOpen(true)
+   }}>Save Weight</button></div>
+  </article>
+ </div>
+ </section>}
+
  {active === 'services' && <section>
  <div className='section-header'>
  <div>
