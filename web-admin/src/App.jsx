@@ -3301,6 +3301,19 @@ function AppInner() {
  }, [communityActiveCall?.status])
 
  useEffect(() => {
+  if (!communityActiveCall || communityActiveCall.mode !== 'video' || communityActiveCall.url) return
+  if (!['connecting-media','connected'].includes(String(communityActiveCall.status || ''))) return
+  const timer = setTimeout(() => {
+   const hasRemoteVideo = !!communityRemoteStreamRef.current?.getVideoTracks?.()?.length
+   if (!hasRemoteVideo) {
+    const room = encodeURIComponent(String(communityActiveCall.callId || `fs-${Date.now()}`))
+    setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(communityActiveCall.callId || '') ? { ...prev, url: `https://meet.jit.si/${room}` } : prev))
+   }
+  }, 8000)
+  return () => clearTimeout(timer)
+ }, [communityActiveCall?.callId, communityActiveCall?.status, communityActiveCall?.mode, communityActiveCall?.url])
+
+ useEffect(() => {
   if (!communityActiveCall) return
   try {
    if (communityLocalVideoRef.current && communityLocalStreamRef.current && communityActiveCall.mode === 'video') {
