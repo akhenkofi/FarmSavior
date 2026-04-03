@@ -8063,7 +8063,28 @@ function AppInner() {
  </div>
  <div className='disease-panel-pill disease-panel-pill-soft'>{state.diseaseScans.filter(r => !r.category || String(r.category).toLowerCase() === 'animal').length} records</div>
  </div>
- <DataTable columns={['id','user_id','image_url','result','created_at']} rows={state.diseaseScans.filter(r => !r.category || String(r.category).toLowerCase() === 'animal')} filterKey='result' />
+ <div className='list' style={{marginTop:8}}>
+ {state.diseaseScans.filter(r => !r.category || String(r.category).toLowerCase() === 'animal').map((row) => {
+  const parsed = (() => { try { return typeof row.result === 'string' ? JSON.parse(row.result) : row.result } catch { return null } })()
+  const diagnosis = parsed?.diagnosis || parsed?.top_matches?.[0]?.diagnosis || 'Scan result'
+  const confidence = parsed?.confidence != null ? `${Math.round(Number(parsed.confidence || 0) * 100)}%` : (parsed?.top_matches?.[0]?.confidence != null ? `${Math.round(Number(parsed.top_matches[0].confidence || 0) * 100)}%` : '--')
+  return <details key={`disease-row-${row.id}`} className='panel' style={{margin:0, background:'#fff', border:'1px solid #e2e8f0'}}>
+   <summary style={{cursor:'pointer', listStyle:'none'}}>
+    <div className='list-row' style={{alignItems:'center'}}>
+     <span><strong>#{row.id}</strong> · {diagnosis}</span>
+     <strong>{confidence}</strong>
+    </div>
+    <div className='helper-text' style={{padding:'0 10px 8px'}}>User {row.user_id} · {String(row.created_at || '').replace('T',' ').slice(0,16)}</div>
+   </summary>
+   <div style={{padding:'0 10px 10px'}}>
+    <div className='list-row'><span>Image</span><strong style={{maxWidth:'65%', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{String(row.image_url || '').replace('uploaded-image://','')}</strong></div>
+    <div className='list-row'><span>Result details</span><strong>{parsed ? 'Structured' : 'Raw text'}</strong></div>
+    <div className='helper-text' style={{whiteSpace:'pre-wrap', marginTop:6}}>{parsed ? JSON.stringify(parsed, null, 2) : String(row.result || '-')}</div>
+   </div>
+  </details>
+ })}
+ {!state.diseaseScans.filter(r => !r.category || String(r.category).toLowerCase() === 'animal').length && <div className='helper-text'>No analyzer history yet.</div>}
+ </div>
  </div>
  </div>
  </div>
