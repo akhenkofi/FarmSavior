@@ -5535,10 +5535,21 @@ function AppInner() {
  {livestockView === 'create' && <article className='panel'>
  <form className='list' onSubmit={async e => {
  e.preventDefault();
- await api.createLivestock({ ...livestockForm, ...normalizeListingImages(livestockImages), farmer_id: Number(livestockForm.farmer_id), quantity: Number(livestockForm.quantity), unit_price: Number(livestockForm.unit_price) });
- setLivestockImages([])
- await load();
- setLivestockView('list')
+ const missing = []
+ if (!String(livestockForm.livestock_type || '').trim()) missing.push('livestock type')
+ if (!Number(livestockForm.quantity || 0)) missing.push('quantity')
+ if (!Number(livestockForm.unit_price || 0)) missing.push('unit price')
+ if (!livestockImages.length) missing.push('at least 1 livestock image')
+ if (missing.length) { alert(`Please add: ${missing.join(', ')}.`); return }
+ try {
+  await api.createLivestock({ ...livestockForm, ...normalizeListingImages(livestockImages), farmer_id: Number(livestockForm.farmer_id), quantity: Number(livestockForm.quantity), unit_price: Number(livestockForm.unit_price) })
+  setLivestockImages([])
+  await load()
+  setLivestockView('list')
+  alert('Livestock listing published successfully.')
+ } catch (err) {
+  alert(`Could not publish listing: ${errMsg(err)}`)
+ }
  }}>
  <div className='panel' style={{padding:10, background:'#f8fafc', border:'1px solid #e2e8f0'}}>
   <div style={{fontSize:'.75rem', textTransform:'uppercase', letterSpacing:'.08em', color:'#334155', fontWeight:800}}>Step 1 • Animal details</div>
