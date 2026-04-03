@@ -8082,12 +8082,7 @@ function AppInner() {
  {communityInboxSection === 'messages' && !communityMessageView.open && <div className='community-messenger-empty'>
  <div className='empty-emoji'>💬</div>
  <strong>Pick a conversation from the inbox</strong>
- <span>Start a new conversation from any profile, then use Audio or Video call instantly from the header.</span>
- <div style={{display:'flex', gap:8, flexWrap:'wrap', justifyContent:'center'}}>
- <button type='button' className='btn btn-dark' onClick={()=>{ closeCommunityMessages(); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>Start New Conversation</button>
- <button type='button' className='btn' disabled title='Select a conversation first'>Audio Call</button>
- <button type='button' className='btn' disabled title='Select a conversation first'>Video Call</button>
- </div>
+ <span>Tap a user on the left to open Messages. Voice/Video actions appear only after a conversation is open.</span>
  </div>}
  {communityInboxSection === 'messages' && communityMessageView.open && <>
  {communityMessageView.loading && <div className='community-messenger-empty'><div className='empty-emoji'>⏳</div><strong>Opening messages…</strong><span>Loading the latest conversation safely.</span></div>}
