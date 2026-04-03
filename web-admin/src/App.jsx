@@ -6358,7 +6358,7 @@ function AppInner() {
      <div className='records-detail-grid'>
       {livestockHistoryRows(currentLivestockRecord).history.map((row, idx) => {
        const [label, value, action] = row
-       const clickable = action === 'notes' || action === 'add-note' || action === 'add-weight' || action === 'medicines' || action === 'add-medicine' || action === 'famacha' || action === 'ancestor-tree' || action === 'share-pdf' || action === 'offspring-report' || action === 'offspring-list' || action === 'add-mark' || action === 'add-flush'
+       const clickable = action === 'notes' || action === 'add-note' || action === 'weights-log' || action === 'add-weight' || action === 'medicines' || action === 'add-medicine' || action === 'famacha' || action === 'ancestor-tree' || action === 'share-pdf' || action === 'offspring-report' || action === 'offspring-list' || action === 'add-mark' || action === 'add-flush'
        return <button type='button' key={`history-${label}-${idx}`} className={`records-detail-row ${clickable ? 'clickable' : ''}`} onClick={() => {
         if (!clickable) return
         setRecordsSectionOpen(prev => ({ ...prev, details: false }))
