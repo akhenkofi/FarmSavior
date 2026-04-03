@@ -119,7 +119,7 @@ const paymentSectionRoute = (product) => ({
  'cattle': 'cattle-university',
 }[product] || 'onboarding')
 const formatDateTime = (value) => {
- if (!value) return '—'
+ if (!value) return '-'
  try {
  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
  } catch {
@@ -202,9 +202,9 @@ const serviceNameFr = {
  'Cold room storage': 'Stockage en chambre froide',
  'Long-haul truck logistics': 'Logistique camion longue distance',
  'Farm spraying service': 'Service de pulvérisation agricole',
- 'Irrigation setup service': 'Service d’installation d’irrigation',
+ 'Irrigation setup service': "Service d’installation d’irrigation",
  'Feed supply delivery': "Livraison d’aliments pour bétail",
- 'Warehouse monthly leasing': 'Location mensuelle d’entrepôt',
+ 'Warehouse monthly leasing': "Location mensuelle d’entrepôt",
  'Farm consultancy': 'Conseil agricole',
  'Ram/Buck/Bull rentals': 'Location de bélier/bouc/taureau'
 }
@@ -230,8 +230,8 @@ const weatherConditionZh = {
 }
 
 const newsTitleFr = {
- 'West Africa input prices ease as supply chains stabilize': 'Les prix des intrants en Afrique de l’Ouest baissent avec la stabilisation des chaînes d’approvisionnement',
- 'Moisture outlook improves for rice and maize belts': 'Les perspectives d’humidité s’améliorent pour les zones de riz et de maïs',
+ 'West Africa input prices ease as supply chains stabilize': "Les prix des intrants en Afrique de l’Ouest baissent avec la stabilisation des chaînes d’approvisionnement",
+ 'Moisture outlook improves for rice and maize belts': "Les perspectives d’humidité s’améliorent pour les zones de riz et de maïs",
  'Regional livestock demand remains strong ahead of market week': 'La demande régionale en bétail reste forte avant la semaine de marché'
 }
 
@@ -608,7 +608,7 @@ const poultryHealthGuides = {
   title: 'Broiler cycle vaccination + prevention calendar',
   caution: 'Educational planning tool only: broiler vaccine timing depends on hatchery history, local disease challenge, intended slaughter age, and withdrawal rules. Confirm all brands, routes, water-medication compatibility, and legal use with local veterinary authorities.',
   timing: [
-   'Pre-placement to day 7: brooding precision matters more than almost anything else—weak heat, poor water access, or bad chick start can look like disease later even when the real cause was management.',
+   'Pre-placement to day 7: brooding precision matters more than almost anything else-weak heat, poor water access, or bad chick start can look like disease later even when the real cause was management.',
    'Day 8-21: keep broilers on schedule for ND/IBD work where used locally, while protecting litter dryness and watching for coccidiosis, wet droppings, and uneven growth.',
    'Day 22 to sale: the health focus shifts toward heat stress, respiratory pressure, leg quality, and avoiding medication or vaccine decisions that clash with slaughter withdrawal periods.',
    'Between cycles: complete total clean-out, wash, disinfect, dry, and downtime before the next placement so one weak batch does not infect the next one.'
@@ -649,7 +649,7 @@ const poultryHealthGuides = {
    'Breeder or long-kept flocks: review periodic booster need, external parasite pressure, and fence/perimeter biosecurity before the next seasonal stress window.'
   ],
   vaccines: [
-   'Many guinea operations adapt core poultry vaccination principles—especially ND and fowl pox where locally relevant—but exact suitability, age timing, and label support must be confirmed before use.',
+   'Many guinea operations adapt core poultry vaccination principles-especially ND and fowl pox where locally relevant-but exact suitability, age timing, and label support must be confirmed before use.',
    'Ask local veterinary authorities whether your district commonly vaccinates guinea fowl against Newcastle disease and what schedule is actually followed under field conditions.',
    'If breeder guinea are kept for extended periods, discuss whether any longer-cycle booster plan is warranted rather than copying a short broiler schedule.',
    'Do not mix species assumptions: what works for chickens is not automatically label-approved or effective for guinea fowl.'
@@ -1015,7 +1015,7 @@ Object.values(cattleTracks).forEach(track => {
  details: [
  ...(m.details || []),
  `Assign one financial KPI and one biological KPI to ${m.name.toLowerCase()} so performance is reviewed as a business system.`,
- 'Record the seasonal constraint most likely to break performance—water, feed, heat, ticks, or labor—and define the contingency action now.',
+ 'Record the seasonal constraint most likely to break performance-water, feed, heat, ticks, or labor-and define the contingency action now.',
  idx === 2 ? 'Require a calving-risk response plan covering labor readiness, calf support, and postpartum recovery.' : 'Review whether current gains come from better management, not genetics alone.'
  ]
  }))
@@ -1184,7 +1184,7 @@ const emptyUniversitySubscription = { tier: 'free', subscription: null, plans: [
 const livestockBreedOptions = {
  SHEEP: ['Dorper', 'Merino', 'Sahel', 'Djallonké', 'West African Dwarf', 'Cross'],
  GOAT: ['Boer', 'Saanen', 'Anglo-Nubian', 'Sahelian', 'West African Dwarf', 'Cross'],
- CATTLE: ['Holstein', 'Jersey', 'Boran', "N'Dama", 'White Fulani', 'Cross'],
+ CATTLE: ['Holstein', 'Jersey', 'Boran', "N’Dama", 'White Fulani', 'Cross'],
  POULTRY: ['Broiler', 'Layer', 'Noiler', 'Kuroiler', 'Local', 'Cross'],
 }
 
@@ -1713,7 +1713,7 @@ const poultryProModuleDeepDives = {
    title: 'Sales, Records, and Scale Gate',
    cadence: 'End of week and end of cycle',
    checklist: [
-    'Review gross margin per tray after feed, mortality, medicine, labor, and reject losses—not revenue alone.',
+    'Review gross margin per tray after feed, mortality, medicine, labor, and reject losses-not revenue alone.',
     'Compare buyer channels by payment speed, volume reliability, and complaint rate.',
     'Delay expansion until two or three stable cycles show acceptable mortality, shell quality, and cashflow discipline.',
     'Preserve one operating review pack that could be shown to a partner, lender, or manager takeover.'
@@ -1730,7 +1730,7 @@ const poultryProModuleDeepDives = {
     'Secure feed supply continuity for the whole cycle instead of hoping to buy opportunistically during growth.',
     'Set one close-cycle review template that tracks mortality, FCR trend, average weight, and realized price by batch.'
    ],
-   managerNotes: 'The broiler margin is often decided before day 1—by feed security, sale planning, and how disciplined the operator is about timing.'
+   managerNotes: 'The broiler margin is often decided before day 1-by feed security, sale planning, and how disciplined the operator is about timing.'
   },
   {
    title: 'Brooding Precision Command Sheet',
@@ -1812,14 +1812,14 @@ const poultryProModuleDeepDives = {
     'Monitor parasite pressure and deworm from risk plus symptoms instead of random routine.',
     'Escalate wet-housing, damp feed, respiratory stress, or sudden piling behavior immediately.'
    ],
-   managerNotes: 'Most preventable guinea setbacks start as “small” housing or perimeter problems.'
+   managerNotes: 'Most preventable guinea setbacks start as "small" housing or perimeter problems.'
   },
   {
    title: 'Premium Sales and Controlled Scaling',
    cadence: 'Per batch review',
    checklist: [
     'Sort breeder-quality, meat birds, and culls before sale conversations begin.',
-    'Sell consistency—age band, average size, survival discipline—not just bird count.',
+    'Sell consistency-age band, average size, survival discipline-not just bird count.',
     'Scale only after losses, predator control, and buyer repeatability are stable.'
    ],
    managerNotes: 'Premium pricing depends on consistency and trust more than one lucky festive sale.'
@@ -3295,7 +3295,7 @@ function AppInner() {
  }
  const showAlreadyActiveMessage = (product, tierOverride) => {
  const tier = String(tierOverride || universitySubscriptions[product]?.subscription?.plan_code || universitySubscriptions[product]?.tier || 'paid').toUpperCase()
- setUniversityProductMessage(product, `${paymentSectionLabel(product)} ${tier} access is already active. Open and use your program — no new checkout is needed.`)
+ setUniversityProductMessage(product, `${paymentSectionLabel(product)} ${tier} access is already active. Open and use your program - no new checkout is needed.`)
  }
  const cachePendingCheckout = (payload) => {
  try { localStorage.setItem(PAYMENT_RETURN_CACHE_KEY, JSON.stringify({ ...(payload || {}), created_at: new Date().toISOString() })) } catch {}
@@ -4251,7 +4251,7 @@ function AppInner() {
  await load()
  setActive('onboarding')
  setPaymentReturnNotice({
- title: 'Thanks — your Livestock Records upgrade is active.',
+ title: 'Thanks - your Livestock Records upgrade is active.',
  message: verified?.message || 'Your premium livestock workspace has been confirmed and is ready to use.',
  reference,
  verified_at: new Date().toISOString(),
@@ -4262,7 +4262,7 @@ function AppInner() {
  await load()
  setActive('onboarding')
  setPaymentReturnNotice({
- title: `Thanks — your ${paymentSectionLabel(pending.product)} access is ready.`,
+ title: `Thanks - your ${paymentSectionLabel(pending.product)} access is ready.`,
  message: verified?.message || 'Your university subscription has been confirmed and the full content is now available.',
  reference,
  verified_at: new Date().toISOString(),
@@ -4828,7 +4828,7 @@ function AppInner() {
  </>}
  </article>
 
- 
+
 
  <article className='panel' style={{marginTop:10}}>
  <div className='list-row'>
@@ -4866,7 +4866,7 @@ function AppInner() {
  <div className='inlineForm'>
  <input className='input' type='number' step='any' min='0' value={fxAmount} onChange={(e)=>setFxAmount(e.target.value)} placeholder={t('Amount','Montant')} />
  <select className='input' value={fxBase} onChange={(e)=>setFxBase(e.target.value)}>
- {Object.keys(fxRates || {}).sort().map((c)=><option key={c} value={c}>{c} — {currencyName(c)}</option>)}
+ {Object.keys(fxRates || {}).sort().map((c)=><option key={c} value={c}>{c} - {currencyName(c)}</option>)}
  {!Object.keys(fxRates || {}).length && <option value='USD'>USD</option>}
  </select>
  <input className='input' value={fxQuery} onChange={(e)=>setFxQuery(e.target.value)} placeholder={t('Filter currency (e.g., GHS, NGN, EUR)','Filtrer devise (ex: GHS, NGN, EUR)')} />
@@ -4877,11 +4877,11 @@ function AppInner() {
  ))}
  <button className='tab' onClick={()=>setFxQuery('')}>{t('All','Tout')}</button>
  </div>
- <p style={{fontSize:'.82rem',color:'#64748b',margin:'6px 0 10px'}}>{t('Rates source','Source des taux')}: open.er-api.com • {t('Last updated','Dernière mise à jour')}: {fxUpdatedAt || '—'}</p>
+ <p style={{fontSize:'.82rem',color:'#64748b',margin:'6px 0 10px'}}>{t('Rates source','Source des taux')}: open.er-api.com • {t('Last updated','Dernière mise à jour')}: {fxUpdatedAt || '-'}</p>
  <div className='list' style={{maxHeight:320, overflow:'auto'}}>
  {fxRows.map((r)=>{
  const formatted = Number.isFinite(r.value) ? r.value.toLocaleString(undefined, { maximumFractionDigits: 4 }) : '0'
- return <div className='list-row' key={`pub-fx-${r.code}`}><span>{r.code} — {r.name}</span><strong>{formatted}</strong></div>
+ return <div className='list-row' key={`pub-fx-${r.code}`}><span>{r.code} - {r.name}</span><strong>{formatted}</strong></div>
  })}
  {!fxRows.length && <div className='list-row'><span>{t('No rates available right now.','Aucun taux disponible pour le moment.')}</span></div>}
  </div>
@@ -4909,7 +4909,7 @@ function AppInner() {
  ) : (
  <div className='list-row'>
  <span>{unitValue || 0} {unitFrom} =</span>
- <strong>{convertedUnitValue === '' ? '—' : Number(convertedUnitValue).toLocaleString(undefined, { maximumFractionDigits: 6 })} {unitTo}</strong>
+ <strong>{convertedUnitValue === '' ? '-' : Number(convertedUnitValue).toLocaleString(undefined, { maximumFractionDigits: 6 })} {unitTo}</strong>
  </div>
  )}
  </div>
@@ -5127,7 +5127,7 @@ function AppInner() {
  <div className='inlineForm'>
  <input className='input' type='number' step='any' min='0' value={fxAmount} onChange={(e)=>setFxAmount(e.target.value)} placeholder='Amount' />
  <select className='input' value={fxBase} onChange={(e)=>setFxBase(e.target.value)}>
- {Object.keys(fxRates || {}).sort().map((c)=><option key={c} value={c}>{c} — {currencyName(c)}</option>)}
+ {Object.keys(fxRates || {}).sort().map((c)=><option key={c} value={c}>{c} - {currencyName(c)}</option>)}
  {!Object.keys(fxRates || {}).length && <option value='USD'>USD</option>}
  </select>
  <input className='input' value={fxQuery} onChange={(e)=>setFxQuery(e.target.value)} placeholder='Filter currency (e.g., GHS, NGN, EUR)' />
@@ -5138,11 +5138,11 @@ function AppInner() {
  ))}
  <button className='tab' onClick={()=>setFxQuery('')}>All</button>
  </div>
- <p style={{fontSize:'.82rem',color:'#64748b',margin:'6px 0 10px'}}>Rates source: open.er-api.com • Last updated: {fxUpdatedAt || '—'}</p>
+ <p style={{fontSize:'.82rem',color:'#64748b',margin:'6px 0 10px'}}>Rates source: open.er-api.com • Last updated: {fxUpdatedAt || '-'}</p>
  <div className='list' style={{maxHeight:320, overflow:'auto'}}>
  {fxRows.map((r)=>{
  const formatted = Number.isFinite(r.value) ? r.value.toLocaleString(undefined, { maximumFractionDigits: 4 }) : '0'
- return <div className='list-row' key={r.code}><span>{r.code} — {r.name}</span><strong>{formatted}</strong></div>
+ return <div className='list-row' key={r.code}><span>{r.code} - {r.name}</span><strong>{formatted}</strong></div>
  })}
  {!fxRows.length && <div className='list-row'><span>No rates available right now.</span></div>}
  </div>
@@ -5170,7 +5170,7 @@ function AppInner() {
  ) : (
  <div className='list-row'>
  <span>{unitValue || 0} {unitFrom} =</span>
- <strong>{convertedUnitValue === '' ? '—' : Number(convertedUnitValue).toLocaleString(undefined, { maximumFractionDigits: 6 })} {unitTo}</strong>
+ <strong>{convertedUnitValue === '' ? '-' : Number(convertedUnitValue).toLocaleString(undefined, { maximumFractionDigits: 6 })} {unitTo}</strong>
  </div>
  )}
  </div>
@@ -5406,7 +5406,7 @@ function AppInner() {
  return <div key={`verify-preview-${app.id_verification_id}`} className='panel' style={{padding:12, border:assessment.recommendation === 'FAST_PASS_RECOMMENDED' ? '1px solid #16a34a' : assessment.recommendation === 'AUTO_REJECT' ? '1px solid #dc2626' : '1px solid #e2e8f0', background:assessment.recommendation === 'FAST_PASS_RECOMMENDED' ? '#f0fdf4' : assessment.recommendation === 'AUTO_REJECT' ? '#fef2f2' : '#fff'}}>
  <div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'flex-start',flexWrap:'wrap'}}>
  <div>
- <div style={{fontWeight:700, marginBottom:4}}>{app.full_name} — {verificationStatusLabel(app.status)}{app.status === 'APPROVED' ? ' 🔵' : ''}</div>
+ <div style={{fontWeight:700, marginBottom:4}}>{app.full_name} - {verificationStatusLabel(app.status)}{app.status === 'APPROVED' ? ' 🔵' : ''}</div>
  <div className='helper-text'>Application #{app.id_verification_id} • {app.id_type} • {assessment.extracted?.id_number_normalized || app.id_number || 'No ID number'}</div>
  <div style={{marginTop:6, fontSize:'.85rem'}}><strong>{assessment.summary || app.ai_reason}</strong></div>
  {assessment.recommendation ? <div style={{marginTop:6, fontSize:'.82rem', color:assessment.recommendation === 'FAST_PASS_RECOMMENDED' ? '#166534' : assessment.recommendation === 'AUTO_REJECT' ? '#991b1b' : '#475569'}}>Recommendation: {String(assessment.recommendation || '').replaceAll('_', ' ')}</div> : null}
@@ -5491,7 +5491,7 @@ function AppInner() {
  <div className='card-grid'>
  {state.listings.map((r) => {
  const images = parseImageList(r.image_urls)
- return <ListingDetailCard key={`product-card-${r.id}`} title={r.crop_name} subtitle={`${r.location || 'Location not set'} • ${r.country} • ${r.status}`} stats={[`${r.quantity_kg} kg`, `${r.unit_price}`, `${images.length} photos`]} contact={r.contact_name || r.phone || `Farmer #${r.farmer_id || '—'}`}><div className='listing-card-media'><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={r.crop_name} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /></div><div className='listing-card-body'><div className='listing-card-metrics'>{images.length ? <span className='cover-badge'>Cover ready</span> : null}</div><div className='card-actions'>
+ return <ListingDetailCard key={`product-card-${r.id}`} title={r.crop_name} subtitle={`${r.location || 'Location not set'} • ${r.country} • ${r.status}`} stats={[`${r.quantity_kg} kg`, `${r.unit_price}`, `${images.length} photos`]} contact={r.contact_name || r.phone || `Farmer #${r.farmer_id || '-'}`}><div className='listing-card-media'><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={r.crop_name} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /></div><div className='listing-card-body'><div className='listing-card-metrics'>{images.length ? <span className='cover-badge'>Cover ready</span> : null}</div><div className='card-actions'>
  <button className='btn btn-dark' type='button' onClick={() => {
  setCropEdit({ id: r.id, farmer_id: r.farmer_id || 1, crop_name: r.crop_name || '', quantity_kg: r.quantity_kg || '', unit_price: r.unit_price || '', location: r.location || '', country: r.country || 'GH', status: r.status || 'OPEN' })
  setCropQuickEdit({ id: r.id, quantity_kg: r.quantity_kg || '', unit_price: r.unit_price || '' })
@@ -5575,7 +5575,7 @@ function AppInner() {
  <div className='card-grid'>
  {state.livestock.map((r) => {
  const images = parseImageList(r.image_urls)
- return <ListingDetailCard key={`livestock-card-${r.id}`} title={r.livestock_type} subtitle={`${r.location || 'Location not set'} • ${r.country} • ${r.status}`} stats={[`${r.quantity} animals`, `${r.unit_price}`, `${images.length} photos`]} contact={r.contact_name || r.phone || `Farmer #${r.farmer_id || '—'}`}><div className='listing-card-media'><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={r.livestock_type} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /></div><div className='listing-card-body'><div className='listing-card-metrics'>{images.length ? <span className='cover-badge'>Cover ready</span> : null}</div><div className='card-actions'>
+ return <ListingDetailCard key={`livestock-card-${r.id}`} title={r.livestock_type} subtitle={`${r.location || 'Location not set'} • ${r.country} • ${r.status}`} stats={[`${r.quantity} animals`, `${r.unit_price}`, `${images.length} photos`]} contact={r.contact_name || r.phone || `Farmer #${r.farmer_id || '-'}`}><div className='listing-card-media'><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={r.livestock_type} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /></div><div className='listing-card-body'><div className='listing-card-metrics'>{images.length ? <span className='cover-badge'>Cover ready</span> : null}</div><div className='card-actions'>
  <button className='btn btn-dark' type='button' onClick={() => {
  setLivestockEdit({ id: r.id, farmer_id: r.farmer_id || 1, livestock_type: r.livestock_type || '', quantity: r.quantity || '', unit_price: r.unit_price || '', location: r.location || '', country: r.country || 'GH', status: r.status || 'OPEN' })
  setLivestockQuickEdit({ id: r.id, quantity: r.quantity || '', unit_price: r.unit_price || '' })
@@ -5607,7 +5607,7 @@ function AppInner() {
  </div>
  <details className='panel' style={{marginBottom:10}}>
  <summary style={{fontWeight:700, cursor:'pointer'}}>Access & Delivery Format</summary>
- <p style={{fontSize:'.85rem',color:'#475569',marginTop:8}}>Standalone professional purchase also available (₵200–₵1,000 depending on package depth).</p>
+ <p style={{fontSize:'.85rem',color:'#475569',marginTop:8}}>Standalone professional purchase also available (₵200-₵1,000 depending on package depth).</p>
  <div className='three-col'>
  <div className='panel' style={{padding:10, border:poultryTier==='free' || poultryPlanPreview==='free'?'2px solid #64748b':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setPoultryPlanPreview('free')}>
  <strong>🆓 Preview Access</strong>
@@ -5615,12 +5615,12 @@ function AppInner() {
  <button className='btn' onClick={(e)=>{ e.stopPropagation(); setPoultryTier('free'); setOpenPoultryModule(0); setPoultryPlanPreview('free'); api.trackAnalyticsEvent({ event_name:'poultry_tier_select', country: uiCountry, role_hint: me?.role || 'user', properties:{tier:'free'} }).catch(()=>{})}}>{poultryTier==='free' ? 'Preview Active ✓' : 'Use Preview'}</button>
  </div>
  <div className='panel' style={{padding:10, border:poultryTier==='basic' || poultryPlanPreview==='basic'?'2px solid #16a34a':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setPoultryPlanPreview('basic')}>
- <strong>🌿 Basic — ₵50/mo</strong>
+ <strong>🌿 Basic - ₵50/mo</strong>
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Full pillar access, both operating zones, health schedules, and structured implementation guidance.</div>
  <button className={`btn ${hasActiveUniversityAccess('poultry') ? '' : 'btn-dark'}`} onClick={(e)=>{ e.stopPropagation(); if (hasActiveUniversityAccess('poultry')) { showAlreadyActiveMessage('poultry'); openUniversityProduct('poultry'); return } startUniversityCheckout('poultry', 'basic', 'Poultry University Basic checkout') }}>{hasActiveUniversityAccess('poultry') ? 'Access active ✓' : 'Buy Basic'}</button>
  </div>
  <div className='panel' style={{padding:10, border:poultryTier==='pro' || poultryPlanPreview==='pro'?'2px solid #f59e0b':'1px solid #e2e8f0', cursor:'pointer', background:((poultryTier==='pro') || String(poultrySubscription?.subscription?.plan_code || '').toLowerCase()==='pro')?'linear-gradient(135deg,#fff7ed 0%,#fffbeb 50%,#ecfeff 100%)':'#fff', boxShadow:((poultryTier==='pro') || String(poultrySubscription?.subscription?.plan_code || '').toLowerCase()==='pro')?'0 12px 28px rgba(245,158,11,.18)':'none'}} onClick={()=>setPoultryPlanPreview('pro')}>
- <strong>🏆 Professional — ₵120/mo {((poultryTier==='pro') || String(poultrySubscription?.subscription?.plan_code || '').toLowerCase()==='pro') ? '✓' : ''}</strong>
+ <strong>🏆 Professional - ₵120/mo {((poultryTier==='pro') || String(poultrySubscription?.subscription?.plan_code || '').toLowerCase()==='pro') ? '✓' : ''}</strong>
  {((poultryTier==='pro') || String(poultrySubscription?.subscription?.plan_code || '').toLowerCase()==='pro') && <div style={{fontSize:'.72rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',marginTop:4,color:'#92400e'}}>PRO MEMBER BADGE</div>}
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus operating briefs, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
  <button className={`btn ${hasActiveUniversityAccess('poultry') ? '' : 'btn-dark'}`} onClick={(e)=>{ e.stopPropagation(); if (hasActiveUniversityAccess('poultry')) { showAlreadyActiveMessage('poultry'); openUniversityProduct('poultry'); return } startUniversityCheckout('poultry', 'pro', 'Poultry University Professional checkout') }}>{hasActiveUniversityAccess('poultry') ? 'Professional access active ✓' : 'Buy Professional'}</button>
@@ -5676,7 +5676,7 @@ function AppInner() {
  return <div key={m.name} className='panel' style={{padding:8,border:locked?'1px solid #e2e8f0':'1px solid #dbe6df',opacity:locked?0.6:1,background:locked?'#f8fafc':'#fff'}}>
  <div className='list-row'>
  <span><strong>{m.name}</strong><br/><span style={{fontSize:'.85rem',color:'#475569'}}>{m.summary}</span></span>
- {locked ? <button className='btn' onClick={()=>{setPoultryBillingMsg('Modules 2–5 stay locked until real payment verification is live. Your account is still on Free.'); api.trackAnalyticsEvent({ event_name:'poultry_unlock_click_blocked', country: uiCountry, role_hint: me?.role || 'user', properties:{from:'free', target:'basic'} }).catch(()=>{})}}>🔒 Locked — not live yet</button> : <button className='btn' onClick={()=>setOpenPoultryModule(openPoultryModule===i ? -1 : i)}>{openPoultryModule===i ? 'Hide' : 'Open'}</button>}
+ {locked ? <button className='btn' onClick={()=>{setPoultryBillingMsg('Modules 2-5 stay locked until real payment verification is live. Your account is still on Free.'); api.trackAnalyticsEvent({ event_name:'poultry_unlock_click_blocked', country: uiCountry, role_hint: me?.role || 'user', properties:{from:'free', target:'basic'} }).catch(()=>{})}}>🔒 Locked - not live yet</button> : <button className='btn' onClick={()=>setOpenPoultryModule(openPoultryModule===i ? -1 : i)}>{openPoultryModule===i ? 'Hide' : 'Open'}</button>}
  </div>
  {!locked && openPoultryModule===i && <div className='list' style={{marginTop:6}}>
  {m.details.map((d)=><div className='list-row' key={d}><span>{d}</span></div>)}
@@ -5842,12 +5842,12 @@ function AppInner() {
  <button className='btn' onClick={(e)=>{e.stopPropagation(); setSheepTier('free'); setOpenSheepModule(0); setSheepPlanPreview('free')}}>{sheepTier==='free' ? 'Preview Active ✓' : 'Use Preview'}</button>
  </div>
  <div className='panel' style={{padding:10, border:sheepTier==='basic' || sheepPlanPreview==='basic'?'2px solid #16a34a':'1px solid #e2e8f0', cursor:'pointer', opacity:sheepTier==='basic' || sheepTier==='pro' ? 1 : 1}} onClick={()=>setSheepPlanPreview('basic')}>
- <strong>🌿 Basic — ₵50/mo</strong>
+ <strong>🌿 Basic - ₵50/mo</strong>
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Full pillar access, both operating zones, and health schedule guidance.</div>
  <button className={`btn ${sheepTier==='basic' || sheepTier==='pro' ? '' : 'btn-dark'}`} onClick={(e)=>{e.stopPropagation(); if (sheepTier==='basic' || sheepTier==='pro') { setOpenSheepModule(1); return } startUniversityCheckout('sheep', 'basic', 'Sheep University Basic checkout')}}>{sheepTier==='basic' ? 'Current plan ✓' : sheepTier==='pro' ? 'Included in Professional ✓' : 'Unlock Basic'}</button>
  </div>
  <div className='panel' style={{padding:10, border:sheepTier==='pro' || sheepPlanPreview==='pro'?'2px solid #7c3aed':'1px solid #e2e8f0', cursor:'pointer', background:sheepTier==='pro'?'linear-gradient(135deg,#f5f3ff 0%,#faf5ff 55%,#fdf4ff 100%)':'#fff', boxShadow:sheepTier==='pro'?'0 12px 28px rgba(124,58,237,.18)':'none'}} onClick={()=>setSheepPlanPreview('pro')}>
- <strong>🏆 Professional — ₵120/mo {sheepTier==='pro' ? '✓' : ''}</strong>
+ <strong>🏆 Professional - ₵120/mo {sheepTier==='pro' ? '✓' : ''}</strong>
  {sheepTier==='pro' && <div style={{fontSize:'.72rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',marginTop:4,color:'#6d28d9'}}>PRO MEMBER BADGE</div>}
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus operating briefs, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
  <button className={`btn ${sheepTier==='pro' ? '' : 'btn-dark'}`} onClick={(e)=>{e.stopPropagation(); if (sheepTier==='pro') return; startUniversityCheckout('sheep', 'pro', 'Sheep University Professional checkout')}}>{sheepTier==='pro' ? 'Professional active ✓' : 'Go Professional'}</button>
@@ -5902,7 +5902,7 @@ function AppInner() {
  return <div key={m.name} className='panel' style={{padding:8,border:locked?'1px solid #e2e8f0':'1px solid #dbe6df',opacity:locked?0.6:1,background:locked?'#f8fafc':'#fff'}}>
  <div className='list-row'>
  <span><strong>{m.name}</strong><br/><span style={{fontSize:'.85rem',color:'#475569'}}>{m.summary}</span></span>
- {locked ? <button className='btn' onClick={()=>startUniversityCheckout('sheep', 'basic', 'Sheep University Basic checkout')}>🔒 Unlock — ₵50/mo</button> : <button className='btn' onClick={()=>setOpenSheepModule(openSheepModule===i ? -1 : i)}>{openSheepModule===i ? 'Hide' : 'Open'}</button>}
+ {locked ? <button className='btn' onClick={()=>startUniversityCheckout('sheep', 'basic', 'Sheep University Basic checkout')}>🔒 Unlock - ₵50/mo</button> : <button className='btn' onClick={()=>setOpenSheepModule(openSheepModule===i ? -1 : i)}>{openSheepModule===i ? 'Hide' : 'Open'}</button>}
  </div>
  {!locked && openSheepModule===i && <div className='list' style={{marginTop:6}}>{m.details.map((d)=><div className='list-row' key={d}><span>{d}</span></div>)}</div>}
  </div>
@@ -5966,12 +5966,12 @@ function AppInner() {
  <button className='btn' onClick={(e)=>{e.stopPropagation(); setGoatTier('free'); setOpenGoatModule(0); setGoatPlanPreview('free')}}>{goatTier==='free' ? 'Preview Active ✓' : 'Use Preview'}</button>
  </div>
  <div className='panel' style={{padding:10, border:goatTier==='basic' || goatPlanPreview==='basic'?'2px solid #16a34a':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setGoatPlanPreview('basic')}>
- <strong>🌿 Basic — ₵50/mo</strong>
+ <strong>🌿 Basic - ₵50/mo</strong>
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Full pillar access, both operating zones, and health schedule guidance.</div>
  <button className={`btn ${hasActiveUniversityAccess('goat') ? '' : 'btn-dark'}`} onClick={(e)=>{e.stopPropagation(); if (hasActiveUniversityAccess('goat')) { showAlreadyActiveMessage('goat'); openUniversityProduct('goat'); return } startUniversityCheckout('goat', 'basic', 'Goat University Basic checkout')}}>{hasActiveUniversityAccess('goat') ? 'Access active ✓' : 'Unlock Basic'}</button>
  </div>
  <div className='panel' style={{padding:10, border:goatTier==='pro' || goatPlanPreview==='pro'?'2px solid #0d9488':'1px solid #e2e8f0', cursor:'pointer', background:goatTier==='pro'?'linear-gradient(135deg,#f0fdfa 0%,#ecfeff 55%,#f5fffb 100%)':'#fff', boxShadow:goatTier==='pro'?'0 12px 28px rgba(13,148,136,.18)':'none'}} onClick={()=>setGoatPlanPreview('pro')}>
- <strong>🏆 Professional — ₵120/mo {goatTier==='pro' ? '✓' : ''}</strong>
+ <strong>🏆 Professional - ₵120/mo {goatTier==='pro' ? '✓' : ''}</strong>
  {goatTier==='pro' && <div style={{fontSize:'.72rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',marginTop:4,color:'#0f766e'}}>PRO MEMBER BADGE</div>}
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus operating briefs, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
  <button className={`btn ${hasActiveUniversityAccess('goat') ? '' : 'btn-dark'}`} onClick={(e)=>{e.stopPropagation(); if (hasActiveUniversityAccess('goat')) { showAlreadyActiveMessage('goat'); openUniversityProduct('goat'); return } startUniversityCheckout('goat', 'pro', 'Goat University Professional checkout')}}>{hasActiveUniversityAccess('goat') ? 'Professional access active ✓' : 'Go Professional'}</button>
@@ -6026,7 +6026,7 @@ function AppInner() {
  return <div key={m.name} className='panel' style={{padding:8,border:locked?'1px solid #e2e8f0':'1px solid #dbe6df',opacity:locked?0.6:1,background:locked?'#f8fafc':'#fff'}}>
  <div className='list-row'>
  <span><strong>{m.name}</strong><br/><span style={{fontSize:'.85rem',color:'#475569'}}>{m.summary}</span></span>
- {locked ? <button className='btn' onClick={()=>startUniversityCheckout('goat', 'basic', 'Goat University Basic checkout')}>🔒 Unlock — ₵50/mo</button> : <button className='btn' onClick={()=>setOpenGoatModule(openGoatModule===i ? -1 : i)}>{openGoatModule===i ? 'Hide' : 'Open'}</button>}
+ {locked ? <button className='btn' onClick={()=>startUniversityCheckout('goat', 'basic', 'Goat University Basic checkout')}>🔒 Unlock - ₵50/mo</button> : <button className='btn' onClick={()=>setOpenGoatModule(openGoatModule===i ? -1 : i)}>{openGoatModule===i ? 'Hide' : 'Open'}</button>}
  </div>
  {!locked && openGoatModule===i && <div className='list' style={{marginTop:6}}>{m.details.map((d)=><div className='list-row' key={d}><span>{d}</span></div>)}</div>}
  </div>
@@ -6091,12 +6091,12 @@ function AppInner() {
  <button className='btn' onClick={(e)=>{e.stopPropagation(); setCattleTier('free'); setOpenCattleModule(0); setCattlePlanPreview('free')}}>{cattleTier==='free' ? 'Preview Active ✓' : 'Use Preview'}</button>
  </div>
  <div className='panel' style={{padding:10, border:cattleTier==='basic' || cattlePlanPreview==='basic'?'2px solid #16a34a':'1px solid #e2e8f0', cursor:'pointer'}} onClick={()=>setCattlePlanPreview('basic')}>
- <strong>🌿 Basic — ₵50/mo</strong>
+ <strong>🌿 Basic - ₵50/mo</strong>
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Full pillar access, both operating zones, and health schedule guidance.</div>
  <button className={`btn ${hasActiveUniversityAccess('cattle') ? '' : 'btn-dark'}`} onClick={(e)=>{e.stopPropagation(); if (hasActiveUniversityAccess('cattle')) { showAlreadyActiveMessage('cattle'); openUniversityProduct('cattle'); return } startUniversityCheckout('cattle', 'basic', 'Cattle University Basic checkout')}}>{hasActiveUniversityAccess('cattle') ? 'Access active ✓' : 'Unlock Basic'}</button>
  </div>
  <div className='panel' style={{padding:10, border:cattleTier==='pro' || cattlePlanPreview==='pro'?'2px solid #d97706':'1px solid #e2e8f0', cursor:'pointer', background:cattleTier==='pro'?'linear-gradient(135deg,#fffbeb 0%,#fff7ed 55%,#fef3c7 100%)':'#fff', boxShadow:cattleTier==='pro'?'0 12px 28px rgba(217,119,6,.18)':'none'}} onClick={()=>setCattlePlanPreview('pro')}>
- <strong>🏆 Professional — ₵120/mo {cattleTier==='pro' ? '✓' : ''}</strong>
+ <strong>🏆 Professional - ₵120/mo {cattleTier==='pro' ? '✓' : ''}</strong>
  {cattleTier==='pro' && <div style={{fontSize:'.72rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',marginTop:4,color:'#92400e'}}>PRO MEMBER BADGE</div>}
  <div style={{fontSize:'.85rem',color:'#475569',margin:'6px 0'}}>Everything in Standard plus operating briefs, benchmark scorecards, printable tools, progress tracking, and certificate outputs.</div>
  <button className={`btn ${hasActiveUniversityAccess('cattle') ? '' : 'btn-dark'}`} onClick={(e)=>{e.stopPropagation(); if (hasActiveUniversityAccess('cattle')) { showAlreadyActiveMessage('cattle'); openUniversityProduct('cattle'); return } startUniversityCheckout('cattle', 'pro', 'Cattle University Professional checkout')}}>{hasActiveUniversityAccess('cattle') ? 'Professional access active ✓' : 'Go Professional'}</button>
@@ -6150,7 +6150,7 @@ function AppInner() {
  return <div key={m.name} className='panel' style={{padding:8,border:locked?'1px solid #e2e8f0':'1px solid #dbe6df',opacity:locked?0.6:1,background:locked?'#f8fafc':'#fff'}}>
  <div className='list-row'>
  <span><strong>{m.name}</strong><br/><span style={{fontSize:'.85rem',color:'#475569'}}>{m.summary}</span></span>
- {locked ? <button className='btn' onClick={()=>startUniversityCheckout('cattle', 'basic', 'Cattle University Basic checkout')}>🔒 Unlock — ₵50/mo</button> : <button className='btn' onClick={()=>setOpenCattleModule(openCattleModule===i ? -1 : i)}>{openCattleModule===i ? 'Hide' : 'Open'}</button>}
+ {locked ? <button className='btn' onClick={()=>startUniversityCheckout('cattle', 'basic', 'Cattle University Basic checkout')}>🔒 Unlock - ₵50/mo</button> : <button className='btn' onClick={()=>setOpenCattleModule(openCattleModule===i ? -1 : i)}>{openCattleModule===i ? 'Hide' : 'Open'}</button>}
  </div>
  {!locked && openCattleModule===i && <div className='list' style={{marginTop:6}}>{m.details.map((d)=><div className='list-row' key={d}><span>{d}</span></div>)}</div>}
  </div>
@@ -6245,14 +6245,14 @@ function AppInner() {
       {livestockRecordsFiltered.map((r) => <button type='button' key={`record-card-${r.id}`} className={`records-card ${currentLivestockRecord?.id === r.id ? 'active' : ''}`} onClick={() => { setSelectedOffspringRecord(null); setSelectedLivestockRecord(r); setRecordsSectionOpen(prev => ({ ...prev, details: true, edit: false, create: false })) }}>
        <div className='records-card-top'>
         <div>
-         <div className='records-card-id'>{r.id || '—'}</div>
+         <div className='records-card-id'>{r.id || '-'}</div>
          <div className='records-card-name'>{r.name || 'Unnamed animal'}</div>
         </div>
         <div className='records-card-arrow'>›</div>
        </div>
        <div className='records-card-tags'>
-        <span>{r.species || '—'}</span>
-        <span>{r.animal_type || '—'}</span>
+        <span>{r.species || '-'}</span>
+        <span>{r.animal_type || '-'}</span>
         <span>{r.ear_tag || 'No ear tag'}</span>
        </div>
        <div className='records-card-meta'>{r.pen_location || r.purchased_from || 'No location or breeder recorded'}</div>
@@ -7011,13 +7011,13 @@ function AppInner() {
 
  {servicesView === 'list' && <div className='three-col'>
  <article className='panel'><h4>Logistics Requests</h4>{!state.logistics.length ? <EmptyListingsState title='No logistics services yet' body='Create your first logistics request or transport service listing.' actionLabel='Add Logistics Service' onAction={() => setServicesView('create')} /> : <div className='list'>
- {state.logistics.map((r) => { const images = parseImageList(r.image_urls); return <ListingDetailCard key={`log-${r.id}`} title={`${r.pickup_location} → ${r.dropoff_location}`} subtitle={`${r.cargo_type || 'General cargo'} • ${r.status}`} stats={[`${r.weight_kg || 0} kg`, `${images.length} photos`]} contact={r.contact_name || r.phone || `Requester #${r.requester_id || '—'}`}><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={`Logistics ${r.id}`} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /><div className='card-actions'><button className='btn btn-dark' type='button' onClick={() => { setLogisticsEdit({ id: r.id, requester_id: r.requester_id || 1, pickup_location: r.pickup_location || '', dropoff_location: r.dropoff_location || '', cargo_type: r.cargo_type || '', weight_kg: r.weight_kg || '', status: r.status || 'PENDING' }); setServiceEditImages(images); setServicesView('edit') }}>Edit</button><button className='btn' type='button' onClick={() => setSavedListings(prev => isSavedListing(prev, 'logistics', r.id) ? prev.filter(x => x !== listingKey('logistics', r.id)) : [...prev, listingKey('logistics', r.id)])}>{isSavedListing(savedListings, 'logistics', r.id) ? 'Saved ✓' : 'Save'}</button><button className='btn' type='button' onClick={async () => { try { await navigator.share?.({ title: `${r.pickup_location} → ${r.dropoff_location}`, text: r.cargo_type || 'Logistics service', url: window.location.href }) } catch {} }}>Share</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.weight_kg || 0, quantity: 1 })}>Contact via FarmSavior</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.weight_kg || 0, quantity: 1 })}>Send Inquiry</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete logistics service #${r.id}?`)) return; await api.deleteLogistics(r.id); await load() }}>Delete</button></div></ListingDetailCard> })}
+ {state.logistics.map((r) => { const images = parseImageList(r.image_urls); return <ListingDetailCard key={`log-${r.id}`} title={`${r.pickup_location} → ${r.dropoff_location}`} subtitle={`${r.cargo_type || 'General cargo'} • ${r.status}`} stats={[`${r.weight_kg || 0} kg`, `${images.length} photos`]} contact={r.contact_name || r.phone || `Requester #${r.requester_id || '-'}`}><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={`Logistics ${r.id}`} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /><div className='card-actions'><button className='btn btn-dark' type='button' onClick={() => { setLogisticsEdit({ id: r.id, requester_id: r.requester_id || 1, pickup_location: r.pickup_location || '', dropoff_location: r.dropoff_location || '', cargo_type: r.cargo_type || '', weight_kg: r.weight_kg || '', status: r.status || 'PENDING' }); setServiceEditImages(images); setServicesView('edit') }}>Edit</button><button className='btn' type='button' onClick={() => setSavedListings(prev => isSavedListing(prev, 'logistics', r.id) ? prev.filter(x => x !== listingKey('logistics', r.id)) : [...prev, listingKey('logistics', r.id)])}>{isSavedListing(savedListings, 'logistics', r.id) ? 'Saved ✓' : 'Save'}</button><button className='btn' type='button' onClick={async () => { try { await navigator.share?.({ title: `${r.pickup_location} → ${r.dropoff_location}`, text: r.cargo_type || 'Logistics service', url: window.location.href }) } catch {} }}>Share</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.weight_kg || 0, quantity: 1 })}>Contact via FarmSavior</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.weight_kg || 0, quantity: 1 })}>Send Inquiry</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete logistics service #${r.id}?`)) return; await api.deleteLogistics(r.id); await load() }}>Delete</button></div></ListingDetailCard> })}
  </div>}</article>
  <article className='panel'><h4>Equipment Rentals</h4>{!state.equipment.length ? <EmptyListingsState title='No equipment rentals yet' body='Create your first machinery or equipment rental service.' actionLabel='Add Equipment Service' onAction={() => setServicesView('create')} /> : <div className='list'>
- {state.equipment.map((r) => { const images = parseImageList(r.image_urls); return <ListingDetailCard key={`eq-${r.id}`} title={r.equipment_type} subtitle={`${r.location || 'Location not set'} • ${r.status}`} stats={[`${r.duration_days} days`, `${r.budget} budget`, `${images.length} photos`]} contact={r.contact_name || r.phone || `Requester #${r.requester_id || '—'}`}><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={`Equipment ${r.id}`} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /><div className='card-actions'><button className='btn btn-dark' type='button' onClick={() => { setEquipmentEdit({ id: r.id, requester_id: r.requester_id || 1, equipment_type: r.equipment_type || '', duration_days: r.duration_days || '', location: r.location || '', budget: r.budget || '', status: r.status || 'PENDING' }); setServiceEditImages(images); setServicesView('edit') }}>Edit</button><button className='btn' type='button' onClick={() => setSavedListings(prev => isSavedListing(prev, 'equipment', r.id) ? prev.filter(x => x !== listingKey('equipment', r.id)) : [...prev, listingKey('equipment', r.id)])}>{isSavedListing(savedListings, 'equipment', r.id) ? 'Saved ✓' : 'Save'}</button><button className='btn' type='button' onClick={async () => { try { await navigator.share?.({ title: r.equipment_type, text: r.location || 'Equipment service', url: window.location.href }) } catch {} }}>Share</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.budget || r.weight_kg || 0, quantity: 1 })}>Contact via FarmSavior</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.budget || r.weight_kg || 0, quantity: 1 })}>Send Inquiry</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete equipment service #${r.id}?`)) return; await api.deleteEquipment(r.id); await load() }}>Delete</button></div></ListingDetailCard> })}
+ {state.equipment.map((r) => { const images = parseImageList(r.image_urls); return <ListingDetailCard key={`eq-${r.id}`} title={r.equipment_type} subtitle={`${r.location || 'Location not set'} • ${r.status}`} stats={[`${r.duration_days} days`, `${r.budget} budget`, `${images.length} photos`]} contact={r.contact_name || r.phone || `Requester #${r.requester_id || '-'}`}><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={`Equipment ${r.id}`} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /><div className='card-actions'><button className='btn btn-dark' type='button' onClick={() => { setEquipmentEdit({ id: r.id, requester_id: r.requester_id || 1, equipment_type: r.equipment_type || '', duration_days: r.duration_days || '', location: r.location || '', budget: r.budget || '', status: r.status || 'PENDING' }); setServiceEditImages(images); setServicesView('edit') }}>Edit</button><button className='btn' type='button' onClick={() => setSavedListings(prev => isSavedListing(prev, 'equipment', r.id) ? prev.filter(x => x !== listingKey('equipment', r.id)) : [...prev, listingKey('equipment', r.id)])}>{isSavedListing(savedListings, 'equipment', r.id) ? 'Saved ✓' : 'Save'}</button><button className='btn' type='button' onClick={async () => { try { await navigator.share?.({ title: r.equipment_type, text: r.location || 'Equipment service', url: window.location.href }) } catch {} }}>Share</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.budget || r.weight_kg || 0, quantity: 1 })}>Contact via FarmSavior</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.budget || r.weight_kg || 0, quantity: 1 })}>Send Inquiry</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete equipment service #${r.id}?`)) return; await api.deleteEquipment(r.id); await load() }}>Delete</button></div></ListingDetailCard> })}
  </div>}</article>
  <article className='panel'><h4>Storage Reservations</h4>{!state.storage.length ? <EmptyListingsState title='No storage services yet' body='Create your first storage or cold-room service listing.' actionLabel='Add Storage Service' onAction={() => setServicesView('create')} /> : <div className='list'>
- {state.storage.map((r) => { const images = parseImageList(r.image_urls); return <ListingDetailCard key={`st-${r.id}`} title={r.storage_type} subtitle={`${r.location || 'Location not set'} • ${r.status}`} stats={[`${r.quantity_kg} kg`, `${r.duration_days} days`, `${images.length} photos`]} contact={r.contact_name || r.phone || `Requester #${r.requester_id || '—'}`}><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={`Storage ${r.id}`} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /><div className='card-actions'><button className='btn btn-dark' type='button' onClick={() => { setStorageEdit({ id: r.id, requester_id: r.requester_id || 1, storage_type: r.storage_type || '', quantity_kg: r.quantity_kg || '', location: r.location || '', duration_days: r.duration_days || '', status: r.status || 'PENDING' }); setServiceEditImages(images); setServicesView('edit') }}>Edit</button><button className='btn' type='button' onClick={() => setSavedListings(prev => isSavedListing(prev, 'storage', r.id) ? prev.filter(x => x !== listingKey('storage', r.id)) : [...prev, listingKey('storage', r.id)])}>{isSavedListing(savedListings, 'storage', r.id) ? 'Saved ✓' : 'Save'}</button><button className='btn' type='button' onClick={async () => { try { await navigator.share?.({ title: r.storage_type, text: r.location || 'Storage service', url: window.location.href }) } catch {} }}>Share</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.budget || r.weight_kg || 0, quantity: 1 })}>Contact via FarmSavior</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.budget || r.weight_kg || 0, quantity: 1 })}>Send Inquiry</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete storage service #${r.id}?`)) return; await api.deleteStorage(r.id); await load() }}>Delete</button></div></ListingDetailCard> })}
+ {state.storage.map((r) => { const images = parseImageList(r.image_urls); return <ListingDetailCard key={`st-${r.id}`} title={r.storage_type} subtitle={`${r.location || 'Location not set'} • ${r.status}`} stats={[`${r.quantity_kg} kg`, `${r.duration_days} days`, `${images.length} photos`]} contact={r.contact_name || r.phone || `Requester #${r.requester_id || '-'}`}><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={`Storage ${r.id}`} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /><div className='card-actions'><button className='btn btn-dark' type='button' onClick={() => { setStorageEdit({ id: r.id, requester_id: r.requester_id || 1, storage_type: r.storage_type || '', quantity_kg: r.quantity_kg || '', location: r.location || '', duration_days: r.duration_days || '', status: r.status || 'PENDING' }); setServiceEditImages(images); setServicesView('edit') }}>Edit</button><button className='btn' type='button' onClick={() => setSavedListings(prev => isSavedListing(prev, 'storage', r.id) ? prev.filter(x => x !== listingKey('storage', r.id)) : [...prev, listingKey('storage', r.id)])}>{isSavedListing(savedListings, 'storage', r.id) ? 'Saved ✓' : 'Save'}</button><button className='btn' type='button' onClick={async () => { try { await navigator.share?.({ title: r.storage_type, text: r.location || 'Storage service', url: window.location.href }) } catch {} }}>Share</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.budget || r.weight_kg || 0, quantity: 1 })}>Contact via FarmSavior</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.budget || r.weight_kg || 0, quantity: 1 })}>Send Inquiry</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete storage service #${r.id}?`)) return; await api.deleteStorage(r.id); await load() }}>Delete</button></div></ListingDetailCard> })}
  </div>}</article>
  </div>}
  </section>}
@@ -7045,7 +7045,7 @@ function AppInner() {
  <div className='three-col' style={{marginTop:12}}>
  <article className='panel'><h4>Buyer Order Page</h4><input className='input filter' placeholder='View orders for this buyer account' value={buyerOrderUserId} onChange={e => setBuyerOrderUserId(e.target.value)} />
  <div className='list'>
- {state.orders.filter(o => String(o.buyer_id) === String(buyerOrderUserId)).map((o) => <ListingDetailCard key={`buyer-${o.id}`} title={`${o.listing_title} • Order ${o.id}`} subtitle={`Escrow ${o.escrow_status} • Fulfillment ${o.fulfillment_status}`} stats={[`${o.gross_amount} ${o.currency}`, `seller net ${o.seller_net}`, `ref ${o.payment_reference || '—'}`]} contact={'Seller protected by FarmSavior escrow'}><div className='card-actions'><button className='btn btn-dark' type='button' onClick={async () => { const res = await api.payOrder(o.id, { ...orderPayment, payer_id: o.buyer_id, payee_id: o.seller_id, amount: o.gross_amount }); const url = res?.payment?.authorization_url; if (url) window.open(url, '_blank', 'noopener,noreferrer'); await load() }}>Pay Securely</button><button className='btn' type='button' onClick={async () => { try { await api.verifyOrderPayment(o.id); await load() } catch (err) { alert(err?.response?.data?.detail || 'Payment not verified yet') } }}>Verify Payment</button><button className='btn' type='button' onClick={async () => { await api.confirmOrder(o.id); await load() }}>Confirm Receipt</button><button className='btn' type='button' onClick={async () => { await api.disputeOrder(o.id, { buyer_note: 'Buyer dispute submitted from dashboard' }); await load() }}>Open Dispute</button><button className='btn' type='button' onClick={async () => { const order = await api.fetchOrder(o.id); setSelectedOrder(order) }}>View Order</button><button className='btn' type='button' onClick={async () => { const receipt = await api.fetchOrderReceipt(o.id); setSelectedReceipt(receipt) }}>Receipt</button><button className='btn' type='button' onClick={async () => { await api.refundOrder(o.id, { buyer_note: 'Buyer refund requested from dashboard' }); await load() }}>Request Refund</button></div></ListingDetailCard>)}
+ {state.orders.filter(o => String(o.buyer_id) === String(buyerOrderUserId)).map((o) => <ListingDetailCard key={`buyer-${o.id}`} title={`${o.listing_title} • Order ${o.id}`} subtitle={`Escrow ${o.escrow_status} • Fulfillment ${o.fulfillment_status}`} stats={[`${o.gross_amount} ${o.currency}`, `seller net ${o.seller_net}`, `ref ${o.payment_reference || '-'}`]} contact={'Seller protected by FarmSavior escrow'}><div className='card-actions'><button className='btn btn-dark' type='button' onClick={async () => { const res = await api.payOrder(o.id, { ...orderPayment, payer_id: o.buyer_id, payee_id: o.seller_id, amount: o.gross_amount }); const url = res?.payment?.authorization_url; if (url) window.open(url, '_blank', 'noopener,noreferrer'); await load() }}>Pay Securely</button><button className='btn' type='button' onClick={async () => { try { await api.verifyOrderPayment(o.id); await load() } catch (err) { alert(err?.response?.data?.detail || 'Payment not verified yet') } }}>Verify Payment</button><button className='btn' type='button' onClick={async () => { await api.confirmOrder(o.id); await load() }}>Confirm Receipt</button><button className='btn' type='button' onClick={async () => { await api.disputeOrder(o.id, { buyer_note: 'Buyer dispute submitted from dashboard' }); await load() }}>Open Dispute</button><button className='btn' type='button' onClick={async () => { const order = await api.fetchOrder(o.id); setSelectedOrder(order) }}>View Order</button><button className='btn' type='button' onClick={async () => { const receipt = await api.fetchOrderReceipt(o.id); setSelectedReceipt(receipt) }}>Receipt</button><button className='btn' type='button' onClick={async () => { await api.refundOrder(o.id, { buyer_note: 'Buyer refund requested from dashboard' }); await load() }}>Request Refund</button></div></ListingDetailCard>)}
  {!state.orders.filter(o => String(o.buyer_id) === String(buyerOrderUserId)).length && <EmptyListingsState title='No buyer orders yet' body='Buyer orders will appear here with escrow, payment, and dispute controls.' />}
  </div>
  </article>
@@ -7123,7 +7123,7 @@ function AppInner() {
  style={{position:'absolute', inset:0, cursor:'crosshair', background:'rgba(2,132,199,0.06)', borderRadius:10}}
  />
  </div>
- <p style={{fontSize:'.85rem', color:'#64748b', marginTop:8}}>Tap map to add many boundary points, or paste multiple points below (one per line: lat,lng). When done, click “Close Area & Use”.</p>
+ <p style={{fontSize:'.85rem', color:'#64748b', marginTop:8}}>Tap map to add many boundary points, or paste multiple points below (one per line: lat,lng). When done, click "Close Area & Use".</p>
  <textarea
  className='input'
  rows={4}
@@ -7364,7 +7364,7 @@ function AppInner() {
  </div>
  <div className='panel' style={{marginTop:10, background:'#f8fafc'}}>
  <strong>Payout status</strong>
- <div className='helper-text' style={{marginTop:6}}>{(state.payoutProfiles.find(x => String(x.user_id) === String(payoutForm.user_id))?.verification_status) || 'PENDING'} — funds release only after verification.</div>
+ <div className='helper-text' style={{marginTop:6}}>{(state.payoutProfiles.find(x => String(x.user_id) === String(payoutForm.user_id))?.verification_status) || 'PENDING'} - funds release only after verification.</div>
  </div>
  {payoutSettingsOpen && <form className='list' style={{marginTop:10}} onSubmit={async e => {
  e.preventDefault()
@@ -7707,7 +7707,7 @@ function AppInner() {
  </div>
  <button type='button' className='btn' onClick={closeCommunityMessages}>Close</button>
  </div>
- <div className='helper-text' style={{marginBottom:10}}>{communityMessageThreads.length ? `${communityMessageThreads.length} conversation${communityMessageThreads.length === 1 ? '' : 's'} ready` : 'No conversations yet — tap Message on a profile, search result, or post to start one.'}</div>
+ <div className='helper-text' style={{marginBottom:10}}>{communityMessageThreads.length ? `${communityMessageThreads.length} conversation${communityMessageThreads.length === 1 ? '' : 's'} ready` : 'No conversations yet - tap Message on a profile, search result, or post to start one.'}</div>
  {((communityMessageThreads || []).filter(t=>{ const tx = String(t?.last_message?.text || '').toLowerCase(); return tx.includes('join my audio call:') || tx.includes('join my video call:') || tx.includes('meet.jit.si/') }).slice(0,5).length > 0) && <div className='panel' style={{marginBottom:10, background:'#f8fafc', border:'1px solid #dbe6df'}}>
  <div style={{fontWeight:700, marginBottom:6}}>Recent Calls</div>
  <div className='list'>
@@ -7784,7 +7784,7 @@ function AppInner() {
  <div className='panel' style={{maxWidth:420, width:'92vw', border:'2px solid #0ea5e9', boxShadow:'0 20px 40px rgba(15,23,42,.25)'}}>
  <div style={{fontSize:'.78rem', fontWeight:700, color:'#0284c7', letterSpacing:'.08em', textTransform:'uppercase'}}>Incoming call</div>
  <h4 style={{margin:'6px 0 4px 0'}}>{communityIncomingCall.from} is calling you</h4>
- <div className='helper-text' style={{marginBottom:10}}>{communityIncomingCall.mode === 'video' ? 'Video call' : 'Audio call'} — answer now?</div>
+ <div className='helper-text' style={{marginBottom:10}}>{communityIncomingCall.mode === 'video' ? 'Video call' : 'Audio call'} - answer now?</div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
  <button type='button' className='btn btn-dark' onClick={()=>{ const url = communityIncomingCall.url; const mode = communityIncomingCall.mode; setCommunityIncomingCall(null); setCommunityActiveCall({ url, mode }) }}>Answer</button>
  <button type='button' className='btn' onClick={()=>setCommunityIncomingCall(null)}>Decline</button>
@@ -7918,8 +7918,11 @@ function AppInner() {
  <h3>{t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析')}</h3>
  <p>Upload a clear livestock photo, add symptoms if you have them, and get a structured first-pass assessment with prevention, treatment, and follow-up guidance.</p>
  </div>
- <div className='disease-hero-actions'>
-
+ <div className='disease-hero-actions' style={{alignItems:'flex-end'}}>
+  <div style={{display:'inline-flex', alignItems:'center', gap:10, background:'rgba(127,29,29,.88)', color:'#fff', border:'1px solid rgba(254,202,202,.5)', borderRadius:999, padding:'8px 12px', boxShadow:'0 10px 28px rgba(127,29,29,.35)'}}>
+   <span style={{display:'inline-grid', placeItems:'center', width:24, height:24, borderRadius:'50%', background:'#ef4444', fontWeight:900}}>✚</span>
+   <span style={{fontSize:'.76rem', letterSpacing:'.06em', textTransform:'uppercase', fontWeight:800}}>Medical Safety Mode</span>
+  </div>
  </div>
  </div>
  <div className='disease-overview-grid'>
@@ -8250,7 +8253,7 @@ function AppInner() {
  <div className='list'>
  {(state.govPrograms || []).map((g, i) => (
  <div className='list-row' key={`gov-int-${i}`}>
- <span><strong>{g.country}</strong> • {g.agency} — {safeGovHeadline(g)}</span>
+ <span><strong>{g.country}</strong> • {g.agency} - {safeGovHeadline(g)}</span>
  <a className='btn' href={g.source_url} target='_blank' rel='noreferrer'>Open Source</a>
  </div>
  ))}
