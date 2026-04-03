@@ -7920,7 +7920,7 @@ function AppInner() {
  </div>
  <div className='disease-hero-actions'>
  <button className='btn' type='button' onClick={() => { setDiseaseResult(null); setDiseaseImagePreview(''); setDiseaseImageFileName(''); setDiseaseForm(prev => ({ ...prev, target: '', image_url: '', context_note: '' })) }}>Start fresh</button>
- <button className='btn btn-dark' type='button' onClick={() => document.getElementById('disease-analyzer-form')?.scrollIntoView({ behavior:'smooth', block:'start' })}>New analysis</button>
+
  </div>
  </div>
  <div className='disease-overview-grid'>
@@ -8086,7 +8086,10 @@ function AppInner() {
  <div className='disease-panel-title'>Recent analyzer history</div>
  <div className='helper-text'>Animal-only disease scans already saved in the admin database.</div>
  </div>
+ <div className='inlineForm' style={{gap:8}}>
  <div className='disease-panel-pill disease-panel-pill-soft'>{state.diseaseScans.filter(r => !r.category || String(r.category).toLowerCase() === 'animal').length} records</div>
+ <button type='button' className='btn' onClick={async()=>{ if (!confirm('Clear all analyzer history?')) return; await api.clearDiseaseScans(); const rows = await api.fetchDiseaseScans().catch(()=>[]); setState(prev => ({ ...prev, diseaseScans: rows || [] })) }}>Clear history</button>
+ </div>
  </div>
  <div className='list' style={{marginTop:8}}>
  {state.diseaseScans.filter(r => !r.category || String(r.category).toLowerCase() === 'animal').map((row) => {
@@ -8102,6 +8105,7 @@ function AppInner() {
     <div className='helper-text' style={{padding:'0 10px 8px'}}>User {row.user_id} · {String(row.created_at || '').replace('T',' ').slice(0,16)}</div>
    </summary>
    <div style={{padding:'0 10px 10px'}}>
+    <div style={{display:'flex', justifyContent:'flex-end'}}><button type='button' className='btn' onClick={async()=>{ if (!confirm('Delete this analyzer history entry?')) return; await api.deleteDiseaseScan(row.id); const rows = await api.fetchDiseaseScans().catch(()=>[]); setState(prev => ({ ...prev, diseaseScans: rows || [] })) }}>Delete entry</button></div>
     <div className='list-row'><span>Image</span><strong style={{maxWidth:'65%', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{String(row.image_url || '').replace('uploaded-image://','')}</strong></div>
     {!!row.image_url && <div style={{marginTop:8}}>
      <button type='button' className='btn' onClick={()=>window.open(String(row.image_url), '_blank', 'noopener,noreferrer')}>View analyzed image</button>

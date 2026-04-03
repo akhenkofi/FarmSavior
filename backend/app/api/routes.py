@@ -4152,6 +4152,23 @@ def list_disease_scans(db: Session = Depends(get_db)):
     return db.query(DiseaseScan).order_by(DiseaseScan.id.desc()).all()
 
 
+@router.delete('/ai/disease/scans/{scan_id}')
+def delete_disease_scan(scan_id: int, db: Session = Depends(get_db)):
+    row = db.query(DiseaseScan).filter(DiseaseScan.id == scan_id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail='Scan not found')
+    db.delete(row)
+    db.commit()
+    return {'ok': True}
+
+
+@router.delete('/ai/disease/scans')
+def clear_disease_scans(db: Session = Depends(get_db)):
+    db.query(DiseaseScan).delete()
+    db.commit()
+    return {'ok': True}
+
+
 @router.get('/verification/approved-accounts')
 def approved_accounts(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
     admin = _current_user_from_auth(authorization, db)

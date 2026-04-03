@@ -236,6 +236,8 @@ export const analyzeDisease = async (payload) => (await api.post('/ai/disease/an
 export const identifyPlant = async (payload) => (await api.post('/ai/plants/identify', payload)).data
 export const identifyPest = async (payload) => (await api.post('/ai/pests/identify', payload)).data
 export const fetchDiseaseScans = async () => (await api.get('/ai/disease/scans')).data
+export const deleteDiseaseScan = async (scanId) => (await api.delete(`/ai/disease/scans/${scanId}`)).data
+export const clearDiseaseScans = async () => (await api.delete('/ai/disease/scans')).data
 
 export const trackAnalyticsEvent = async (payload) => (await api.post('/analytics/events', payload)).data
 export const fetchUsersAnalyticsSummary = async () => (await api.get('/analytics/users/summary')).data
