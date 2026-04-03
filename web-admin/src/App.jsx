@@ -2715,6 +2715,7 @@ function AppInner() {
  const [communityActiveCall, setCommunityActiveCall] = useState(null)
  const communityMessageListRef = useRef(null)
  const communityLastCallAlertRef = useRef(null)
+ const communityLastSignalIdRef = useRef('')
  const [editingCommunityPostId, setEditingCommunityPostId] = useState(null)
  const [communityCommentText, setCommunityCommentText] = useState({})
  const [communityComments, setCommunityComments] = useState({})
@@ -2863,6 +2864,14 @@ function AppInner() {
    setCommunityMessageSending(false)
   }
  }
+ const parseCallSignal = (rawText) => {
+  const text = String(rawText || '')
+  const marker = 'CALL_SIGNAL:'
+  const i = text.indexOf(marker)
+  if (i < 0) return null
+  try { return JSON.parse(text.slice(i + marker.length)) } catch { return null }
+ }
+
  const enableCommunityCallPermissions = async (options = {}) => {
   const { silent = false } = options
   if (communityCallPermissionBusy) return
@@ -2925,6 +2934,37 @@ function AppInner() {
    new Notification('Incoming FarmSavior call', { body: `${sender} is calling you (${mode}).`, silent: false })
   }
  }, [communityMessageView.open, communityMessageView.loading, communityMessageView.messages, communityMessageView?.user?.full_name])
+
+ useEffect(() => {
+  if (active !== 'community' || !token || !me?.id) return
+  let stopped = false
+  const run = async () => {
+   try {
+    const threads = await api.fetchCommunityMessageThreads().catch(() => [])
+    if (stopped || !Array.isArray(threads) || !threads.length) return
+    setCommunityMessageThreads(threads)
+    const candidate = threads.find(t => {
+     const msg = t?.last_message
+     if (!msg || msg.is_mine) return false
+     const signal = parseCallSignal(msg.text)
+     if (!signal || String(signal.type || '') !== 'offer') return false
+     if (Number(signal.toUserId || 0) && Number(signal.toUserId || 0) !== Number(me?.id || 0)) return false
+     const createdMs = msg?.created_at ? new Date(msg.created_at).getTime() : Date.now()
+     return Number.isFinite(createdMs) && (Date.now() - createdMs) < 90 * 1000
+    })
+    const signal = parseCallSignal(candidate?.last_message?.text)
+    if (!signal) return
+    const marker = String(signal.callId || candidate?.last_message?.id || '')
+    if (!marker || communityLastSignalIdRef.current === marker) return
+    communityLastSignalIdRef.current = marker
+    setCommunityIncomingCall({ from: candidate?.user?.full_name || 'A user', mode: signal.mode === 'video' ? 'video' : 'audio', callId: signal.callId || '', fromUserId: signal.fromUserId || null })
+   } catch {}
+  }
+  run()
+  const timer = setInterval(run, 4000)
+  return () => { stopped = true; clearInterval(timer) }
+ }, [active, token, me?.id])
+
  useEffect(() => {
  if (active !== 'community') return
  const routeUserId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('communityProfile') : ''
