@@ -6569,6 +6569,45 @@ function AppInner() {
  </div>
  </section>}
 
+ {flushComposerOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:268, margin:0, background:'#f8fafc', overflow:'auto'}}>
+ <div className='records-shell'>
+  <div className='records-hero-card'>
+   <div><div className='records-eyebrow'>BREEDING ENTRY</div><h3>Add Flush</h3><p>{currentLivestockRecord?.name || 'Animal record'}</p></div>
+   <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setFlushComposerOpen(false)}>Cancel</button></div>
+  </div>
+  <article className='panel records-panel'>
+   <div className='row2' style={{gap:10}}>
+    <input className='input' type='date' value={flushDraft.date || ''} onChange={e=>setFlushDraft(prev=>({ ...prev, date:e.target.value }))} />
+    <input className='input' placeholder='Ram ID/Name' value={flushDraft.ram || ''} onChange={e=>setFlushDraft(prev=>({ ...prev, ram:e.target.value }))} />
+   </div>
+   <div className='row2' style={{gap:10, marginTop:10}}>
+    <input className='input' type='date' value={flushDraft.cidrIn || ''} onChange={e=>setFlushDraft(prev=>({ ...prev, cidrIn:e.target.value }))} />
+    <input className='input' type='date' value={flushDraft.cidrOut || ''} onChange={e=>setFlushDraft(prev=>({ ...prev, cidrOut:e.target.value }))} />
+   </div>
+   <div className='helper-text' style={{marginTop:6}}>CIDR In date and CIDR Out date</div>
+   <textarea className='input' rows={4} placeholder='Notes (optional)' value={flushDraft.notes || ''} onChange={e=>setFlushDraft(prev=>({ ...prev, notes:e.target.value }))} style={{marginTop:10}} />
+   <div style={{marginTop:10, display:'flex', justifyContent:'flex-end'}}><button type='button' className='btn btn-dark' onClick={async()=>{
+    if (!currentLivestockRecord?.id) return
+    const date = String(flushDraft.date || new Date().toISOString().slice(0,10))
+    const ram = String(flushDraft.ram || '').trim()
+    const cidrIn = String(flushDraft.cidrIn || '').trim()
+    const cidrOut = String(flushDraft.cidrOut || '').trim()
+    const extra = String(flushDraft.notes || '').trim()
+    if (!ram && !cidrIn && !cidrOut) { alert('Enter at least ram or CIDR info before saving.'); return }
+    const stamped = `[${date}] Flush: ${ram || 'N/A'}${cidrIn ? ` | CIDR In: ${cidrIn}` : ''}${cidrOut ? ` | CIDR Out: ${cidrOut}` : ''}${extra ? ` | Notes: ${extra}` : ''}`
+    try {
+     await api.appendLivestockNote(Number(currentLivestockRecord.id), stamped)
+     await loadLivestockRecords()
+     setFlushDraft({ ram: '', date: new Date().toISOString().slice(0,10), cidrIn: '', cidrOut: '', notes: '' })
+     setFlushComposerOpen(false)
+    } catch (err) {
+     alert(`Save flush entry failed: ${errMsg(err)}`)
+    }
+   }}>Save Flush</button></div>
+  </article>
+ </div>
+ </section>}
+
  {markComposerOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:269, margin:0, background:'#f8fafc', overflow:'auto'}}>
  <div className='records-shell'>
   <div className='records-hero-card'>
