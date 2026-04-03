@@ -2849,6 +2849,22 @@ function AppInner() {
   const text = `${icon} CALL_SIGNAL:${JSON.stringify(payload)}`
   return api.sendCommunityMessage(targetUserId, { text })
  }
+ const startCommunityCallToUser = async (user, mode = 'audio') => {
+  const targetUserId = user?.user_id || user?.id
+  if (!targetUserId || communityMessageSending) return
+  const callId = `fs-call-${Date.now()}-${Math.floor(Math.random()*1000)}`
+  const signalPayload = { v: 1, type: 'offer', mode, callId, fromUserId: Number(me?.id || 0), toUserId: Number(targetUserId || 0), ts: Date.now() }
+  try {
+   setCommunityMessageSending(true)
+   await sendCallSignal(targetUserId, signalPayload, mode === 'video' ? '📹' : '📞')
+   setCommunityActiveCall({ callId, mode, status: 'calling', peerUserId: targetUserId, isCaller: true })
+   await openCommunityMessages(user)
+  } catch (err) {
+   alert(errMsg(err))
+  } finally {
+   setCommunityMessageSending(false)
+  }
+ }
  const sendCommunityCallInvite = async (mode = 'audio') => {
   const targetUserId = communityMessageView?.user?.user_id
   if (!targetUserId || communityMessageSending) return
@@ -8046,6 +8062,17 @@ function AppInner() {
  <button type='button' className='btn' onClick={closeCommunityMessages}>Close</button>
  </div>
  <div className='helper-text' style={{marginBottom:10}}>{communityInboxSection === 'calls' ? 'Phone activity only.' : (communityMessageThreads.length ? `${communityMessageThreads.length} conversation${communityMessageThreads.length === 1 ? '' : 's'} ready` : 'No conversations yet - tap Message on a profile, search result, or post to start one.')}</div>
+
+ {communityInboxSection === 'calls' && <div className='panel' style={{marginBottom:10, background:'#f8fafc', border:'1px solid #dbe6df'}}>
+  <div style={{fontWeight:700, marginBottom:6}}>Start a new call</div>
+  <div className='list'>
+   {[...(communityMessageThreads || []).map(t=>t?.user).filter(Boolean), ...((communityFollowState?.following || []).slice(0,10) || [])]
+    .filter((u, i, arr)=>arr.findIndex(x=>String(x?.user_id || x?.id)===String(u?.user_id || u?.id))===i)
+    .slice(0,8)
+    .map((u)=><div key={`quick-call-${u?.user_id || u?.id}`} className='list-row'><span>{u?.full_name || `User ${u?.user_id || u?.id || ''}`}</span><div style={{display:'flex', gap:6}}><button type='button' className='btn' onClick={()=>startCommunityCallToUser(u,'audio')}>Audio</button><button type='button' className='btn btn-dark' onClick={()=>startCommunityCallToUser(u,'video')}>Video</button></div></div>)}
+   {!([...(communityMessageThreads || []).map(t=>t?.user).filter(Boolean), ...((communityFollowState?.following || []).slice(0,10) || [])].length) && <div className='community-thread-preview community-thread-preview-empty'>No recent/followed contacts yet.</div>}
+  </div>
+ </div>}
 
  {communityInboxSection === 'calls' && ((communityMessageThreads || []).filter(t=>{ const tx = String(t?.last_message?.text || '').toLowerCase(); return tx.includes('join my audio call:') || tx.includes('join my video call:') || tx.includes('meet.jit.si/') || tx.includes('call_signal:') }).slice(0,5).length > 0) && <div className='panel' style={{marginBottom:10, background:'#f8fafc', border:'1px solid #dbe6df'}}>
  <div style={{fontWeight:700, marginBottom:6}}>Recent Calls</div>
