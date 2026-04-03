@@ -7787,7 +7787,7 @@ function AppInner() {
  <strong>{thread?.user?.full_name || `User ${thread?.user?.user_id || ''}`}</strong>
  <div style={{fontSize:'.8rem', color:'#0284c7'}}>{thread?.user?.username ? `@${thread.user.username}` : 'No username yet'}</div>
  </div>
- <div style={{fontSize:'.84rem', color:'#475569', textAlign:'left'}}>{(()=>{ const tx = String(thread?.last_message?.text || 'No messages yet'); const lx = tx.toLowerCase(); if (lx.includes('join my audio call:') || lx.includes('join my video call:') || lx.includes('meet.jit.si/')) return `📞 ${thread?.last_message?.is_mine ? 'Outgoing' : 'Missed'} call`; return `${thread?.last_message?.is_mine ? 'You: ' : ''}${tx.slice(0, 88)}` })()}</div>
+ <div style={{fontSize:'.84rem', color:'#475569', textAlign:'left'}}>{(()=>{ const tx = String(thread?.last_message?.text || 'No messages yet'); const lx = tx.toLowerCase(); if (lx.includes('join my audio call:') || lx.includes('join my video call:') || lx.includes('meet.jit.si/') || lx.includes('call_signal:')) return `📞 ${thread?.last_message?.is_mine ? 'Outgoing' : 'Missed'} call`; return `${thread?.last_message?.is_mine ? 'You: ' : ''}${tx.slice(0, 88)}` })()}</div>
  </button>)}
  {!communityMessageThreads.length && <div className='community-thread-preview community-thread-preview-empty'>Your inbox will appear here after you send or receive your first direct message.</div>}
  </div>
@@ -7804,10 +7804,10 @@ function AppInner() {
  <button type='button' className='btn' onClick={closeCommunityMessages}>Close</button>
  </div>
  <div className='helper-text' style={{marginBottom:10}}>{communityMessageThreads.length ? `${communityMessageThreads.length} conversation${communityMessageThreads.length === 1 ? '' : 's'} ready` : 'No conversations yet - tap Message on a profile, search result, or post to start one.'}</div>
- {((communityMessageThreads || []).filter(t=>{ const tx = String(t?.last_message?.text || '').toLowerCase(); return tx.includes('join my audio call:') || tx.includes('join my video call:') || tx.includes('meet.jit.si/') }).slice(0,5).length > 0) && <div className='panel' style={{marginBottom:10, background:'#f8fafc', border:'1px solid #dbe6df'}}>
+ {((communityMessageThreads || []).filter(t=>{ const tx = String(t?.last_message?.text || '').toLowerCase(); return tx.includes('join my audio call:') || tx.includes('join my video call:') || tx.includes('meet.jit.si/') || tx.includes('call_signal:') }).slice(0,5).length > 0) && <div className='panel' style={{marginBottom:10, background:'#f8fafc', border:'1px solid #dbe6df'}}>
  <div style={{fontWeight:700, marginBottom:6}}>Recent Calls</div>
  <div className='list'>
- {(communityMessageThreads || []).filter(t=>{ const tx = String(t?.last_message?.text || '').toLowerCase(); return tx.includes('join my audio call:') || tx.includes('join my video call:') || tx.includes('meet.jit.si/') }).slice(0,5).map((thread)=>{ const tx = String(thread?.last_message?.text || '').toLowerCase(); const mode = tx.includes('video') ? 'Video' : 'Audio'; const status = thread?.last_message?.is_mine ? 'Outgoing' : 'Missed'; return <button key={`recent-call-${thread?.user?.user_id}`} type='button' className='list-row' style={{justifyContent:'space-between', width:'100%', textAlign:'left', background:'#fff', border:'1px solid #e2e8f0', borderRadius:10}} onClick={()=>openCommunityMessages(thread.user)}><span>{mode} • {status} • {thread?.user?.full_name || `User ${thread?.user?.user_id || ''}`}</span><span style={{fontSize:'.75rem', color:'#64748b'}}>{String(thread?.last_message?.created_at || '').replace('T',' ').slice(0,16)}</span></button> })}
+ {(communityMessageThreads || []).filter(t=>{ const tx = String(t?.last_message?.text || '').toLowerCase(); return tx.includes('join my audio call:') || tx.includes('join my video call:') || tx.includes('meet.jit.si/') || tx.includes('call_signal:') }).slice(0,5).map((thread)=>{ const tx = String(thread?.last_message?.text || '').toLowerCase(); const mode = tx.includes('video') ? 'Video' : 'Audio'; const status = thread?.last_message?.is_mine ? 'Outgoing' : 'Missed'; return <button key={`recent-call-${thread?.user?.user_id}`} type='button' className='list-row' style={{justifyContent:'space-between', width:'100%', textAlign:'left', background:'#fff', border:'1px solid #e2e8f0', borderRadius:10}} onClick={()=>openCommunityMessages(thread.user)}><span>{mode} • {status} • {thread?.user?.full_name || `User ${thread?.user?.user_id || ''}`}</span><span style={{fontSize:'.75rem', color:'#64748b'}}>{String(thread?.last_message?.created_at || '').replace('T',' ').slice(0,16)}</span></button> })}
  </div>
  </div>}
  <div className='community-thread-list'>
@@ -7817,7 +7817,7 @@ function AppInner() {
  <span>{String(thread?.last_message?.created_at || '').replace('T',' ').slice(0,16)}</span>
  </div>
  <div style={{fontSize:'.8rem', color:'#0284c7'}}>{thread?.user?.username ? `@${thread.user.username}` : 'No username yet'}</div>
- <div className='community-thread-snippet'>{(()=>{ const tx = String(thread?.last_message?.text || ''); const lx = tx.toLowerCase(); if (lx.includes('join my audio call:') || lx.includes('join my video call:') || lx.includes('meet.jit.si/')) return `📞 ${thread?.last_message?.is_mine ? 'Outgoing' : 'Missed'} call activity (see Recent Calls)`; return `${thread?.last_message?.is_mine ? 'You: ' : ''}${tx.slice(0, 120)}` })()}</div>
+ <div className='community-thread-snippet'>{(()=>{ const tx = String(thread?.last_message?.text || ''); const lx = tx.toLowerCase(); if (lx.includes('join my audio call:') || lx.includes('join my video call:') || lx.includes('meet.jit.si/') || lx.includes('call_signal:')) return `📞 ${thread?.last_message?.is_mine ? 'Outgoing' : 'Missed'} call activity (see Recent Calls)`; return `${thread?.last_message?.is_mine ? 'You: ' : ''}${tx.slice(0, 120)}` })()}</div>
  </button>)}
  {!communityMessageThreads.length && <div className='community-thread-preview community-thread-preview-empty'>No active conversations yet.</div>}
  </div>
@@ -7854,7 +7854,7 @@ function AppInner() {
  {(communityMessageView.messages || [])
  .filter((msg)=>{
  const t = String(msg?.text || '').toLowerCase()
- return !(t.includes('join my audio call:') || t.includes('join my video call:') || t.includes('meet.jit.si/'))
+ return !(t.includes('join my audio call:') || t.includes('join my video call:') || t.includes('meet.jit.si/') || t.includes('call_signal:'))
  })
  .map((msg)=><div key={`community-dm-${msg.id}`} style={{display:'flex', justifyContent: msg.is_mine ? 'flex-end' : 'flex-start'}}>
  <div className={`community-message-bubble ${msg.is_mine ? 'mine' : ''}`}>
@@ -7862,7 +7862,7 @@ function AppInner() {
  <div className='community-message-meta'>{String(msg.created_at || '').replace('T',' ').slice(0,16)}</div>
  </div>
  </div>)}
- {!(communityMessageView.messages || []).length && <div className='community-messenger-empty compact'><strong>No messages yet.</strong><span>Send the first message to start the conversation.</span></div>}
+ {!((communityMessageView.messages || []).filter(msg => { const t = String(msg?.text || '').toLowerCase(); return !(t.includes('join my audio call:') || t.includes('join my video call:') || t.includes('meet.jit.si/') || t.includes('call_signal:')) }).length) && <div className='community-messenger-empty compact'><strong>No messages yet.</strong><span>Send the first message to start the conversation.</span></div>}
  </div>
  <div className='community-message-composer'>
  <input className='input' placeholder='Write a direct message…' value={communityMessageDraft} onChange={(e)=>setCommunityMessageDraft(e.target.value)} disabled={communityMessageSending} onKeyDown={(e)=>{ if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendActiveCommunityMessage() } }} />
