@@ -7957,9 +7957,12 @@ function AppInner() {
  const r = await api.analyzeDisease({ user_id: Number(diseaseForm.user_id), category: 'animal', crop_type: diseaseForm.target, image_url: diseaseForm.image_url, context_note: diseaseForm.context_note });
  setDiseaseResult(r)
  api.fetchDiseaseScans().then(rows => setState(prev => ({ ...prev, diseaseScans: rows }))).catch(() => {})
- const minDelayMs = 5000
+ let scanCount = 0
+ try { scanCount = Number(localStorage.getItem('farmsavior_disease_scan_count') || 0) || 0 } catch {}
+ const minDelayMs = scanCount < 10 ? 5000 : 2200
  const remaining = minDelayMs - (Date.now() - startedAt)
  if (remaining > 0) await new Promise(resolve => setTimeout(resolve, remaining))
+ try { localStorage.setItem('farmsavior_disease_scan_count', String(scanCount + 1)) } catch {}
  } catch (err) {
  alert(`Analyze failed: ${errMsg(err)}`)
  } finally {
