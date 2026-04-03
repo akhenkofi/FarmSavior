@@ -2827,6 +2827,11 @@ function AppInner() {
    setCommunityMessageSending(false)
   }
  }
+ const sendCallSignal = async (targetUserId, payload, icon = '📞') => {
+  if (!targetUserId) return null
+  const text = `${icon} CALL_SIGNAL:${JSON.stringify(payload)}`
+  return api.sendCommunityMessage(targetUserId, { text })
+ }
  const sendCommunityCallInvite = async (mode = 'audio') => {
   const targetUserId = communityMessageView?.user?.user_id
   if (!targetUserId || communityMessageSending) return
@@ -2840,10 +2845,9 @@ function AppInner() {
    toUserId: Number(targetUserId || 0),
    ts: Date.now()
   }
-  const inviteText = `${mode === 'video' ? '📹' : '📞'} CALL_SIGNAL:${JSON.stringify(signalPayload)}`
   try {
    setCommunityMessageSending(true)
-   const sent = await api.sendCommunityMessage(targetUserId, { text: inviteText })
+   const sent = await sendCallSignal(targetUserId, signalPayload, mode === 'video' ? '📹' : '📞')
    setCommunityMessageView(prev => ({ ...prev, messages: [ ...(prev?.messages || []), sent ].filter(Boolean) }))
    const threads = await api.fetchCommunityMessageThreads().catch(() => [])
    setCommunityMessageThreads(threads || [])
@@ -2906,7 +2910,17 @@ function AppInner() {
   if (signalIndex < 0) return
   let signal = null
   try { signal = JSON.parse(text.slice(signalIndex + markerPrefix.length)) } catch {}
-  if (!signal || String(signal.type || '') !== 'offer') return
+  if (!signal) return
+  const signalType = String(signal.type || '')
+  if (signalType === 'answer') {
+   setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? { ...prev, status: 'connected' } : prev))
+   return
+  }
+  if (signalType === 'decline' || signalType === 'end') {
+   setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? null : prev))
+   return
+  }
+  if (signalType !== 'offer') return
   if (Number(signal.toUserId || 0) && Number(signal.toUserId || 0) !== Number(me?.id || 0)) return
   const marker = String(signal.callId || latest.id || latest.created_at || lowerText)
   if (communityLastCallAlertRef.current === marker) return
@@ -2937,17 +2951,30 @@ function AppInner() {
      const msg = t?.last_message
      if (!msg || msg.is_mine) return false
      const signal = parseCallSignal(msg.text)
-     if (!signal || String(signal.type || '') !== 'offer') return false
+     if (!signal) return false
+     const tpe = String(signal.type || '')
+     if (!['offer','answer','decline','end'].includes(tpe)) return false
      if (Number(signal.toUserId || 0) && Number(signal.toUserId || 0) !== Number(me?.id || 0)) return false
      const createdMs = msg?.created_at ? new Date(msg.created_at).getTime() : Date.now()
      return Number.isFinite(createdMs) && (Date.now() - createdMs) < 90 * 1000
     })
     const signal = parseCallSignal(candidate?.last_message?.text)
     if (!signal) return
-    const marker = String(signal.callId || candidate?.last_message?.id || '')
+    const marker = `${signal.callId || candidate?.last_message?.id || ''}:${signal.type || ''}:${signal.ts || ''}`
     if (!marker || communityLastSignalIdRef.current === marker) return
     communityLastSignalIdRef.current = marker
-    setCommunityIncomingCall({ from: candidate?.user?.full_name || 'A user', mode: signal.mode === 'video' ? 'video' : 'audio', callId: signal.callId || '', fromUserId: signal.fromUserId || null })
+    const signalType = String(signal.type || '')
+    if (signalType === 'offer') {
+     setCommunityIncomingCall({ from: candidate?.user?.full_name || 'A user', mode: signal.mode === 'video' ? 'video' : 'audio', callId: signal.callId || '', fromUserId: signal.fromUserId || null })
+     return
+    }
+    if (signalType === 'answer') {
+     setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? { ...prev, status: 'connected' } : prev))
+     return
+    }
+    if (signalType === 'decline' || signalType === 'end') {
+     setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? null : prev))
+    }
    } catch {}
   }
   run()
@@ -7922,8 +7949,8 @@ function AppInner() {
  <h4 style={{margin:'6px 0 4px 0'}}>{communityIncomingCall.from} is calling you</h4>
  <div className='helper-text' style={{marginBottom:10}}>{communityIncomingCall.mode === 'video' ? 'Video call' : 'Audio call'} - answer now?</div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
- <button type='button' className='btn btn-dark' onClick={()=>{ const mode = communityIncomingCall.mode; const callId = communityIncomingCall.callId; setCommunityIncomingCall(null); setCommunityActiveCall({ callId, mode, status: 'connecting', isCaller: false }) }}>Answer</button>
- <button type='button' className='btn' onClick={()=>setCommunityIncomingCall(null)}>Decline</button>
+ <button type='button' className='btn btn-dark' onClick={async()=>{ const mode = communityIncomingCall.mode; const callId = communityIncomingCall.callId; const peerUserId = communityIncomingCall.fromUserId; try { await sendCallSignal(peerUserId, { v:1, type:'answer', mode, callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now() }, mode === 'video' ? '📹' : '📞') } catch {} setCommunityIncomingCall(null); setCommunityActiveCall({ callId, mode, status: 'connected', isCaller: false, peerUserId }) }}>Answer</button>
+ <button type='button' className='btn' onClick={async()=>{ const peerUserId = communityIncomingCall.fromUserId; const callId = communityIncomingCall.callId; const mode = communityIncomingCall.mode || 'audio'; try { await sendCallSignal(peerUserId, { v:1, type:'decline', mode, callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now() }, '📞') } catch {} setCommunityIncomingCall(null) }}>Decline</button>
  </div>
  </div>
  </div>}
@@ -7932,7 +7959,7 @@ function AppInner() {
  <div style={{width:'100vw', height:'100vh', background:'#000', display:'grid', gridTemplateRows:'auto 1fr'}}>
  <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 12px', background:'rgba(2,6,23,.86)', color:'#fff'}}>
  <strong>{communityActiveCall?.mode === 'video' ? 'Video Call' : 'Audio Call'}</strong>
- <button type='button' className='btn' onClick={()=>setCommunityActiveCall(null)}>End Call</button>
+ <button type='button' className='btn' onClick={async()=>{ const current = communityActiveCall; try { if (current?.peerUserId) await sendCallSignal(current.peerUserId, { v:1, type:'end', mode:current.mode || 'audio', callId:current.callId || '', fromUserId:Number(me?.id || 0), toUserId:Number(current.peerUserId || 0), ts:Date.now() }, '📞') } catch {} setCommunityActiveCall(null) }}>End Call</button>
  </div>
  {communityActiveCall?.url
   ? <iframe title='FarmSavior Call' src={communityActiveCall.url} allow='camera; microphone; fullscreen; display-capture; autoplay' style={{width:'100%', height:'100%', border:'0'}} />
