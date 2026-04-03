@@ -7950,12 +7950,16 @@ function AppInner() {
  <form id='disease-analyzer-form' className='panel disease-panel disease-form-panel' onSubmit={async e => {
  e.preventDefault();
  try {
- setDiseaseAnalyzing(true)
  if (!diseaseForm.target) { alert('Please select animal type first.'); return }
  if (!diseaseForm.image_url) { alert('Please upload an animal image from your device or camera.'); return }
+ setDiseaseAnalyzing(true)
+ const startedAt = Date.now()
  const r = await api.analyzeDisease({ user_id: Number(diseaseForm.user_id), category: 'animal', crop_type: diseaseForm.target, image_url: diseaseForm.image_url, context_note: diseaseForm.context_note });
  setDiseaseResult(r)
  api.fetchDiseaseScans().then(rows => setState(prev => ({ ...prev, diseaseScans: rows }))).catch(() => {})
+ const minDelayMs = 5000
+ const remaining = minDelayMs - (Date.now() - startedAt)
+ if (remaining > 0) await new Promise(resolve => setTimeout(resolve, remaining))
  } catch (err) {
  alert(`Analyze failed: ${errMsg(err)}`)
  } finally {
