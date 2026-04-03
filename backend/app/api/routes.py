@@ -15,6 +15,7 @@ import re
 import ssl
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, Body, Header, Request
+from pydantic import BaseModel
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, text, inspect
@@ -52,6 +53,7 @@ router = APIRouter(prefix='/api/v1')
 
 
 ID_UPLOAD_ROOT = Path(__file__).resolve().parents[3] / 'data' / 'private' / 'id-verifications'
+CALL_SIGNAL_EVENTS: dict[str, list[dict]] = {}
 
 
 def _guess_ext_from_data_url(data_url: str) -> str:
@@ -105,6 +107,12 @@ def _local_photo_path(ref: Optional[str]) -> Optional[Path]:
     except Exception:
         return None
     return p
+
+
+class CallSignalEventIn(BaseModel):
+    type: str
+    to_user_id: Optional[int] = None
+    data: Optional[dict] = None
 
 
 def _identity_review_for_user(db: Session, user_id: int):
@@ -3425,6 +3433,38 @@ def community_send_message(other_user_id: int, payload: CommunityDirectMessageIn
         'created_at': row.created_at,
         'is_mine': True,
     }
+
+
+@router.post('/community/call-signal/{call_id}')
+def community_call_signal_push(call_id: str, payload: CallSignalEventIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    viewer = _current_user_from_auth(authorization, db)
+    cid = str(call_id or '').strip()[:120]
+    if not cid:
+        raise HTTPException(status_code=400, detail='call_id is required')
+    events = CALL_SIGNAL_EVENTS.setdefault(cid, [])
+    event_id = (events[-1]['id'] + 1) if events else 1
+    event = {
+        'id': event_id,
+        'call_id': cid,
+        'type': str(payload.type or '').strip().lower(),
+        'from_user_id': int(viewer.id),
+        'to_user_id': int(payload.to_user_id) if payload.to_user_id else None,
+        'data': payload.data or {},
+        'created_at': datetime.utcnow().isoformat(),
+    }
+    events.append(event)
+    if len(events) > 300:
+        del events[:-300]
+    return {'ok': True, 'event': event}
+
+
+@router.get('/community/call-signal/{call_id}')
+def community_call_signal_poll(call_id: str, after_id: int = 0, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    viewer = _current_user_from_auth(authorization, db)
+    cid = str(call_id or '').strip()[:120]
+    events = CALL_SIGNAL_EVENTS.get(cid, [])
+    out = [e for e in events if int(e.get('id') or 0) > int(after_id or 0) and (not e.get('to_user_id') or int(e.get('to_user_id')) == int(viewer.id) or int(e.get('from_user_id')) == int(viewer.id))]
+    return {'call_id': cid, 'events': out}
 
 
 @router.get('/community/feed')
