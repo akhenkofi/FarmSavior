@@ -2725,6 +2725,7 @@ function AppInner() {
  const communityHandledCallIdsRef = useRef(new Set())
  const communityRingingTimerRef = useRef(null)
  const communityCallSignalCursorRef = useRef({})
+ const communityCallInboxCursorRef = useRef(0)
  const [editingCommunityPostId, setEditingCommunityPostId] = useState(null)
  const [communityCommentText, setCommunityCommentText] = useState({})
  const [communityComments, setCommunityComments] = useState({})
@@ -2861,9 +2862,7 @@ function AppInner() {
     await api.pushCommunityCallSignal(callId, { type, to_user_id: Number(targetUserId || 0), data: payload })
    } catch {}
   }
-  if (type !== 'offer') return null
-  const text = `${icon} CALL_SIGNAL:${JSON.stringify(payload)}`
-  return api.sendCommunityMessage(targetUserId, { text })
+  return null
  }
  const startCommunityCallToUser = async (user, mode = 'audio') => {
   const targetUserId = user?.user_id || user?.id
@@ -3213,6 +3212,31 @@ function AppInner() {
   const timer = setInterval(run, 4000)
   return () => { stopped = true; clearInterval(timer) }
  }, [active, token])
+
+ useEffect(() => {
+  if (active !== 'community' || !token) return
+  let stop = false
+  const run = async () => {
+   try {
+    const res = await api.pollCommunityCallSignalInbox(Number(communityCallInboxCursorRef.current || 0)).catch(() => null)
+    const events = Array.isArray(res?.events) ? res.events : []
+    for (const ev of events) {
+      const iid = Number(ev?.inbox_id || 0)
+      if (iid) communityCallInboxCursorRef.current = Math.max(Number(communityCallInboxCursorRef.current || 0), iid)
+      const signal = ev?.data || {}
+      const t = String(ev?.type || signal?.type || '').toLowerCase()
+      if (t === 'offer' && !communityIncomingCall && !communityActiveCall) {
+        const fromUserId = Number(signal.fromUserId || ev?.from_user_id || 0)
+        const caller = (communityMessageThreads || []).find(x => Number(x?.user?.user_id || 0) === fromUserId)?.user?.full_name || 'A user'
+        setCommunityIncomingCall({ from: caller, mode: signal.mode === 'video' ? 'video' : 'audio', callId: String(signal.callId || ev?.call_id || ''), fromUserId })
+      }
+    }
+   } catch {}
+  }
+  run()
+  const t = setInterval(() => { if (!stop) run() }, 1200)
+  return () => { stop = true; clearInterval(t) }
+ }, [active, token, communityIncomingCall, communityActiveCall, communityMessageThreads])
 
  useEffect(() => {
   const callId = String(communityActiveCall?.callId || communityIncomingCall?.callId || '')

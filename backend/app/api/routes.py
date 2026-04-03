@@ -54,6 +54,7 @@ router = APIRouter(prefix='/api/v1')
 
 ID_UPLOAD_ROOT = Path(__file__).resolve().parents[3] / 'data' / 'private' / 'id-verifications'
 CALL_SIGNAL_EVENTS: dict[str, list[dict]] = {}
+CALL_SIGNAL_INBOX_EVENTS: list[dict] = []
 
 
 def _guess_ext_from_data_url(data_url: str) -> str:
@@ -3455,6 +3456,11 @@ def community_call_signal_push(call_id: str, payload: CallSignalEventIn, authori
     events.append(event)
     if len(events) > 300:
         del events[:-300]
+    inbox_event = dict(event)
+    inbox_event['inbox_id'] = (CALL_SIGNAL_INBOX_EVENTS[-1]['inbox_id'] + 1) if CALL_SIGNAL_INBOX_EVENTS else 1
+    CALL_SIGNAL_INBOX_EVENTS.append(inbox_event)
+    if len(CALL_SIGNAL_INBOX_EVENTS) > 2000:
+        del CALL_SIGNAL_INBOX_EVENTS[:-2000]
     return {'ok': True, 'event': event}
 
 
@@ -3465,6 +3471,17 @@ def community_call_signal_poll(call_id: str, after_id: int = 0, authorization: O
     events = CALL_SIGNAL_EVENTS.get(cid, [])
     out = [e for e in events if int(e.get('id') or 0) > int(after_id or 0) and (not e.get('to_user_id') or int(e.get('to_user_id')) == int(viewer.id) or int(e.get('from_user_id')) == int(viewer.id))]
     return {'call_id': cid, 'events': out}
+
+
+@router.get('/community/call-signal/inbox')
+def community_call_signal_inbox(after_id: int = 0, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    viewer = _current_user_from_auth(authorization, db)
+    out = [
+        e for e in CALL_SIGNAL_INBOX_EVENTS
+        if int(e.get('inbox_id') or 0) > int(after_id or 0)
+        and (not e.get('to_user_id') or int(e.get('to_user_id')) == int(viewer.id) or int(e.get('from_user_id')) == int(viewer.id))
+    ]
+    return {'events': out}
 
 
 @router.get('/community/feed')
