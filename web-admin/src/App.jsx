@@ -2384,7 +2384,7 @@ function UniversityExecutiveToolkit({ product, progress, setProgress, trackKey, 
    <div className='helper-text' style={{marginTop:8}}>{activeDive.managerNotes}</div>
   </div>}
   <div className='inlineForm' style={{marginTop:8, flexWrap:'wrap'}}>
-   {downloads.map((asset)=><a key={asset.filename} className='poultry-tool-card' download={asset.filename} href={'data:text/plain;charset=utf-8,'+encodeURIComponent(asset.content)}><strong>{asset.title}</strong><span>{asset.filename}</span></a>)}
+   {downloads.map((asset)=><div key={asset.filename} className='poultry-tool-card'><strong>{asset.title}</strong><span>{asset.filename}</span><div className='inlineForm' style={{marginTop:6}}><button type='button' className='btn' onClick={()=>openTextAsset(asset.content, asset.filename, 'view')}>View</button><button type='button' className='btn btn-dark' onClick={()=>openTextAsset(asset.content, asset.filename, 'download')}>Download</button></div></div>)}
   </div>
   <div className='inlineForm' style={{marginTop:8, flexWrap:'wrap'}}>
    {prompts.map((prompt)=><button key={prompt} className={`poultry-tool-card ${question===prompt ? 'active' : ''}`} onClick={()=>setQuestion(prompt)}><strong>Use prompt</strong><span>{prompt}</span></button>)}
@@ -2420,7 +2420,8 @@ function ProfessionalAssets({ product, progress, setProgress, trackKey, openModu
  <h4 style={{marginTop:0}}>🏛️ Operating Brief</h4>
  <div className='helper-text' style={{marginBottom:8}}>A concise operating brief for teams, partners, and program stakeholders.</div>
  <div className='inlineForm' style={{flexWrap:'wrap'}}>
- <a className='btn' download={`${product}-Executive-Brief.txt`} href={'data:text/plain;charset=utf-8,' + encodeURIComponent(executiveBriefs[product] || '')}>Download Operating Brief</a>
+ <button className='btn' type='button' onClick={() => openTextAsset(executiveBriefs[product] || '', `${product}-Executive-Brief.txt`, 'view')}>View Operating Brief</button>
+ <button className='btn btn-dark' type='button' onClick={() => openTextAsset(executiveBriefs[product] || '', `${product}-Executive-Brief.txt`, 'download')}>Download Operating Brief</button>
  <button className='btn' type='button' onClick={() => setProgress((s) => ({ ...s, completed: Array.from(new Set([...(s.completed || []), `${trackKey}:${openModule}`, `${product}:brief`])) }))}>Mark Brief Reviewed</button>
  </div>
  </article>
@@ -2465,6 +2466,24 @@ const lockDemandCount = (arr, fillerFactory) => {
  const out = [...arr]
  while (out.length < DEMAND_LOCK_COUNT) out.push(fillerFactory(out.length + 1))
  return out.slice(0, DEMAND_LOCK_COUNT)
+}
+
+const openTextAsset = (content, filename = 'asset.txt', mode = 'view') => {
+ try {
+  const blob = new Blob([String(content || '')], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  if (mode === 'download') {
+   const a = document.createElement('a')
+   a.href = url
+   a.download = filename
+   document.body.appendChild(a)
+   a.click()
+   a.remove()
+  } else {
+   window.open(url, '_blank', 'noopener,noreferrer')
+  }
+  setTimeout(() => URL.revokeObjectURL(url), 20000)
+ } catch {}
 }
 
 const isUserImage = (v) => String(v || '').startsWith('data:image/')
@@ -5713,10 +5732,11 @@ function AppInner() {
  <strong>Guidance Workspace</strong>
  <span>Load a track-specific guidance prompt and build a response plan.</span>
  </button>
- {poultryProDownloads.map((asset)=><a key={asset.filename} className={`poultry-tool-card ${poultryAnswer && poultryAnswer.includes(asset.title) ? 'active' : ''}`} download={asset.filename} href={'data:text/plain;charset=utf-8,'+encodeURIComponent(asset.content)}>
+ {poultryProDownloads.map((asset)=><div key={asset.filename} className={`poultry-tool-card ${poultryAnswer && poultryAnswer.includes(asset.title) ? 'active' : ''}`}>
  <strong>{asset.title}</strong>
- <span>Download this premium operating asset.</span>
- </a>)}
+ <span>{asset.filename}</span>
+ <div className='inlineForm' style={{marginTop:6}}><button type='button' className='btn' onClick={()=>openTextAsset(asset.content, asset.filename, 'view')}>View</button><button type='button' className='btn btn-dark' onClick={()=>openTextAsset(asset.content, asset.filename, 'download')}>Download</button></div>
+ </div>)}
  </div>
 
  <div className='panel' style={{marginTop:8,padding:10,background:'#fff'}}>
