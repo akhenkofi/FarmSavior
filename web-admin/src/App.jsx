@@ -2525,12 +2525,9 @@ function ListingImagePicker({ label, limit, images, setImages }) {
  alert(`${file.name} must be JPG, PNG, or WebP.`)
  continue
  }
- if (file.size > MAX_IMAGE_BYTES) {
- alert(`${file.name} is larger than 5MB.`)
- continue
- }
  try {
- const dataUrl = await compressImageFileToDataUrl(file)
+ const oversized = file.size > MAX_IMAGE_BYTES
+ const dataUrl = await compressImageFileToDataUrl(file, oversized ? { maxDim: 1400, quality: 0.68, maxChars: 700000 } : { maxDim: 1600, quality: 0.82, maxChars: 900000 })
  next.push(dataUrl)
  } catch (err) {
  alert(err?.message || 'Could not process image.')
