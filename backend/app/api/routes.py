@@ -5013,8 +5013,19 @@ def _send_fcm_push(tokens: list[str], title: str, body: str, data: Optional[dict
                         'token': token,
                         'notification': {'title': str(title or '')[:120], 'body': str(body or '')[:240]},
                         'data': {k: str(v) for k, v in (data or {}).items()},
-                        'android': {'priority': 'high', 'notification': {'sound': 'default'}},
-                        'apns': {'payload': {'aps': {'sound': 'default'}}},
+                        'android': {
+                            'priority': 'high',
+                            'ttl': '30s',
+                            'notification': {'sound': 'default', 'channel_id': 'calls'}
+                        },
+                        'webpush': {
+                            'headers': {'Urgency': 'high', 'TTL': '30'},
+                            'notification': {'requireInteraction': True, 'renotify': True, 'tag': f"call-{(data or {}).get('callId','')}"}
+                        },
+                        'apns': {
+                            'headers': {'apns-priority': '10', 'apns-push-type': 'alert'},
+                            'payload': {'aps': {'sound': 'default', 'content-available': 1, 'mutable-content': 1}}
+                        },
                     }
                 }
                 req = UrlRequest(endpoint, data=json.dumps(payload).encode('utf-8'), method='POST')
@@ -5032,9 +5043,15 @@ def _send_fcm_push(tokens: list[str], title: str, body: str, data: Optional[dict
     endpoint = 'https://fcm.googleapis.com/fcm/send'
     payload = {
         'registration_ids': clean_tokens,
-        'notification': {'title': str(title or '')[:120], 'body': str(body or '')[:240], 'sound': 'default'},
+        'notification': {'title': str(title or '')[:120], 'body': str(body or '')[:240], 'sound': 'default', 'tag': f"call-{(data or {}).get('callId','')}"},
         'data': data or {},
         'priority': 'high',
+        'time_to_live': 30,
+        'content_available': True,
+        'mutable_content': True,
+        'android': {'priority': 'high', 'ttl': '30s', 'notification': {'sound': 'default', 'channel_id': 'calls'}},
+        'apns': {'headers': {'apns-priority': '10', 'apns-push-type': 'alert'}, 'payload': {'aps': {'sound': 'default', 'content-available': 1, 'mutable-content': 1}}},
+        'webpush': {'headers': {'Urgency': 'high', 'TTL': '30'}, 'notification': {'requireInteraction': True, 'renotify': True}},
     }
     try:
         req = UrlRequest(endpoint, data=json.dumps(payload).encode('utf-8'), method='POST')
