@@ -226,6 +226,7 @@ export const fetchLivestockPurchaseSources = async (params) => (await api.get('/
 export const saveLivestockPurchaseSource = async (payload) => (await api.post('/livestock-records/purchase-sources', payload)).data
 export const createLivestockRecord = async (payload) => (await api.post('/livestock-records/animals', payload)).data
 export const updateLivestockRecord = async (recordId, payload) => (await api.put(`/livestock-records/animals/${recordId}`, payload)).data
+export const appendLivestockNote = async (recordId, note) => (await api.post(`/livestock-records/animals/${recordId}/notes`, { note })).data
 export const deleteLivestockRecord = async (recordId) => (await api.delete(`/livestock-records/animals/${recordId}`)).data
 
 export const registerDeviceToken = async (payload) => (await api.post('/messaging/device-token', payload)).data

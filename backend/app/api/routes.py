@@ -4464,6 +4464,29 @@ def create_livestock_record(payload: SheepGoatRecordIn, authorization: Optional[
     return rec
 
 
+@router.post('/livestock-records/animals/{record_id}/notes')
+def append_livestock_note(record_id: int, payload: dict = Body(default={}), authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    user = _current_user_from_auth(authorization, db)
+    rec = db.query(SheepGoatRecord).filter(SheepGoatRecord.id == record_id, SheepGoatRecord.user_id == user.id).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail='Livestock record not found')
+    note_value = str((payload or {}).get('note') or '').strip()
+    if not note_value:
+        raise HTTPException(status_code=400, detail='Note is required')
+    existing = str(rec.notes or '').strip()
+    marker = '\n\n[ATTACHMENTS_JSON]'
+    if marker in existing:
+        text_part, blob = existing.split(marker, 1)
+        text_part = text_part.strip()
+        merged_text = f"{text_part}\n{note_value}".strip() if text_part else note_value
+        rec.notes = f"{merged_text}{marker}{blob.strip()}"
+    else:
+        rec.notes = f"{existing}\n{note_value}".strip() if existing else note_value
+    db.commit()
+    db.refresh(rec)
+    return rec
+
+
 @router.put('/livestock-records/animals/{record_id}')
 def update_livestock_record(record_id: int, payload: SheepGoatRecordIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
     user = _current_user_from_auth(authorization, db)

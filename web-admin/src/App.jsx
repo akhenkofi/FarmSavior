@@ -6432,13 +6432,8 @@ function AppInner() {
     const txt = String(draftNote || '').trim();
     if (!txt || !currentLivestockRecord?.id) { alert('Enter a note before saving.'); return }
     try {
-     const base = extractAttachmentsFromNotes(currentLivestockRecord?.notes || '')
      const stamped = `[${new Date().toISOString().slice(0,16).replace('T',' ')}] ${txt}`
-     const merged = `${base.text ? `${base.text}\n` : ''}${stamped}`
-     const nextNotes = mergeNotesWithAttachments(merged, { photos: base.photos || [], docs: base.docs || [] })
-     const payload = normalizeLivestockPayload({ ...mapLivestockRecordToEditForm(currentLivestockRecord), notes: nextNotes })
-     delete payload.id
-     await api.updateLivestockRecord(Number(currentLivestockRecord.id), payload)
+     await api.appendLivestockNote(Number(currentLivestockRecord.id), stamped)
      await loadLivestockRecords()
      setDraftNote('')
      setNotesComposerOpen(false)
@@ -6466,14 +6461,9 @@ function AppInner() {
     const txt = String(draftWeight || '').trim();
     if (!txt || !currentLivestockRecord?.id) { alert('Enter a weight before saving.'); return }
     try {
-     const base = extractAttachmentsFromNotes(currentLivestockRecord?.notes || '')
      const dateLabel = draftWeightDate || new Date().toISOString().slice(0,10)
      const stamped = `[${dateLabel}] Weight: ${txt} kg`
-     const merged = `${base.text ? `${base.text}\n` : ''}${stamped}`
-     const nextNotes = mergeNotesWithAttachments(merged, { photos: base.photos || [], docs: base.docs || [] })
-     const payload = normalizeLivestockPayload({ ...mapLivestockRecordToEditForm(currentLivestockRecord), notes: nextNotes })
-     delete payload.id
-     await api.updateLivestockRecord(Number(currentLivestockRecord.id), payload)
+     await api.appendLivestockNote(Number(currentLivestockRecord.id), stamped)
      await loadLivestockRecords()
      setDraftWeight('')
      setDraftWeightDate(new Date().toISOString().slice(0,10))
