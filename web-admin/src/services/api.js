@@ -261,6 +261,7 @@ export const sendCommunityMessage = async (userId, payload) => (await api.post(`
 export const pushCommunityCallSignal = async (callId, payload) => (await api.post(`/community/call-signal/${encodeURIComponent(callId)}`, payload)).data
 export const pollCommunityCallSignal = async (callId, afterId = 0) => (await api.get(`/community/call-signal/${encodeURIComponent(callId)}`, { params: { after_id: afterId } })).data
 export const pollCommunityCallSignalInbox = async (afterId = 0) => (await api.get('/community/call-signal/inbox', { params: { after_id: afterId } })).data
+export const fetchAgoraToken = async (otherUserId) => (await api.get('/agora-token', { params: { other_user_id: otherUserId } })).data
 export const fetchCommunityFeed = async (mode = 'for-you', limit = 40) => (await api.get('/community/feed', { params: { mode, limit } })).data
 export const fetchCommunityPosts = async (limit = 60) => (await api.get('/community/posts', { params: { limit } })).data
 export const createCommunityPost = async (payload) => (await api.post('/community/posts', payload)).data
