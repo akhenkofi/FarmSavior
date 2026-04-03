@@ -7876,25 +7876,27 @@ function AppInner() {
  </div>
  </div>}
 
- {communityIncomingCall?.url && <div className='community-messenger-overlay' style={{zIndex: 220}}>
+ {communityIncomingCall && <div className='community-messenger-overlay' style={{zIndex: 220}}>
  <div className='panel' style={{maxWidth:420, width:'92vw', border:'2px solid #0ea5e9', boxShadow:'0 20px 40px rgba(15,23,42,.25)'}}>
  <div style={{fontSize:'.78rem', fontWeight:700, color:'#0284c7', letterSpacing:'.08em', textTransform:'uppercase'}}>Incoming call</div>
  <h4 style={{margin:'6px 0 4px 0'}}>{communityIncomingCall.from} is calling you</h4>
  <div className='helper-text' style={{marginBottom:10}}>{communityIncomingCall.mode === 'video' ? 'Video call' : 'Audio call'} - answer now?</div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
- <button type='button' className='btn btn-dark' onClick={()=>{ const url = communityIncomingCall.url; const mode = communityIncomingCall.mode; setCommunityIncomingCall(null); setCommunityActiveCall({ url, mode }) }}>Answer</button>
+ <button type='button' className='btn btn-dark' onClick={()=>{ const mode = communityIncomingCall.mode; const callId = communityIncomingCall.callId; setCommunityIncomingCall(null); setCommunityActiveCall({ callId, mode, status: 'connecting', isCaller: false }) }}>Answer</button>
  <button type='button' className='btn' onClick={()=>setCommunityIncomingCall(null)}>Decline</button>
  </div>
  </div>
  </div>}
 
- {communityActiveCall?.url && <div className='community-messenger-overlay' style={{zIndex: 240, padding: 0}}>
+ {communityActiveCall && <div className='community-messenger-overlay' style={{zIndex: 240, padding: 0}}>
  <div style={{width:'100vw', height:'100vh', background:'#000', display:'grid', gridTemplateRows:'auto 1fr'}}>
  <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 12px', background:'rgba(2,6,23,.86)', color:'#fff'}}>
  <strong>{communityActiveCall?.mode === 'video' ? 'Video Call' : 'Audio Call'}</strong>
  <button type='button' className='btn' onClick={()=>setCommunityActiveCall(null)}>End Call</button>
  </div>
- <iframe title='FarmSavior Call' src={communityActiveCall.url} allow='camera; microphone; fullscreen; display-capture; autoplay' style={{width:'100%', height:'100%', border:'0'}} />
+ {communityActiveCall?.url
+  ? <iframe title='FarmSavior Call' src={communityActiveCall.url} allow='camera; microphone; fullscreen; display-capture; autoplay' style={{width:'100%', height:'100%', border:'0'}} />
+  : <div style={{display:'grid', placeItems:'center', padding:24, color:'#e2e8f0'}}><div style={{textAlign:'center'}}><div style={{fontSize:'2rem'}}>🔄</div><div style={{fontWeight:700}}>Call is connecting…</div><div style={{fontSize:'.85rem', opacity:.85, marginTop:6}}>Signaling succeeded. Media channel setup is next.</div></div></div>}
  </div>
  </div>}
 
