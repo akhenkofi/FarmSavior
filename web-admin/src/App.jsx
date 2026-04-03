@@ -3082,6 +3082,24 @@ function AppInner() {
  }, [communityActiveCall])
 
  useEffect(() => {
+  if (!communityActiveCall) return
+  try {
+   if (communityLocalVideoRef.current && communityLocalStreamRef.current && communityActiveCall.mode === 'video') {
+    communityLocalVideoRef.current.srcObject = communityLocalStreamRef.current
+    communityLocalVideoRef.current.play?.().catch(()=>{})
+   }
+   if (communityRemoteVideoRef.current && communityRemoteStreamRef.current && communityActiveCall.mode === 'video') {
+    communityRemoteVideoRef.current.srcObject = communityRemoteStreamRef.current
+    communityRemoteVideoRef.current.play?.().catch(()=>{})
+   }
+   if (communityRemoteAudioRef.current && communityRemoteStreamRef.current) {
+    communityRemoteAudioRef.current.srcObject = communityRemoteStreamRef.current
+    communityRemoteAudioRef.current.play?.().catch(()=>{})
+   }
+  } catch {}
+ }, [communityActiveCall?.mode, communityActiveCall?.status, communityActiveCall?.callId])
+
+ useEffect(() => {
  if (active !== 'community') return
  const routeUserId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('communityProfile') : ''
  if (routeUserId) {
