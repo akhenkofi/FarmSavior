@@ -31,8 +31,9 @@ self.addEventListener('push', (event) => {
   try { data = event.data ? event.data.json() : {}; } catch { data = { body: event.data?.text?.() || '' }; }
   const title = data.title || 'FarmSavior Call';
   const body = data.body || 'Incoming call';
-  const callUrl = data.url || '/?go=community';
   const mode = data.mode || 'audio';
+  const base = data.url || '/?go=community'
+  const callUrl = `${base}${String(base).includes('?') ? '&' : '?'}incomingCall=1&callId=${encodeURIComponent(String(data.callId || ''))}&callType=${encodeURIComponent(String(mode || 'audio'))}`;
   event.waitUntil(
     self.registration.showNotification(title, {
       body,
