@@ -3397,10 +3397,26 @@ def community_send_message(other_user_id: int, payload: CommunityDirectMessageIn
     db.commit()
     db.refresh(row)
     lower_text = text_value.lower()
-    if 'meet.jit.si/' in lower_text and ('join my audio call:' in lower_text or 'join my video call:' in lower_text):
+    if 'call_signal:' in lower_text:
+        try:
+            idx = lower_text.index('call_signal:')
+            payload = json.loads(text_value[idx + len('call_signal:'):])
+            if str(payload.get('type') or '').lower() == 'offer':
+                mode = 'video' if str(payload.get('mode') or '').lower() == 'video' else 'audio'
+                _push_call_alert(
+                    db,
+                    int(other_user_id),
+                    caller_name=str(viewer.full_name or 'Someone'),
+                    mode=mode,
+                    room_url='/?go=community',
+                    call_id=str(payload.get('callId') or ''),
+                )
+        except Exception:
+            pass
+    elif 'meet.jit.si/' in lower_text and ('join my audio call:' in lower_text or 'join my video call:' in lower_text):
         mode = 'video' if 'video' in lower_text else 'audio'
         room_match = re.search(r'https?://meet\.jit\.si/\S+', text_value, flags=re.IGNORECASE)
-        _push_call_alert(db, int(other_user_id), caller_name=str(viewer.full_name or 'Someone'), mode=mode, room_url=(room_match.group(0) if room_match else ''))
+        _push_call_alert(db, int(other_user_id), caller_name=str(viewer.full_name or 'Someone'), mode=mode, room_url=(room_match.group(0) if room_match else ''), call_id='')
     return {
         'id': row.id,
         'text': row.text,
@@ -5030,7 +5046,7 @@ def _send_fcm_push(tokens: list[str], title: str, body: str, data: Optional[dict
         pass
 
 
-def _push_call_alert(db: Session, user_id: int, *, caller_name: str, mode: str, room_url: str):
+def _push_call_alert(db: Session, user_id: int, *, caller_name: str, mode: str, room_url: str, call_id: str = ''):
     rows = db.query(DeviceToken).filter(DeviceToken.user_id == int(user_id)).all()
     tokens = [str(r.token or '').strip() for r in rows if str(r.token or '').strip()]
     if not tokens:
@@ -5040,7 +5056,7 @@ def _push_call_alert(db: Session, user_id: int, *, caller_name: str, mode: str, 
         tokens,
         title=f'Incoming {mode_label} Call',
         body=f'{caller_name or "Someone"} is calling you on FarmSavior',
-        data={'type': 'incoming_call', 'mode': str(mode or 'audio'), 'room_url': str(room_url or '')}
+        data={'type': 'incoming_call', 'mode': str(mode or 'audio'), 'room_url': str(room_url or ''), 'url': str(room_url or '/?go=community'), 'callId': str(call_id or '')}
     )
 
 def _order_fee_breakdown(unit_price: float, quantity: float):
