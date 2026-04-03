@@ -1285,6 +1285,8 @@ const livestockHistoryRows = (record) => {
  }
 }
 
+const DEFAULT_MEDICINE_LIBRARY = ['5-Way','Blackleg 7-Way','BO-SE','Brucellosis','CDT','Dexamethasone','Excenel','LA-200/Oxytetracycline','Nuflor','Penicillin','Pinkeye','Trichomoniasis']
+
 const livestockDetailRows = (record) => {
  if (!record) return []
  return [
@@ -3029,6 +3031,7 @@ function AppInner() {
  const [medicineShotOpen, setMedicineShotOpen] = useState(false)
  const [medicinesSearch, setMedicinesSearch] = useState('')
  const [medicineShotDraft, setMedicineShotDraft] = useState({ medicine: '', dosage: '', notes: '' })
+ const [medicineSearch, setMedicineSearch] = useState('')
  const [medicineChooserOpen, setMedicineChooserOpen] = useState(false)
  const [medicineChooserSearch, setMedicineChooserSearch] = useState('')
  const [famachaComposerOpen, setFamachaComposerOpen] = useState(false)
@@ -6508,6 +6511,12 @@ function AppInner() {
    <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setMedicinesScreenOpen(false)}>Back</button><button type='button' className='btn btn-dark' onClick={()=>{ setMedicinesScreenOpen(false); setMedicineShotDraft({ medicine: '', dosage: '', notes: '' }); setMedicineShotOpen(true) }}>Add Medicine</button></div>
   </div>
   <article className='panel records-panel'>
+   <input className='input' placeholder='Search medicines' value={medicineSearch} onChange={e=>setMedicineSearch(e.target.value)} />
+   <div className='records-detail-section' style={{marginTop:10}}>Available medicines</div>
+   <div className='list'>
+    {DEFAULT_MEDICINE_LIBRARY.filter(name => name.toLowerCase().includes(String(medicineSearch || '').toLowerCase())).map((name)=><button type='button' key={`med-lib-${name}`} className='list-row' onClick={()=>{ setMedicineShotDraft({ medicine: name, dosage: '', notes: '' }); setMedicinesScreenOpen(false); setMedicineShotOpen(true) }}><span>{name}</span><strong>＋</strong></button>)}
+   </div>
+   <div className='records-detail-section' style={{marginTop:12}}>Saved medicine log</div>
    {(() => {
     const rows = String(extractAttachmentsFromNotes(currentLivestockRecord?.notes || '').text || '').split('\n').filter(line => /Medicine:/i.test(line)).reverse()
     if (!rows.length) return <div className='helper-text'>No medicines logged yet.</div>
