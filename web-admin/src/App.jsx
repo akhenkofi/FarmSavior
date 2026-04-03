@@ -2899,11 +2899,9 @@ function AppInner() {
   try { return JSON.parse(text.slice(i + marker.length)) } catch { return null }
  }
  const closeCommunityPeer = () => {
-  try { communityPcRef.current?.getSenders?.().forEach(s => { try { s.track?.stop?.() } catch {} }) } catch {}
+  try { communityPcRef.current?.getSenders?.().forEach(s => { try { s.replaceTrack?.(null) } catch {} }) } catch {}
   try { communityPcRef.current?.close?.() } catch {}
   communityPcRef.current = null
-  try { communityLocalStreamRef.current?.getTracks?.().forEach(t => t.stop()) } catch {}
-  communityLocalStreamRef.current = null
   communityRemoteStreamRef.current = null
   if (communityRemoteAudioRef.current) communityRemoteAudioRef.current.srcObject = null
   if (communityLocalVideoRef.current) communityLocalVideoRef.current.srcObject = null
@@ -2918,17 +2916,23 @@ function AppInner() {
  const ensureCommunityPeer = async ({ mode = 'audio', callId, peerUserId }) => {
   if (communityPcRef.current) return communityPcRef.current
   const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] })
-  const local = await navigator.mediaDevices.getUserMedia({ audio: true, video: mode === 'video' })
+  let local = communityLocalStreamRef.current
+  const needVideo = mode === 'video'
+  const hasUsable = !!local && local.getAudioTracks().some(t => t.readyState === 'live') && (!needVideo || local.getVideoTracks().some(t => t.readyState === 'live'))
+  if (!hasUsable) local = await navigator.mediaDevices.getUserMedia({ audio: true, video: needVideo })
   communityLocalStreamRef.current = local
   if (communityLocalVideoRef.current && mode === 'video') {
    communityLocalVideoRef.current.srcObject = local
    communityLocalVideoRef.current.play?.().catch(()=>{})
   }
+  pc.addTransceiver('audio', { direction: 'sendrecv' })
+  if (needVideo) pc.addTransceiver('video', { direction: 'sendrecv' })
   local.getTracks().forEach(track => pc.addTrack(track, local))
   const remoteStream = new MediaStream()
   communityRemoteStreamRef.current = remoteStream
   pc.ontrack = (ev) => {
-   ;(ev.streams?.[0]?.getTracks?.() || []).forEach(t => remoteStream.addTrack(t))
+   if (ev.track) remoteStream.addTrack(ev.track)
+   ;(ev.streams?.[0]?.getTracks?.() || []).forEach(t => { if (!remoteStream.getTracks().find(x=>x.id===t.id)) remoteStream.addTrack(t) })
    if (communityRemoteAudioRef.current) {
     communityRemoteAudioRef.current.srcObject = remoteStream
     communityRemoteAudioRef.current.play?.().catch(()=>{})
