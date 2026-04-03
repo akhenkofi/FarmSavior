@@ -2874,7 +2874,8 @@ function AppInner() {
   try {
    setCommunityMessageSending(true)
    await sendCallSignal(targetUserId, signalPayload, mode === 'video' ? '📹' : '📞')
-   setCommunityActiveCall({ callId, mode, status: 'calling', peerUserId: targetUserId, isCaller: true })
+   const room = mode === 'video' ? `https://meet.jit.si/${encodeURIComponent(String(callId))}` : undefined
+   setCommunityActiveCall({ callId, mode, status: 'calling', peerUserId: targetUserId, isCaller: true, url: room })
    await openCommunityMessages(user)
   } catch (err) {
    alert(errMsg(err))
@@ -2901,7 +2902,8 @@ function AppInner() {
    setCommunityMessageView(prev => ({ ...prev, messages: [ ...(prev?.messages || []), sent ].filter(Boolean) }))
    const threads = await api.fetchCommunityMessageThreads().catch(() => [])
    setCommunityMessageThreads(threads || [])
-   setCommunityActiveCall({ callId, mode, status: 'calling', peerUserId: targetUserId, isCaller: true })
+   const room = mode === 'video' ? `https://meet.jit.si/${encodeURIComponent(String(callId))}` : undefined
+   setCommunityActiveCall({ callId, mode, status: 'calling', peerUserId: targetUserId, isCaller: true, url: room })
   } catch (err) {
    alert(errMsg(err))
   } finally {
@@ -3298,7 +3300,7 @@ function AppInner() {
    clearInterval(communityRingingTimerRef.current)
    communityRingingTimerRef.current = null
   }
-  if (communityActiveCall?.status === 'ringing') {
+  if (communityActiveCall?.status === 'calling' || communityActiveCall?.status === 'ringing') {
    playRingPulse()
    communityRingingTimerRef.current = setInterval(() => playRingPulse(), 1800)
   }
@@ -8332,7 +8334,7 @@ function AppInner() {
   <button type='button' className='btn' onClick={async()=>{ const current = communityActiveCall; try { if (current?.peerUserId) await sendCallSignal(current.peerUserId, { v:1, type:'end', mode:current.mode || 'audio', callId:current.callId || '', fromUserId:Number(me?.id || 0), toUserId:Number(current.peerUserId || 0), ts:Date.now() }, '📞') } catch {} returnToCommunityPhone() }}>End Call</button>
  </div>
  </div>
- {(communityActiveCall?.status === 'calling' || communityActiveCall?.status === 'ringing')
+ {((communityActiveCall?.status === 'calling' || communityActiveCall?.status === 'ringing') && !communityActiveCall?.url)
   ? <div style={{display:'grid', placeItems:'center', padding:24, color:'#e2e8f0'}}><div style={{textAlign:'center'}}><div style={{fontSize:'2rem'}}>📞</div><div style={{fontWeight:700}}>{communityActiveCall?.status === 'calling' ? 'Calling…' : 'Ringing…'}</div><div style={{fontSize:'.85rem', opacity:.85, marginTop:6}}>{communityActiveCall?.status === 'calling' ? 'Trying to reach the other user.' : 'Other user is receiving your call now.'}</div></div></div>
   : (communityActiveCall?.url
     ? <iframe title='FarmSavior Call' src={communityActiveCall.url} allow='camera; microphone; fullscreen; display-capture; autoplay' style={{width:'100%', height:'100%', border:'0'}} />
