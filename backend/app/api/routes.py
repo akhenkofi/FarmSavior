@@ -62,6 +62,20 @@ def _get_call_channel_name(user_id_1: int, user_id_2: int) -> str:
     return f"farmsavior-{pair[0]}-{pair[1]}"
 
 
+def _normalize_call_event_type(v: str) -> str:
+    t = str(v or '').strip().lower()
+    aliases = {
+        'call:invite': 'offer',
+        'invite': 'offer',
+        'call:ringing': 'ringing',
+        'call:answer': 'answer',
+        'call:reject': 'decline',
+        'call:end': 'end',
+        'call:missed': 'missed',
+    }
+    return aliases.get(t, t)
+
+
 def _guess_ext_from_data_url(data_url: str) -> str:
     head = str(data_url or '').split(';', 1)[0].lower()
     if 'image/png' in head:
@@ -3476,7 +3490,7 @@ def community_call_signal_push(call_id: str, payload: CallSignalEventIn, authori
     event = {
         'id': event_id,
         'call_id': cid,
-        'type': str(payload.type or '').strip().lower(),
+        'type': _normalize_call_event_type(payload.type),
         'from_user_id': int(viewer.id),
         'to_user_id': int(payload.to_user_id) if payload.to_user_id else None,
         'data': payload.data or {},
