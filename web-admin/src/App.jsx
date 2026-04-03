@@ -6569,6 +6569,33 @@ function AppInner() {
  </div>
  </section>}
 
+ {offspringReportOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:271, margin:0, background:'#f8fafc', overflow:'auto'}}>
+ <div className='records-shell'>
+  <div className='records-hero-card'>
+   <div><div className='records-eyebrow'>OFFSPRING</div><h3>Offspring Report</h3><p>{currentLivestockRecord?.name || 'Animal record'}</p></div>
+   <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setOffspringReportOpen(false)}>Back</button></div>
+  </div>
+  <article className='panel records-panel'>
+   {(() => {
+    const all = Array.isArray(state?.livestockRecords) ? state.livestockRecords : []
+    const parentId = Number(currentLivestockRecord?.id || 0)
+    const kids = all.filter(r => Number(r?.sire_id) === parentId || Number(r?.dam_id) === parentId)
+    const male = kids.filter(k => String(k?.animal_type || '').toUpperCase().includes('RAM') || String(k?.animal_type || '').toUpperCase().includes('BUCK') || String(k?.animal_type || '').toUpperCase().includes('MALE') || String(k?.animal_type || '').toUpperCase().includes('BULL') || String(k?.animal_type || '').toUpperCase().includes('COCKEREL')).length
+    const female = kids.length - male
+    return <>
+      <div className='list'>
+       <div className='list-row'><span><strong>Total offspring:</strong> {kids.length}</span></div>
+       <div className='list-row'><span><strong>Male:</strong> {male}</span></div>
+       <div className='list-row'><span><strong>Female:</strong> {female}</span></div>
+      </div>
+      <div className='records-detail-section' style={{marginTop:12}}>Animals</div>
+      {kids.length ? <div className='list'>{kids.map(k => <div key={`offspring-report-${k.id}`} className='list-row'><span>{k.name || `Animal ${k.id}`} · {k.species || '--'} · {k.animal_type || '--'}</span></div>)}</div> : <div className='helper-text'>No offspring records linked yet.</div>}
+     </>
+   })()}
+  </article>
+ </div>
+ </section>}
+
  {ancestorTreeOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:272, margin:0, background:'#f8fafc', overflow:'auto'}}>
  <div className='records-shell'>
   <div className='records-hero-card'>
