@@ -8036,7 +8036,7 @@ function AppInner() {
  </article>
 
  {communityInboxOpen && <div className='community-messenger-overlay' onClick={(e)=>{ if (e.target === e.currentTarget) closeCommunityMessages() }}>
- <div className={`community-messenger-shell ${communityMessageView.open ? 'conversation-open' : ''}`}>
+ <div className={`community-messenger-shell ${communityMessageView.open ? 'conversation-open' : ''}`} style={{height:'82vh', maxHeight:820}}>
  <div className='community-messenger-sidebar'>
  <div className='community-messenger-sidebar-head'>
  <div>
