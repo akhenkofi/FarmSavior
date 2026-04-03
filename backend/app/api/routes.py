@@ -1192,6 +1192,19 @@ def register_user(payload: UserCreate, db: Session = Depends(get_db)):
 
     _account_store_upsert_user(user)
 
+    now = datetime.utcnow()
+    otp_query = db.query(OTPCode).filter((OTPCode.destination == dest) | (OTPCode.phone == user.phone)).order_by(OTPCode.id.desc())
+    latest_otp = otp_query.first()
+    if latest_otp and getattr(latest_otp, 'created_at', None):
+        seconds_since = (now - latest_otp.created_at).total_seconds()
+        if seconds_since < 60:
+            wait_for = int(max(1, 60 - seconds_since))
+            raise HTTPException(status_code=429, detail=f'Please wait {wait_for}s before requesting a new OTP.')
+    day_ago = now - timedelta(days=1)
+    otp_daily_count = db.query(OTPCode).filter(((OTPCode.destination == dest) | (OTPCode.phone == user.phone)) & (OTPCode.created_at >= day_ago)).count()
+    if otp_daily_count >= 3:
+        raise HTTPException(status_code=429, detail='Daily OTP limit reached (3 requests). Try again tomorrow.')
+
     code = f"{random.randint(100000, 999999)}"
     db.add(OTPCode(phone=user.phone, destination=dest, channel=method, code=code))
     db.commit()

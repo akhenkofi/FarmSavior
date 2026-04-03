@@ -3018,6 +3018,8 @@ function AppInner() {
  const [signup, setSignup] = useState({ full_name: '', signup_method: 'phone', phone: '', email: '', country: 'GH', region: '', user_type: 'Farmer', password: '', accept_terms: true, accept_privacy: true, consent_analytics: true, consent_personalization: true, consent_marketing: false, consent_aggregated_insights: true })
  const [login, setLogin] = useState({ identifier: '', password: '' })
  const [otp, setOtp] = useState({ destination: '', code: '' })
+ const [otpResendReadyAt, setOtpResendReadyAt] = useState(0)
+ const [otpNowMs, setOtpNowMs] = useState(Date.now())
 
  const [idForm, setIdForm] = useState({ user_id: 1, id_type: 'GhanaCard', id_number: '', id_photo_url: '', id_front_photo_url: '', id_back_photo_url: '', facial_verification_flag: false })
  const [accountForm, setAccountForm] = useState({ full_name: '', region: '' })
@@ -3026,6 +3028,12 @@ function AppInner() {
  const [myIdVerification, setMyIdVerification] = useState({ application: null, review: null })
  const [myIdForm, setMyIdForm] = useState({ id_type: 'GhanaCard', id_number: '', id_photo_url: '', id_front_photo_url: '', id_back_photo_url: '', facial_verification_flag: false })
  const [myIdSubmitting, setMyIdSubmitting] = useState(false)
+
+ useEffect(() => {
+  if (authMode !== 'verify-otp') return
+  const timer = setInterval(() => setOtpNowMs(Date.now()), 1000)
+  return () => clearInterval(timer)
+ }, [authMode])
  const [passportForm, setPassportForm] = useState({ user_id: 1, gps_lat: '', gps_lng: '', farm_size_hectares: '', crop_types: '[]', livestock_numbers: '{}', farm_photo_urls: '[]', harvest_records_notes: '' })
  const [cropForm, setCropForm] = useState({ farmer_id: 1, crop_name: '', quantity_kg: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
  const [cropEdit, setCropEdit] = useState({ id: '', farmer_id: 1, crop_name: '', quantity_kg: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
@@ -4490,6 +4498,7 @@ function AppInner() {
  } catch {}
  const destination = registerRes?.otp_destination || (signup.signup_method === 'email' ? signup.email.trim().toLowerCase() : normalizePhone(signup.phone))
  setOtp({ destination, code: '' })
+ setOtpResendReadyAt(Date.now() + 60_000)
  setAuthMode('verify-otp')
  setAuthMsg(registerRes?.otp_sent
  ? `Account created. Enter the OTP sent to ${destination}.`
@@ -4546,6 +4555,38 @@ function AppInner() {
  }}>
  <input className='input' placeholder='OTP destination' value={otp.destination} onChange={e => setOtp({ ...otp, destination: e.target.value })} required />
  <input className='input' placeholder={t('OTP Code','Code OTP','验证码')} value={otp.code} onChange={e => setOtp({ ...otp, code: e.target.value })} required />
+ <div className='inlineForm' style={{gap:8, flexWrap:'wrap'}}>
+  <button type='button' className='btn' disabled={authLoading || otpNowMs < otpResendReadyAt} onClick={async()=>{
+   try {
+    setAuthLoading(true)
+    const phoneValue = normalizePhone(signup.phone || '')
+    const emailValue = String(signup.email || '').trim().toLowerCase()
+    await api.registerUser({
+     full_name: signup.full_name || 'FarmSavior User',
+     signup_method: signup.signup_method,
+     phone: signup.signup_method === 'phone' ? phoneValue : undefined,
+     email: signup.signup_method === 'email' ? emailValue : undefined,
+     country: signup.country || 'GH',
+     region: signup.region || '',
+     user_type: signup.user_type || 'Farmer',
+     password: signup.password || 'changeme',
+     accept_terms: !!signup.accept_terms,
+     accept_privacy: !!signup.accept_privacy,
+     consent_analytics: !!signup.consent_analytics,
+     consent_personalization: !!signup.consent_personalization,
+     consent_marketing: !!signup.consent_marketing,
+     consent_aggregated_insights: !!signup.consent_aggregated_insights,
+    })
+    setOtpResendReadyAt(Date.now() + 60_000)
+    setAuthMsg('OTP resent successfully.')
+   } catch (e) {
+    setAuthMsg(errMsg(e))
+   } finally {
+    setAuthLoading(false)
+   }
+  }}>{otpNowMs < otpResendReadyAt ? `Request new OTP in ${Math.max(1, Math.ceil((otpResendReadyAt - otpNowMs)/1000))}s` : 'Request new OTP'}</button>
+  <div className='helper-text'>Maximum 3 OTP requests per day per number/email.</div>
+ </div>
  <button className='btn btn-dark' disabled={authLoading}>{authLoading ? 'FarmSavior is verifying your OTP…' : t('Verify OTP','Vérifier OTP','验证 OTP')}</button>
  {authLoading && <div className='panel' style={{padding:10, display:'flex', alignItems:'center', gap:10}}><div style={{fontSize:'1.2rem'}}>🌿</div><div><strong>FarmSavior</strong><div style={{fontSize:'.85rem', color:'#64748b'}}>Verifying your code…</div></div></div>}
  </form>}
