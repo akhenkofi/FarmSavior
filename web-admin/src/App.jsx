@@ -2720,18 +2720,7 @@ function AppInner() {
  const [communityProfileView, setCommunityProfileView] = useState({ open: !!initialCommunityProfileUserId, loading: false, data: null, error: '', userId: initialCommunityProfileUserId || null })
  const [communityProfileOpeningUserId, setCommunityProfileOpeningUserId] = useState(null)
 
- useEffect(() => {
-  if (!me?.id) return
-  try {
-   const raw = localStorage.getItem(`farmsavior_community_profile_cache_${me.id}`)
-   if (raw) setCommunityProfile(JSON.parse(raw))
-  } catch {}
- }, [me?.id])
 
- useEffect(() => {
-  if (!me?.id) return
-  try { localStorage.setItem(`farmsavior_community_profile_cache_${me.id}`, JSON.stringify(communityProfile || {})) } catch {}
- }, [communityProfile, me?.id])
 
  const isFollowingUser = (userId) => (communityFollowState?.following_ids || []).map(String).includes(String(userId))
  const isMutedUser = (userId) => (communityFollowState?.muted_ids || []).map(String).includes(String(userId))
@@ -3016,6 +3005,19 @@ function AppInner() {
  const [state, setState] = useState({ metrics: {}, users: [], listings: [], livestock: [], livestockRecords: [], livestockPurchaseSources: [], logistics: [], equipment: [], storage: [], payments: [], orders: [], payoutProfiles: [], notifications: [], payoutHistory: [], alerts: [], contracts: [], idv: [], passports: [], verificationApps: [], approvedAccounts: [], deviceTokens: [], diseaseScans: [], disputes: [], fraudFlags: [], news: [], publicWeather: [], govPrograms: [], spotTrading: [], spotHistory: [], tradeExportStats: [], livestockPlans: [] })
  const [me, setMe] = useState(null)
  const lastTrackRef = useRef('')
+
+ useEffect(() => {
+  if (!me?.id) return
+  try {
+   const raw = localStorage.getItem(`farmsavior_community_profile_cache_${me.id}`)
+   if (raw) setCommunityProfile(JSON.parse(raw))
+  } catch {}
+ }, [me?.id])
+
+ useEffect(() => {
+  if (!me?.id) return
+  try { localStorage.setItem(`farmsavior_community_profile_cache_${me.id}`, JSON.stringify(communityProfile || {})) } catch {}
+ }, [communityProfile, me?.id])
 
  const [signup, setSignup] = useState({ full_name: '', signup_method: 'phone', phone: '', email: '', country: 'GH', region: '', user_type: 'Farmer', password: '', accept_terms: true, accept_privacy: true, consent_analytics: true, consent_personalization: true, consent_marketing: false, consent_aggregated_insights: true })
  const [login, setLogin] = useState({ identifier: '', password: '' })
