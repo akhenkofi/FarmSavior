@@ -302,7 +302,7 @@ def _ghana_card_assessment(rec: IDVerification) -> dict:
     score = 0.0
 
     if not format_ok:
-        hard_failures.append('Ghana Card PIN must match GHA-123456789-0')
+        warnings.append('Ghana Card PIN format differs from expected GHA-123456789-0 pattern')
     else:
         score += 0.34
         positives.append('Ghana Card PIN format looks valid')
@@ -320,7 +320,7 @@ def _ghana_card_assessment(rec: IDVerification) -> dict:
         hard_failures.append('Back Ghana Card image missing')
 
     if duplicate_images:
-        hard_failures.append('Front and back images appear to be the same file')
+        warnings.append('Front and back images appear very similar; verify card sides are clearly captured')
     else:
         if front_present and has_back:
             score += 0.10
@@ -342,12 +342,12 @@ def _ghana_card_assessment(rec: IDVerification) -> dict:
         recommendation = 'AUTO_REJECT'
         review_priority = 'HIGH'
         summary = 'Auto-rejected: ' + '; '.join(hard_failures)
-    elif score >= 0.80:
+    elif score >= 0.55:
         status = 'APPROVED'
         recommendation = 'AUTO_APPROVE'
         review_priority = 'FAST_PASS'
-        summary = 'Auto-approved: Ghana Card checks are strong and match required format/image rules.'
-    elif score >= 0.65:
+        summary = 'Auto-approved: Ghana Card submission passed required image + ID checks.'
+    elif score >= 0.40:
         status = 'PENDING'
         recommendation = 'MANUAL_REVIEW'
         review_priority = 'NORMAL'
