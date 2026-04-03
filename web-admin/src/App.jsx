@@ -3376,6 +3376,22 @@ function AppInner() {
  }, [communityActiveCall?.callId, communityActiveCall?.status])
 
  useEffect(() => {
+  if (!communityActiveCall) return
+  const handleOffline = () => setCommunityActiveCall(prev => prev ? { ...prev, status: 'poor-connection' } : prev)
+  const handleOnline = () => setCommunityActiveCall(prev => (prev && String(prev.status || '') === 'poor-connection') ? { ...prev, status: 'connected' } : prev)
+  if (typeof window !== 'undefined') {
+   window.addEventListener('offline', handleOffline)
+   window.addEventListener('online', handleOnline)
+  }
+  return () => {
+   if (typeof window !== 'undefined') {
+    window.removeEventListener('offline', handleOffline)
+    window.removeEventListener('online', handleOnline)
+   }
+  }
+ }, [communityActiveCall?.callId])
+
+ useEffect(() => {
   if (!communityActiveCall || communityActiveCall.mode !== 'video' || communityActiveCall.url) return
   if (!['connecting-media','connected'].includes(String(communityActiveCall.status || ''))) return
   const timer = setTimeout(() => {
@@ -8403,7 +8419,7 @@ function AppInner() {
   ? <div style={{display:'grid', placeItems:'center', padding:24, color:'#e2e8f0'}}><div style={{textAlign:'center'}}><div style={{fontSize:'2rem'}}>📞</div><div style={{fontWeight:700}}>{communityActiveCall?.status === 'calling' ? 'Calling…' : 'Ringing…'}</div><div style={{fontSize:'.85rem', opacity:.85, marginTop:6}}>{communityActiveCall?.status === 'calling' ? 'Trying to reach the other user.' : 'Other user is receiving your call now.'}</div></div></div>
   : (communityActiveCall?.url
     ? <iframe title='FarmSavior Call' src={communityActiveCall.url} allow='camera; microphone; fullscreen; display-capture; autoplay' style={{width:'100%', height:'100%', border:'0'}} />
-    : <div style={{display:'grid', placeItems:'center', padding:24, color:'#e2e8f0'}}><div style={{textAlign:'center'}}><div style={{fontSize:'2rem'}}>🔄</div><div style={{fontWeight:700}}>Call is {communityActiveCall?.status === 'connected' ? 'connected' : 'connecting'}…</div><div style={{fontSize:'.85rem', opacity:.85, marginTop:6}}>Status: {communityActiveCall?.status || 'initializing'}</div></div></div>)}
+    : <div style={{display:'grid', placeItems:'center', padding:24, color:'#e2e8f0'}}><div style={{textAlign:'center'}}><div style={{fontSize:'2rem'}}>{communityActiveCall?.status === 'poor-connection' ? '📶' : '🔄'}</div><div style={{fontWeight:700}}>{communityActiveCall?.status === 'poor-connection' ? 'Poor connection — audio only' : `Call is ${communityActiveCall?.status === 'connected' ? 'connected' : 'connecting'}…`}</div><div style={{fontSize:'.85rem', opacity:.85, marginTop:6}}>Status: {communityActiveCall?.status || 'initializing'}</div></div></div>)}
  {communityActiveCall?.mode === 'video' && <div style={{position:'absolute', left:0, right:0, top:52, bottom:0, pointerEvents:'none', display:'grid', gridTemplateColumns:'1fr', gridTemplateRows:'1fr'}}>
   <video ref={communityRemoteVideoRef} autoPlay playsInline style={{width:'100%', height:'100%', objectFit:'cover', background:'#000'}} />
   <video ref={communityLocalVideoRef} autoPlay playsInline muted style={{position:'absolute', right:12, bottom:12, width:120, height:160, objectFit:'cover', borderRadius:10, border:'1px solid rgba(255,255,255,.35)', background:'#111'}} />
