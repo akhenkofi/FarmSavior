@@ -1139,30 +1139,18 @@ def _send_otp(destination: str, method: str, code: str):
 
 @router.post('/auth/register')
 def register_user(payload: UserCreate, db: Session = Depends(get_db)):
-    method = (payload.signup_method or 'phone').lower()
+    method = 'phone'
     payload.phone = _normalize_phone(payload.phone)
     if payload.email:
         payload.email = str(payload.email).strip().lower()
 
-    existing_user = None
-    if method == 'phone':
-        if not payload.phone:
-            raise HTTPException(status_code=400, detail='Phone is required for phone signup')
-        existing_user = _find_existing_user_by_identity(db, phone=payload.phone, email=payload.email)
-        if existing_user and existing_user.is_verified:
-            raise HTTPException(status_code=400, detail='Phone already registered')
-        dest = payload.phone
-    elif method == 'email':
-        if not payload.email:
-            raise HTTPException(status_code=400, detail='Email is required for email signup')
-        existing_user = _find_existing_user_by_identity(db, phone=payload.phone, email=payload.email.lower())
-        if existing_user and existing_user.is_verified:
-            raise HTTPException(status_code=400, detail='Email already registered')
-        if not payload.phone:
-            payload.phone = existing_user.phone if existing_user and existing_user.phone else f"TMP-{int(datetime.utcnow().timestamp())}-{random.randint(1000,9999)}"
-        dest = payload.email.lower()
-    else:
-        raise HTTPException(status_code=400, detail='Unsupported signup method')
+    if not payload.phone:
+        raise HTTPException(status_code=400, detail='Phone number is required for signup')
+
+    existing_user = _find_existing_user_by_identity(db, phone=payload.phone, email=payload.email)
+    if existing_user and existing_user.is_verified:
+        raise HTTPException(status_code=400, detail='Phone already registered')
+    dest = payload.phone
 
     if existing_user and not existing_user.is_verified:
         existing_user.full_name = payload.full_name or existing_user.full_name

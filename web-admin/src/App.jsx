@@ -4450,7 +4450,7 @@ function AppInner() {
  const countryValue = String(form.get('country') || signup.country || '').trim()
  const regionValue = String(form.get('region') || signup.region || '').trim()
  const passwordValue = String(form.get('password') || signup.password || '').trim()
- const signupMethodValue = signup.signup_method
+ const signupMethodValue = 'phone'
  if (!signup.accept_terms || !signup.accept_privacy) { setAuthMsg('Please accept Terms and Privacy to continue.'); return }
  if (!fullNameValue) { setAuthMsg('Please enter your full name.'); return }
  if (!countryValue) { setAuthMsg('Please enter your country.'); return }
@@ -4498,7 +4498,7 @@ function AppInner() {
  captured_at_utc: new Date().toISOString()
  }))
  } catch {}
- const destination = registerRes?.otp_destination || (signup.signup_method === 'email' ? signup.email.trim().toLowerCase() : normalizePhone(signup.phone))
+ const destination = registerRes?.otp_destination || normalizePhone(signup.phone) || signup.email.trim().toLowerCase()
  setOtp({ destination, code: '' })
  setOtpResendReadyAt(Date.now() + 60_000)
  setAuthMode('verify-otp')
@@ -4509,14 +4509,9 @@ function AppInner() {
  finally { setAuthLoading(false) }
  }}>
  <input className='input' name='full_name' autoComplete='name' placeholder='Full name' value={signup.full_name} onChange={e => setSignup({ ...signup, full_name: e.target.value })} onInput={e => setSignup({ ...signup, full_name: e.target.value })} required />
- <div className='row2' style={{gap:10}}>
- <button type='button' className={`btn ${signup.signup_method === 'phone' ? 'btn-dark' : ''}`} onClick={() => setSignup({ ...signup, signup_method: 'phone' })}>Phone OTP</button>
- <button type='button' className={`btn ${signup.signup_method === 'email' ? 'btn-dark' : ''}`} onClick={() => setSignup({ ...signup, signup_method: 'email' })}>Email OTP</button>
- </div>
- {signup.signup_method === 'phone'
- ? <input className='input' name='phone' autoComplete='tel' placeholder='Phone' value={signup.phone} onChange={e => setSignup({ ...signup, phone: e.target.value })} onInput={e => setSignup({ ...signup, phone: e.target.value })} required />
- : <input className='input' name='email' autoComplete='email' type='email' placeholder='Email' value={signup.email} onChange={e => setSignup({ ...signup, email: e.target.value })} onInput={e => setSignup({ ...signup, email: e.target.value })} required />}
- <div style={{fontSize:'.76rem', color:'#64748b'}}>{signup.signup_method === 'email' ? 'OTP will be sent to the email address you enter.' : 'OTP will be sent to the phone number you enter.'}</div>
+ <input className='input' name='phone' autoComplete='tel' placeholder='Phone (required)' value={signup.phone} onChange={e => setSignup({ ...signup, phone: e.target.value, signup_method: 'phone' })} onInput={e => setSignup({ ...signup, phone: e.target.value, signup_method: 'phone' })} required />
+ <input className='input' name='email' autoComplete='email' type='email' placeholder='Email (optional)' value={signup.email} onChange={e => setSignup({ ...signup, email: e.target.value, signup_method: 'phone' })} onInput={e => setSignup({ ...signup, email: e.target.value, signup_method: 'phone' })} />
+ <div style={{fontSize:'.76rem', color:'#64748b'}}>OTP will be sent to the phone number you enter. Email is optional for receipts/account recovery.</div>
  <div className='row2' style={{gap:10}}>
  <input className='input' name='country' autoComplete='country-name' placeholder='Country (any code or name, e.g. US, KE, Brazil)' value={signup.country} onChange={e => setSignup({ ...signup, country: e.target.value })} onInput={e => setSignup({ ...signup, country: e.target.value })} required />
  <input className='input' name='region' autoComplete='address-level1' placeholder='Region' value={signup.region} onChange={e => setSignup({ ...signup, region: e.target.value })} onInput={e => setSignup({ ...signup, region: e.target.value })} required />
