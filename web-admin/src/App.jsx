@@ -3224,6 +3224,8 @@ function AppInner() {
     const res = await api.pollCommunityCallSignalInbox(Number(communityCallInboxCursorRef.current || 0)).catch(() => null)
     const events = Array.isArray(res?.events) ? res.events : []
     for (const ev of events) {
+      const myId = Number((typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem('farmsavior_me') || '{}')?.id || 0) : 0) || 0)
+      if (Number(ev?.from_user_id || 0) === myId) continue
       const iid = Number(ev?.inbox_id || 0)
       if (iid) communityCallInboxCursorRef.current = Math.max(Number(communityCallInboxCursorRef.current || 0), iid)
       const signal = ev?.data || {}
@@ -3251,6 +3253,8 @@ function AppInner() {
     const res = await api.pollCommunityCallSignal(callId, afterId).catch(() => null)
     const events = Array.isArray(res?.events) ? res.events : []
     for (const ev of events) {
+      const myId = Number((typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem('farmsavior_me') || '{}')?.id || 0) : 0) || 0)
+      if (Number(ev?.from_user_id || 0) === myId) continue
       const eid = Number(ev?.id || 0)
       if (eid) communityCallSignalCursorRef.current[callId] = Math.max(Number(communityCallSignalCursorRef.current?.[callId] || 0), eid)
       const signal = ev?.data || {}
