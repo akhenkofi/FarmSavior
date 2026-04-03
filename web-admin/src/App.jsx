@@ -6577,7 +6577,7 @@ function AppInner() {
   </div>
   <article className='panel records-panel'>
    {(() => {
-    const all = Array.isArray(livestockRecords) ? livestockRecords : []
+    const all = Array.isArray(state?.livestockRecords) ? state.livestockRecords : []
     const findById = (id) => all.find(r => Number(r?.id) === Number(id)) || null
     const animal = currentLivestockRecord || null
     if (!animal) return <div className='helper-text'>No animal selected.</div>
