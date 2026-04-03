@@ -8078,6 +8078,10 @@ function AppInner() {
    </summary>
    <div style={{padding:'0 10px 10px'}}>
     <div className='list-row'><span>Image</span><strong style={{maxWidth:'65%', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{String(row.image_url || '').replace('uploaded-image://','')}</strong></div>
+    {!!row.image_url && <div style={{marginTop:8}}>
+     <button type='button' className='btn' onClick={()=>window.open(String(row.image_url), '_blank', 'noopener,noreferrer')}>View analyzed image</button>
+     {String(row.image_url).startsWith('data:image/') && <img src={String(row.image_url)} alt='Analyzed' style={{display:'block', marginTop:8, maxWidth:'100%', maxHeight:260, borderRadius:10, border:'1px solid #e2e8f0'}} onClick={()=>window.open(String(row.image_url), '_blank', 'noopener,noreferrer')} />}
+    </div>}
     <div className='list-row'><span>Result details</span><strong>{parsed ? 'Structured' : 'Raw text'}</strong></div>
     <div className='helper-text' style={{whiteSpace:'pre-wrap', marginTop:6}}>{parsed ? JSON.stringify(parsed, null, 2) : String(row.result || '-')}</div>
    </div>
