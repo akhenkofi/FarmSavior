@@ -1495,12 +1495,14 @@ def create_id_verification(payload: IDVerificationIn, authorization: Optional[st
     db.commit()
     db.refresh(rec)
 
+    ai_status, ai_score, ai_reason = _ai_review_id_verification(rec)
     review = VerificationReview(
         id_verification_id=rec.id,
         user_id=rec.user_id,
-        status='PENDING',
-        ai_score=0,
-        ai_reason='Awaiting analysis'
+        status=ai_status,
+        ai_score=ai_score,
+        ai_reason=ai_reason,
+        reviewed_at=datetime.utcnow()
     )
     db.add(review)
     db.commit()
@@ -1522,6 +1524,14 @@ def my_latest_id_verification(authorization: Optional[str] = Header(None), db: S
     if not iv:
         return {'application': None, 'review': None}
     review = db.query(VerificationReview).filter(VerificationReview.id_verification_id == iv.id).first()
+    if review and str(review.status or '').upper() == 'PENDING':
+        ai_status, ai_score, ai_reason = _ai_review_id_verification(iv)
+        review.status = ai_status
+        review.ai_score = ai_score
+        review.ai_reason = ai_reason
+        review.reviewed_at = datetime.utcnow()
+        db.commit()
+        db.refresh(review)
     token = None
     if authorization and str(authorization).lower().startswith('bearer '):
         token = str(authorization).split(' ', 1)[1].strip()
@@ -1551,17 +1561,19 @@ def submit_my_id_verification(payload: IDVerificationSelfIn, authorization: Opti
     db.commit()
     db.refresh(rec)
 
+    ai_status, ai_score, ai_reason = _ai_review_id_verification(rec)
     review = VerificationReview(
         id_verification_id=rec.id,
         user_id=u.id,
-        status='PENDING',
-        ai_score=0,
-        ai_reason='Awaiting analysis'
+        status=ai_status,
+        ai_score=ai_score,
+        ai_reason=ai_reason,
+        reviewed_at=datetime.utcnow()
     )
     db.add(review)
     db.commit()
 
-    return {'message': 'Verification update submitted for re-review', 'id_verification_id': rec.id, 'status': 'PENDING'}
+    return {'message': 'Verification submitted and auto-reviewed', 'id_verification_id': rec.id, 'status': ai_status, 'ai_score': ai_score, 'ai_reason': ai_reason}
 
 
 
