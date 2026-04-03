@@ -3047,6 +3047,7 @@ function AppInner() {
  const [notesSearch, setNotesSearch] = useState('')
  const [draftNote, setDraftNote] = useState('')
  const [draftWeight, setDraftWeight] = useState('')
+ const [draftWeightDate, setDraftWeightDate] = useState(new Date().toISOString().slice(0,10))
  const [livestockRecordsFilter, setLivestockRecordsFilter] = useState('ALL')
  const [recordsSectionOpen, setRecordsSectionOpen] = useState({ create: false, edit: false, batch: false, details: false })
  const [batchMedicationForm, setBatchMedicationForm] = useState({ species:'ALL', animal_type:'ALL', health_status:'ALL', cull_keep_status:'ALL', minStars:'', pen_location:'', medication:'', dose:'', days:'' })
@@ -6346,7 +6347,7 @@ function AppInner() {
         setRecordsSectionOpen(prev => ({ ...prev, details: false }))
         if (action === 'notes') setNotesScreenOpen(true)
         if (action === 'add-note') { setDraftNote(''); setNotesComposerOpen(true) }
-        if (action === 'add-weight') { setDraftWeight(''); setWeightComposerOpen(true) }
+        if (action === 'add-weight') { setDraftWeight(''); setDraftWeightDate(new Date().toISOString().slice(0,10)); setWeightComposerOpen(true) }
         if (action === 'medicines') setMedicinesScreenOpen(true)
         if (action === 'add-medicine') { setMedicineShotDraft({ medicine: '', dosage: '', notes: '' }); setMedicineShotOpen(true) }
         if (action === 'share-pdf') setAncestorPdfOpen(true)
@@ -6439,12 +6440,16 @@ function AppInner() {
    <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setWeightComposerOpen(false)}>Cancel</button></div>
   </div>
   <article className='panel records-panel'>
-   <input className='input' inputMode='decimal' placeholder='Weight in kg' value={draftWeight} onChange={e=>setDraftWeight(e.target.value)} />
+   <div className='row2' style={{gap:10}}>
+    <input className='input' type='date' value={draftWeightDate} onChange={e=>setDraftWeightDate(e.target.value)} />
+    <input className='input' inputMode='decimal' placeholder='Weight in kg' value={draftWeight} onChange={e=>setDraftWeight(e.target.value)} />
+   </div>
    <div style={{marginTop:10, display:'flex', justifyContent:'flex-end'}}><button type='button' className='btn btn-dark' onClick={async()=>{
     const txt = String(draftWeight || '').trim();
     if (!txt || !currentLivestockRecord?.id) { setWeightComposerOpen(false); return }
     const base = extractAttachmentsFromNotes(currentLivestockRecord?.notes || '')
-    const stamped = `[${new Date().toISOString().slice(0,16).replace('T',' ')}] Weight: ${txt} kg`
+    const dateLabel = draftWeightDate || new Date().toISOString().slice(0,10)
+    const stamped = `[${dateLabel}] Weight: ${txt} kg`
     const merged = `${base.text ? `${base.text}\n` : ''}${stamped}`
     const nextNotes = mergeNotesWithAttachments(merged, { photos: base.photos || [], docs: base.docs || [] })
     const payload = { ...mapLivestockRecordToEditForm(currentLivestockRecord), notes: nextNotes }
@@ -6452,6 +6457,7 @@ function AppInner() {
     await api.updateLivestockRecord(Number(currentLivestockRecord.id), payload)
     await loadLivestockRecords()
     setDraftWeight('')
+    setDraftWeightDate(new Date().toISOString().slice(0,10))
     setWeightComposerOpen(false)
     setNotesScreenOpen(true)
    }}>Save Weight</button></div>
