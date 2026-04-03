@@ -6695,48 +6695,35 @@ function AppInner() {
  {markComposerOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:269, margin:0, background:'#f8fafc', overflow:'auto'}}>
  <div className='records-shell'>
   <div className='records-hero-card'>
-   <div><div className='records-eyebrow'>OFFSPRING ENTRY</div><h3>Add Lamb</h3><p>{currentLivestockRecord?.name || 'Parent record'}</p></div>
+   <div><div className='records-eyebrow'>BREEDING ENTRY</div><h3>Add Mark</h3><p>{currentLivestockRecord?.name || 'Animal record'}</p></div>
    <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setMarkComposerOpen(false)}>Cancel</button></div>
   </div>
   <article className='panel records-panel'>
    <div className='row2' style={{gap:10}}>
-    <input className='input' type='date' value={markDraft.markDate || ''} onChange={e=>setMarkDraft(prev=>({ ...prev, markDate:e.target.value }))} />
-    <input className='input' placeholder='Lamb name' value={markDraft.name || ''} onChange={e=>setMarkDraft(prev=>({ ...prev, name:e.target.value }))} />
-    <input className='input' placeholder='Ear tag' value={markDraft.ear_tag || ''} onChange={e=>setMarkDraft(prev=>({ ...prev, ear_tag:e.target.value }))} />
+    <input className='input' placeholder='Sire' value={markDraft.sire || ''} onChange={e=>setMarkDraft(prev=>({ ...prev, sire:e.target.value }))} />
+    <input className='input' placeholder='Dam' value={markDraft.dam || ''} onChange={e=>setMarkDraft(prev=>({ ...prev, dam:e.target.value }))} />
    </div>
    <div className='row2' style={{gap:10, marginTop:10}}>
-    <select className='input' value={markDraft.animal_type || 'LAMB'} onChange={e=>setMarkDraft(prev=>({ ...prev, animal_type:e.target.value }))}>
-     <option value='LAMB'>Lamb</option><option value='RAM LAMB'>Ram Lamb</option><option value='EWE LAMB'>Ewe Lamb</option>
-    </select>
-    <input className='input' placeholder='Birth weight (kg, optional)' value={markDraft.initial_weight_kg || ''} onChange={e=>setMarkDraft(prev=>({ ...prev, initial_weight_kg:e.target.value }))} />
+    <input className='input' type='date' value={markDraft.markDate || ''} onChange={e=>setMarkDraft(prev=>({ ...prev, markDate:e.target.value }))} />
+    <input className='input' type='date' value={markDraft.dueDate || ''} onChange={e=>setMarkDraft(prev=>({ ...prev, dueDate:e.target.value }))} />
+   </div>
+   <div className='records-detail-section' style={{marginTop:10}}>Fertilization Type</div>
+   <div className='list'>
+    {['Natural','AI Fresh','AI Frozen'].map(type => <button key={`mark-fert-${type}`} type='button' className='list-row' onClick={()=>setMarkDraft(prev=>({ ...prev, fertilizationType:type }))}><span>{type}</span><strong>{markDraft.fertilizationType===type ? '✓' : 'Choose'}</strong></button>)}
    </div>
    <div style={{marginTop:10, display:'flex', justifyContent:'flex-end'}}><button type='button' className='btn btn-dark' onClick={async()=>{
     if (!currentLivestockRecord?.id) return
-    const payload = {
-      user_id: Number(currentLivestockRecord.user_id || 1),
-      ownership: currentLivestockRecord.ownership || 'Owned by Me',
-      species: currentLivestockRecord.species || 'SHEEP',
-      animal_type: markDraft.animal_type || 'LAMB',
-      name: String(markDraft.name || '').trim(),
-      ear_tag: String(markDraft.ear_tag || '').trim(),
-      date_of_birth: markDraft.markDate || new Date().toISOString().slice(0,10),
-      sire_id: currentLivestockRecord.animal_type?.toUpperCase().includes('RAM') ? Number(currentLivestockRecord.id) : (markDraft.sire ? Number(markDraft.sire) : null),
-      dam_id: currentLivestockRecord.animal_type?.toUpperCase().includes('EWE') ? Number(currentLivestockRecord.id) : (markDraft.dam ? Number(markDraft.dam) : null),
-      litter_size: 1,
-      initial_weight_kg: markDraft.initial_weight_kg ? Number(markDraft.initial_weight_kg) : null,
-      breeding_type: 'Natural',
-      cull_keep_status: 'KEEP',
-      purchased_from_type: 'BREEDER'
-    }
+    const markDate = String(markDraft.markDate || new Date().toISOString().slice(0,10))
+    const stamped = `[${markDate}] Mark: Sire ${markDraft.sire || '--'} | Dam ${markDraft.dam || '--'} | Due ${markDraft.dueDate || '--'} | Type ${markDraft.fertilizationType || 'Natural'}`
     try {
-      await api.createLivestockRecord(payload)
+      await api.appendLivestockNote(Number(currentLivestockRecord.id), stamped)
       await loadLivestockRecords()
+      setMarkDraft({ sire: '', dam: '', markDate: new Date().toISOString().slice(0,10), dueDate: '', fertilizationType: 'Natural' })
       setMarkComposerOpen(false)
-      setOffspringListOpen(true)
     } catch (err) {
-      alert(`Add lamb failed: ${errMsg(err)}`)
+      alert(`Save mark failed: ${errMsg(err)}`)
     }
-   }}>Save Lamb</button></div>
+   }}>Save Mark</button></div>
   </article>
  </div>
  </section>}
