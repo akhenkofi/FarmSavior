@@ -5560,10 +5560,10 @@ function AppInner() {
 
  {active === 'poultry-university' && <section>
  <h3>🐔 Poultry University</h3>
- <div className='panel' style={{marginBottom:10, background:'linear-gradient(135deg,#eff6ff 0%,#f8fafc 100%)', border:'1px solid #bfdbfe'}}>
- <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',color:'#1d4ed8'}}>AADU school</div>
- <strong style={{display:'block',marginTop:4}}>Poultry University</strong>
- <div style={{marginTop:6,color:'#334155'}}>This school brings brooding, grow-out, layer management, biosecurity, flock health, and commercial discipline into one structured operating reference for serious poultry teams.</div>
+ <div className='panel' style={{marginBottom:10, background:poultryTier==='pro' ? 'linear-gradient(135deg,#0f172a 0%,#1d4ed8 45%,#0ea5e9 100%)' : 'linear-gradient(135deg,#eff6ff 0%,#f8fafc 100%)', border:poultryTier==='pro' ? '1px solid rgba(255,255,255,.16)' : '1px solid #bfdbfe', color:poultryTier==='pro' ? '#fff' : '#0f172a'}}>
+ <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',color:poultryTier==='pro' ? 'rgba(255,255,255,.9)' : '#1d4ed8'}}>AADU school</div>
+ <strong style={{display:'block',marginTop:4}}>{poultryTier==='pro' ? 'Poultry University · PRO ✓' : 'Poultry University'}</strong>
+ <div style={{marginTop:6,color:poultryTier==='pro' ? 'rgba(255,255,255,.88)' : '#334155'}}>{poultryTier==='pro' ? 'Professional access is active. Full Poultry University modules and premium execution tools are unlocked.' : 'This school brings brooding, grow-out, layer management, biosecurity, flock health, and commercial discipline into one structured operating reference for serious poultry teams.'}</div>
  </div>
  <article className='panel' style={{marginBottom:10}}>
  <h4 style={{marginTop:0}}>Access & Delivery Format</h4>
@@ -5903,10 +5903,10 @@ function AppInner() {
 
  {active === 'goat-university' && <section>
  <h3>🐐 Goat University</h3>
- <div className='panel' style={{marginBottom:10, background:'linear-gradient(135deg,#eff6ff 0%,#f0fdfa 100%)', border:'1px solid #bfdbfe'}}>
- <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',color:'#0f766e'}}>AADU school</div>
- <strong style={{display:'block',marginTop:4}}>Goat University</strong>
- <div style={{marginTop:6,color:'#334155'}}>Goat University organizes breeding strategy, kidding management, parasite control, and market-ready herd development into a practical AADU reference for operators, managers, and technical partners.</div>
+ <div className='panel' style={{marginBottom:10, background:(goatTier==='pro' || String(universitySubscriptions.goat?.subscription?.plan_code || '').toLowerCase()==='pro') ? 'linear-gradient(135deg,#0f172a 0%,#0f766e 45%,#14b8a6 100%)' : 'linear-gradient(135deg,#eff6ff 0%,#f0fdfa 100%)', border:(goatTier==='pro' || String(universitySubscriptions.goat?.subscription?.plan_code || '').toLowerCase()==='pro') ? '1px solid rgba(255,255,255,.16)' : '1px solid #bfdbfe', color:(goatTier==='pro' || String(universitySubscriptions.goat?.subscription?.plan_code || '').toLowerCase()==='pro') ? '#fff' : '#0f172a'}}>
+ <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',color:(goatTier==='pro' || String(universitySubscriptions.goat?.subscription?.plan_code || '').toLowerCase()==='pro') ? 'rgba(255,255,255,.9)' : '#0f766e'}}>AADU school</div>
+ <strong style={{display:'block',marginTop:4}}>{(goatTier==='pro' || String(universitySubscriptions.goat?.subscription?.plan_code || '').toLowerCase()==='pro') ? `Goat University · PRO ✓` : 'Goat University'}</strong>
+ <div style={{marginTop:6,color:(goatTier==='pro' || String(universitySubscriptions.goat?.subscription?.plan_code || '').toLowerCase()==='pro') ? 'rgba(255,255,255,.88)' : '#334155'}}>{(goatTier==='pro' || String(universitySubscriptions.goat?.subscription?.plan_code || '').toLowerCase()==='pro') ? 'Professional access is active. Full Goat University modules and premium execution tools are unlocked.' : 'Goat University organizes breeding strategy, kidding management, parasite control, and market-ready herd development into a practical AADU reference for operators, managers, and technical partners.'}</div>
  </div>
  <article className='panel' style={{marginBottom:10,border:'1px solid #99f6e4',background:'#f0fdfa'}}>
  <h4 style={{marginTop:0,color:'#0f766e'}}>Ghana Goat Breed Development Framework</h4>
@@ -6028,10 +6028,10 @@ function AppInner() {
 
  {active === 'cattle-university' && <section>
  <h3>🐄 Cattle University</h3>
- <div className='panel' style={{marginBottom:10, background:'linear-gradient(135deg,#eff6ff 0%,#fffbeb 100%)', border:'1px solid #bfdbfe'}}>
- <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',color:'#92400e'}}>AADU school</div>
- <strong style={{display:'block',marginTop:4}}>Cattle University</strong>
- <div style={{marginTop:6,color:'#334155'}}>Cattle University brings herd improvement, calving discipline, health scheduling, and commercial growth management into one working AADU reference for serious cattle operations.</div>
+ <div className='panel' style={{marginBottom:10, background:(cattleTier==='pro' || String(universitySubscriptions.cattle?.subscription?.plan_code || '').toLowerCase()==='pro') ? 'linear-gradient(135deg,#0f172a 0%,#92400e 45%,#d97706 100%)' : 'linear-gradient(135deg,#eff6ff 0%,#fffbeb 100%)', border:(cattleTier==='pro' || String(universitySubscriptions.cattle?.subscription?.plan_code || '').toLowerCase()==='pro') ? '1px solid rgba(255,255,255,.16)' : '1px solid #bfdbfe', color:(cattleTier==='pro' || String(universitySubscriptions.cattle?.subscription?.plan_code || '').toLowerCase()==='pro') ? '#fff' : '#0f172a'}}>
+ <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',color:(cattleTier==='pro' || String(universitySubscriptions.cattle?.subscription?.plan_code || '').toLowerCase()==='pro') ? 'rgba(255,255,255,.9)' : '#92400e'}}>AADU school</div>
+ <strong style={{display:'block',marginTop:4}}>{(cattleTier==='pro' || String(universitySubscriptions.cattle?.subscription?.plan_code || '').toLowerCase()==='pro') ? `Cattle University · PRO ✓` : 'Cattle University'}</strong>
+ <div style={{marginTop:6,color:(cattleTier==='pro' || String(universitySubscriptions.cattle?.subscription?.plan_code || '').toLowerCase()==='pro') ? 'rgba(255,255,255,.88)' : '#334155'}}>{(cattleTier==='pro' || String(universitySubscriptions.cattle?.subscription?.plan_code || '').toLowerCase()==='pro') ? 'Professional access is active. Full Cattle University modules and premium execution tools are unlocked.' : 'Cattle University brings herd improvement, calving discipline, health scheduling, and commercial growth management into one working AADU reference for serious cattle operations.'}</div>
  </div>
  <article className='panel' style={{marginBottom:10,border:'1px solid #fde68a',background:'#fffbeb'}}>
  <h4 style={{marginTop:0,color:'#92400e'}}>Ghana Cattle Breed Program (3 Phases)</h4>
