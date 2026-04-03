@@ -6602,6 +6602,27 @@ function AppInner() {
  </div>
  </section>}
 
+ {ancestorPdfOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:273, margin:0, background:'#f8fafc', overflow:'auto'}}>
+ <div className='records-shell'>
+  <div className='records-hero-card'>
+   <div><div className='records-eyebrow'>REPORT</div><h3>Share PDF Report</h3><p>{currentLivestockRecord?.name || 'Animal record'}</p></div>
+   <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setAncestorPdfOpen(false)}>Back</button><button type='button' className='btn btn-dark' onClick={()=>window.print()}>Print / Save PDF</button></div>
+  </div>
+  <article className='panel records-panel'>
+   <div className='list'>
+    <div className='list-row'><span><strong>Name:</strong> {currentLivestockRecord?.name || '--'}</span></div>
+    <div className='list-row'><span><strong>Species:</strong> {currentLivestockRecord?.species || '--'}</span></div>
+    <div className='list-row'><span><strong>Tag:</strong> {currentLivestockRecord?.ear_tag || '--'}</span></div>
+    <div className='list-row'><span><strong>DOB:</strong> {currentLivestockRecord?.date_of_birth || '--'}</span></div>
+    <div className='list-row'><span><strong>Health:</strong> {currentLivestockRecord?.health_status || '--'}</span></div>
+    <div className='list-row'><span><strong>Pen:</strong> {currentLivestockRecord?.pen_location || '--'}</span></div>
+   </div>
+   <div className='records-detail-section' style={{marginTop:12}}>Included history</div>
+   <div className='helper-text'>Notes, weights, medicines, and FAMACHA lines will appear in the print/PDF output for sharing.</div>
+  </article>
+ </div>
+ </section>}
+
  {famachaRecordsOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:273, margin:0, background:'#f8fafc', overflow:'auto'}}>
  <div className='records-shell'>
   <div className='records-hero-card'>
