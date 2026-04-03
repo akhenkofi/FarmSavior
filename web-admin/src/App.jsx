@@ -6374,7 +6374,7 @@ function AppInner() {
         if (action === 'add-note') { setDraftNote(''); setNotesComposerOpen(true) }
         if (action === 'weights-log') setWeightsScreenOpen(true)
         if (action === 'add-weight') { setDraftWeight(''); setDraftWeightDate(new Date().toISOString().slice(0,10)); setWeightComposerOpen(true) }
-        if (action === 'medicines') setMedicinesScreenOpen(true)
+        if (action === 'medicines') { setMedicineSearch(''); setMedicinesScreenOpen(true) }
         if (action === 'add-medicine') { setMedicineShotDraft({ medicine: '', dosage: '', notes: '' }); setMedicineShotOpen(true) }
         if (action === 'share-pdf') setAncestorPdfOpen(true)
         if (action === 'famacha') { setFamachaDraft({ famacha: '--', bodyScore: '', weight: '', notes: '' }); setFamachaComposerOpen(true) }
@@ -6519,9 +6519,12 @@ function AppInner() {
    <input className='input' placeholder='Search medicines' value={medicineSearch} onChange={e=>setMedicineSearch(e.target.value)} />
    <div className='records-detail-section' style={{marginTop:10}}>Available medicines</div>
    <div className='list'>
-    {(DEFAULT_MEDICINE_LIBRARY_BY_SPECIES[String(currentLivestockRecord?.species || 'SHEEP').toUpperCase()] || DEFAULT_MEDICINE_LIBRARY_BY_SPECIES.SHEEP)
-      .filter(name => name.toLowerCase().includes(String(medicineSearch || '').toLowerCase()))
-      .map((name)=><button type='button' key={`med-lib-${name}`} className='list-row' onClick={()=>{ setMedicineShotDraft({ medicine: name, dosage: '', notes: '' }); setMedicinesScreenOpen(false); setMedicineShotOpen(true) }}><span>{name}</span><strong>＋</strong></button>)}
+    {(() => {
+      const meds = (DEFAULT_MEDICINE_LIBRARY_BY_SPECIES[String(currentLivestockRecord?.species || 'SHEEP').toUpperCase()] || DEFAULT_MEDICINE_LIBRARY_BY_SPECIES.SHEEP)
+        .filter(name => name.toLowerCase().includes(String(medicineSearch || '').toLowerCase()))
+      if (!meds.length) return <div className='helper-text'>No matches. Clear search to see full medicine list.</div>
+      return meds.map((name)=><button type='button' key={`med-lib-${name}`} className='list-row' onClick={()=>{ setMedicineShotDraft({ medicine: name, dosage: '', notes: '' }); setMedicinesScreenOpen(false); setMedicineShotOpen(true) }}><span>{name}</span><strong>＋</strong></button>)
+    })()}
    </div>
    <div className='records-detail-section' style={{marginTop:12}}>Saved medicine log</div>
    {(() => {
