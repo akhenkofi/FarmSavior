@@ -25,3 +25,40 @@ self.addEventListener('fetch', (event) => {
       .catch(() => caches.match(event.request).then((cached) => cached || caches.match('/')))
   );
 });
+
+self.addEventListener('push', (event) => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch { data = { body: event.data?.text?.() || '' }; }
+  const title = data.title || 'FarmSavior Call';
+  const body = data.body || 'Incoming call';
+  const callUrl = data.url || '/?go=community';
+  const mode = data.mode || 'audio';
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      tag: `farmsavior-call-${data.callId || Date.now()}`,
+      renotify: true,
+      requireInteraction: true,
+      data: { url: callUrl, callId: data.callId || '', mode },
+      icon: '/assets/farmsavior-logo.jpg',
+      badge: '/assets/farmsavior-logo.jpg'
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification?.data?.url || '/?go=community';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if ('focus' in client) {
+          client.navigate?.(targetUrl);
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) return clients.openWindow(targetUrl);
+      return null;
+    })
+  );
+});
