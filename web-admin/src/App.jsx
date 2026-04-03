@@ -2876,6 +2876,7 @@ function AppInner() {
    await sendCallSignal(targetUserId, signalPayload, mode === 'video' ? '📹' : '📞')
    const room = mode === 'video' ? `https://meet.jit.si/${encodeURIComponent(String(callId))}` : undefined
    setCommunityActiveCall({ callId, mode, status: 'calling', peerUserId: targetUserId, isCaller: true, url: room })
+   if (mode === 'video' && room && typeof window !== 'undefined') window.open(room, '_blank', 'noopener,noreferrer')
    await openCommunityMessages(user)
   } catch (err) {
    alert(errMsg(err))
@@ -2904,6 +2905,7 @@ function AppInner() {
    setCommunityMessageThreads(threads || [])
    const room = mode === 'video' ? `https://meet.jit.si/${encodeURIComponent(String(callId))}` : undefined
    setCommunityActiveCall({ callId, mode, status: 'calling', peerUserId: targetUserId, isCaller: true, url: room })
+   if (mode === 'video' && room && typeof window !== 'undefined') window.open(room, '_blank', 'noopener,noreferrer')
   } catch (err) {
    alert(errMsg(err))
   } finally {
@@ -8319,7 +8321,7 @@ function AppInner() {
  <h4 style={{margin:'6px 0 4px 0'}}>{communityIncomingCall.from} is calling you</h4>
  <div className='helper-text' style={{marginBottom:10}}>{communityIncomingCall.mode === 'video' ? 'Video call' : 'Audio call'} - answer now?</div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
- <button type='button' className='btn btn-dark' onClick={async()=>{ const mode = communityIncomingCall.mode; const callId = communityIncomingCall.callId; const peerUserId = communityIncomingCall.fromUserId; const room = `https://meet.jit.si/${encodeURIComponent(String(callId || `fs-${Date.now()}`))}`; try { await sendCallSignal(peerUserId, { v:1, type:'answer', mode, callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now() }, mode === 'video' ? '📹' : '📞') } catch {} communityHandledCallIdsRef.current.add(String(callId || '')); setCommunityIncomingCall(null); setCommunityActiveCall({ callId, mode, status: 'connected', isCaller: false, peerUserId, url: mode === 'video' ? room : undefined }) }}>Answer</button>
+ <button type='button' className='btn btn-dark' onClick={async()=>{ const mode = communityIncomingCall.mode; const callId = communityIncomingCall.callId; const peerUserId = communityIncomingCall.fromUserId; const room = `https://meet.jit.si/${encodeURIComponent(String(callId || `fs-${Date.now()}`))}`; try { await sendCallSignal(peerUserId, { v:1, type:'answer', mode, callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now() }, mode === 'video' ? '📹' : '📞') } catch {} communityHandledCallIdsRef.current.add(String(callId || '')); setCommunityIncomingCall(null); setCommunityActiveCall({ callId, mode, status: 'connected', isCaller: false, peerUserId, url: mode === 'video' ? room : undefined }); if (mode === 'video' && typeof window !== 'undefined') window.open(room, '_blank', 'noopener,noreferrer') }}>Answer</button>
  <button type='button' className='btn' onClick={async()=>{ const peerUserId = communityIncomingCall.fromUserId; const callId = communityIncomingCall.callId; const mode = communityIncomingCall.mode || 'audio'; try { await sendCallSignal(peerUserId, { v:1, type:'decline', mode, callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now() }, '📞') } catch {} communityHandledCallIdsRef.current.add(String(callId || '')); setCommunityIncomingCall(null) }}>Decline</button>
  </div>
  </div>
