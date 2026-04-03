@@ -258,6 +258,8 @@ export const toggleCommunityMute = async (userId) => (await api.post(`/community
 export const fetchCommunityMessageThreads = async () => (await api.get('/community/messages')).data
 export const fetchCommunityMessageThread = async (userId, limit = 80) => (await api.get(`/community/messages/${userId}`, { params: { limit } })).data
 export const sendCommunityMessage = async (userId, payload) => (await api.post(`/community/messages/${userId}`, payload)).data
+export const pushCommunityCallSignal = async (callId, payload) => (await api.post(`/community/call-signal/${encodeURIComponent(callId)}`, payload)).data
+export const pollCommunityCallSignal = async (callId, afterId = 0) => (await api.get(`/community/call-signal/${encodeURIComponent(callId)}`, { params: { after_id: afterId } })).data
 export const fetchCommunityFeed = async (mode = 'for-you', limit = 40) => (await api.get('/community/feed', { params: { mode, limit } })).data
 export const fetchCommunityPosts = async (limit = 60) => (await api.get('/community/posts', { params: { limit } })).data
 export const createCommunityPost = async (payload) => (await api.post('/community/posts', payload)).data

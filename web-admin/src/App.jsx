@@ -2724,6 +2724,7 @@ function AppInner() {
  const communityRemoteVideoRef = useRef(null)
  const communityHandledCallIdsRef = useRef(new Set())
  const communityRingingTimerRef = useRef(null)
+ const communityCallSignalCursorRef = useRef({})
  const [editingCommunityPostId, setEditingCommunityPostId] = useState(null)
  const [communityCommentText, setCommunityCommentText] = useState({})
  const [communityComments, setCommunityComments] = useState({})
@@ -2853,6 +2854,14 @@ function AppInner() {
  }
  const sendCallSignal = async (targetUserId, payload, icon = '📞') => {
   if (!targetUserId) return null
+  const callId = String(payload?.callId || '')
+  const type = String(payload?.type || '').toLowerCase()
+  if (callId && type) {
+   try {
+    await api.pushCommunityCallSignal(callId, { type, to_user_id: Number(targetUserId || 0), data: payload })
+   } catch {}
+  }
+  if (type !== 'offer') return null
   const text = `${icon} CALL_SIGNAL:${JSON.stringify(payload)}`
   return api.sendCommunityMessage(targetUserId, { text })
  }
@@ -3204,6 +3213,40 @@ function AppInner() {
   const timer = setInterval(run, 4000)
   return () => { stopped = true; clearInterval(timer) }
  }, [active, token])
+
+ useEffect(() => {
+  const callId = String(communityActiveCall?.callId || communityIncomingCall?.callId || '')
+  if (!callId || active !== 'community' || !token) return
+  let stop = false
+  const run = async () => {
+   try {
+    const afterId = Number(communityCallSignalCursorRef.current?.[callId] || 0)
+    const res = await api.pollCommunityCallSignal(callId, afterId).catch(() => null)
+    const events = Array.isArray(res?.events) ? res.events : []
+    for (const ev of events) {
+      const eid = Number(ev?.id || 0)
+      if (eid) communityCallSignalCursorRef.current[callId] = Math.max(Number(communityCallSignalCursorRef.current?.[callId] || 0), eid)
+      const signal = ev?.data || {}
+      const t = String(ev?.type || signal?.type || '').toLowerCase()
+      if (t === 'ringing') setCommunityActiveCall(prev => prev && String(prev.callId||'')===callId ? { ...prev, status: 'ringing' } : prev)
+      if (t === 'answer') setCommunityActiveCall(prev => prev && String(prev.callId||'')===callId ? { ...prev, status: 'connecting-media' } : prev)
+      if (t === 'decline' || t === 'end') { closeCommunityPeer(); returnToCommunityPhone() }
+      if (t === 'rtc_offer' && signal?.sdp) {
+        const peerUserId = Number(signal.fromUserId || 0)
+        const mode = signal.mode === 'video' ? 'video' : 'audio'
+        const pc = await ensureCommunityPeer({ mode, callId, peerUserId })
+        await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp))
+        const answer = await pc.createAnswer(); await pc.setLocalDescription(answer); await waitIceDone(pc)
+        await sendCallSignal(peerUserId, { v:1, type:'rtc_answer', mode, callId, fromUserId:Number(me?.id || 0), toUserId:peerUserId, ts:Date.now(), sdp: pc.localDescription }, mode === 'video' ? '📹' : '📞')
+      }
+      if (t === 'rtc_answer' && signal?.sdp && communityPcRef.current) await communityPcRef.current.setRemoteDescription(new RTCSessionDescription(signal.sdp))
+    }
+   } catch {}
+  }
+  run()
+  const t = setInterval(() => { if (!stop) run() }, 1200)
+  return () => { stop = true; clearInterval(t) }
+ }, [active, token, communityActiveCall?.callId, communityIncomingCall?.callId])
 
  useEffect(() => {
   if (communityActiveCall) return
