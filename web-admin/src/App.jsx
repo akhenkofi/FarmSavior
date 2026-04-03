@@ -6569,6 +6569,39 @@ function AppInner() {
  </div>
  </section>}
 
+ {ancestorTreeOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:272, margin:0, background:'#f8fafc', overflow:'auto'}}>
+ <div className='records-shell'>
+  <div className='records-hero-card'>
+   <div><div className='records-eyebrow'>GENETICS</div><h3>Ancestor Tree</h3><p>{currentLivestockRecord?.name || 'Animal record'}</p></div>
+   <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setAncestorTreeOpen(false)}>Back</button></div>
+  </div>
+  <article className='panel records-panel'>
+   {(() => {
+    const all = Array.isArray(livestockRecords) ? livestockRecords : []
+    const findById = (id) => all.find(r => Number(r?.id) === Number(id)) || null
+    const animal = currentLivestockRecord || null
+    if (!animal) return <div className='helper-text'>No animal selected.</div>
+    const sire = findById(animal.sire_id)
+    const dam = findById(animal.dam_id)
+    const sireSire = sire ? findById(sire.sire_id) : null
+    const sireDam = sire ? findById(sire.dam_id) : null
+    const damSire = dam ? findById(dam.sire_id) : null
+    const damDam = dam ? findById(dam.dam_id) : null
+    const row = (label, rec) => <div className='list-row'><span><strong>{label}:</strong> {rec?.name || rec?.tag_number || (rec ? `ID ${rec.id}` : 'Unknown')}</span></div>
+    return <div className='list'>
+      {row('Animal', animal)}
+      {row('Sire (Father)', sire)}
+      {row('Dam (Mother)', dam)}
+      {row('Paternal Grandfather', sireSire)}
+      {row('Paternal Grandmother', sireDam)}
+      {row('Maternal Grandfather', damSire)}
+      {row('Maternal Grandmother', damDam)}
+    </div>
+   })()}
+  </article>
+ </div>
+ </section>}
+
  {famachaRecordsOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:273, margin:0, background:'#f8fafc', overflow:'auto'}}>
  <div className='records-shell'>
   <div className='records-hero-card'>
