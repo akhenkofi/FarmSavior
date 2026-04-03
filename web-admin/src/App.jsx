@@ -3035,7 +3035,7 @@ function AppInner() {
  const [medicinesScreenOpen, setMedicinesScreenOpen] = useState(false)
  const [medicineShotOpen, setMedicineShotOpen] = useState(false)
  const [medicinesSearch, setMedicinesSearch] = useState('')
- const [medicineShotDraft, setMedicineShotDraft] = useState({ medicine: '', dosage: '', notes: '' })
+ const [medicineShotDraft, setMedicineShotDraft] = useState({ medicine: '', dosage: '', notes: '', date: new Date().toISOString().slice(0,10) })
  const [medicineSearch, setMedicineSearch] = useState('')
  const [medicineChooserOpen, setMedicineChooserOpen] = useState(false)
  const [medicineChooserSearch, setMedicineChooserSearch] = useState('')
@@ -6375,7 +6375,7 @@ function AppInner() {
         if (action === 'weights-log') setWeightsScreenOpen(true)
         if (action === 'add-weight') { setDraftWeight(''); setDraftWeightDate(new Date().toISOString().slice(0,10)); setWeightComposerOpen(true) }
         if (action === 'medicines') { setMedicineSearch(''); setMedicinesScreenOpen(true) }
-        if (action === 'add-medicine') { setMedicineShotDraft({ medicine: '', dosage: '', notes: '' }); setMedicineShotOpen(true) }
+        if (action === 'add-medicine') { setMedicineShotDraft({ medicine: '', dosage: '', notes: '', date: new Date().toISOString().slice(0,10) }); setMedicineShotOpen(true) }
         if (action === 'share-pdf') setAncestorPdfOpen(true)
         if (action === 'famacha') { setFamachaDraft({ famacha: '--', bodyScore: '', weight: '', notes: '' }); setFamachaComposerOpen(true) }
         if (action === 'ancestor-tree') setAncestorTreeOpen(true)
@@ -6513,7 +6513,7 @@ function AppInner() {
  <div className='records-shell'>
   <div className='records-hero-card'>
    <div><div className='records-eyebrow'>MEDICINE LOG</div><h3>Medicines</h3><p>{currentLivestockRecord?.name || 'Animal record'}</p></div>
-   <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setMedicinesScreenOpen(false)}>Back</button><button type='button' className='btn btn-dark' onClick={()=>{ setMedicinesScreenOpen(false); setMedicineShotDraft({ medicine: '', dosage: '', notes: '' }); setMedicineShotOpen(true) }}>Add Medicine</button></div>
+   <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setMedicinesScreenOpen(false)}>Back</button><button type='button' className='btn btn-dark' onClick={()=>{ setMedicinesScreenOpen(false); setMedicineShotDraft({ medicine: '', dosage: '', notes: '', date: new Date().toISOString().slice(0,10) }); setMedicineShotOpen(true) }}>Add Medicine</button></div>
   </div>
   <article className='panel records-panel'>
    <input className='input' placeholder='Search medicines' value={medicineSearch} onChange={e=>setMedicineSearch(e.target.value)} />
@@ -6544,6 +6544,7 @@ function AppInner() {
   </div>
   <article className='panel records-panel'>
    <div className='row2' style={{gap:10}}>
+    <input className='input' type='date' value={medicineShotDraft.date || ''} onChange={e=>setMedicineShotDraft(prev=>({ ...prev, date:e.target.value }))} />
     <input className='input' list='medicine-library-options' placeholder='Medicine name' value={medicineShotDraft.medicine} onChange={e=>setMedicineShotDraft(prev=>({ ...prev, medicine:e.target.value }))} />
     <input className='input' placeholder='Dosage' value={medicineShotDraft.dosage} onChange={e=>setMedicineShotDraft(prev=>({ ...prev, dosage:e.target.value }))} />
    </div>
@@ -6559,11 +6560,12 @@ function AppInner() {
     if (!med || !currentLivestockRecord?.id) { alert('Enter medicine name before saving.'); return }
     const dose = String(medicineShotDraft.dosage || '').trim()
     const extra = String(medicineShotDraft.notes || '').trim()
-    const stamped = `[${new Date().toISOString().slice(0,16).replace('T',' ')}] Medicine: ${med}${dose ? ` | Dose: ${dose}` : ''}${extra ? ` | Notes: ${extra}` : ''}`
+    const medDate = String(medicineShotDraft.date || new Date().toISOString().slice(0,10))
+    const stamped = `[${medDate}] Medicine: ${med}${dose ? ` | Dose: ${dose}` : ''}${extra ? ` | Notes: ${extra}` : ''}`
     try {
      await api.appendLivestockNote(Number(currentLivestockRecord.id), stamped)
      await loadLivestockRecords()
-     setMedicineShotDraft({ medicine: '', dosage: '', notes: '' })
+     setMedicineShotDraft({ medicine: '', dosage: '', notes: '', date: new Date().toISOString().slice(0,10) })
      setMedicineShotOpen(false)
      setMedicinesScreenOpen(true)
     } catch (err) {
