@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     FIREBASE_PROJECT_ID: str = ''
     FIREBASE_SERVICE_ACCOUNT_JSON: str = ''
 
+    # Agora calling
+    AGORA_APP_ID: str = ''
+    AGORA_APP_CERTIFICATE: str = ''
+
     # App security
     FRONTEND_ORIGINS: str = 'https://www.farmsavior.com,https://api.farmsavior.com'
     FORCE_HTTPS: bool = True

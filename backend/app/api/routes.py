@@ -57,6 +57,11 @@ CALL_SIGNAL_EVENTS: dict[str, list[dict]] = {}
 CALL_SIGNAL_INBOX_EVENTS: list[dict] = []
 
 
+def _get_call_channel_name(user_id_1: int, user_id_2: int) -> str:
+    pair = sorted([int(user_id_1), int(user_id_2)])
+    return f"farmsavior-{pair[0]}-{pair[1]}"
+
+
 def _guess_ext_from_data_url(data_url: str) -> str:
     head = str(data_url or '').split(';', 1)[0].lower()
     if 'image/png' in head:
@@ -1287,6 +1292,30 @@ def login_user(payload: UserLogin, db: Session = Depends(get_db)):
     _account_store_upsert_user(user)
 
     return TokenResponse(access_token=create_access_token(subject=str(user.id), phone=user.phone, email=user.email or ''))
+
+
+@router.get('/agora-token')
+def agora_token(other_user_id: int, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    viewer = _current_user_from_auth(authorization, db)
+    if not settings.AGORA_APP_ID or not settings.AGORA_APP_CERTIFICATE:
+        raise HTTPException(status_code=500, detail='Agora is not configured')
+    channel_name = _get_call_channel_name(int(viewer.id), int(other_user_id))
+    uid = int(viewer.id)
+    expire_seconds = 3600
+    privilege_expired_ts = int(time.time()) + expire_seconds
+    try:
+        from agora_token_builder import RtcTokenBuilder, RtcRole
+        token = RtcTokenBuilder.buildTokenWithUid(
+            settings.AGORA_APP_ID,
+            settings.AGORA_APP_CERTIFICATE,
+            channel_name,
+            uid,
+            RtcRole.PUBLISHER,
+            privilege_expired_ts,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f'Agora token generation failed: {exc}')
+    return {'token': token, 'channelName': channel_name, 'uid': uid, 'expiresIn': expire_seconds}
 
 
 @router.post('/auth/verify-otp', response_model=TokenResponse)
