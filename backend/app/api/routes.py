@@ -342,11 +342,11 @@ def _ghana_card_assessment(rec: IDVerification) -> dict:
         recommendation = 'AUTO_REJECT'
         review_priority = 'HIGH'
         summary = 'Auto-rejected: ' + '; '.join(hard_failures)
-    elif score >= 0.86:
-        status = 'PENDING'
-        recommendation = 'FAST_PASS_RECOMMENDED'
+    elif score >= 0.80:
+        status = 'APPROVED'
+        recommendation = 'AUTO_APPROVE'
         review_priority = 'FAST_PASS'
-        summary = 'Fast-pass recommended: Ghana Card checks look strong. Human approval still required.'
+        summary = 'Auto-approved: Ghana Card checks are strong and match required format/image rules.'
     elif score >= 0.65:
         status = 'PENDING'
         recommendation = 'MANUAL_REVIEW'

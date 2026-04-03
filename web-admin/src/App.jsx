@@ -3025,6 +3025,7 @@ function AppInner() {
  const [deleteAccountForm, setDeleteAccountForm] = useState({ current_password: '' })
  const [myIdVerification, setMyIdVerification] = useState({ application: null, review: null })
  const [myIdForm, setMyIdForm] = useState({ id_type: 'GhanaCard', id_number: '', id_photo_url: '', id_front_photo_url: '', id_back_photo_url: '', facial_verification_flag: false })
+ const [myIdSubmitting, setMyIdSubmitting] = useState(false)
  const [passportForm, setPassportForm] = useState({ user_id: 1, gps_lat: '', gps_lng: '', farm_size_hectares: '', crop_types: '[]', livestock_numbers: '{}', farm_photo_urls: '[]', harvest_records_notes: '' })
  const [cropForm, setCropForm] = useState({ farmer_id: 1, crop_name: '', quantity_kg: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
  const [cropEdit, setCropEdit] = useState({ id: '', farmer_id: 1, crop_name: '', quantity_kg: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
@@ -5340,10 +5341,12 @@ function AppInner() {
  e.preventDefault()
  if (!myIdForm.id_front_photo_url || !myIdForm.id_back_photo_url) { alert('Please upload front and back ID photos from your device or camera.'); return }
  try {
- await api.submitMyIdVerification({ ...myIdForm, facial_verification_flag: false })
- alert('Verification update submitted. Status set to Pending verification for re-review.')
- await load()
- } catch (e) { alert(errMsg(e)) }
+  setMyIdSubmitting(true)
+  const res = await api.submitMyIdVerification({ ...myIdForm, facial_verification_flag: false })
+  const nextStatus = String(res?.status || 'PENDING').toUpperCase()
+  alert(`Verification submitted. Current status: ${nextStatus.replaceAll('_',' ')}.`)
+  await load()
+ } catch (e) { alert(errMsg(e)) } finally { setMyIdSubmitting(false) }
  }}>
  <select className='input' value={myIdForm.id_type} onChange={e => setMyIdForm({ ...myIdForm, id_type: e.target.value })}><option>GhanaCard</option><option>NIN</option><option>BF National ID</option></select>
  <input className='input' placeholder='ID Number (e.g. GHA-123456789-0)' value={myIdForm.id_number} onChange={e => setMyIdForm({ ...myIdForm, id_number: e.target.value.toUpperCase() })} />
@@ -5360,7 +5363,7 @@ function AppInner() {
  const r = new FileReader(); r.onload = () => setMyIdForm(prev => ({ ...prev, id_back_photo_url: String(r.result || '') })); r.readAsDataURL(f)
  }} />
  </label>
- <button className='btn btn-dark'>Submit Verification Update</button>
+ <button className='btn btn-dark' disabled={myIdSubmitting}>{myIdSubmitting ? 'Submitting verification update…' : 'Submit Verification Update'}</button>
  </form>
  <div style={{fontSize:'.78rem',color:'#64748b',marginTop:6}}>If you update ID details after approval, your verification goes through re-review for safety.</div>
  </article>
