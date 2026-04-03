@@ -8076,14 +8076,17 @@ function AppInner() {
  <div style={{width:'100vw', height:'100vh', background:'#000', display:'grid', gridTemplateRows:'auto 1fr', position:'relative'}}>
  <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 12px', background:'rgba(2,6,23,.86)', color:'#fff'}}>
  <strong>{communityActiveCall?.mode === 'video' ? 'Video Call' : 'Audio Call'}</strong>
- <button type='button' className='btn' onClick={async()=>{ const current = communityActiveCall; try { if (current?.peerUserId) await sendCallSignal(current.peerUserId, { v:1, type:'end', mode:current.mode || 'audio', callId:current.callId || '', fromUserId:Number(me?.id || 0), toUserId:Number(current.peerUserId || 0), ts:Date.now() }, '📞') } catch {} setCommunityActiveCall(null) }}>End Call</button>
+ <div style={{display:'flex', gap:8}}>
+  <button type='button' className='btn' onClick={async()=>{ const current = communityActiveCall; try { if (current?.peerUserId) await sendCallSignal(current.peerUserId, { v:1, type:'end', mode:current.mode || 'audio', callId:current.callId || '', fromUserId:Number(me?.id || 0), toUserId:Number(current.peerUserId || 0), ts:Date.now() }, '📞') } catch {} setCommunityActiveCall(null) }}>Back</button>
+  <button type='button' className='btn' onClick={async()=>{ const current = communityActiveCall; try { if (current?.peerUserId) await sendCallSignal(current.peerUserId, { v:1, type:'end', mode:current.mode || 'audio', callId:current.callId || '', fromUserId:Number(me?.id || 0), toUserId:Number(current.peerUserId || 0), ts:Date.now() }, '📞') } catch {} setCommunityActiveCall(null) }}>End Call</button>
+ </div>
  </div>
  {communityActiveCall?.status === 'ringing'
   ? <div style={{display:'grid', placeItems:'center', padding:24, color:'#e2e8f0'}}><div style={{textAlign:'center'}}><div style={{fontSize:'2rem'}}>📞</div><div style={{fontWeight:700}}>Ringing…</div><div style={{fontSize:'.85rem', opacity:.85, marginTop:6}}>Waiting for the other user to answer.</div></div></div>
   : (communityActiveCall?.url
     ? <iframe title='FarmSavior Call' src={communityActiveCall.url} allow='camera; microphone; fullscreen; display-capture; autoplay' style={{width:'100%', height:'100%', border:'0'}} />
     : <div style={{display:'grid', placeItems:'center', padding:24, color:'#e2e8f0'}}><div style={{textAlign:'center'}}><div style={{fontSize:'2rem'}}>🔄</div><div style={{fontWeight:700}}>Call is {communityActiveCall?.status === 'connected' ? 'connected' : 'connecting'}…</div><div style={{fontSize:'.85rem', opacity:.85, marginTop:6}}>Status: {communityActiveCall?.status || 'initializing'}</div></div></div>)}
- {communityActiveCall?.mode === 'video' && <div style={{position:'absolute', inset:0, pointerEvents:'none', display:'grid', gridTemplateColumns:'1fr', gridTemplateRows:'1fr'}}>
+ {communityActiveCall?.mode === 'video' && <div style={{position:'absolute', left:0, right:0, top:52, bottom:0, pointerEvents:'none', display:'grid', gridTemplateColumns:'1fr', gridTemplateRows:'1fr'}}>
   <video ref={communityRemoteVideoRef} autoPlay playsInline style={{width:'100%', height:'100%', objectFit:'cover', background:'#000'}} />
   <video ref={communityLocalVideoRef} autoPlay playsInline muted style={{position:'absolute', right:12, bottom:12, width:120, height:160, objectFit:'cover', borderRadius:10, border:'1px solid rgba(255,255,255,.35)', background:'#111'}} />
  </div>}
