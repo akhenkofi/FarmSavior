@@ -5896,8 +5896,8 @@ function AppInner() {
  </article>
  </div>
 
- {sheepTier !== 'free' && <article className='panel' style={{marginTop:10}}>
- <h4>Climate Priorities + Vaccination/Health Schedule</h4>
+ {sheepTier !== 'free' && <details className='panel' style={{marginTop:10}}>
+ <summary style={{fontWeight:700, cursor:'pointer'}}>Climate Priorities + Vaccination/Health Schedule</summary>
  <div className='list'>
  {(sheepZone === 'humid' ? sheepClimate.humid : sheepClimate.dry).map((p)=><div className='list-row' key={p}><span>{p}</span></div>)}
  {sheepHealthProgram.map((v)=><div className='list-row' key={v}><span>{v}</span></div>)}
@@ -5912,7 +5912,7 @@ function AppInner() {
  </div>
  <p style={{fontSize:'.82rem',color:'#64748b',marginTop:8}}>{livestockHealthGuides.sheep.caution}</p>
  </div>
- </article>}
+ </details>}
 
  {sheepTier === 'pro' && <UniversityExecutiveToolkit product='sheep' progress={sheepProgress} setProgress={setSheepProgress} trackKey={sheepTrack} openModule={openSheepModule} question={sheepQuestion} setQuestion={setSheepQuestion} answer={sheepAnswer} setAnswer={setSheepAnswer} />}
 
@@ -6020,8 +6020,8 @@ function AppInner() {
  </article>
  </div>
 
- {goatTier !== 'free' && <article className='panel' style={{marginTop:10}}>
- <h4>Climate Priorities + Health Schedule</h4>
+ {goatTier !== 'free' && <details className='panel' style={{marginTop:10}}>
+ <summary style={{fontWeight:700, cursor:'pointer'}}>Climate Priorities + Health Schedule</summary>
  <div className='list'>
  {(goatZone === 'humid' ? goatClimate.humid : goatClimate.dry).map((p)=><div className='list-row' key={p}><span>{p}</span></div>)}
  {goatHealthProgram.map((v)=><div className='list-row' key={v}><span>{v}</span></div>)}
@@ -6037,7 +6037,7 @@ function AppInner() {
  <p style={{fontSize:'.82rem',color:'#64748b',marginTop:8}}>Goat-specific warning: CCPP and Haemonchus risks require strict routine monitoring.</p>
  <p style={{fontSize:'.82rem',color:'#64748b',marginTop:8}}>{livestockHealthGuides.goat.caution}</p>
  </div>
- </article>}
+ </details>}
 
  {goatTier === 'pro' && <UniversityExecutiveToolkit product='goat' progress={goatProgress} setProgress={setGoatProgress} trackKey={goatTrack} openModule={openGoatModule} question={goatQuestion} setQuestion={setGoatQuestion} answer={goatAnswer} setAnswer={setGoatAnswer} />}
 
@@ -6144,8 +6144,8 @@ function AppInner() {
  </article>
  </div>
 
- {cattleTier !== 'free' && <article className='panel' style={{marginTop:10}}>
- <h4>Climate Priorities + Health Schedule</h4>
+ {cattleTier !== 'free' && <details className='panel' style={{marginTop:10}}>
+ <summary style={{fontWeight:700, cursor:'pointer'}}>Climate Priorities + Health Schedule</summary>
  <div className='list'>
  {(cattleZone === 'humid' ? cattleClimate.humid : cattleClimate.dry).map((p)=><div className='list-row' key={p}><span>{p}</span></div>)}
  {cattleHealthProgram.map((v)=><div className='list-row' key={v}><span>{v}</span></div>)}
@@ -6160,7 +6160,7 @@ function AppInner() {
  </div>
  <p style={{fontSize:'.82rem',color:'#64748b',marginTop:8}}>{livestockHealthGuides.cattle.caution}</p>
  </div>
- </article>}
+ </details>}
 
  {cattleTier === 'pro' && <UniversityExecutiveToolkit product='cattle' progress={cattleProgress} setProgress={setCattleProgress} trackKey={cattleTrack} openModule={openCattleModule} question={cattleQuestion} setQuestion={setCattleQuestion} answer={cattleAnswer} setAnswer={setCattleAnswer} />}
 
