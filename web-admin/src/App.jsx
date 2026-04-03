@@ -2953,7 +2953,7 @@ function AppInner() {
   run()
   const timer = setInterval(run, 4000)
   return () => { stopped = true; clearInterval(timer) }
- }, [active, token, me?.id])
+ }, [active, token])
 
  useEffect(() => {
  if (active !== 'community') return
