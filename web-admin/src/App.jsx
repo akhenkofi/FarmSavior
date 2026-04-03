@@ -2716,6 +2716,7 @@ function AppInner() {
  const [communityCallSeconds, setCommunityCallSeconds] = useState(0)
  const [communityCallMuted, setCommunityCallMuted] = useState(false)
  const [communityCallCameraOff, setCommunityCallCameraOff] = useState(false)
+ const [communityCallSoundsEnabled, setCommunityCallSoundsEnabled] = useState(() => { try { return localStorage.getItem('farmsavior_call_sounds') !== '0' } catch { return true } })
  const communityMessageListRef = useRef(null)
  const communityLastCallAlertRef = useRef(null)
  const communityLastSignalIdRef = useRef('')
@@ -2928,6 +2929,7 @@ function AppInner() {
   return `https://meet.jit.si/${room}#config.prejoinPageEnabled=false&config.disableDeepLinking=true`
  }
  const playRingPulse = () => {
+  if (!communityCallSoundsEnabled) return
   try {
    const Ctx = window.AudioContext || window.webkitAudioContext
    if (!Ctx) return
@@ -2947,6 +2949,7 @@ function AppInner() {
   } catch {}
  }
  const playEndedTone = () => {
+  if (!communityCallSoundsEnabled) return
   try {
    const Ctx = window.AudioContext || window.webkitAudioContext
    if (!Ctx) return
@@ -3340,6 +3343,10 @@ function AppInner() {
   setCommunityCallCameraOff(false)
   closeCommunityPeer()
  }, [communityActiveCall])
+
+ useEffect(() => {
+  try { localStorage.setItem('farmsavior_call_sounds', communityCallSoundsEnabled ? '1' : '0') } catch {}
+ }, [communityCallSoundsEnabled])
 
  useEffect(() => {
   if (communityRingingTimerRef.current) {
@@ -8318,6 +8325,7 @@ function AppInner() {
  <button type='button' className='btn' onClick={closeCommunityMessages}>Close</button>
  </div>
  <div className='helper-text' style={{marginBottom:10}}>{communityInboxSection === 'calls' ? 'Phone activity only.' : (communityMessageThreads.length ? `${communityMessageThreads.length} conversation${communityMessageThreads.length === 1 ? '' : 's'} ready` : 'No conversations yet - tap Message on a profile, search result, or post to start one.')}</div>
+ {communityInboxSection === 'calls' && <div style={{marginBottom:8}}><button type='button' className='btn' onClick={()=>setCommunityCallSoundsEnabled(v=>!v)}>{communityCallSoundsEnabled ? 'Call Sounds: On' : 'Call Sounds: Off'}</button></div>}
 
  {communityInboxSection === 'calls' && <div className='panel' style={{marginBottom:10, background:'#f8fafc', border:'1px solid #dbe6df'}}>
   <div style={{fontWeight:700, marginBottom:6}}>Start a new call</div>
