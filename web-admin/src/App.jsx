@@ -3052,7 +3052,7 @@ function AppInner() {
  const [markComposerOpen, setMarkComposerOpen] = useState(false)
  const [markDraft, setMarkDraft] = useState({ sire: '', dam: '', markDate: '', dueDate: '', fertilizationType: 'Natural' })
  const [flushComposerOpen, setFlushComposerOpen] = useState(false)
- const [flushDraft, setFlushDraft] = useState({ ram: '', date: '', cidrIn: '', cidrOut: '', notes: '' })
+ const [flushDraft, setFlushDraft] = useState({ sire: '', dam: '', markDate: new Date().toISOString().slice(0,10), dueDate: '', fertilizationType: 'Natural', flushDate: '', recipient: '', cidrIn: '', cidrOut: '', notes: '' })
  const [famachaDraft, setFamachaDraft] = useState({ famacha: '--', bodyScore: '', weight: '', notes: '', date: new Date().toISOString().slice(0,10) })
  const [customMedicineComposerOpen, setCustomMedicineComposerOpen] = useState(false)
  const [customMedicineName, setCustomMedicineName] = useState('')
@@ -6387,7 +6387,7 @@ function AppInner() {
         if (action === 'offspring-list') setOffspringListOpen(true)
         if (action === 'add-mark') setMarkDraft({ sire: currentLivestockRecord?.sire_id || '', dam: currentLivestockRecord?.dam_id || currentLivestockRecord?.id || '', markDate: new Date().toISOString().slice(0,10), dueDate: '2026-08-26', fertilizationType: 'Natural', name: '', ear_tag: '', animal_type: 'LAMB', initial_weight_kg: '' })
         if (action === 'add-mark') setMarkComposerOpen(true)
-        if (action === 'add-flush') setFlushDraft({ ram: currentLivestockRecord?.sire_id || '', date: new Date().toISOString().slice(0,10), cidrIn: '', cidrOut: '', notes: '' })
+        if (action === 'add-flush') setFlushDraft({ sire: currentLivestockRecord?.sire_id || '', dam: currentLivestockRecord?.dam_id || currentLivestockRecord?.id || '', markDate: new Date().toISOString().slice(0,10), dueDate: '', fertilizationType: 'Natural', flushDate: '', recipient: '', cidrIn: '', cidrOut: '', notes: '' })
         if (action === 'add-flush') setFlushComposerOpen(true)
        }}>
         <span>{label}</span>
@@ -6572,33 +6572,41 @@ function AppInner() {
  {flushComposerOpen && <section className='records-home-screen' style={{position:'fixed', inset:0, zIndex:268, margin:0, background:'#f8fafc', overflow:'auto'}}>
  <div className='records-shell'>
   <div className='records-hero-card'>
-   <div><div className='records-eyebrow'>BREEDING ENTRY</div><h3>Add Flush</h3><p>{currentLivestockRecord?.name || 'Animal record'}</p></div>
+   <div><div className='records-eyebrow'>BREEDING ENTRY</div><h3>Flush Plan</h3><p>{currentLivestockRecord?.name || 'Animal record'}</p></div>
    <div className='records-hero-actions'><button type='button' className='btn' onClick={()=>setFlushComposerOpen(false)}>Cancel</button></div>
   </div>
   <article className='panel records-panel'>
    <div className='row2' style={{gap:10}}>
-    <input className='input' type='date' value={flushDraft.date || ''} onChange={e=>setFlushDraft(prev=>({ ...prev, date:e.target.value }))} />
-    <input className='input' placeholder='Ram ID/Name' value={flushDraft.ram || ''} onChange={e=>setFlushDraft(prev=>({ ...prev, ram:e.target.value }))} />
+    <input className='input' placeholder='Sire' value={flushDraft.sire || ''} onChange={e=>setFlushDraft(prev=>({ ...prev, sire:e.target.value }))} />
+    <input className='input' placeholder='Dam' value={flushDraft.dam || ''} onChange={e=>setFlushDraft(prev=>({ ...prev, dam:e.target.value }))} />
+   </div>
+   <div className='row2' style={{gap:10, marginTop:10}}>
+    <input className='input' type='date' value={flushDraft.markDate || ''} onChange={e=>setFlushDraft(prev=>({ ...prev, markDate:e.target.value }))} />
+    <input className='input' type='date' value={flushDraft.dueDate || ''} onChange={e=>setFlushDraft(prev=>({ ...prev, dueDate:e.target.value }))} />
+   </div>
+   <div className='records-detail-section' style={{marginTop:10}}>Fertilization Type</div>
+   <div className='list'>
+    {['Natural','AI Fresh','AI Frozen'].map(type => <button key={`fert-${type}`} type='button' className='list-row' onClick={()=>setFlushDraft(prev=>({ ...prev, fertilizationType:type }))}><span>{type}</span><strong>{flushDraft.fertilizationType===type ? '✓' : 'Choose'}</strong></button>)}
+   </div>
+   <div className='records-detail-section' style={{marginTop:10}}>Flush Details</div>
+   <div className='row2' style={{gap:10}}>
+    <input className='input' type='date' value={flushDraft.flushDate || ''} onChange={e=>setFlushDraft(prev=>({ ...prev, flushDate:e.target.value }))} />
+    <input className='input' placeholder='Recipient' value={flushDraft.recipient || ''} onChange={e=>setFlushDraft(prev=>({ ...prev, recipient:e.target.value }))} />
    </div>
    <div className='row2' style={{gap:10, marginTop:10}}>
     <input className='input' type='date' value={flushDraft.cidrIn || ''} onChange={e=>setFlushDraft(prev=>({ ...prev, cidrIn:e.target.value }))} />
     <input className='input' type='date' value={flushDraft.cidrOut || ''} onChange={e=>setFlushDraft(prev=>({ ...prev, cidrOut:e.target.value }))} />
    </div>
-   <div className='helper-text' style={{marginTop:6}}>CIDR In date and CIDR Out date</div>
-   <textarea className='input' rows={4} placeholder='Notes (optional)' value={flushDraft.notes || ''} onChange={e=>setFlushDraft(prev=>({ ...prev, notes:e.target.value }))} style={{marginTop:10}} />
+   <div className='helper-text' style={{marginTop:6}}>CIDR In / Out</div>
+   <textarea className='input' rows={3} placeholder='Notes (optional)' value={flushDraft.notes || ''} onChange={e=>setFlushDraft(prev=>({ ...prev, notes:e.target.value }))} style={{marginTop:10}} />
    <div style={{marginTop:10, display:'flex', justifyContent:'flex-end'}}><button type='button' className='btn btn-dark' onClick={async()=>{
     if (!currentLivestockRecord?.id) return
-    const date = String(flushDraft.date || new Date().toISOString().slice(0,10))
-    const ram = String(flushDraft.ram || '').trim()
-    const cidrIn = String(flushDraft.cidrIn || '').trim()
-    const cidrOut = String(flushDraft.cidrOut || '').trim()
-    const extra = String(flushDraft.notes || '').trim()
-    if (!ram && !cidrIn && !cidrOut) { alert('Enter at least ram or CIDR info before saving.'); return }
-    const stamped = `[${date}] Flush: ${ram || 'N/A'}${cidrIn ? ` | CIDR In: ${cidrIn}` : ''}${cidrOut ? ` | CIDR Out: ${cidrOut}` : ''}${extra ? ` | Notes: ${extra}` : ''}`
+    const markDate = String(flushDraft.markDate || new Date().toISOString().slice(0,10))
+    const stamped = `[${markDate}] Flush: Sire ${flushDraft.sire || '--'} | Dam ${flushDraft.dam || '--'} | Due ${flushDraft.dueDate || '--'} | Type ${flushDraft.fertilizationType || 'Natural'}${flushDraft.flushDate ? ` | Flush Date: ${flushDraft.flushDate}` : ''}${flushDraft.recipient ? ` | Recipient: ${flushDraft.recipient}` : ''}${flushDraft.cidrIn ? ` | CIDR In: ${flushDraft.cidrIn}` : ''}${flushDraft.cidrOut ? ` | CIDR Out: ${flushDraft.cidrOut}` : ''}${flushDraft.notes ? ` | Notes: ${flushDraft.notes}` : ''}`
     try {
      await api.appendLivestockNote(Number(currentLivestockRecord.id), stamped)
      await loadLivestockRecords()
-     setFlushDraft({ ram: '', date: new Date().toISOString().slice(0,10), cidrIn: '', cidrOut: '', notes: '' })
+     setFlushDraft({ sire: '', dam: '', markDate: new Date().toISOString().slice(0,10), dueDate: '', fertilizationType: 'Natural', flushDate: '', recipient: '', cidrIn: '', cidrOut: '', notes: '' })
      setFlushComposerOpen(false)
     } catch (err) {
      alert(`Save flush entry failed: ${errMsg(err)}`)
