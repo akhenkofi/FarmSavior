@@ -3036,6 +3036,8 @@ function AppInner() {
   enableCommunityCallPermissions({ silent: true })
  }, [communityInboxOpen])
  useEffect(() => {
+  // Legacy DM-based signaling path disabled (dedicated call-signal channel only)
+  if (true) return
   if (!communityMessageView.open || communityMessageView.loading) return
   const latest = (communityMessageView.messages || []).slice(-1)[0]
   if (!latest || latest.is_mine) return
@@ -3130,6 +3132,7 @@ function AppInner() {
     const threads = await api.fetchCommunityMessageThreads().catch(() => [])
     if (stopped || !Array.isArray(threads) || !threads.length) return
     setCommunityMessageThreads(threads)
+    return
     const candidate = threads.find(t => {
      const msg = t?.last_message
      if (!msg || msg.is_mine) return false
