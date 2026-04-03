@@ -6544,8 +6544,14 @@ function AppInner() {
   </div>
   <article className='panel records-panel'>
    <div className='row2' style={{gap:10}}>
-    <input className='input' placeholder='Medicine name' value={medicineShotDraft.medicine} onChange={e=>setMedicineShotDraft(prev=>({ ...prev, medicine:e.target.value }))} />
+    <input className='input' list='medicine-library-options' placeholder='Medicine name' value={medicineShotDraft.medicine} onChange={e=>setMedicineShotDraft(prev=>({ ...prev, medicine:e.target.value }))} />
     <input className='input' placeholder='Dosage' value={medicineShotDraft.dosage} onChange={e=>setMedicineShotDraft(prev=>({ ...prev, dosage:e.target.value }))} />
+   </div>
+   <datalist id='medicine-library-options'>
+    {(DEFAULT_MEDICINE_LIBRARY_BY_SPECIES[String(currentLivestockRecord?.species || 'SHEEP').toUpperCase()] || DEFAULT_MEDICINE_LIBRARY_BY_SPECIES.SHEEP).map(name => <option key={`med-opt-${name}`} value={name} />)}
+   </datalist>
+   <div className='list' style={{marginTop:10}}>
+    {(DEFAULT_MEDICINE_LIBRARY_BY_SPECIES[String(currentLivestockRecord?.species || 'SHEEP').toUpperCase()] || DEFAULT_MEDICINE_LIBRARY_BY_SPECIES.SHEEP).map(name => <button type='button' key={`med-pick-${name}`} className='list-row' onClick={()=>setMedicineShotDraft(prev=>({ ...prev, medicine:name }))}><span>{name}</span><strong>Use</strong></button>)}
    </div>
    <textarea className='input' rows={4} placeholder='Notes (optional)' value={medicineShotDraft.notes} onChange={e=>setMedicineShotDraft(prev=>({ ...prev, notes:e.target.value }))} style={{marginTop:10}} />
    <div style={{marginTop:10, display:'flex', justifyContent:'flex-end'}}><button type='button' className='btn btn-dark' onClick={async()=>{
