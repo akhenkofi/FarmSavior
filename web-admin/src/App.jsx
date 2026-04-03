@@ -2979,10 +2979,7 @@ function AppInner() {
    }
    setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(callId || '') ? { ...prev, status: 'connected' } : prev))
   }
-  pc.onicecandidate = async (ev) => {
-   if (!ev.candidate || !peerUserId) return
-   try { await sendCallSignal(peerUserId, { v:1, type:'rtc_ice', mode, callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now(), candidate: ev.candidate }) } catch {}
-  }
+  pc.onicecandidate = () => {}
   pc.onconnectionstatechange = () => {
    const st = String(pc.connectionState || '')
    if (st === 'connected') {
