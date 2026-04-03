@@ -890,11 +890,14 @@ const livestockHealthGuides = {
    'Lamb timing guide: if dams were properly boosted pre-lambing, begin the lamb primary series at the age recommended on the label/local protocol, then give the booster on schedule before weaning or high-risk weather.'
   ],
   deworm: [
-   'Target the right animals first: lambs after weaning, thin ewes, high-FAMACHA/anemia animals, and groups grazing low wet pasture usually need the closest monitoring.',
-   'Use dewormer categories strategically, not brand-hopping every few weeks: benzimidazoles (white drenches), macrocyclic lactones, and imidazothiazole/tetrahydropyrimidine groups should be rotated by efficacy evidence or seasonal review, not every single treatment date.',
+   'Field protocol (sheep/goat operations): use FAMACHA + signs like pale/white eyes, swollen throat/bottle-jaw, and poor condition to trigger targeted treatment for Haemonchosis burden.',
+   'Dry season approach: Levafas Diamond can be used where farm/veterinary protocol targets Haemonchosis and tapeworm pressure.',
+   'Start of rains: injectable options (Iplus, Biomectin Plus, Ivanor, Ivermectin-class) are often prioritized in high blood-feeding worm pressure periods because rapid systemic absorption can improve early response when clinically indicated.',
+   'Mid-rain adjustment: when pasture moisture load changes, farms may shift to Levafas Diamond per local efficacy history and veterinary guidance.',
+   'End of rains / start of dry: Levafas Diamond is commonly re-used in farms following this seasonal program.',
+   'Mid-dry checkpoint: Biomectin Plus or Iplus may be used as targeted follow-up where anemia/worm indicators persist.',
    'Wet season rule: shorten monitoring intervals because Haemonchus risk climbs fast; move sheep to taller, cleaner pasture and avoid repeatedly grazing the same wet, contaminated paddock.',
-   'Dry season rule: do not keep drenching on a calendar when worm challenge is low; preserve refugia by leaving low-risk, thriving animals untreated when appropriate and advised locally.',
-   'Dose by accurate weight or the heaviest animal in the group if one drench gun setting is used, and calibrate the drench gun before each treatment day.'
+   'Dose by accurate weight, avoid underdosing, record product/date, and validate efficacy with veterinary follow-up (for example FAMACHA trend or fecal checks where available).'
   ],
   calendar: [
    'January-February: dry-season review, body condition, mineral support, and targeted deworming only for high-risk groups.',
@@ -920,11 +923,14 @@ const livestockHealthGuides = {
    'Kid timing guide: start the kid primary series according to label and local veterinary advice, especially if dam vaccination status is unknown or weak.'
   ],
   deworm: [
-   'Goats often metabolize some dewormers differently from sheep, so never copy a sheep dose without checking the goat label or veterinary instruction.',
-   'Build selective treatment around anemia scoring, body condition, kid growth, and known worm hotspots instead of whole-herd monthly drenching.',
-   'Recommended dewormer categories to discuss with local vets: benzimidazoles, macrocyclic lactones, and levamisole-class products; rotate based on reduced efficacy or seasonal review, not because the calendar changed.',
+   'Goats often metabolize some dewormers differently from sheep, so always confirm goat-specific dose/label with a veterinarian before treatment.',
+   'Field protocol integration: use FAMACHA + signs such as pale eyes, swollen throat/bottle-jaw, and poor body condition to identify likely Haemonchosis burden.',
+   'Dry season: Levafas Diamond is commonly used in farms targeting Haemonchosis/tapeworm pressure in this period.',
+   'Start of rains: injectable options (Iplus, Biomectin Plus, Ivanor, Ivermectin-class) are often used first in high blood-feeding worm pressure periods when rapid systemic effect is needed.',
+   'Mid-rain shift: some farms move to Levafas Diamond as grass moisture reduces.',
+   'End-rain to dry transition: Levafas Diamond may be repeated in seasonal programs; mid-dry follow-up may use Biomectin Plus or Iplus when indicators persist.',
    'Wet season rule: move goats onto browse or taller forage faster, keep sleeping areas dry, and avoid forcing kids to graze the shortest, most contaminated pasture.',
-   'Resistance-control rule: leave some healthy low-risk animals untreated when appropriate, avoid underdosing, and check whether the product still works on your farm before repeating the same active ingredient.'
+   'Resistance-control rule: avoid underdosing, record product/date, preserve refugia where appropriate, and verify efficacy trend before repeating the same active ingredient.'
   ],
   calendar: [
    'January-February: dry-season browse planning, mineral support, selective deworming for thin or anemic groups, and buck readiness checks.',
@@ -1287,8 +1293,8 @@ const livestockHistoryRows = (record) => {
 }
 
 const DEFAULT_MEDICINE_LIBRARY_BY_SPECIES = {
- SHEEP: ['CDT','BO-SE','LA-200/Oxytetracycline','Nuflor','Penicillin','Dexamethasone','Dewormer (Albendazole)','Dewormer (Ivermectin)'],
- GOAT: ['CDT','BO-SE','LA-200/Oxytetracycline','Nuflor','Penicillin','Dexamethasone','Dewormer (Albendazole)','Dewormer (Ivermectin)'],
+ SHEEP: ['CDT','BO-SE','LA-200/Oxytetracycline','Nuflor','Penicillin','Dexamethasone','Levafas Diamond','Iplus','Biomectin Plus','Ivanor','Dewormer (Albendazole)','Dewormer (Ivermectin)'],
+ GOAT: ['CDT','BO-SE','LA-200/Oxytetracycline','Nuflor','Penicillin','Dexamethasone','Levafas Diamond','Iplus','Biomectin Plus','Ivanor','Dewormer (Albendazole)','Dewormer (Ivermectin)'],
  CATTLE: ['5-Way','Blackleg 7-Way','Brucellosis','Excenel','LA-200/Oxytetracycline','Nuflor','Penicillin','Pinkeye','Trichomoniasis'],
  POULTRY: ['Newcastle vaccine','Gumboro vaccine','Fowl pox vaccine','Amprolium','Tylosin','Oxytetracycline (poultry)','Vitamin/electrolyte mix','Coccidiostat']
 }
