@@ -6416,18 +6416,22 @@ function AppInner() {
    <textarea className='input' rows={8} placeholder='Write note...' value={draftNote} onChange={e=>setDraftNote(e.target.value)} />
    <div style={{marginTop:10, display:'flex', justifyContent:'flex-end'}}><button type='button' className='btn btn-dark' onClick={async()=>{
     const txt = String(draftNote || '').trim();
-    if (!txt || !currentLivestockRecord?.id) { setNotesComposerOpen(false); return }
-    const base = extractAttachmentsFromNotes(currentLivestockRecord?.notes || '')
-    const stamped = `[${new Date().toISOString().slice(0,16).replace('T',' ')}] ${txt}`
-    const merged = `${base.text ? `${base.text}\n` : ''}${stamped}`
-    const nextNotes = mergeNotesWithAttachments(merged, { photos: base.photos || [], docs: base.docs || [] })
-    const payload = { ...mapLivestockRecordToEditForm(currentLivestockRecord), notes: nextNotes }
-    delete payload.id
-    await api.updateLivestockRecord(Number(currentLivestockRecord.id), payload)
-    await loadLivestockRecords()
-    setDraftNote('')
-    setNotesComposerOpen(false)
-    setNotesScreenOpen(true)
+    if (!txt || !currentLivestockRecord?.id) { alert('Enter a note before saving.'); return }
+    try {
+     const base = extractAttachmentsFromNotes(currentLivestockRecord?.notes || '')
+     const stamped = `[${new Date().toISOString().slice(0,16).replace('T',' ')}] ${txt}`
+     const merged = `${base.text ? `${base.text}\n` : ''}${stamped}`
+     const nextNotes = mergeNotesWithAttachments(merged, { photos: base.photos || [], docs: base.docs || [] })
+     const payload = { ...mapLivestockRecordToEditForm(currentLivestockRecord), notes: nextNotes }
+     delete payload.id
+     await api.updateLivestockRecord(Number(currentLivestockRecord.id), payload)
+     await loadLivestockRecords()
+     setDraftNote('')
+     setNotesComposerOpen(false)
+     setNotesScreenOpen(true)
+    } catch (err) {
+     alert(`Save note failed: ${errMsg(err)}`)
+    }
    }}>Save Note</button></div>
   </article>
  </div>
