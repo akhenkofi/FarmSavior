@@ -2705,6 +2705,13 @@ function AppInner() {
  const [communityProfileSectionsOpen, setCommunityProfileSectionsOpen] = useState({ photos: true, identity: true, story: false, privacy: false })
  const [communityPosts, setCommunityPosts] = useState([])
  const [communityFeedMode, setCommunityFeedMode] = useState('for-you')
+ const goHomeSafely = () => {
+  if (active === 'onboarding') {
+   const ok = window.confirm('Leave onboarding and return to Main Interface?')
+   if (!ok) return
+  }
+  setActive('home')
+ }
  const [communityFeedItems, setCommunityFeedItems] = useState([])
  const [communityUserSearch, setCommunityUserSearch] = useState('')
  const [communityUserResults, setCommunityUserResults] = useState([])
@@ -5592,7 +5599,7 @@ function AppInner() {
  <option value='en'>English</option><option value='fr'>Français</option><option value='zh'>中文</option>
  </select>
  <div className='app-quick-nav' role='tablist' aria-label='App sections'>
- <button className={`app-quick-btn ${active === 'home' ? 'active' : ''}`} aria-pressed={active === 'home'} onClick={() => setActive('home')}>{t('← Main Interface','← Interface principale','← 主界面')}</button>
+ <button className={`app-quick-btn ${active === 'home' ? 'active' : ''}`} aria-pressed={active === 'home'} onClick={goHomeSafely}>{t('← Main Interface','← Interface principale','← 主界面')}</button>
  <button className={`app-quick-btn ${active === 'products' ? 'active' : ''}`} aria-pressed={active === 'products'} onClick={() => setActive('products')}>{t('Products','Produits')}</button>
  <button className={`app-quick-btn ${active === 'livestock' ? 'active' : ''}`} aria-pressed={active === 'livestock'} onClick={() => setActive('livestock')}>{t('Livestock','Élevage')}</button>
  <button className={`app-quick-btn ${active === 'services' ? 'active' : ''}`} aria-pressed={active === 'services'} onClick={() => setActive('services')}>{t('Services','Services')}</button>
