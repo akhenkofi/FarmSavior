@@ -509,7 +509,8 @@ def _require_transact_verified_user(db: Session, user_id: int, label: str = 'Use
     latest = db.query(IDVerification).filter(IDVerification.user_id == user_id).order_by(IDVerification.created_at.desc(), IDVerification.id.desc()).first()
     review = db.query(VerificationReview).filter(VerificationReview.user_id == user_id).order_by(VerificationReview.reviewed_at.desc().nullslast(), VerificationReview.id.desc()).first()
 
-    if not latest or not review or review.status != 'APPROVED':
+    approved = bool(getattr(user, 'is_verified', False)) or (bool(review) and str(getattr(review, 'status', '')).upper() == 'APPROVED')
+    if not latest or not approved:
         raise HTTPException(status_code=403, detail=f'{label} must complete ID verification and be approved before transacting')
 
     if str(user.country.value if hasattr(user.country, 'value') else user.country).upper() == 'GH' and str(latest.id_type) == 'GhanaCard':
