@@ -5841,20 +5841,21 @@ function AppInner() {
  </form>
  </article>
 
- <article className='panel'>
- <h3>Subscriptions & Billing</h3>
+ <article className='panel' style={{border:'1px solid #dbeafe', background:'linear-gradient(180deg,#f8fbff 0%,#ffffff 100%)', boxShadow:'0 10px 26px rgba(15,23,42,.06)'}}>
+ <h3 style={{marginBottom:8}}>Subscriptions & Billing</h3>
+ <div className='helper-text' style={{marginBottom:10}}>Premium plans and billing details by product.</div>
  <div className='list'>
- {(billingOverview.active_subscriptions || []).slice(0, 6).map((sub) => <div className='list-row' key={`active-sub-${sub.reference}`}>
+ {(billingOverview.active_subscriptions || []).slice(0, 6).map((sub) => <div className='list-row' style={{border:'1px solid #dbeafe', background:'#fff', borderRadius:14}} key={`active-sub-${sub.reference}`}>
    <span>
     <strong>{paymentDisplayLabel(sub.product, sub.plan_code, sub.reference)}</strong><br/>
     <small>{String(sub.plan_code || '').toUpperCase()} plan • {String(sub.billing_cycle || '').toLowerCase()} billing</small>
    </span>
-   <strong>{sub.status}</strong>
+   <strong style={{color:'#0f766e'}}>{sub.status}</strong>
   </div>)}
  {!(billingOverview.active_subscriptions || []).length && <div className='list-row'><span>No active paid subscriptions yet.</span></div>}
  </div>
- <div className='panel' style={{marginTop:10, padding:10, background:'#f8fafc'}}>
- <strong style={{display:'block', marginBottom:6}}>Billing history</strong>
+ <div className='panel' style={{marginTop:10, padding:12, background:'linear-gradient(180deg,#f8fafc 0%,#eef6ff 100%)', border:'1px solid #dbeafe'}}>
+ <strong style={{display:'block', marginBottom:6, fontSize:'.95rem'}}>Billing history</strong>
  <div className='list' style={{maxHeight:220, overflow:'auto'}}>
  {[...(billingOverview.subscriptions || []).map((sub) => ({
    kind: 'subscription',
@@ -5872,7 +5873,7 @@ function AppInner() {
    status: pay.status,
    amount: formatMoney(pay.amount, pay.currency),
    when: pay.created_at
-  }))].sort((a,b) => new Date(b.when || 0) - new Date(a.when || 0)).slice(0, 12).map((row) => <div className='list-row' key={`${row.kind}-${row.reference}`}>
+  }))].sort((a,b) => new Date(b.when || 0) - new Date(a.when || 0)).slice(0, 12).map((row) => <div className='list-row' style={{border:'1px solid #dbeafe', borderRadius:12, background:'#fff'}} key={`${row.kind}-${row.reference}`}>
    <span>
     <strong>{row.title || 'Payment'}</strong><br/>
     <small>{row.subtitle}{row.when ? ` • ${formatDateTime(row.when)}` : ''}{row.reference ? ` • Ref: ${row.reference}` : ''}</small>
