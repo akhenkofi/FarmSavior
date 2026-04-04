@@ -2861,6 +2861,16 @@ function AppInner() {
   setCommunityInboxSection('calls')
   setCommunityMessageView({ open: false, loading: false, error: '', user: null, messages: [] })
  }
+ const endCommunityActiveCall = async () => {
+  const current = communityActiveCall
+  try {
+   if (current?.peerUserId) {
+    await sendCallSignal(current.peerUserId, { v:1, type:'end', mode:current.mode || 'audio', callId:current.callId || '', fromUserId:Number(me?.id || 0), toUserId:Number(current.peerUserId || 0), ts:Date.now() }, '📞')
+   }
+  } catch {}
+  closeCommunityPeer()
+  returnToCommunityPhone()
+ }
  const sendActiveCommunityMessage = async () => {
   const targetUserId = communityMessageView?.user?.user_id
   const textValue = String(communityMessageDraft || '').trim()
@@ -8415,15 +8425,13 @@ function AppInner() {
  <div style={{display:'flex', gap:8, flexWrap:'wrap', justifyContent:'flex-end'}}>
   <button type='button' className='btn' onClick={toggleCommunityMute}>{communityCallMuted ? 'Unmute' : 'Mute'}</button>
   {communityActiveCall?.mode === 'video' && <button type='button' className='btn' onClick={toggleCommunityCamera}>{communityCallCameraOff ? 'Camera On' : 'Camera Off'}</button>}
-  <button type='button' className='btn' onClick={async()=>{ const current = communityActiveCall; try { if (current?.peerUserId) await sendCallSignal(current.peerUserId, { v:1, type:'end', mode:current.mode || 'audio', callId:current.callId || '', fromUserId:Number(me?.id || 0), toUserId:Number(current.peerUserId || 0), ts:Date.now() }, '📞') } catch {} returnToCommunityPhone() }}>Back</button>
-  <button type='button' className='btn' onClick={async()=>{ const current = communityActiveCall; try { if (current?.peerUserId) await sendCallSignal(current.peerUserId, { v:1, type:'end', mode:current.mode || 'audio', callId:current.callId || '', fromUserId:Number(me?.id || 0), toUserId:Number(current.peerUserId || 0), ts:Date.now() }, '📞') } catch {} returnToCommunityPhone() }}>End Call</button>
+  <button type='button' className='btn' onClick={endCommunityActiveCall}>Back</button>
+  <button type='button' className='btn' onClick={endCommunityActiveCall}>End Call</button>
  </div>
  </div>
- {((communityActiveCall?.status === 'calling' || communityActiveCall?.status === 'ringing') && !communityActiveCall?.url)
+ {((communityActiveCall?.status === 'calling' || communityActiveCall?.status === 'ringing'))
   ? <div style={{display:'grid', placeItems:'center', padding:24, color:'#e2e8f0'}}><div style={{textAlign:'center'}}><div style={{fontSize:'2rem'}}>📞</div><div style={{fontWeight:700}}>{communityActiveCall?.status === 'calling' ? 'Calling…' : 'Ringing…'}</div><div style={{fontSize:'.85rem', opacity:.85, marginTop:6}}>{communityActiveCall?.status === 'calling' ? 'Trying to reach the other user.' : 'Other user is receiving your call now.'}</div></div></div>
-  : (communityActiveCall?.url
-    ? <iframe title='FarmSavior Call' src={communityActiveCall.url} allow='camera; microphone; fullscreen; display-capture; autoplay' style={{width:'100%', height:'100%', border:'0'}} />
-    : <div style={{display:'grid', placeItems:'center', padding:24, color:'#e2e8f0'}}><div style={{textAlign:'center'}}><div style={{fontSize:'2rem'}}>{communityActiveCall?.status === 'poor-connection' ? '📶' : '🔄'}</div><div style={{fontWeight:700}}>{communityActiveCall?.status === 'poor-connection' ? 'Poor connection — audio only' : `Call is ${communityActiveCall?.status === 'connected' ? 'connected' : 'connecting'}…`}</div><div style={{fontSize:'.85rem', opacity:.85, marginTop:6}}>Status: {communityActiveCall?.status || 'initializing'}</div></div></div>)}
+  : <div style={{display:'grid', placeItems:'center', padding:24, color:'#e2e8f0'}}><div style={{textAlign:'center'}}><div style={{fontSize:'2rem'}}>{communityActiveCall?.status === 'poor-connection' ? '📶' : '🔄'}</div><div style={{fontWeight:700}}>{communityActiveCall?.status === 'poor-connection' ? 'Poor connection — audio only' : `Call is ${communityActiveCall?.status === 'connected' ? 'connected' : 'connecting'}…`}</div><div style={{fontSize:'.85rem', opacity:.85, marginTop:6}}>Status: {communityActiveCall?.status || 'initializing'}</div></div></div>}
  {communityActiveCall?.mode === 'video' && <div style={{position:'absolute', left:0, right:0, top:52, bottom:0, pointerEvents:'none', display:'grid', gridTemplateColumns:'1fr', gridTemplateRows:'1fr'}}>
   <video ref={communityRemoteVideoRef} autoPlay playsInline style={{width:'100%', height:'100%', objectFit:'cover', background:'#000'}} />
   <video ref={communityLocalVideoRef} autoPlay playsInline muted style={{position:'absolute', right:12, bottom:12, width:120, height:160, objectFit:'cover', borderRadius:10, border:'1px solid rgba(255,255,255,.35)', background:'#111'}} />
