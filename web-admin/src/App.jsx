@@ -7938,7 +7938,7 @@ function AppInner() {
  </article>
 
  <div className='two-col'>
- <article className='panel'>
+ {false && <article className='panel'>
  <div className='list-row' style={{alignItems:'flex-start', gap:10}}>
  <div>
  <h4 style={{margin:'0 0 4px 0'}}>Seller payout settings</h4>
@@ -8021,7 +8021,7 @@ function AppInner() {
  <div className='helper-text'>Funds release only after verification. Saving this form should show a success popup.</div>
  <button className='btn btn-dark' disabled={payoutSaving}>{payoutSaving ? 'Saving payout settings…' : 'Save payout settings'}</button>
  </form>}
- </article>
+ </article>}
  <article className='panel'>
  <h4>{t('My Community Profile','Mon profil communautaire','我的社区资料')}</h4>
  <div style={{position:'relative', marginBottom:12}}>
