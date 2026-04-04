@@ -2741,6 +2741,8 @@ function AppInner() {
  const communityAgoraClientRef = useRef(null)
  const communityAgoraLocalAudioTrackRef = useRef(null)
  const communityAgoraLocalVideoTrackRef = useRef(null)
+ const communityAgoraRemoteAudioTrackRef = useRef(null)
+ const communityAgoraRemoteVideoTrackRef = useRef(null)
  const communityLocalStreamRef = useRef(null)
  const communityRemoteStreamRef = useRef(null)
  const communityRemoteAudioRef = useRef(null)
@@ -3010,6 +3012,8 @@ function AppInner() {
   try { communityAgoraLocalVideoTrackRef.current?.stop?.(); communityAgoraLocalVideoTrackRef.current?.close?.() } catch {}
   communityAgoraLocalAudioTrackRef.current = null
   communityAgoraLocalVideoTrackRef.current = null
+  communityAgoraRemoteAudioTrackRef.current = null
+  communityAgoraRemoteVideoTrackRef.current = null
   try { communityAgoraClientRef.current?.removeAllListeners?.() } catch {}
   ;(async()=>{ try { await communityAgoraClientRef.current?.leave?.() } catch {} })()
   communityAgoraClientRef.current = null
@@ -3039,10 +3043,12 @@ function AppInner() {
   client.on('user-published', async (user, mediaType) => {
    await client.subscribe(user, mediaType)
    if (mediaType === 'audio' && user.audioTrack) {
+    communityAgoraRemoteAudioTrackRef.current = user.audioTrack
     try { user.audioTrack.play() } catch {}
     try { remoteStream.addTrack(user.audioTrack.getMediaStreamTrack()) } catch {}
    }
    if (mediaType === 'video' && user.videoTrack) {
+    communityAgoraRemoteVideoTrackRef.current = user.videoTrack
     if (communityRemoteVideoRef.current) user.videoTrack.play(communityRemoteVideoRef.current)
     try { remoteStream.addTrack(user.videoTrack.getMediaStreamTrack()) } catch {}
    }
@@ -3416,15 +3422,15 @@ function AppInner() {
  useEffect(() => {
   if (!communityActiveCall) return
   try {
-   if (communityLocalVideoRef.current && communityLocalStreamRef.current && communityActiveCall.mode === 'video') {
-    communityLocalVideoRef.current.srcObject = communityLocalStreamRef.current
-    communityLocalVideoRef.current.play?.().catch(()=>{})
+   if (communityActiveCall.mode === 'video' && communityLocalVideoRef.current && communityAgoraLocalVideoTrackRef.current) {
+    communityAgoraLocalVideoTrackRef.current.play(communityLocalVideoRef.current)
    }
-   if (communityRemoteVideoRef.current && communityRemoteStreamRef.current && communityActiveCall.mode === 'video') {
-    communityRemoteVideoRef.current.srcObject = communityRemoteStreamRef.current
-    communityRemoteVideoRef.current.play?.().catch(()=>{})
+   if (communityActiveCall.mode === 'video' && communityRemoteVideoRef.current && communityAgoraRemoteVideoTrackRef.current) {
+    communityAgoraRemoteVideoTrackRef.current.play(communityRemoteVideoRef.current)
    }
-   if (communityRemoteAudioRef.current && communityRemoteStreamRef.current) {
+   if (communityAgoraRemoteAudioTrackRef.current) {
+    communityAgoraRemoteAudioTrackRef.current.play()
+   } else if (communityRemoteAudioRef.current && communityRemoteStreamRef.current) {
     communityRemoteAudioRef.current.srcObject = communityRemoteStreamRef.current
     communityRemoteAudioRef.current.play?.().catch(()=>{})
    }
@@ -8437,6 +8443,7 @@ function AppInner() {
   <video ref={communityLocalVideoRef} autoPlay playsInline muted style={{position:'absolute', right:12, bottom:12, width:120, height:160, objectFit:'cover', borderRadius:10, border:'1px solid rgba(255,255,255,.35)', background:'#111'}} />
  </div>}
  <audio ref={communityRemoteAudioRef} autoPlay playsInline style={{display:'none'}} />
+ <button type='button' className='btn btn-dark' style={{position:'absolute', left:'50%', transform:'translateX(-50%)', bottom:16, zIndex:260, minWidth:160}} onClick={endCommunityActiveCall}>End Call</button>
  </div>
  </div>}
 
