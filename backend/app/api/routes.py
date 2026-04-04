@@ -5002,7 +5002,25 @@ def create_logistics(payload: LogisticsIn, db: Session = Depends(get_db)):
 
 @router.get('/services/logistics')
 def list_logistics(db: Session = Depends(get_db)):
-    return db.query(LogisticsRequest).order_by(LogisticsRequest.id.desc()).all()
+    rows = db.query(LogisticsRequest).order_by(LogisticsRequest.id.desc()).all()
+    changed = False
+    for r in rows:
+        if str(getattr(r, 'status', '')).upper() != 'PENDING':
+            continue
+        status, reason = _service_auto_moderate({
+            'pickup_location': r.pickup_location,
+            'dropoff_location': r.dropoff_location,
+            'cargo_type': r.cargo_type,
+            'weight_kg': r.weight_kg,
+            'image_urls': r.image_urls,
+            'cover_image_url': r.cover_image_url,
+        })
+        r.status = status
+        r.tracking_note = str(reason)[:255]
+        changed = True
+    if changed:
+        db.commit()
+    return rows
 
 
 @router.put('/services/logistics/{request_id}')
@@ -5069,7 +5087,22 @@ def delete_logistics(request_id: int, db: Session = Depends(get_db)):
 
 @router.get('/services/equipment-rentals')
 def list_equipment_rentals(db: Session = Depends(get_db)):
-    return db.query(EquipmentRental).order_by(EquipmentRental.id.desc()).all()
+    rows = db.query(EquipmentRental).order_by(EquipmentRental.id.desc()).all()
+    changed = False
+    for r in rows:
+        if str(getattr(r, 'status', '')).upper() != 'PENDING':
+            continue
+        status, reason = _service_auto_moderate({
+            'equipment_type': r.equipment_type,
+            'location': r.location,
+            'image_urls': r.image_urls,
+            'cover_image_url': r.cover_image_url,
+        })
+        r.status = status if status == 'APPROVED' else f'DENIED: {reason[:90]}'
+        changed = True
+    if changed:
+        db.commit()
+    return rows
 
 
 @router.put('/services/equipment-rentals/{rental_id}')
@@ -5108,7 +5141,23 @@ def create_storage_reservation(payload: StorageReservationIn, db: Session = Depe
 
 @router.get('/services/storage-reservations')
 def list_storage_reservations(db: Session = Depends(get_db)):
-    return db.query(StorageReservation).order_by(StorageReservation.id.desc()).all()
+    rows = db.query(StorageReservation).order_by(StorageReservation.id.desc()).all()
+    changed = False
+    for r in rows:
+        if str(getattr(r, 'status', '')).upper() != 'PENDING':
+            continue
+        status, reason = _service_auto_moderate({
+            'storage_type': r.storage_type,
+            'location': r.location,
+            'quantity_kg': r.quantity_kg,
+            'image_urls': r.image_urls,
+            'cover_image_url': r.cover_image_url,
+        })
+        r.status = status if status == 'APPROVED' else f'DENIED: {reason[:90]}'
+        changed = True
+    if changed:
+        db.commit()
+    return rows
 
 
 @router.put('/services/storage-reservations/{reservation_id}')
