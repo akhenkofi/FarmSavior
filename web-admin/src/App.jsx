@@ -114,10 +114,10 @@ const paymentSectionLabel = (product) => ({
 const paymentDisplayLabel = (product, planCode = '', reference = '') => {
  const productLabel = paymentSectionLabel(String(product || '').toLowerCase())
  const sig = `${String(planCode || '').toLowerCase()} ${String(reference || '').toLowerCase()}`
- if (sig.includes('poultry')) return 'Poultry University'
- if (sig.includes('sheep')) return 'Sheep University'
- if (sig.includes('goat')) return 'Goat University'
- if (sig.includes('cattle')) return 'Cattle University'
+ if (sig.includes('poultry') || sig.includes('pusub') || sig.includes('pu-')) return 'Poultry University'
+ if (sig.includes('sheep') || sig.includes('susub') || sig.includes('su-')) return 'Sheep University'
+ if (sig.includes('goat') || sig.includes('gusub') || sig.includes('gu-')) return 'Goat University'
+ if (sig.includes('cattle') || sig.includes('cusub') || sig.includes('cu-')) return 'Cattle University'
  return productLabel
 }
 const paymentSectionRoute = (product) => ({
@@ -7908,16 +7908,16 @@ function AppInner() {
  </div>
  </>}
  </article> : <>
- <div className='panel' style={{background:'linear-gradient(120deg,#065f46,#0ea5e9)', color:'#fff', marginBottom:10, position:'relative', overflow:'hidden'}}>
- <div style={{position:'absolute', right:-20, top:-20, width:120, height:120, borderRadius:'50%', background:'rgba(255,255,255,.18)'}} />
- <div style={{position:'absolute', right:60, bottom:-36, width:100, height:100, borderRadius:'50%', background:'rgba(255,255,255,.12)'}} />
- <h3 style={{marginTop:0, position:'relative'}}>{t('📸 FarmSavior Community','📸 Communauté FarmSavior','📸 FarmSavior 社区')}</h3>
- <p style={{margin:0, opacity:.95, position:'relative'}}>Share farm life, innovations, products, and short videos with growers worldwide.</p>
- <div className='tabs' style={{marginTop:10, position:'relative'}}>
- <span className='tab active'>🔥 Trending</span>
- <span className='tab'>🎥 Reels</span>
- <span className='tab'>🌱 Tips</span>
- <span className='tab'>🛒 Products</span>
+ <div className='panel' style={{background:'linear-gradient(140deg,#0b6b5b 0%,#0b83cf 60%,#22c1f1 100%)', color:'#fff', marginBottom:12, position:'relative', overflow:'hidden', border:'1px solid rgba(255,255,255,.28)', boxShadow:'0 16px 36px rgba(2,132,199,.25)', borderRadius:24}}>
+ <div style={{position:'absolute', right:-14, top:-14, width:132, height:132, borderRadius:'50%', background:'rgba(255,255,255,.20)', backdropFilter:'blur(2px)'}} />
+ <div style={{position:'absolute', right:74, bottom:-44, width:118, height:118, borderRadius:'50%', background:'rgba(255,255,255,.14)'}} />
+ <h3 style={{marginTop:0, marginBottom:6, position:'relative', fontSize:'1.75rem', letterSpacing:'.2px'}}>{t('📸 FarmSavior Community','📸 Communauté FarmSavior','📸 FarmSavior 社区')}</h3>
+ <p style={{margin:0, opacity:.96, position:'relative', fontSize:'1.02rem', lineHeight:1.45, maxWidth:560}}>Share farm life, innovations, products, and short videos with growers worldwide.</p>
+ <div style={{marginTop:14, position:'relative', display:'grid', gridTemplateColumns:'repeat(2,minmax(0,1fr))', gap:10}}>
+ <div style={{background:'rgba(2,6,23,.72)', border:'1px solid rgba(255,255,255,.32)', color:'#fff', borderRadius:14, padding:'10px 14px', fontWeight:700}}>🔥 Trending</div>
+ <div style={{background:'rgba(255,255,255,.92)', border:'1px solid rgba(255,255,255,.7)', color:'#0f172a', borderRadius:14, padding:'10px 14px', fontWeight:600}}>🎥 Reels</div>
+ <div style={{background:'rgba(255,255,255,.92)', border:'1px solid rgba(255,255,255,.7)', color:'#0f172a', borderRadius:14, padding:'10px 14px', fontWeight:600}}>🌱 Tips</div>
+ <div style={{background:'rgba(255,255,255,.92)', border:'1px solid rgba(255,255,255,.7)', color:'#0f172a', borderRadius:14, padding:'10px 14px', fontWeight:600}}>🛒 Products</div>
  </div>
  </div>
 
