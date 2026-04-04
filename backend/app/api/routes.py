@@ -1330,7 +1330,15 @@ def agora_token(other_user_id: int, authorization: Optional[str] = Header(None),
         )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f'Agora token generation failed: {exc}')
-    return {'token': token, 'channelName': channel_name, 'uid': uid, 'expiresIn': expire_seconds}
+    return {
+        'token': token,
+        'app_id': settings.AGORA_APP_ID,
+        'appId': settings.AGORA_APP_ID,
+        'channel_name': channel_name,
+        'channelName': channel_name,
+        'uid': uid,
+        'expiresIn': expire_seconds,
+    }
 
 
 @router.post('/auth/verify-otp', response_model=TokenResponse)
