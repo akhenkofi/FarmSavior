@@ -2741,6 +2741,7 @@ function AppInner() {
  const [communityCallSeconds, setCommunityCallSeconds] = useState(0)
  const [communityCallMuted, setCommunityCallMuted] = useState(false)
  const [communityCallCameraOff, setCommunityCallCameraOff] = useState(false)
+ const [communityCallCameraFacing, setCommunityCallCameraFacing] = useState('user')
  const [communityRemoteVideoReady, setCommunityRemoteVideoReady] = useState(false)
  const [communityCallControlsVisible, setCommunityCallControlsVisible] = useState(true)
  const [communityMainVideo, setCommunityMainVideo] = useState('remote')
@@ -3020,6 +3021,21 @@ function AppInner() {
   try { communityAgoraLocalVideoTrackRef.current?.setEnabled?.(!next) } catch {}
   setCommunityCallCameraOff(next)
  }
+ const flipCommunityCamera = async () => {
+  try {
+   const nextFacing = communityCallCameraFacing === 'user' ? 'environment' : 'user'
+   const devices = await navigator.mediaDevices?.enumerateDevices?.() || []
+   const cams = devices.filter(d => d.kind === 'videoinput')
+   if (!cams.length) return
+   const frontCam = cams.find(c => /front|user/i.test(String(c.label || '')))
+   const backCam = cams.find(c => /back|rear|environment/i.test(String(c.label || '')))
+   const chosen = nextFacing === 'user' ? (frontCam || cams[0]) : (backCam || cams[cams.length - 1])
+   if (chosen?.deviceId && communityAgoraLocalVideoTrackRef.current?.setDevice) {
+    await communityAgoraLocalVideoTrackRef.current.setDevice(chosen.deviceId)
+    setCommunityCallCameraFacing(nextFacing)
+   }
+  } catch {}
+ }
  const bumpCommunityCallControls = () => {
   setCommunityCallControlsVisible(true)
   if (communityCallControlsTimerRef.current) clearTimeout(communityCallControlsTimerRef.current)
@@ -3057,8 +3073,7 @@ function AppInner() {
   const appId = tokenRes?.app_id || tokenRes?.appId
   const channel = tokenRes?.channel_name || tokenRes?.channel || tokenRes?.channelName
   let token = tokenRes?.token || null
-  const firstUid = Number(tokenRes?.uid)
-  let uid = Number.isFinite(firstUid) && firstUid > 0 ? firstUid : (Math.floor(Math.random() * 2000000000) + 1)
+  let uid = null
   if (!appId || !channel) throw new Error('Agora token config missing appId/channel')
   const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' })
   communityAgoraClientRef.current = client
@@ -3102,8 +3117,7 @@ function AppInner() {
    if (!msg.includes('UID_CONFLICT')) throw err
    const retryTokenRes = await api.fetchAgoraToken(Number(peerUserId || 0))
    token = retryTokenRes?.token || token
-   const retryUid = Number(retryTokenRes?.uid)
-   uid = Number.isFinite(retryUid) && retryUid > 0 ? retryUid : (Math.floor(Math.random() * 2000000000) + 1)
+   uid = null
    await client.join(appId, channel, token, uid)
   }
   let localAudioTrack = communityAgoraLocalAudioTrackRef.current
@@ -3465,6 +3479,7 @@ function AppInner() {
   if (communityActiveCall) return
   setCommunityCallMuted(false)
   setCommunityCallCameraOff(false)
+  setCommunityCallCameraFacing('user')
   setCommunityRemoteVideoReady(false)
   setCommunityMainVideo('remote')
   setCommunityCallMiniCollapsed(false)
@@ -8644,6 +8659,7 @@ function AppInner() {
  <div style={{position:'fixed', left:'50%', transform:'translateX(-50%)', bottom:'calc(env(safe-area-inset-bottom, 0px) + 18px)', zIndex:3200, display:'flex', gap:10, alignItems:'center', opacity: communityActiveCall?.mode === 'video' ? (communityCallControlsVisible ? 1 : 0) : 1, transition:'opacity .18s ease'}}>
   <button type='button' className='btn' onClick={(e)=>{ e.stopPropagation(); toggleCommunityMute(); bumpCommunityCallControls() }} style={{background:'rgba(15,23,42,.78)', color:'#fff', border:'1px solid rgba(255,255,255,.3)', minWidth:88}}>{communityCallMuted ? 'Unmute' : 'Mute'}</button>
   {communityActiveCall?.mode === 'video' && <button type='button' className='btn' onClick={(e)=>{ e.stopPropagation(); toggleCommunityCamera(); bumpCommunityCallControls() }} style={{background:'rgba(15,23,42,.78)', color:'#fff', border:'1px solid rgba(255,255,255,.3)', minWidth:102}}>{communityCallCameraOff ? 'Camera On' : 'Camera Off'}</button>}
+  {communityActiveCall?.mode === 'video' && communityActiveCall?.isCaller && <button type='button' className='btn' onClick={async(e)=>{ e.stopPropagation(); await flipCommunityCamera(); bumpCommunityCallControls() }} style={{background:'rgba(15,23,42,.78)', color:'#fff', border:'1px solid rgba(255,255,255,.3)', minWidth:84}}>Flip</button>}
   <button type='button' className='btn btn-dark' onClick={(e)=>{ e.stopPropagation(); endCommunityActiveCall() }} style={{background:'#dc2626', borderColor:'#dc2626', minWidth:110}}>End Call</button>
  </div>
  </div>
