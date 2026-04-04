@@ -1318,13 +1318,14 @@ def agora_token(other_user_id: int, authorization: Optional[str] = Header(None),
     expire_seconds = 3600
     privilege_expired_ts = int(time.time()) + expire_seconds
     try:
-        from agora_token_builder import RtcTokenBuilder, RtcRole
+        from agora_token_builder import RtcTokenBuilder
+        role_publisher = 1
         token = RtcTokenBuilder.buildTokenWithUid(
             settings.AGORA_APP_ID,
             settings.AGORA_APP_CERTIFICATE,
             channel_name,
             uid,
-            RtcRole.PUBLISHER,
+            role_publisher,
             privilege_expired_ts,
         )
     except Exception as exc:
