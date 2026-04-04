@@ -111,6 +111,15 @@ const paymentSectionLabel = (product) => ({
  'goat': 'Goat University',
  'cattle': 'Cattle University',
 }[product] || 'Subscription')
+const paymentDisplayLabel = (product, planCode = '', reference = '') => {
+ const productLabel = paymentSectionLabel(String(product || '').toLowerCase())
+ const sig = `${String(planCode || '').toLowerCase()} ${String(reference || '').toLowerCase()}`
+ if (sig.includes('poultry')) return 'Poultry University'
+ if (sig.includes('sheep')) return 'Sheep University'
+ if (sig.includes('goat')) return 'Goat University'
+ if (sig.includes('cattle')) return 'Cattle University'
+ return productLabel
+}
 const paymentSectionRoute = (product) => ({
  'livestock-records': 'livestock-records',
  'poultry': 'poultry-university',
@@ -5837,7 +5846,7 @@ function AppInner() {
  <div className='list'>
  {(billingOverview.active_subscriptions || []).slice(0, 6).map((sub) => <div className='list-row' key={`active-sub-${sub.reference}`}>
    <span>
-    <strong>{paymentSectionLabel(sub.product)}</strong><br/>
+    <strong>{paymentDisplayLabel(sub.product, sub.plan_code, sub.reference)}</strong><br/>
     <small>{String(sub.plan_code || '').toUpperCase()} plan • {String(sub.billing_cycle || '').toLowerCase()} billing</small>
    </span>
    <strong>{sub.status}</strong>
@@ -5850,7 +5859,7 @@ function AppInner() {
  {[...(billingOverview.subscriptions || []).map((sub) => ({
    kind: 'subscription',
    reference: sub.reference,
-   title: paymentSectionLabel(sub.product),
+   title: paymentDisplayLabel(sub.product, sub.plan_code, sub.reference),
    subtitle: `${String(sub.plan_code || '').toUpperCase()} plan • ${String(sub.billing_cycle || '').toLowerCase()} billing`,
    status: sub.status,
    amount: formatMoney(sub.amount, sub.currency),
@@ -5858,7 +5867,7 @@ function AppInner() {
   })), ...(billingOverview.payments || []).map((pay) => ({
    kind: 'payment',
    reference: pay.reference,
-   title: paymentSectionLabel(pay.product || ''),
+   title: paymentDisplayLabel(pay.product || '', pay.plan_code || pay.method || '', pay.reference),
    subtitle: `${pay.method || 'Payment'} • ${pay.provider || 'FarmSavior'}`,
    status: pay.status,
    amount: formatMoney(pay.amount, pay.currency),
