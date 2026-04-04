@@ -3341,7 +3341,12 @@ function AppInner() {
       const signal = ev?.data || {}
       const t = String(ev?.type || signal?.type || '').toLowerCase()
       if (t === 'ringing') setCommunityActiveCall(prev => prev && String(prev.callId||'')===callId ? { ...prev, status: 'ringing' } : prev)
-      if (t === 'answer') setCommunityActiveCall(prev => prev && String(prev.callId||'')===callId ? { ...prev, status: 'connecting-media' } : prev)
+      if (t === 'answer') {
+        const peerUserId = Number(signal.fromUserId || ev?.from_user_id || 0)
+        const mode = signal.mode === 'video' ? 'video' : 'audio'
+        setCommunityActiveCall(prev => prev && String(prev.callId||'')===callId ? { ...prev, status: 'connecting-media', peerUserId } : prev)
+        try { await ensureCommunityAgora({ mode, callId, peerUserId }) } catch (err) { alert(errMsg(err)); returnToCommunityPhone() }
+      }
       if (t === 'decline' || t === 'end') { closeCommunityPeer(); returnToCommunityPhone() }
       if (t === 'missed') { closeCommunityPeer(); returnToCommunityPhone(); alert('Call missed (no answer).') }
 
