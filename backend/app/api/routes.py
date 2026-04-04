@@ -3545,6 +3545,16 @@ def community_call_signal_push(call_id: str, payload: CallSignalEventIn, authori
         'data': payload.data or {},
         'created_at': datetime.utcnow().isoformat(),
     }
+    if event.get('type') == 'offer' and event.get('to_user_id'):
+        mode = 'video' if str((event.get('data') or {}).get('mode') or '').lower() == 'video' else 'audio'
+        _push_call_alert(
+            db,
+            int(event['to_user_id']),
+            caller_name=str(getattr(viewer, 'full_name', '') or 'Someone'),
+            mode=mode,
+            room_url='/?go=community',
+            call_id=cid,
+        )
     events.append(event)
     if len(events) > 300:
         del events[:-300]
@@ -5277,7 +5287,7 @@ def _push_call_alert(db: Session, user_id: int, *, caller_name: str, mode: str, 
         tokens,
         title=f'Incoming {mode_label} Call',
         body=f'{caller_name or "Someone"} is calling you on FarmSavior',
-        data={'type': 'incoming_call', 'mode': str(mode or 'audio'), 'room_url': str(room_url or ''), 'url': str(room_url or '/?go=community'), 'callId': str(call_id or '')}
+        data={'type': 'incoming_call', 'mode': str(mode or 'audio'), 'room_url': str(room_url or ''), 'url': str(room_url or '/?go=community'), 'callId': str(call_id or ''), 'ring': '1', 'full_screen': '1', 'voip': '1'}
     )
 
 def _order_fee_breakdown(unit_price: float, quantity: float):
