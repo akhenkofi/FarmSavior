@@ -3169,38 +3169,10 @@ function AppInner() {
    const mode = signal.mode === 'video' ? 'video' : 'audio'
    ;(async()=>{
     try {
-     const pc = await ensureCommunityPeer({ mode, callId: signal.callId, peerUserId })
-     const offer = await pc.createOffer()
-     await pc.setLocalDescription(offer)
-     await waitIceDone(pc)
-     await sendCallSignal(peerUserId, { v:1, type:'rtc_offer', mode, callId:signal.callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now(), sdp: pc.localDescription }, mode === 'video' ? '📹' : '📞')
+     await ensureCommunityAgora({ mode, callId: signal.callId, peerUserId })
      setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? { ...prev, status: 'connecting-media', peerUserId } : prev))
     } catch {}
    })()
-   return
-  }
-  if (signalType === 'rtc_offer') {
-   const peerUserId = signal.fromUserId || communityMessageView?.user?.user_id
-   const mode = signal.mode === 'video' ? 'video' : 'audio'
-   ;(async()=>{
-    try {
-     const pc = await ensureCommunityPeer({ mode, callId: signal.callId, peerUserId })
-     await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp))
-     const answer = await pc.createAnswer()
-     await pc.setLocalDescription(answer)
-     await waitIceDone(pc)
-     await sendCallSignal(peerUserId, { v:1, type:'rtc_answer', mode, callId:signal.callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now(), sdp: pc.localDescription }, mode === 'video' ? '📹' : '📞')
-     setCommunityActiveCall(prev => ({ ...(prev || {}), callId: signal.callId, mode, status: 'connected', peerUserId, isCaller: false }))
-    } catch {}
-   })()
-   return
-  }
-  if (signalType === 'rtc_answer') {
-   ;(async()=>{ try { if (communityPcRef.current && signal?.sdp) { await communityPcRef.current.setRemoteDescription(new RTCSessionDescription(signal.sdp)); setCommunityActiveCall(prev => prev ? { ...prev, status: 'connected' } : prev) } } catch {} })()
-   return
-  }
-  if (signalType === 'rtc_ice') {
-   ;(async()=>{ try { if (communityPcRef.current && signal?.candidate) await communityPcRef.current.addIceCandidate(new RTCIceCandidate(signal.candidate)) } catch {} })()
    return
   }
   if (signalType === 'decline' || signalType === 'end') {
@@ -3248,7 +3220,7 @@ function AppInner() {
      const signal = parseCallSignal(msg.text)
      if (!signal) return false
      const tpe = String(signal.type || '')
-     if (!['offer','ringing','answer','decline','end','rtc_offer','rtc_answer','rtc_ice'].includes(tpe)) return false
+     if (!['offer','ringing','answer','decline','end'].includes(tpe)) return false
      if (Number(signal.toUserId || 0) && Number(signal.fromUserId || 0) === Number(signal.toUserId || 0)) return false
      const createdMs = msg?.created_at ? new Date(msg.created_at).getTime() : Date.now()
      return Number.isFinite(createdMs) && (Date.now() - createdMs) < 90 * 1000
@@ -3282,30 +3254,7 @@ function AppInner() {
      })()
      return
     }
-    if (signalType === 'rtc_offer') {
-     const peerUserId = signal.fromUserId || candidate?.user?.user_id
-     const mode = signal.mode === 'video' ? 'video' : 'audio'
-     ;(async()=>{
-      try {
-       const pc = await ensureCommunityPeer({ mode, callId: signal.callId, peerUserId })
-       await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp))
-       const answer = await pc.createAnswer()
-       await pc.setLocalDescription(answer)
-       await waitIceDone(pc)
-       await sendCallSignal(peerUserId, { v:1, type:'rtc_answer', mode, callId:signal.callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now(), sdp: pc.localDescription }, mode === 'video' ? '📹' : '📞')
-       setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? { ...prev, status: 'connected', peerUserId } : prev))
-      } catch {}
-     })()
-     return
-    }
-    if (signalType === 'rtc_answer') {
-     ;(async()=>{ try { if (communityPcRef.current && signal?.sdp) { await communityPcRef.current.setRemoteDescription(new RTCSessionDescription(signal.sdp)); setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? { ...prev, status: 'connected' } : prev)) } } catch {} })()
-     return
-    }
-    if (signalType === 'rtc_ice') {
-     ;(async()=>{ try { if (communityPcRef.current && signal?.candidate) await communityPcRef.current.addIceCandidate(new RTCIceCandidate(signal.candidate)) } catch {} })()
-     return
-    }
+
     if (signalType === 'decline' || signalType === 'end') {
      closeCommunityPeer()
      setCommunityActiveCall(prev => {
@@ -3372,15 +3321,7 @@ function AppInner() {
       if (t === 'answer') setCommunityActiveCall(prev => prev && String(prev.callId||'')===callId ? { ...prev, status: 'connecting-media' } : prev)
       if (t === 'decline' || t === 'end') { closeCommunityPeer(); returnToCommunityPhone() }
       if (t === 'missed') { closeCommunityPeer(); returnToCommunityPhone(); alert('Call missed (no answer).') }
-      if (t === 'rtc_offer' && signal?.sdp) {
-        const peerUserId = Number(signal.fromUserId || 0)
-        const mode = signal.mode === 'video' ? 'video' : 'audio'
-        const pc = await ensureCommunityPeer({ mode, callId, peerUserId })
-        await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp))
-        const answer = await pc.createAnswer(); await pc.setLocalDescription(answer); await waitIceDone(pc)
-        await sendCallSignal(peerUserId, { v:1, type:'rtc_answer', mode, callId, fromUserId:Number(me?.id || 0), toUserId:peerUserId, ts:Date.now(), sdp: pc.localDescription }, mode === 'video' ? '📹' : '📞')
-      }
-      if (t === 'rtc_answer' && signal?.sdp && communityPcRef.current) await communityPcRef.current.setRemoteDescription(new RTCSessionDescription(signal.sdp))
+
     }
    } catch {}
   }
