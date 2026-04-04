@@ -1314,7 +1314,7 @@ def agora_token(other_user_id: int, authorization: Optional[str] = Header(None),
     if not settings.AGORA_APP_ID or not settings.AGORA_APP_CERTIFICATE:
         raise HTTPException(status_code=500, detail='Agora is not configured')
     channel_name = _get_call_channel_name(int(viewer.id), int(other_user_id))
-    uid = int(viewer.id)
+    uid = int(f"{int(viewer.id)}{random.randint(1000, 9999)}") % 2147483647
     expire_seconds = 3600
     privilege_expired_ts = int(time.time()) + expire_seconds
     try:
