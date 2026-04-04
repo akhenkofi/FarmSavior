@@ -257,12 +257,12 @@ const newsTitleZh = {
 const zhMap = {
  'home': '首页', 'dashboard': '仪表盘', 'onboarding': '账户', 'products': '产品', 'livestock': '牲畜', 'services': '服务', 'payments': '支付', 'alerts': '预警', 'maps': '地图', 'messaging': '消息', 'World Chat': '世界聊天', 'FarmSavior Community': 'FarmSavior 社区', 'AI Disease Analyzer': 'AI 病害分析', 'AI Plant Identifier': 'AI 植物识别', 'AI Insect & Pest Identifier': 'AI 昆虫与害虫识别', 'Government Programs': '政府项目', 'contracts': '合同', 'admin': '管理员',
  'Hide': '隐藏', 'Show': '显示', 'Open': '打开', 'Start': '开始', 'Login': '登录', 'Sign In': '登录', 'Create Account': '创建账户', 'Cancel': '取消', 'Currency': '货币', 'Payment methods': '支付方式', 'Products': '产品', 'logout': '退出登录',
- 'No messages yet.': '暂无消息。', 'Open Chat': '打开聊天', 'Open World Chat': '打开全球聊天', 'Go to My Account': '前往我的账户', 'Popular Actions': '热门操作', 'Global World Chat': '全球世界聊天', 'Map System (Google Maps) + Farm GPS Mapping': '地图系统（Google 地图）+ 农场 GPS 标注',
+ 'No messages yet.': '暂无消息。', 'Open Chat': '打开聊天', 'Open World Chat': '打开全球聊天', 'Go to My Account Settings': '前往账户设置', 'Popular Actions': '热门操作', 'Global World Chat': '全球世界聊天', 'Map System (Google Maps) + Farm GPS Mapping': '地图系统（Google 地图）+ 农场 GPS 标注',
  'Government Programs & Subsidies (Ghana • Nigeria • Burkina Faso)': '政府项目与补贴（加纳 • 尼日利亚 • 布基纳法索）', 'Programs Page': '项目页面', 'Current Export/Import Statistics (Top 10 + Volumes)': '当前进出口统计（前10 + 总量）', 'Top 10 Exporters': '前10大出口国', 'Top 10 Importers': '前10大进口国',
  'Program details temporarily unavailable. Open source page.': '项目详情暂时不可用。请打开来源页面。', 'unavailable': '不可用', 'Official program update': '官方项目更新',
  'Please sign in or create an account to continue.': '请登录或创建账户以继续。', 'Sign in required': '需要登录', 'Open Login Popup': '打开登录弹窗',
  'Phone': '手机号', 'Phone or Email': '手机号或邮箱', 'Password': '密码', 'OTP Code': '验证码', 'Verify OTP': '验证 OTP',
- 'My Account': '我的账户', 'My Verification Status': '我的认证状态', 'Save Profile': '保存资料', 'Change Password': '修改密码',
+ 'My Account Settings': '账户设置', 'My Verification Status': '我的认证状态', 'Save Profile': '保存资料', 'Change Password': '修改密码',
  'Main Interface': '主界面', 'Main App Homepage': '主应用首页', 'Public Homepage': '公开首页',
  'Goats': '山羊', 'Sheep': '绵羊', 'Day-old Chicks': '雏鸡', 'Cows': '奶牛', 'Cashew': '腰果', 'Mango': '芒果', 'Coconuts': '椰子', 'Coffee': '咖啡', 'Cocoa': '可可', 'Rice': '大米', 'Maize': '玉米', 'Wheat': '小麦', 'Soybeans': '大豆', 'Poultry': '家禽', 'Sheep & Goats': '羊与山羊', 'Cattle': '牛',
  'Tractor hire (4WD)': '四驱拖拉机租赁', 'Combine harvester rental': '联合收割机租赁', 'Cold room storage': '冷库储存', 'Long-haul truck logistics': '长途卡车物流', 'Farm spraying service': '农场喷洒服务', 'Irrigation setup service': '灌溉安装服务', 'Feed supply delivery': '饲料配送', 'Warehouse monthly leasing': '仓库月租', 'Farm consultancy': '农业咨询', 'Ram/Buck/Bull rentals': '公羊/种公山羊/公牛租赁',
@@ -2500,6 +2500,14 @@ const isUserImage = (v) => String(v || '').startsWith('data:image/')
 
 
 const MAX_IMAGE_COUNTS = { products: 20, livestock: 10, services: 20 }
+const HIGH_DEMAND_PRODUCT_TYPES = ['Goats', 'Sheep', 'Day-old Chicks', 'Cows', 'Cashew', 'Mango', 'Coconuts', 'Coffee', 'Cocoa', 'Rice']
+const HIGH_DEMAND_SERVICE_TYPES = ['Tractor hire (4WD)', 'Combine harvester rental', 'Cold room storage', 'Long-haul truck logistics', 'Farm spraying service', 'Irrigation setup service', 'Feed supply delivery', 'Warehouse monthly leasing', 'Farm consultancy', 'Ram/Buck/Bull rentals']
+const normalizeProductType = (value) => {
+ const raw = String(value || '').trim()
+ if (!raw) return ''
+ const hit = HIGH_DEMAND_PRODUCT_TYPES.find(x => x.toLowerCase() === raw.toLowerCase())
+ return hit || raw
+}
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
@@ -2708,7 +2716,7 @@ function AppInner() {
  const [communityFeedMode, setCommunityFeedMode] = useState('for-you')
  const goHomeSafely = () => {
   if (active === 'onboarding') {
-   const ok = window.confirm('Leave onboarding and return to Main Interface?')
+   const ok = window.confirm('Leave My Account Settings and return to Main Interface?')
    if (!ok) return
   }
   setActive('home')
@@ -2733,6 +2741,10 @@ function AppInner() {
  const [communityCallSeconds, setCommunityCallSeconds] = useState(0)
  const [communityCallMuted, setCommunityCallMuted] = useState(false)
  const [communityCallCameraOff, setCommunityCallCameraOff] = useState(false)
+ const [communityRemoteVideoReady, setCommunityRemoteVideoReady] = useState(false)
+ const [communityCallControlsVisible, setCommunityCallControlsVisible] = useState(true)
+ const [communityMainVideo, setCommunityMainVideo] = useState('remote')
+ const [communityCallMiniCollapsed, setCommunityCallMiniCollapsed] = useState(false)
  const [communityCallSoundsEnabled, setCommunityCallSoundsEnabled] = useState(() => { try { return localStorage.getItem('farmsavior_call_sounds') !== '0' } catch { return true } })
  const communityMessageListRef = useRef(null)
  const communityLastCallAlertRef = useRef(null)
@@ -2750,6 +2762,8 @@ function AppInner() {
  const communityRemoteVideoRef = useRef(null)
  const communityHandledCallIdsRef = useRef(new Set())
  const communityRingingTimerRef = useRef(null)
+ const communityCallControlsTimerRef = useRef(null)
+ const communityPermissionPromptedRef = useRef(false)
  const communityCallSignalCursorRef = useRef({})
  const communityCallInboxCursorRef = useRef(0)
  const [editingCommunityPostId, setEditingCommunityPostId] = useState(null)
@@ -2910,6 +2924,7 @@ function AppInner() {
   const signalPayload = { v: 1, type: 'offer', mode, callId, fromUserId: Number(me?.id || 0), toUserId: Number(targetUserId || 0), ts: Date.now() }
   try {
    setCommunityMessageSending(true)
+   try { await enableCommunityCallPermissions({ silent: true }) } catch {}
    await sendCallSignal(targetUserId, signalPayload, mode === 'video' ? '📹' : '📞')
    setCommunityActiveCall({ callId, mode, status: 'calling', peerUserId: targetUserId, isCaller: true })
    await openCommunityMessages(user)
@@ -2934,6 +2949,7 @@ function AppInner() {
   }
   try {
    setCommunityMessageSending(true)
+   try { await enableCommunityCallPermissions({ silent: true }) } catch {}
    const sent = await sendCallSignal(targetUserId, signalPayload, mode === 'video' ? '📹' : '📞')
    setCommunityMessageView(prev => ({ ...prev, messages: [ ...(prev?.messages || []), sent ].filter(Boolean) }))
    const threads = await api.fetchCommunityMessageThreads().catch(() => [])
@@ -3004,14 +3020,21 @@ function AppInner() {
   try { communityAgoraLocalVideoTrackRef.current?.setEnabled?.(!next) } catch {}
   setCommunityCallCameraOff(next)
  }
+ const bumpCommunityCallControls = () => {
+  setCommunityCallControlsVisible(true)
+  if (communityCallControlsTimerRef.current) clearTimeout(communityCallControlsTimerRef.current)
+  communityCallControlsTimerRef.current = setTimeout(() => {
+   setCommunityCallControlsVisible(false)
+   communityCallControlsTimerRef.current = null
+  }, 2600)
+ }
+ const swapCommunityVideoFocus = () => setCommunityMainVideo(prev => (prev === 'remote' ? 'local' : 'remote'))
  const closeCommunityPeer = () => {
   try { communityPcRef.current?.getSenders?.().forEach(s => { try { s.replaceTrack?.(null) } catch {} }) } catch {}
   try { communityPcRef.current?.close?.() } catch {}
   communityPcRef.current = null
-  try { communityAgoraLocalAudioTrackRef.current?.stop?.(); communityAgoraLocalAudioTrackRef.current?.close?.() } catch {}
-  try { communityAgoraLocalVideoTrackRef.current?.stop?.(); communityAgoraLocalVideoTrackRef.current?.close?.() } catch {}
-  communityAgoraLocalAudioTrackRef.current = null
-  communityAgoraLocalVideoTrackRef.current = null
+  try { communityAgoraLocalAudioTrackRef.current?.setEnabled?.(false) } catch {}
+  try { communityAgoraLocalVideoTrackRef.current?.setEnabled?.(false) } catch {}
   communityAgoraRemoteAudioTrackRef.current = null
   communityAgoraRemoteVideoTrackRef.current = null
   try { communityAgoraClientRef.current?.removeAllListeners?.() } catch {}
@@ -3033,8 +3056,9 @@ function AppInner() {
   const tokenRes = await api.fetchAgoraToken(Number(peerUserId || 0))
   const appId = tokenRes?.app_id || tokenRes?.appId
   const channel = tokenRes?.channel_name || tokenRes?.channel || tokenRes?.channelName
-  const token = tokenRes?.token || null
-  const uid = Number(tokenRes?.uid || me?.id || 0)
+  let token = tokenRes?.token || null
+  const firstUid = Number(tokenRes?.uid)
+  let uid = Number.isFinite(firstUid) && firstUid > 0 ? firstUid : (Math.floor(Math.random() * 2000000000) + 1)
   if (!appId || !channel) throw new Error('Agora token config missing appId/channel')
   const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' })
   communityAgoraClientRef.current = client
@@ -3049,12 +3073,14 @@ function AppInner() {
    }
    if (mediaType === 'video' && user.videoTrack) {
     communityAgoraRemoteVideoTrackRef.current = user.videoTrack
+    setCommunityRemoteVideoReady(true)
     if (communityRemoteVideoRef.current) user.videoTrack.play(communityRemoteVideoRef.current)
     try { remoteStream.addTrack(user.videoTrack.getMediaStreamTrack()) } catch {}
    }
    setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(callId || '') ? { ...prev, status: 'connected' } : prev))
   })
-  client.on('user-unpublished', () => {
+  client.on('user-unpublished', (user, mediaType) => {
+    if (String(mediaType || '').toLowerCase() === 'video') setCommunityRemoteVideoReady(false)
     setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(callId || '') ? { ...prev, status: 'connected' } : prev))
   })
   client.on('connection-state-change', (curState) => {
@@ -3063,22 +3089,60 @@ function AppInner() {
     if (st === 'DISCONNECTED' || st === 'DISCONNECTING') setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(callId || '') ? { ...prev, status: 'poor-connection' } : prev))
   })
   client.on('user-left', async () => {
+    setCommunityRemoteVideoReady(false)
     try { if (peerUserId) await sendCallSignal(peerUserId, { v:1, type:'end', mode, callId: String(callId || ''), fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now() }, mode === 'video' ? '📹' : '📞') } catch {}
     playEndedTone()
     closeCommunityPeer()
     returnToCommunityPhone()
   })
-  await client.join(appId, channel, token, uid)
-  const localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack()
-  communityAgoraLocalAudioTrackRef.current = localAudioTrack
-  let localVideoTrack = null
-  if (mode === 'video') {
+  try {
+   await client.join(appId, channel, token, uid)
+  } catch (err) {
+   const msg = String(err?.message || err || '')
+   if (!msg.includes('UID_CONFLICT')) throw err
+   const retryTokenRes = await api.fetchAgoraToken(Number(peerUserId || 0))
+   token = retryTokenRes?.token || token
+   const retryUid = Number(retryTokenRes?.uid)
+   uid = Number.isFinite(retryUid) && retryUid > 0 ? retryUid : (Math.floor(Math.random() * 2000000000) + 1)
+   await client.join(appId, channel, token, uid)
+  }
+  let localAudioTrack = communityAgoraLocalAudioTrackRef.current
+  if (!localAudioTrack) {
+   localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack()
+   communityAgoraLocalAudioTrackRef.current = localAudioTrack
+  }
+  let localVideoTrack = communityAgoraLocalVideoTrackRef.current
+  if (mode === 'video' && !localVideoTrack) {
    localVideoTrack = await AgoraRTC.createCameraVideoTrack()
    communityAgoraLocalVideoTrackRef.current = localVideoTrack
-   if (communityLocalVideoRef.current) localVideoTrack.play(communityLocalVideoRef.current)
   }
-  const publishTracks = [localAudioTrack, localVideoTrack].filter(Boolean)
-  if (publishTracks.length) await client.publish(publishTracks)
+  try { if (localAudioTrack?.setEnabled) await localAudioTrack.setEnabled(true) } catch {}
+  if (mode === 'video') {
+   try { if (localVideoTrack?.setEnabled) await localVideoTrack.setEnabled(true) } catch {}
+   if (communityLocalVideoRef.current && localVideoTrack) localVideoTrack.play(communityLocalVideoRef.current)
+  }
+  let publishTracks = [localAudioTrack, mode === 'video' ? localVideoTrack : null].filter(Boolean)
+  if (publishTracks.length) {
+   try {
+    await client.publish(publishTracks)
+   } catch (err) {
+    const msg = String(err?.message || err || '')
+    if (!msg.toLowerCase().includes('track_is_disabled')) throw err
+    try { await localAudioTrack?.close?.() } catch {}
+    try { await localVideoTrack?.close?.() } catch {}
+    localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack()
+    communityAgoraLocalAudioTrackRef.current = localAudioTrack
+    if (mode === 'video') {
+     localVideoTrack = await AgoraRTC.createCameraVideoTrack()
+     communityAgoraLocalVideoTrackRef.current = localVideoTrack
+     if (communityLocalVideoRef.current && localVideoTrack) localVideoTrack.play(communityLocalVideoRef.current)
+    }
+    publishTracks = [localAudioTrack, mode === 'video' ? localVideoTrack : null].filter(Boolean)
+    if (publishTracks.length) await client.publish(publishTracks)
+   }
+  }
+  try { if (communityCallMuted && localAudioTrack?.setEnabled) await localAudioTrack.setEnabled(false) } catch {}
+  try { if (mode === 'video' && communityCallCameraOff && localVideoTrack?.setEnabled) await localVideoTrack.setEnabled(false) } catch {}
   setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(callId || '') ? { ...prev, status: 'connecting-media' } : prev))
   return client
  }
@@ -3138,17 +3202,33 @@ function AppInner() {
  }
 
  const enableCommunityCallPermissions = async (options = {}) => {
-  const { silent = false } = options
+  const { silent = false, forcePrompt = false } = options
   if (communityCallPermissionBusy) return
+  const hasLiveLocal = !!communityLocalStreamRef.current && (communityLocalStreamRef.current.getTracks?.() || []).some(t => t.readyState === 'live')
+  if (hasLiveLocal) return
   try {
    setCommunityCallPermissionBusy(true)
    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission !== 'granted') {
-    await Notification.requestPermission()
+    await Notification.requestPermission().catch(()=>{})
    }
-   if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
-    communityLocalStreamRef.current = stream
-   }
+   if (!(typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia)) return
+   let camState = ''
+   let micState = ''
+   try { camState = await navigator.permissions?.query?.({ name: 'camera' }).then(r => r?.state || '').catch(()=>'') } catch {}
+   try { micState = await navigator.permissions?.query?.({ name: 'microphone' }).then(r => r?.state || '').catch(()=>'') } catch {}
+   const blocked = camState === 'denied' || micState === 'denied'
+   if (blocked) return
+   const savedGranted = (()=>{ try { return typeof window !== 'undefined' && localStorage.getItem('farmsavior_call_permissions_granted') === '1' } catch { return false } })()
+   const shouldPrompt = forcePrompt || !savedGranted
+   if (!shouldPrompt && camState === 'prompt' && micState === 'prompt') return
+   const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+   communityLocalStreamRef.current = stream
+   try {
+    if (!communityAgoraLocalAudioTrackRef.current) communityAgoraLocalAudioTrackRef.current = await AgoraRTC.createMicrophoneAudioTrack()
+    if (!communityAgoraLocalVideoTrackRef.current) communityAgoraLocalVideoTrackRef.current = await AgoraRTC.createCameraVideoTrack()
+    communityAgoraLocalAudioTrackRef.current?.setEnabled?.(false)
+    communityAgoraLocalVideoTrackRef.current?.setEnabled?.(false)
+   } catch {}
    try { if (typeof window !== 'undefined' && 'localStorage' in window) localStorage.setItem('farmsavior_call_permissions_granted', '1') } catch {}
   } catch (err) {
    if (!silent) alert(errMsg(err))
@@ -3162,6 +3242,18 @@ function AppInner() {
   if (!node) return
   node.scrollTop = node.scrollHeight
  }, [communityInboxOpen, communityMessageView.open, communityMessageView.messages, communityMessageView.loading])
+
+ useEffect(() => {
+  if (active !== 'community') return
+  const alreadyGranted = (()=>{ try { return typeof window !== 'undefined' && localStorage.getItem('farmsavior_call_permissions_granted') === '1' } catch { return false } })()
+  if (alreadyGranted) {
+   enableCommunityCallPermissions({ silent: true, forcePrompt: false })
+   return
+  }
+  if (communityPermissionPromptedRef.current) return
+  communityPermissionPromptedRef.current = true
+  enableCommunityCallPermissions({ silent: true, forcePrompt: true })
+ }, [active])
  useEffect(() => {
   if (!communityInboxOpen) return
   let alreadyGranted = false
@@ -3373,6 +3465,14 @@ function AppInner() {
   if (communityActiveCall) return
   setCommunityCallMuted(false)
   setCommunityCallCameraOff(false)
+  setCommunityRemoteVideoReady(false)
+  setCommunityMainVideo('remote')
+  setCommunityCallMiniCollapsed(false)
+  setCommunityCallControlsVisible(true)
+  if (communityCallControlsTimerRef.current) {
+   clearTimeout(communityCallControlsTimerRef.current)
+   communityCallControlsTimerRef.current = null
+  }
   closeCommunityPeer()
  }, [communityActiveCall])
 
@@ -3403,6 +3503,17 @@ function AppInner() {
   const timer = setInterval(() => setCommunityCallSeconds(v => v + 1), 1000)
   return () => clearInterval(timer)
  }, [communityActiveCall?.callId, communityActiveCall?.status])
+
+ useEffect(() => {
+  if (!communityActiveCall || communityActiveCall?.mode !== 'video') return
+  bumpCommunityCallControls()
+  return () => {
+   if (communityCallControlsTimerRef.current) {
+    clearTimeout(communityCallControlsTimerRef.current)
+    communityCallControlsTimerRef.current = null
+   }
+  }
+ }, [communityActiveCall?.callId, communityActiveCall?.mode, communityActiveCall?.status])
 
  useEffect(() => {
   if (!communityActiveCall || String(communityActiveCall?.status || '') !== 'calling') return
@@ -3451,7 +3562,12 @@ function AppInner() {
     communityRemoteAudioRef.current.play?.().catch(()=>{})
    }
   } catch {}
- }, [communityActiveCall?.mode, communityActiveCall?.status, communityActiveCall?.callId])
+ }, [communityActiveCall?.mode, communityActiveCall?.status, communityActiveCall?.callId, communityMainVideo, communityCallMiniCollapsed])
+
+ useEffect(() => {
+  if (!communityActiveCall || communityActiveCall?.mode !== 'video') return
+  if (communityRemoteVideoReady) setCommunityMainVideo('remote')
+ }, [communityRemoteVideoReady, communityActiveCall?.callId, communityActiveCall?.mode])
 
  useEffect(() => {
  if (active !== 'community') return
@@ -3592,6 +3708,14 @@ function AppInner() {
  const [livestockForm, setLivestockForm] = useState({ farmer_id: 1, livestock_type: '', quantity: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
  const [livestockEdit, setLivestockEdit] = useState({ id: '', farmer_id: 1, livestock_type: '', quantity: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
  const [livestockQuickEdit, setLivestockQuickEdit] = useState({ id: '', quantity: '', unit_price: '' })
+ const [accountSettingsTab, setAccountSettingsTab] = useState('profile')
+ const [notificationPrefs, setNotificationPrefs] = useState(() => {
+  try {
+   const raw = localStorage.getItem('farmsavior_notification_prefs')
+   if (raw) return { ...{ calls: true, orders: true, verification: true, push: true, sms: false, email: true }, ...JSON.parse(raw) }
+  } catch {}
+  return { calls: true, orders: true, verification: true, push: true, sms: false, email: true }
+ })
  const [livestockImages, setLivestockImages] = useState([])
  const [livestockEditImages, setLivestockEditImages] = useState([])
  const [livestockRecordForm, setLivestockRecordForm] = useState({ user_id: '', ownership: 'Owned by Me', species: 'SHEEP', animal_type: 'EWE', name: '', ear_tag: '', farm_id: '', registration_number: '', stars: 0, date_of_birth: '', acquisition_date: '', purchased_from: '', purchased_from_type: 'BREEDER', purchase_price: '', currency: 'GHS', sire_id: '', dam_id: '', litter_size: 1, initial_weight_kg: '', breeding_type: 'Natural', castrated: false, sale_date: '', sale_price: '', sold_to: '', died_date: '', cull_keep_status: 'KEEP', cull_reason: '', health_status: '', pen_location: '', notes: '', treatment_entry: '' })
@@ -3767,6 +3891,10 @@ function AppInner() {
  }))
  } catch {}
  }, [showHighDemandProducts, showHighDemandServices, popularActionsOpen, publicRecordsOpen, publicUniversityOpen, weatherOpen, newsOpen, spotTradingOpen, governmentProgramsOpen, tradeStatsOpen])
+
+ useEffect(() => {
+  try { localStorage.setItem('farmsavior_notification_prefs', JSON.stringify(notificationPrefs || {})) } catch {}
+ }, [notificationPrefs])
  const recordsBillingSubscription = useMemo(() => {
  return (billingOverview?.active_subscriptions || []).find((sub) => String(sub?.product || '') === 'livestock-records' && ['ACTIVE', 'TRIAL_ACTIVE'].includes(String(sub?.status || '').toUpperCase())) || null
  }, [billingOverview])
@@ -4551,7 +4679,7 @@ function AppInner() {
  const menuLabel = (m) => ({
  'home':t('home','home','首页'),
  'dashboard':t('dashboard','dashboard','仪表盘'),
- 'onboarding':t('onboarding','onboarding','账户'),
+ 'onboarding':t('My Account Settings','Paramètres du compte','账户设置'),
  'products':t('products','products','产品'),
  'livestock':t('livestock','livestock','牲畜'),
  'services':t('services','services','服务'),
@@ -4954,6 +5082,7 @@ function AppInner() {
  {popularActionsOpen && <div className='list'>
  <div className='list-row'><span>{t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('ai-disease', 'AI Disease Analyzer')}>{t('Open','Ouvrir')}</button></div>
  <div className='list-row'><span>{t('Livestock Records Management','Gestion des registres du bétail','牲畜档案管理')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('livestock-records', 'Livestock Records Management')}>{t('Open','Ouvrir')}</button></div>
+ <div className='list-row'><span>{t('FarmSavior Community','Communauté FarmSavior','FarmSavior 社区')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('community', 'FarmSavior Community')}>{t('Open','Ouvrir')}</button></div>
  <div className='list-row'><span>AADU · Poultry University (Layers • Broilers • Guinea Fowl)</span><button type='button' className='btn' onClick={()=>handleProtectedAction('poultry-university', 'Poultry University')}>{t('Open','Ouvrir')}</button></div>
  <div className='list-row'><span>AADU · Sheep University (Ghana Sheep Breed Program)</span><button type='button' className='btn' onClick={()=>handleProtectedAction('sheep-university', 'Sheep University')}>{t('Open','Ouvrir')}</button></div>
  <div className='list-row'><span>AADU · Goat University (Ghana Goat Breed Program)</span><button type='button' className='btn' onClick={()=>handleProtectedAction('goat-university', 'Goat University')}>{t('Open','Ouvrir')}</button></div>
@@ -4975,7 +5104,7 @@ function AppInner() {
  {token && <div className='panel' style={{padding:10, marginBottom:10, background:'#ecfeff', border:'1px solid #99f6e4'}}>
  <div style={{fontWeight:700, marginBottom:6}}>{t('You are signed in.','Vous êtes connecté.')}</div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
- <button className='btn btn-dark' onClick={() => { window.location.href='/?public=0' }}>{t('Go to My Account','Aller à mon compte')}</button>
+ <button className='btn btn-dark' onClick={() => { window.location.href='/?public=0' }}>{t('Go to My Account Settings','Aller aux paramètres du compte')}</button>
  <button className='btn' onClick={() => { localStorage.removeItem('farmsavior_token'); setToken(''); setAuthMode('login') }}>{t('Log out','Se déconnecter')}</button>
  </div>
  </div>}
@@ -5634,19 +5763,20 @@ function AppInner() {
  </select>
  <div className='app-quick-nav' role='tablist' aria-label='App sections'>
  <button className={`app-quick-btn ${active === 'home' ? 'active' : ''}`} aria-pressed={active === 'home'} onClick={goHomeSafely}>{t('← Main Interface','← Interface principale','← 主界面')}</button>
- <button className={`app-quick-btn ${active === 'products' ? 'active' : ''}`} aria-pressed={active === 'products'} onClick={() => setActive('products')}>{t('Products','Produits')}</button>
- <button className={`app-quick-btn ${active === 'livestock' ? 'active' : ''}`} aria-pressed={active === 'livestock'} onClick={() => setActive('livestock')}>{t('Livestock','Élevage')}</button>
- <button className={`app-quick-btn ${active === 'services' ? 'active' : ''}`} aria-pressed={active === 'services'} onClick={() => setActive('services')}>{t('Services','Services')}</button>
  <button className={`app-quick-btn ${active === 'ai-disease' ? 'active' : ''}`} aria-pressed={active === 'ai-disease'} onClick={() => setActive('ai-disease')}>{t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析')}</button>
+ <button className={`app-quick-btn ${active === 'livestock-records' ? 'active' : ''}`} aria-pressed={active === 'livestock-records'} onClick={() => setActive('livestock-records')}>{t('Records','Registres','档案')}</button>
+ <button className={`app-quick-btn ${active === 'community' ? 'active' : ''}`} aria-pressed={active === 'community'} onClick={() => setActive('community')}>{t('Community','Communauté','社区')}</button>
  <button className={`app-quick-btn ${active === 'poultry-university' ? 'active' : ''}`} aria-pressed={active === 'poultry-university'} onClick={() => setActive('poultry-university')}>AADU Poultry</button>
  <button className={`app-quick-btn ${active === 'sheep-university' ? 'active' : ''}`} aria-pressed={active === 'sheep-university'} onClick={() => setActive('sheep-university')}>AADU Sheep</button>
  <button className={`app-quick-btn ${active === 'goat-university' ? 'active' : ''}`} aria-pressed={active === 'goat-university'} onClick={() => setActive('goat-university')}>AADU Goat</button>
  <button className={`app-quick-btn ${active === 'cattle-university' ? 'active' : ''}`} aria-pressed={active === 'cattle-university'} onClick={() => setActive('cattle-university')}>AADU Cattle</button>
- <button className={`app-quick-btn ${active === 'livestock-records' ? 'active' : ''}`} aria-pressed={active === 'livestock-records'} onClick={() => setActive('livestock-records')}>{t('Records','Registres','档案')}</button>
+ <button className={`app-quick-btn ${active === 'products' ? 'active' : ''}`} aria-pressed={active === 'products'} onClick={() => setActive('products')}>{t('Products','Produits')}</button>
+ <button className={`app-quick-btn ${active === 'livestock' ? 'active' : ''}`} aria-pressed={active === 'livestock'} onClick={() => setActive('livestock')}>{t('Livestock','Élevage')}</button>
+ <button className={`app-quick-btn ${active === 'services' ? 'active' : ''}`} aria-pressed={active === 'services'} onClick={() => setActive('services')}>{t('Services','Services')}</button>
  </div>
  </div>
  <div className='app-toolbar-side'>
- <button className={`app-quick-btn ${active === 'onboarding' ? 'active' : ''}`} aria-pressed={active === 'onboarding'} onClick={() => setActive('onboarding')}>{t('My Account','Mon compte')}</button>
+ <button className={`app-quick-btn ${active === 'onboarding' ? 'active' : ''}`} aria-pressed={active === 'onboarding'} onClick={() => setActive('onboarding')}>{t('My Account Settings','Paramètres du compte','账户设置')}</button>
  <button className='btn' onClick={goToPublicHomepage}>{t('Public Homepage','Page publique')}</button>
  </div>
  </div>
@@ -5832,9 +5962,14 @@ function AppInner() {
  </div>
  </div>
  </article>}
+ <article className='panel' style={{marginBottom:12, border:'1px solid #dbeafe', background:'linear-gradient(180deg,#ffffff 0%,#f8fbff 100%)'}}>
+ <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+  {['profile','verification','security','notifications','billing'].map(tab => <button key={`acct-tab-${tab}`} type='button' className={`btn ${accountSettingsTab === tab ? 'btn-dark' : ''}`} onClick={()=>setAccountSettingsTab(tab)}>{({profile:'Profile',verification:'Verification',security:'Security',notifications:'Notifications',billing:'Billing/Payouts'})[tab]}</button>)}
+ </div>
+ </article>
  <div className='two-col' style={{marginBottom:12}}>
- <article className='panel'>
- <h3>{t('My Account','Mon compte','我的账户')}</h3>
+ {(accountSettingsTab === 'profile' || accountSettingsTab === 'security') && <article className='panel'>
+ <h3>{t('My Account Settings','Paramètres du compte','账户设置')}</h3>
  <form className='list' onSubmit={async e => {
  e.preventDefault()
  setActionBusy('livestock-create')
@@ -5880,9 +6015,9 @@ function AppInner() {
  <input className='input' type='password' placeholder='Confirm current password to delete account' value={deleteAccountForm.current_password} onChange={e => setDeleteAccountForm({ current_password: e.target.value })} />
  <button className='btn' style={{background:'#7f1d1d', color:'#fff', borderColor:'#7f1d1d'}}>Delete Account</button>
  </form>
- </article>
+ </article>}
 
- <article className='panel' style={{border:'1px solid #dbeafe', background:'linear-gradient(180deg,#f8fbff 0%,#ffffff 100%)', boxShadow:'0 10px 26px rgba(15,23,42,.06)'}}>
+ {accountSettingsTab === 'billing' && <article className='panel' style={{border:'1px solid #dbeafe', background:'linear-gradient(180deg,#f8fbff 0%,#ffffff 100%)', boxShadow:'0 10px 26px rgba(15,23,42,.06)'}}>
  <h3 style={{marginBottom:8}}>Subscriptions & Billing</h3>
  <div className='helper-text' style={{marginBottom:10}}>Premium plans and billing details by product.</div>
  <div className='list'>
@@ -5924,9 +6059,9 @@ function AppInner() {
  {!((billingOverview.subscriptions || []).length || (billingOverview.payments || []).length) && <div className='list-row'><span>No billing history yet.</span></div>}
  </div>
  </div>
- </article>
+ </article>}
 
- <article className='panel'>
+ {accountSettingsTab === 'verification' && <article className='panel'>
  <h3>{t('My Verification Status','Mon statut de vérification','我的认证状态')}</h3>
  <div className='list'>
  <div className='list-row'><span>Current status</span><strong>{verificationStatusLabel(me?.identity_verification_status || myIdVerification?.review?.status || 'NOT_SUBMITTED')}{verificationBadge(me)}</strong></div>
@@ -5964,7 +6099,24 @@ function AppInner() {
  <button className='btn btn-dark' disabled={myIdSubmitting}>{myIdSubmitting ? 'Submitting verification update…' : 'Submit Verification Update'}</button>
  </form>
  <div style={{fontSize:'.78rem',color:'#64748b',marginTop:6}}>If you update ID details after approval, your verification goes through re-review for safety.</div>
- </article>
+ </article>}
+ {accountSettingsTab === 'notifications' && <article className='panel' style={{border:'1px solid #dbeafe', background:'linear-gradient(180deg,#ffffff 0%,#f8fbff 100%)'}}>
+  <h3>Notification Preferences</h3>
+  <div className='helper-text' style={{marginBottom:10}}>Control which alerts you get and where they are delivered.</div>
+  <div className='list'>
+   {[['calls','Call alerts','Incoming and missed call alerts'],['orders','Order updates','New orders, status updates, and receipts'],['verification','Verification updates','Identity verification decisions and review updates']].map(([key,label,desc]) => <div key={`notif-pref-${key}`} className='list-row' style={{border:'1px solid #e2e8f0', borderRadius:14, background:'#fff'}}>
+    <span><strong>{label}</strong><br/><small>{desc}</small></span>
+    <button type='button' className={`btn ${notificationPrefs[key] ? 'btn-dark' : ''}`} onClick={()=>setNotificationPrefs(prev => ({ ...(prev || {}), [key]: !prev?.[key] }))}>{notificationPrefs[key] ? 'Enabled' : 'Disabled'}</button>
+   </div>)}
+  </div>
+  <div className='panel' style={{marginTop:12, border:'1px solid #e2e8f0', background:'#fff'}}>
+   <strong style={{display:'block', marginBottom:8}}>Delivery Channels</strong>
+   <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+    {[['push','Push'],['sms','SMS'],['email','Email']].map(([key,label]) => <button key={`notif-channel-${key}`} type='button' className={`btn ${notificationPrefs[key] ? 'btn-dark' : ''}`} onClick={()=>setNotificationPrefs(prev => ({ ...(prev || {}), [key]: !prev?.[key] }))}>{label}: {notificationPrefs[key] ? 'On' : 'Off'}</button>)}
+   </div>
+   <div className='helper-text' style={{marginTop:8}}>Preferences save automatically on this device now. Server-synced settings are next.</div>
+  </div>
+ </article>}
  </div>
 
  <div className='two-col onboarding-grid'>
@@ -6052,13 +6204,16 @@ function AppInner() {
  {productsView === 'create' && <article className='panel'>
  <form className='list' onSubmit={async e => {
  e.preventDefault();
- await api.createListing({ ...cropForm, ...normalizeListingImages(productImages), farmer_id: Number(cropForm.farmer_id), quantity_kg: Number(cropForm.quantity_kg), unit_price: Number(cropForm.unit_price) });
+ await api.createListing({ ...cropForm, crop_name: normalizeProductType(cropForm.crop_name), ...normalizeListingImages(productImages), farmer_id: Number(cropForm.farmer_id), quantity_kg: Number(cropForm.quantity_kg), unit_price: Number(cropForm.unit_price) });
  setProductImages([])
  await load();
  setProductsView('list')
  }}>
  <div className='row2' style={{gap:10}}>
- <input className='input' placeholder='Product name' value={cropForm.crop_name} onChange={e => setCropForm({ ...cropForm, crop_name: e.target.value })} required />
+ <select className='input' value={cropForm.crop_name} onChange={e => setCropForm({ ...cropForm, crop_name: e.target.value })} required>
+  <option value=''>Select product type</option>
+  {HIGH_DEMAND_PRODUCT_TYPES.map(x => <option key={`product-type-${x}`} value={x}>{x}</option>)}
+ </select>
  <input className='input' placeholder='Location' value={cropForm.location} onChange={e => setCropForm({ ...cropForm, location: e.target.value })} />
  </div>
  <div className='row2' style={{gap:10}}>
@@ -6073,13 +6228,17 @@ function AppInner() {
  {productsView === 'edit' && <article className='panel'>
  {!cropEdit.id ? <EmptyListingsState title='Choose a product to edit' body='Open Product List and tap Edit on a product card or row.' /> : <form className='list' onSubmit={async e => {
  e.preventDefault();
- await api.updateListing(Number(cropEdit.id), { ...cropEdit, ...normalizeListingImages(productEditImages, productEditImages[0]), farmer_id: Number(cropEdit.farmer_id), quantity_kg: Number(cropEdit.quantity_kg), unit_price: Number(cropEdit.unit_price) });
+ await api.updateListing(Number(cropEdit.id), { ...cropEdit, crop_name: normalizeProductType(cropEdit.crop_name), ...normalizeListingImages(productEditImages, productEditImages[0]), farmer_id: Number(cropEdit.farmer_id), quantity_kg: Number(cropEdit.quantity_kg), unit_price: Number(cropEdit.unit_price) });
  await load();
  setProductsView('list')
  }}>
  <div className='row2' style={{gap:10}}>
  <input className='input' placeholder='Listing ID' value={cropEdit.id} onChange={e => setCropEdit({ ...cropEdit, id: e.target.value })} required />
- <input className='input' placeholder='Product name' value={cropEdit.crop_name} onChange={e => setCropEdit({ ...cropEdit, crop_name: e.target.value })} required />
+ <select className='input' value={cropEdit.crop_name} onChange={e => setCropEdit({ ...cropEdit, crop_name: e.target.value })} required>
+  <option value=''>Select product type</option>
+  {!!cropEdit.crop_name && !HIGH_DEMAND_PRODUCT_TYPES.includes(cropEdit.crop_name) && <option value={cropEdit.crop_name}>{cropEdit.crop_name}</option>}
+  {HIGH_DEMAND_PRODUCT_TYPES.map(x => <option key={`product-type-edit-${x}`} value={x}>{x}</option>)}
+ </select>
  </div>
  <div className='row2' style={{gap:10}}>
  <input className='input' placeholder='Qty kg' value={cropEdit.quantity_kg} onChange={e => setCropEdit({ ...cropEdit, quantity_kg: e.target.value })} required />
@@ -7597,13 +7756,19 @@ function AppInner() {
  <article className='panel'><h4>Logistics Request</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.createLogistics({ ...logisticsForm, ...normalizeListingImages(serviceImages), requester_id: Number(logisticsForm.requester_id), weight_kg: Number(logisticsForm.weight_kg) }); setServiceImages([]); await load(); setServicesView('list') }}>
  <input className='input' placeholder='Pickup' value={logisticsForm.pickup_location} onChange={e => setLogisticsForm({ ...logisticsForm, pickup_location: e.target.value })} />
  <input className='input' placeholder='Dropoff' value={logisticsForm.dropoff_location} onChange={e => setLogisticsForm({ ...logisticsForm, dropoff_location: e.target.value })} />
- <input className='input' placeholder='Cargo type' value={logisticsForm.cargo_type} onChange={e => setLogisticsForm({ ...logisticsForm, cargo_type: e.target.value })} />
+ <select className='input' value={logisticsForm.cargo_type} onChange={e => setLogisticsForm({ ...logisticsForm, cargo_type: e.target.value })} required>
+  <option value=''>Select service type</option>
+  {HIGH_DEMAND_SERVICE_TYPES.map(x => <option key={`service-type-log-${x}`} value={x}>{x}</option>)}
+ </select>
  <input className='input' placeholder='Weight kg' value={logisticsForm.weight_kg} onChange={e => setLogisticsForm({ ...logisticsForm, weight_kg: e.target.value })} />
  <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceImages} setImages={setServiceImages} />
  <button className='btn btn-dark'>Create Logistics</button>
  </form></article>
  <article className='panel'><h4>Equipment Rental</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.createEquipment({ ...equipmentForm, ...normalizeListingImages(serviceImages), requester_id: Number(equipmentForm.requester_id), duration_days: Number(equipmentForm.duration_days), budget: Number(equipmentForm.budget) }); setServiceImages([]); await load(); setServicesView('list') }}>
- <input className='input' placeholder='Equipment' value={equipmentForm.equipment_type} onChange={e => setEquipmentForm({ ...equipmentForm, equipment_type: e.target.value })} />
+ <select className='input' value={equipmentForm.equipment_type} onChange={e => setEquipmentForm({ ...equipmentForm, equipment_type: e.target.value })} required>
+  <option value=''>Select service type</option>
+  {HIGH_DEMAND_SERVICE_TYPES.map(x => <option key={`service-type-eq-${x}`} value={x}>{x}</option>)}
+ </select>
  <input className='input' placeholder='Duration days' value={equipmentForm.duration_days} onChange={e => setEquipmentForm({ ...equipmentForm, duration_days: e.target.value })} />
  <input className='input' placeholder='Location' value={equipmentForm.location} onChange={e => setEquipmentForm({ ...equipmentForm, location: e.target.value })} />
  <input className='input' placeholder='Budget' value={equipmentForm.budget} onChange={e => setEquipmentForm({ ...equipmentForm, budget: e.target.value })} />
@@ -7611,7 +7776,10 @@ function AppInner() {
  <button className='btn btn-dark'>Create Rental</button>
  </form></article>
  <article className='panel'><h4>Storage Reservation</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.createStorage({ ...storageForm, ...normalizeListingImages(serviceImages), requester_id: Number(storageForm.requester_id), duration_days: Number(storageForm.duration_days), quantity_kg: Number(storageForm.quantity_kg) }); setServiceImages([]); await load(); setServicesView('list') }}>
- <input className='input' placeholder='Storage type' value={storageForm.storage_type} onChange={e => setStorageForm({ ...storageForm, storage_type: e.target.value })} />
+ <select className='input' value={storageForm.storage_type} onChange={e => setStorageForm({ ...storageForm, storage_type: e.target.value })} required>
+  <option value=''>Select service type</option>
+  {HIGH_DEMAND_SERVICE_TYPES.map(x => <option key={`service-type-st-${x}`} value={x}>{x}</option>)}
+ </select>
  <input className='input' placeholder='Quantity kg' value={storageForm.quantity_kg} onChange={e => setStorageForm({ ...storageForm, quantity_kg: e.target.value })} />
  <input className='input' placeholder='Location' value={storageForm.location} onChange={e => setStorageForm({ ...storageForm, location: e.target.value })} />
  <input className='input' placeholder='Duration days' value={storageForm.duration_days} onChange={e => setStorageForm({ ...storageForm, duration_days: e.target.value })} />
@@ -7625,19 +7793,32 @@ function AppInner() {
  <input className='input' placeholder='ID to edit' value={logisticsEdit.id} onChange={e => setLogisticsEdit({ ...logisticsEdit, id: e.target.value })} required />
  <input className='input' placeholder='Pickup' value={logisticsEdit.pickup_location} onChange={e => setLogisticsEdit({ ...logisticsEdit, pickup_location: e.target.value })} />
  <input className='input' placeholder='Dropoff' value={logisticsEdit.dropoff_location} onChange={e => setLogisticsEdit({ ...logisticsEdit, dropoff_location: e.target.value })} />
+ <select className='input' value={logisticsEdit.cargo_type || ''} onChange={e => setLogisticsEdit({ ...logisticsEdit, cargo_type: e.target.value })}>
+  <option value=''>Select service type</option>
+  {!!logisticsEdit.cargo_type && !HIGH_DEMAND_SERVICE_TYPES.includes(logisticsEdit.cargo_type) && <option value={logisticsEdit.cargo_type}>{logisticsEdit.cargo_type}</option>}
+  {HIGH_DEMAND_SERVICE_TYPES.map(x => <option key={`service-type-log-edit-${x}`} value={x}>{x}</option>)}
+ </select>
  <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceEditImages} setImages={setServiceEditImages} />
  <button className='btn btn-dark'>Save Logistics</button>
  </form></article>
  <article className='panel'><h4>Edit Equipment</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.updateEquipment(Number(equipmentEdit.id), { ...equipmentEdit, ...normalizeListingImages(serviceEditImages), requester_id: Number(equipmentEdit.requester_id), duration_days: Number(equipmentEdit.duration_days), budget: Number(equipmentEdit.budget) }); await load(); setServicesView('list') }}>
  <input className='input' placeholder='ID to edit' value={equipmentEdit.id} onChange={e => setEquipmentEdit({ ...equipmentEdit, id: e.target.value })} required />
- <input className='input' placeholder='Equipment' value={equipmentEdit.equipment_type} onChange={e => setEquipmentEdit({ ...equipmentEdit, equipment_type: e.target.value })} />
+ <select className='input' value={equipmentEdit.equipment_type || ''} onChange={e => setEquipmentEdit({ ...equipmentEdit, equipment_type: e.target.value })}>
+  <option value=''>Select service type</option>
+  {!!equipmentEdit.equipment_type && !HIGH_DEMAND_SERVICE_TYPES.includes(equipmentEdit.equipment_type) && <option value={equipmentEdit.equipment_type}>{equipmentEdit.equipment_type}</option>}
+  {HIGH_DEMAND_SERVICE_TYPES.map(x => <option key={`service-type-eq-edit-${x}`} value={x}>{x}</option>)}
+ </select>
  <input className='input' placeholder='Location' value={equipmentEdit.location} onChange={e => setEquipmentEdit({ ...equipmentEdit, location: e.target.value })} />
  <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceEditImages} setImages={setServiceEditImages} />
  <button className='btn btn-dark'>Save Equipment</button>
  </form></article>
  <article className='panel'><h4>Edit Storage</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.updateStorage(Number(storageEdit.id), { ...storageEdit, ...normalizeListingImages(serviceEditImages), requester_id: Number(storageEdit.requester_id), duration_days: Number(storageEdit.duration_days), quantity_kg: Number(storageEdit.quantity_kg) }); await load(); setServicesView('list') }}>
  <input className='input' placeholder='ID to edit' value={storageEdit.id} onChange={e => setStorageEdit({ ...storageEdit, id: e.target.value })} required />
- <input className='input' placeholder='Storage type' value={storageEdit.storage_type} onChange={e => setStorageEdit({ ...storageEdit, storage_type: e.target.value })} />
+ <select className='input' value={storageEdit.storage_type || ''} onChange={e => setStorageEdit({ ...storageEdit, storage_type: e.target.value })}>
+  <option value=''>Select service type</option>
+  {!!storageEdit.storage_type && !HIGH_DEMAND_SERVICE_TYPES.includes(storageEdit.storage_type) && <option value={storageEdit.storage_type}>{storageEdit.storage_type}</option>}
+  {HIGH_DEMAND_SERVICE_TYPES.map(x => <option key={`service-type-st-edit-${x}`} value={x}>{x}</option>)}
+ </select>
  <input className='input' placeholder='Location' value={storageEdit.location} onChange={e => setStorageEdit({ ...storageEdit, location: e.target.value })} />
  <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceEditImages} setImages={setServiceEditImages} />
  <button className='btn btn-dark'>Save Storage</button>
@@ -8434,32 +8615,37 @@ function AppInner() {
  <h4 style={{margin:'6px 0 4px 0'}}>{communityIncomingCall.from} is calling you</h4>
  <div className='helper-text' style={{marginBottom:10}}>{communityIncomingCall.mode === 'video' ? 'Video call' : 'Audio call'} - answer now?</div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
- <button type='button' className='btn btn-dark' onClick={async()=>{ const mode = communityIncomingCall.mode; const callId = communityIncomingCall.callId; const peerUserId = communityIncomingCall.fromUserId; try { await sendCallSignal(peerUserId, { v:1, type:'answer', mode, callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now() }, mode === 'video' ? '📹' : '📞') } catch {} communityHandledCallIdsRef.current.add(String(callId || '')); setCommunityIncomingCall(null); setCommunityActiveCall({ callId, mode, status: 'connecting-media', isCaller: false, peerUserId }); try { await ensureCommunityAgora({ mode, callId, peerUserId }) } catch (err) { alert(errMsg(err)); returnToCommunityPhone() } }}>Answer</button>
+ <button type='button' className='btn btn-dark' onClick={async()=>{ const mode = communityIncomingCall.mode; const callId = communityIncomingCall.callId; const peerUserId = communityIncomingCall.fromUserId; try { await enableCommunityCallPermissions({ silent: true }) } catch {} try { await sendCallSignal(peerUserId, { v:1, type:'answer', mode, callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now() }, mode === 'video' ? '📹' : '📞') } catch {} communityHandledCallIdsRef.current.add(String(callId || '')); setCommunityIncomingCall(null); setCommunityActiveCall({ callId, mode, status: 'connecting-media', isCaller: false, peerUserId }); try { await ensureCommunityAgora({ mode, callId, peerUserId }) } catch (err) { alert(errMsg(err)); returnToCommunityPhone() } }}>Answer</button>
  <button type='button' className='btn' onClick={async()=>{ const peerUserId = communityIncomingCall.fromUserId; const callId = communityIncomingCall.callId; const mode = communityIncomingCall.mode || 'audio'; try { await sendCallSignal(peerUserId, { v:1, type:'decline', mode, callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now() }, '📞') } catch {} communityHandledCallIdsRef.current.add(String(callId || '')); setCommunityIncomingCall(null) }}>Decline</button>
  </div>
  </div>
  </div>}
 
- {communityActiveCall && <div className='community-messenger-overlay' style={{zIndex: 240, padding: 0}}>
- <div style={{width:'100vw', height:'100vh', background:'#000', display:'grid', gridTemplateRows:'auto 1fr', position:'relative'}}>
- <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 12px', background:'rgba(2,6,23,.86)', color:'#fff'}}>
- <strong>{communityActiveCall?.mode === 'video' ? 'Video Call' : 'Audio Call'}{communityActiveCall?.status === 'connected' ? ` • ${String(Math.floor(communityCallSeconds/60)).padStart(2,'0')}:${String(communityCallSeconds%60).padStart(2,'0')}` : ''}</strong>
- <div style={{display:'flex', gap:8, flexWrap:'wrap', justifyContent:'flex-end'}}>
-  <button type='button' className='btn' onClick={toggleCommunityMute}>{communityCallMuted ? 'Unmute' : 'Mute'}</button>
-  {communityActiveCall?.mode === 'video' && <button type='button' className='btn' onClick={toggleCommunityCamera}>{communityCallCameraOff ? 'Camera On' : 'Camera Off'}</button>}
-  <button type='button' className='btn' onClick={endCommunityActiveCall}>Back</button>
-  <button type='button' className='btn' onClick={endCommunityActiveCall}>End Call</button>
- </div>
- </div>
- {((communityActiveCall?.status === 'calling' || communityActiveCall?.status === 'ringing'))
-  ? <div style={{display:'grid', placeItems:'center', padding:24, color:'#e2e8f0'}}><div style={{textAlign:'center'}}><div style={{fontSize:'2rem'}}>📞</div><div style={{fontWeight:700}}>{communityActiveCall?.status === 'calling' ? 'Calling…' : 'Ringing…'}</div><div style={{fontSize:'.85rem', opacity:.85, marginTop:6}}>{communityActiveCall?.status === 'calling' ? 'Trying to reach the other user.' : 'Other user is receiving your call now.'}</div></div></div>
-  : <div style={{display:'grid', placeItems:'center', padding:24, color:'#e2e8f0'}}><div style={{textAlign:'center'}}><div style={{fontSize:'2rem'}}>{communityActiveCall?.status === 'poor-connection' ? '📶' : '🔄'}</div><div style={{fontWeight:700}}>{communityActiveCall?.status === 'poor-connection' ? 'Poor connection — audio only' : `Call is ${communityActiveCall?.status === 'connected' ? 'connected' : 'connecting'}…`}</div><div style={{fontSize:'.85rem', opacity:.85, marginTop:6}}>Status: {communityActiveCall?.status || 'initializing'}</div></div></div>}
- {communityActiveCall?.mode === 'video' && <div style={{position:'absolute', left:0, right:0, top:52, bottom:0, pointerEvents:'none', display:'grid', gridTemplateColumns:'1fr', gridTemplateRows:'1fr'}}>
-  <video ref={communityRemoteVideoRef} autoPlay playsInline style={{width:'100%', height:'100%', objectFit:'cover', background:'#000'}} />
-  <video ref={communityLocalVideoRef} autoPlay playsInline muted style={{position:'absolute', right:12, bottom:12, width:120, height:160, objectFit:'cover', borderRadius:10, border:'1px solid rgba(255,255,255,.35)', background:'#111'}} />
- </div>}
+ {communityActiveCall && <div className='community-messenger-overlay' style={{zIndex: 3000, padding: 0}}>
+ <div style={{position:'fixed', inset:0, width:'100dvw', height:'100dvh', background:'#000', overflow:'hidden', overscrollBehavior:'none', touchAction:'manipulation'}} onClick={()=>{ if (communityActiveCall?.mode === 'video') bumpCommunityCallControls() }}>
+ {communityActiveCall?.mode !== 'video' && <div style={{display:'grid', placeItems:'center', height:'100%', padding:24, color:'#e2e8f0'}}><div style={{textAlign:'center'}}><div style={{fontSize:'2rem'}}>{(communityActiveCall?.status === 'calling' || communityActiveCall?.status === 'ringing') ? '📞' : (communityActiveCall?.status === 'poor-connection' ? '📶' : '🔄')}</div><div style={{fontWeight:700}}>{communityActiveCall?.status === 'calling' ? 'Calling…' : communityActiveCall?.status === 'ringing' ? 'Ringing…' : (communityActiveCall?.status === 'poor-connection' ? 'Poor connection — audio only' : `Call is ${communityActiveCall?.status === 'connected' ? 'connected' : 'connecting'}…`)}</div><div style={{fontSize:'.85rem', opacity:.85, marginTop:6}}>Status: {communityActiveCall?.status || 'initializing'}</div></div></div>}
+ {communityActiveCall?.mode === 'video' && <>
+  <video ref={communityRemoteVideoRef} autoPlay playsInline muted={communityMainVideo !== 'remote'} onClick={(e)=>{ e.stopPropagation(); if (communityMainVideo === 'remote') bumpCommunityCallControls(); else swapCommunityVideoFocus(); bumpCommunityCallControls() }} style={communityMainVideo === 'remote'
+   ? {position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', background:'#000', cursor:'pointer'}
+   : (!communityCallMiniCollapsed ? {position:'absolute', right:12, bottom:18, width:128, height:176, objectFit:'cover', borderRadius:12, border:'1px solid rgba(255,255,255,.45)', background:'#111', zIndex:255, cursor:'pointer', boxShadow:'0 8px 24px rgba(0,0,0,.35)'} : {display:'none'})} />
+  <video ref={communityLocalVideoRef} autoPlay playsInline muted onClick={(e)=>{ e.stopPropagation(); if (communityMainVideo === 'local') bumpCommunityCallControls(); else swapCommunityVideoFocus(); bumpCommunityCallControls() }} style={communityMainVideo === 'local'
+   ? {position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', background:'#000', cursor:'pointer'}
+   : (!communityCallMiniCollapsed ? {position:'absolute', right:12, bottom:18, width:128, height:176, objectFit:'cover', borderRadius:12, border:'1px solid rgba(255,255,255,.45)', background:'#111', zIndex:255, cursor:'pointer', boxShadow:'0 8px 24px rgba(0,0,0,.35)'} : {display:'none'})} />
+  {communityMainVideo === 'remote' && !communityRemoteVideoReady && <div style={{position:'absolute', inset:0, display:'grid', placeItems:'center', zIndex:240, pointerEvents:'none'}}><div style={{background:'rgba(2,6,23,.72)', color:'#e2e8f0', border:'1px solid rgba(255,255,255,.18)', borderRadius:999, padding:'8px 14px', fontWeight:600}}>Connecting video…</div></div>}
+  {communityCallControlsVisible && <button type='button' className='btn' onClick={(e)=>{ e.stopPropagation(); setCommunityCallMiniCollapsed(v => !v); bumpCommunityCallControls() }} style={{position:'absolute', right:14, bottom:'calc(env(safe-area-inset-bottom, 0px) + 200px)', zIndex:256, background:'rgba(15,23,42,.78)', color:'#fff', border:'1px solid rgba(255,255,255,.35)', padding:'6px 10px'}}>{communityCallMiniCollapsed ? 'Show mini' : 'Hide mini'}</button>}
+ </>}
  <audio ref={communityRemoteAudioRef} autoPlay playsInline style={{display:'none'}} />
- <button type='button' className='btn btn-dark' style={{position:'absolute', left:'50%', transform:'translateX(-50%)', bottom:16, zIndex:260, minWidth:160}} onClick={endCommunityActiveCall}>End Call</button>
+ {communityActiveCall?.mode === 'video' && !communityCallControlsVisible && <button type='button' className='btn btn-dark' onClick={(e)=>{ e.stopPropagation(); bumpCommunityCallControls() }} style={{position:'fixed', right:10, top:'50%', transform:'translateY(-50%)', zIndex:3300, minWidth:92, background:'rgba(15,23,42,.78)', border:'1px solid rgba(255,255,255,.35)'}}>Controls</button>}
+ <div style={{position:'fixed', top:'calc(env(safe-area-inset-top, 0px) + 10px)', left:12, right:12, zIndex:3200, display:'flex', alignItems:'center', justifyContent:'space-between', gap:8, opacity: communityActiveCall?.mode === 'video' ? (communityCallControlsVisible ? 1 : 0) : 1, transition:'opacity .18s ease'}}>
+  <button type='button' className='btn' onClick={(e)=>{ e.stopPropagation(); endCommunityActiveCall() }} style={{background:'rgba(15,23,42,.78)', color:'#fff', border:'1px solid rgba(255,255,255,.3)'}}>Back</button>
+  <strong style={{color:'#fff', textShadow:'0 1px 2px rgba(0,0,0,.45)'}}>{communityActiveCall?.mode === 'video' ? 'Video Call' : 'Audio Call'}{communityActiveCall?.status === 'connected' ? ` • ${String(Math.floor(communityCallSeconds/60)).padStart(2,'0')}:${String(communityCallSeconds%60).padStart(2,'0')}` : ''}</strong>
+  <div style={{width:54}} />
+ </div>
+ <div style={{position:'fixed', left:'50%', transform:'translateX(-50%)', bottom:'calc(env(safe-area-inset-bottom, 0px) + 18px)', zIndex:3200, display:'flex', gap:10, alignItems:'center', opacity: communityActiveCall?.mode === 'video' ? (communityCallControlsVisible ? 1 : 0) : 1, transition:'opacity .18s ease'}}>
+  <button type='button' className='btn' onClick={(e)=>{ e.stopPropagation(); toggleCommunityMute(); bumpCommunityCallControls() }} style={{background:'rgba(15,23,42,.78)', color:'#fff', border:'1px solid rgba(255,255,255,.3)', minWidth:88}}>{communityCallMuted ? 'Unmute' : 'Mute'}</button>
+  {communityActiveCall?.mode === 'video' && <button type='button' className='btn' onClick={(e)=>{ e.stopPropagation(); toggleCommunityCamera(); bumpCommunityCallControls() }} style={{background:'rgba(15,23,42,.78)', color:'#fff', border:'1px solid rgba(255,255,255,.3)', minWidth:102}}>{communityCallCameraOff ? 'Camera On' : 'Camera Off'}</button>}
+  <button type='button' className='btn btn-dark' onClick={(e)=>{ e.stopPropagation(); endCommunityActiveCall() }} style={{background:'#dc2626', borderColor:'#dc2626', minWidth:110}}>End Call</button>
+ </div>
  </div>
  </div>}
 
