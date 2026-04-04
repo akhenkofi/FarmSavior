@@ -3310,7 +3310,18 @@ function AppInner() {
       if (t === 'offer' && !communityIncomingCall && !communityActiveCall) {
         const fromUserId = Number(signal.fromUserId || ev?.from_user_id || 0)
         const caller = (communityMessageThreads || []).find(x => Number(x?.user?.user_id || 0) === fromUserId)?.user?.full_name || 'A user'
-        setCommunityIncomingCall({ from: caller, mode: signal.mode === 'video' ? 'video' : 'audio', callId: String(signal.callId || ev?.call_id || ''), fromUserId })
+        const offerTs = Number(signal.ts || 0)
+        const createdMs = ev?.created_at ? new Date(ev.created_at).getTime() : 0
+        const baseTs = Number.isFinite(offerTs) && offerTs > 0 ? offerTs : createdMs
+        const ageMs = baseTs > 0 ? (Date.now() - baseTs) : 0
+        const staleOffer = ageMs > 35000
+        const callKey = String(signal.callId || ev?.call_id || '')
+        if (staleOffer) {
+          if (callKey) communityHandledCallIdsRef.current.add(callKey)
+          alert(`Missed call from ${caller}`)
+        } else {
+          setCommunityIncomingCall({ from: caller, mode: signal.mode === 'video' ? 'video' : 'audio', callId: callKey, fromUserId })
+        }
       }
       if (t === 'missed') {
         const caller = (communityMessageThreads || []).find(x => Number(x?.user?.user_id || 0) === Number(signal.fromUserId || ev?.from_user_id || 0))?.user?.full_name || 'A user'
