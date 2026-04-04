@@ -5134,7 +5134,7 @@ function AppInner() {
  <div className='section-header'>
  <div>
  <h3 style={{margin:0}}>{AADU_FULL_NAME} (AADU)</h3>
- <div className='helper-text' style={{marginTop:4}}>FarmSavior’s flagship livestock learning hub, now featured on the public homepage.</div>
+ <div className='helper-text' style={{marginTop:4}}>Explore FarmSavior University for practical livestock training.</div>
  </div>
  <button type='button' className='btn' style={{marginLeft:'auto'}} onClick={() => setPublicUniversityOpen(v => !v)}>{publicUniversityOpen ? t('Hide','Masquer','隐藏') : t('Open','Ouvrir','打开')}</button>
  </div>
