@@ -549,6 +549,45 @@ def _ai_review_change(module: str, payload: dict):
     return decision, round(max(score, 0), 3), reason
 
 
+def _service_auto_moderate(payload: dict):
+    banned_terms = [
+        'tramadol', 'codeine', 'morphine', 'fentanyl', 'cocaine', 'heroin', 'meth',
+        'poison', 'cyanide', 'ddt', 'endosulfan', 'paraquat', 'banned pesticide', 'illegal drug'
+    ]
+    text = ' '.join([
+        str(payload.get('pickup_location') or ''),
+        str(payload.get('dropoff_location') or ''),
+        str(payload.get('cargo_type') or ''),
+        str(payload.get('cargo_details') or ''),
+        str(payload.get('equipment_type') or ''),
+        str(payload.get('storage_type') or ''),
+        str(payload.get('location') or ''),
+    ]).lower()
+    for term in banned_terms:
+        if term in text:
+            return 'DENIED', f'Denied: banned substance/content detected ({term}).'
+
+    images = []
+    raw_images = payload.get('image_urls')
+    if isinstance(raw_images, list):
+        images = [x for x in raw_images if str(x or '').strip()]
+    elif isinstance(raw_images, str) and raw_images.strip():
+        try:
+            parsed = json.loads(raw_images)
+            if isinstance(parsed, list):
+                images = [x for x in parsed if str(x or '').strip()]
+        except Exception:
+            pass
+    cover = str(payload.get('cover_image_url') or '').strip()
+    if not images and not cover:
+        return 'DENIED', 'Denied: add at least one clear listing image.'
+
+    decision, _, reason = _ai_review_change('services', payload)
+    if decision != 'APPROVED':
+        return 'DENIED', reason
+    return 'APPROVED', 'Auto-approved by safety checks.'
+
+
 def _save_update_review(db: Session, module: str, record_id: int, action: str, payload: dict, decision: str, ai_score: float, reason: str):
     db.add(UpdateReview(
         module=module,
@@ -4943,13 +4982,15 @@ def delete_livestock_listing(listing_id: int, db: Session = Depends(get_db)):
 def create_logistics(payload: LogisticsIn, db: Session = Depends(get_db)):
     data = payload.model_dump()
     _assert_no_contact_info(data.get('pickup_location'), data.get('dropoff_location'), data.get('cargo_type'), data.get('cargo_details'))
+    auto_status, auto_reason = _service_auto_moderate(data)
     req = LogisticsRequest(
         requester_id=data.get('requester_id') or data.get('created_by'),
         pickup_location=data['pickup_location'],
         dropoff_location=data['dropoff_location'],
         cargo_type=data.get('cargo_type') or data.get('cargo_details') or 'General Cargo',
         weight_kg=data.get('weight_kg') or 0,
-        status=data.get('status') or 'PENDING',
+        status=auto_status,
+        tracking_note=auto_reason[:255],
         image_urls=data.get('image_urls') or '[]',
         cover_image_url=data.get('cover_image_url')
     )
@@ -5008,7 +5049,9 @@ def accept_logistics(request_id: int, payload: LogisticsAcceptIn, db: Session = 
 @router.post('/services/equipment-rentals')
 def create_equipment_rental(payload: EquipmentRentalIn, db: Session = Depends(get_db)):
     _assert_no_contact_info(payload.equipment_type, payload.location)
-    rec = EquipmentRental(**payload.model_dump())
+    data = payload.model_dump()
+    auto_status, auto_reason = _service_auto_moderate(data)
+    rec = EquipmentRental(**{**data, 'status': auto_status if auto_status == 'APPROVED' else f'DENIED: {auto_reason[:90]}'} )
     db.add(rec)
     db.commit()
     db.refresh(rec)
@@ -5054,7 +5097,9 @@ def delete_equipment_rental(rental_id: int, db: Session = Depends(get_db)):
 @router.post('/services/storage-reservations')
 def create_storage_reservation(payload: StorageReservationIn, db: Session = Depends(get_db)):
     _assert_no_contact_info(payload.storage_type, payload.location)
-    rec = StorageReservation(**payload.model_dump())
+    data = payload.model_dump()
+    auto_status, auto_reason = _service_auto_moderate(data)
+    rec = StorageReservation(**{**data, 'status': auto_status if auto_status == 'APPROVED' else f'DENIED: {auto_reason[:90]}'} )
     db.add(rec)
     db.commit()
     db.refresh(rec)
