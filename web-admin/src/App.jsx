@@ -3041,7 +3041,14 @@ function AppInner() {
   client.on('user-unpublished', () => {
     setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(callId || '') ? { ...prev, status: 'connected' } : prev))
   })
-  client.on('user-left', () => {
+  client.on('connection-state-change', (curState) => {
+    const st = String(curState || '').toUpperCase()
+    if (st === 'CONNECTED') setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(callId || '') ? { ...prev, status: 'connected' } : prev))
+    if (st === 'DISCONNECTED' || st === 'DISCONNECTING') setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(callId || '') ? { ...prev, status: 'poor-connection' } : prev))
+  })
+  client.on('user-left', async () => {
+    try { if (peerUserId) await sendCallSignal(peerUserId, { v:1, type:'end', mode, callId: String(callId || ''), fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now() }, mode === 'video' ? '📹' : '📞') } catch {}
+    playEndedTone()
     closeCommunityPeer()
     returnToCommunityPhone()
   })
