@@ -7914,7 +7914,7 @@ function AppInner() {
  <div style={{position:'relative'}}>
   <div style={{fontSize:12, fontWeight:800, letterSpacing:'.14em', textTransform:'uppercase', color:'rgba(186,230,253,.88)', marginBottom:8}}>Premium social experience</div>
   <h3 style={{margin:'0 0 8px 0', fontSize:'2rem', lineHeight:1.12}}>{t('📸 FarmSavior Community','📸 Communauté FarmSavior','📸 FarmSavior 社区')}</h3>
-  <p style={{margin:0, color:'rgba(226,232,240,.95)', fontSize:'1.02rem', lineHeight:1.55, maxWidth:700}}>A modern creator-grade feed for farmers: stories, reels, product showcases, and practical tips in one premium experience.</p>
+  <p style={{margin:0, color:'rgba(226,232,240,.95)', fontSize:'1.02rem', lineHeight:1.55, maxWidth:700}}>Share farm life, reels, products, and practical tips with farmers worldwide.</p>
   <div style={{display:'flex', gap:8, flexWrap:'wrap', marginTop:16}}>
    <span style={{padding:'8px 12px', borderRadius:999, background:'rgba(14,165,233,.22)', border:'1px solid rgba(125,211,252,.45)', fontSize:12, fontWeight:700}}>🔥 Trending</span>
    <span style={{padding:'8px 12px', borderRadius:999, background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.28)', fontSize:12, fontWeight:700}}>🎥 Reels</span>
