@@ -7908,16 +7908,26 @@ function AppInner() {
  </div>
  </>}
  </article> : <>
- <div className='panel' style={{background:'linear-gradient(140deg,#0b6b5b 0%,#0b83cf 60%,#22c1f1 100%)', color:'#fff', marginBottom:12, position:'relative', overflow:'hidden', border:'1px solid rgba(255,255,255,.28)', boxShadow:'0 16px 36px rgba(2,132,199,.25)', borderRadius:24}}>
- <div style={{position:'absolute', right:-14, top:-14, width:132, height:132, borderRadius:'50%', background:'rgba(255,255,255,.20)', backdropFilter:'blur(2px)'}} />
- <div style={{position:'absolute', right:74, bottom:-44, width:118, height:118, borderRadius:'50%', background:'rgba(255,255,255,.14)'}} />
- <h3 style={{marginTop:0, marginBottom:6, position:'relative', fontSize:'1.75rem', letterSpacing:'.2px'}}>{t('📸 FarmSavior Community','📸 Communauté FarmSavior','📸 FarmSavior 社区')}</h3>
- <p style={{margin:0, opacity:.96, position:'relative', fontSize:'1.02rem', lineHeight:1.45, maxWidth:560}}>Share farm life, innovations, products, and short videos with growers worldwide.</p>
- <div style={{marginTop:14, position:'relative', display:'grid', gridTemplateColumns:'repeat(2,minmax(0,1fr))', gap:10}}>
- <div style={{background:'rgba(2,6,23,.72)', border:'1px solid rgba(255,255,255,.32)', color:'#fff', borderRadius:14, padding:'10px 14px', fontWeight:700}}>🔥 Trending</div>
- <div style={{background:'rgba(255,255,255,.92)', border:'1px solid rgba(255,255,255,.7)', color:'#0f172a', borderRadius:14, padding:'10px 14px', fontWeight:600}}>🎥 Reels</div>
- <div style={{background:'rgba(255,255,255,.92)', border:'1px solid rgba(255,255,255,.7)', color:'#0f172a', borderRadius:14, padding:'10px 14px', fontWeight:600}}>🌱 Tips</div>
- <div style={{background:'rgba(255,255,255,.92)', border:'1px solid rgba(255,255,255,.7)', color:'#0f172a', borderRadius:14, padding:'10px 14px', fontWeight:600}}>🛒 Products</div>
+ <div className='panel' style={{background:'linear-gradient(132deg,#020617 0%,#0f172a 28%,#0f766e 64%,#0ea5e9 100%)', color:'#fff', marginBottom:14, position:'relative', overflow:'hidden', border:'1px solid rgba(148,163,184,.42)', boxShadow:'0 22px 50px rgba(2,6,23,.35)', borderRadius:28, padding:'18px 16px'}}>
+ <div style={{position:'absolute', right:-30, top:-22, width:170, height:170, borderRadius:'50%', background:'radial-gradient(circle,rgba(255,255,255,.24),rgba(255,255,255,.02))'}} />
+ <div style={{position:'absolute', left:-26, bottom:-38, width:140, height:140, borderRadius:'50%', background:'radial-gradient(circle,rgba(255,255,255,.2),rgba(255,255,255,.02))'}} />
+ <div style={{position:'relative', display:'flex', justifyContent:'space-between', gap:14, flexWrap:'wrap'}}>
+  <div style={{minWidth:0, flex:'1 1 320px'}}>
+   <div style={{fontSize:12, fontWeight:800, letterSpacing:'.14em', textTransform:'uppercase', color:'rgba(186,230,253,.88)', marginBottom:8}}>Premium social experience</div>
+   <h3 style={{margin:'0 0 8px 0', fontSize:'2rem', lineHeight:1.12}}>{t('📸 FarmSavior Community','📸 Communauté FarmSavior','📸 FarmSavior 社区')}</h3>
+   <p style={{margin:0, color:'rgba(226,232,240,.95)', fontSize:'1.02rem', lineHeight:1.55, maxWidth:640}}>A modern creator-grade feed for farmers: stories, reels, product showcases, expert tips, and high-trust community signals in one premium space.</p>
+   <div style={{display:'flex', gap:8, flexWrap:'wrap', marginTop:14}}>
+    <span style={{padding:'8px 12px', borderRadius:999, background:'rgba(14,165,233,.22)', border:'1px solid rgba(125,211,252,.45)', fontSize:12, fontWeight:700}}>🔥 Trending</span>
+    <span style={{padding:'8px 12px', borderRadius:999, background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.28)', fontSize:12, fontWeight:700}}>🎥 Reels</span>
+    <span style={{padding:'8px 12px', borderRadius:999, background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.28)', fontSize:12, fontWeight:700}}>🌱 Tips</span>
+    <span style={{padding:'8px 12px', borderRadius:999, background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.28)', fontSize:12, fontWeight:700}}>🛒 Products</span>
+   </div>
+  </div>
+  <div style={{display:'grid', gap:8, minWidth:220, alignContent:'start'}}>
+   <div style={{background:'rgba(15,23,42,.56)', border:'1px solid rgba(148,163,184,.42)', borderRadius:14, padding:'10px 12px'}}><div style={{fontSize:11, color:'#bae6fd', fontWeight:800, letterSpacing:'.08em'}}>DISCOVERY</div><div style={{fontSize:15, fontWeight:800}}>Smart feed ranking</div></div>
+   <div style={{background:'rgba(15,23,42,.56)', border:'1px solid rgba(148,163,184,.42)', borderRadius:14, padding:'10px 12px'}}><div style={{fontSize:11, color:'#bae6fd', fontWeight:800, letterSpacing:'.08em'}}>TRUST</div><div style={{fontSize:15, fontWeight:800}}>Verified creator badges</div></div>
+   <div style={{background:'rgba(15,23,42,.56)', border:'1px solid rgba(148,163,184,.42)', borderRadius:14, padding:'10px 12px'}}><div style={{fontSize:11, color:'#bae6fd', fontWeight:800, letterSpacing:'.08em'}}>COMMERCE</div><div style={{fontSize:15, fontWeight:800}}>University + products</div></div>
+  </div>
  </div>
  </div>
 
