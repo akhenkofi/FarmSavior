@@ -68,6 +68,7 @@ api.interceptors.response.use(
       : JSON.stringify(detailSource || {}).toLowerCase()
     const reqUrl = String(error?.config?.url || '')
     const isAuthMe = reqUrl.includes('/auth/me')
+    const isAgoraTokenRequest = reqUrl.includes('/agora-token')
 
     // Prevent random logout loops during deploy/restarts/network hiccups.
     // Only hard-logout on repeated identity failures, or immediately for clearly invalid tokens.
@@ -83,11 +84,13 @@ api.interceptors.response.use(
       detail.includes('missing bearer token') ||
       (status === 401 && isAuthMe)
 
-    if (isStrongTokenFailure) {
-      forceLogoutToLogin()
-    } else if (isIdentityFailure) {
-      const failures = recordAuthFailure()
-      if (failures >= AUTH_FAILURE_THRESHOLD) forceLogoutToLogin()
+    if (!isAgoraTokenRequest) {
+      if (isStrongTokenFailure) {
+        forceLogoutToLogin()
+      } else if (isIdentityFailure) {
+        const failures = recordAuthFailure()
+        if (failures >= AUTH_FAILURE_THRESHOLD) forceLogoutToLogin()
+      }
     }
 
     return Promise.reject(error)

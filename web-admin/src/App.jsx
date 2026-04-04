@@ -3273,7 +3273,7 @@ function AppInner() {
       try {
        await ensureCommunityAgora({ mode, callId: signal.callId, peerUserId })
        setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? { ...prev, status: 'connecting-media', peerUserId } : prev))
-      } catch {}
+      } catch (err) { setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? { ...prev, status: 'failed' } : prev)); alert(errMsg(err)) }
      })()
      return
     }
@@ -8418,7 +8418,7 @@ function AppInner() {
  <h4 style={{margin:'6px 0 4px 0'}}>{communityIncomingCall.from} is calling you</h4>
  <div className='helper-text' style={{marginBottom:10}}>{communityIncomingCall.mode === 'video' ? 'Video call' : 'Audio call'} - answer now?</div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
- <button type='button' className='btn btn-dark' onClick={async()=>{ const mode = communityIncomingCall.mode; const callId = communityIncomingCall.callId; const peerUserId = communityIncomingCall.fromUserId; try { await sendCallSignal(peerUserId, { v:1, type:'answer', mode, callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now() }, mode === 'video' ? '📹' : '📞') } catch {} communityHandledCallIdsRef.current.add(String(callId || '')); setCommunityIncomingCall(null); setCommunityActiveCall({ callId, mode, status: 'connecting-media', isCaller: false, peerUserId }); try { await ensureCommunityAgora({ mode, callId, peerUserId }) } catch {} }}>Answer</button>
+ <button type='button' className='btn btn-dark' onClick={async()=>{ const mode = communityIncomingCall.mode; const callId = communityIncomingCall.callId; const peerUserId = communityIncomingCall.fromUserId; try { await sendCallSignal(peerUserId, { v:1, type:'answer', mode, callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now() }, mode === 'video' ? '📹' : '📞') } catch {} communityHandledCallIdsRef.current.add(String(callId || '')); setCommunityIncomingCall(null); setCommunityActiveCall({ callId, mode, status: 'connecting-media', isCaller: false, peerUserId }); try { await ensureCommunityAgora({ mode, callId, peerUserId }) } catch (err) { alert(errMsg(err)); returnToCommunityPhone() } }}>Answer</button>
  <button type='button' className='btn' onClick={async()=>{ const peerUserId = communityIncomingCall.fromUserId; const callId = communityIncomingCall.callId; const mode = communityIncomingCall.mode || 'audio'; try { await sendCallSignal(peerUserId, { v:1, type:'decline', mode, callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now() }, '📞') } catch {} communityHandledCallIdsRef.current.add(String(callId || '')); setCommunityIncomingCall(null) }}>Decline</button>
  </div>
  </div>
