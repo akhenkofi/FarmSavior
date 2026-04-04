@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import AgoraRTC from 'agora-rtc-sdk-ng'
 // homepage-priority-refresh
 import * as api from './services/api'
 
@@ -2737,6 +2738,9 @@ function AppInner() {
  const communityLastCallAlertRef = useRef(null)
  const communityLastSignalIdRef = useRef('')
  const communityPcRef = useRef(null)
+ const communityAgoraClientRef = useRef(null)
+ const communityAgoraLocalAudioTrackRef = useRef(null)
+ const communityAgoraLocalVideoTrackRef = useRef(null)
  const communityLocalStreamRef = useRef(null)
  const communityRemoteStreamRef = useRef(null)
  const communityRemoteAudioRef = useRef(null)
@@ -2979,17 +2983,26 @@ function AppInner() {
  const toggleCommunityMute = () => {
   const next = !communityCallMuted
   try { (communityLocalStreamRef.current?.getAudioTracks?.() || []).forEach(t => { t.enabled = !next }) } catch {}
+  try { communityAgoraLocalAudioTrackRef.current?.setEnabled?.(!next) } catch {}
   setCommunityCallMuted(next)
  }
  const toggleCommunityCamera = () => {
   const next = !communityCallCameraOff
   try { (communityLocalStreamRef.current?.getVideoTracks?.() || []).forEach(t => { t.enabled = !next }) } catch {}
+  try { communityAgoraLocalVideoTrackRef.current?.setEnabled?.(!next) } catch {}
   setCommunityCallCameraOff(next)
  }
  const closeCommunityPeer = () => {
   try { communityPcRef.current?.getSenders?.().forEach(s => { try { s.replaceTrack?.(null) } catch {} }) } catch {}
   try { communityPcRef.current?.close?.() } catch {}
   communityPcRef.current = null
+  try { communityAgoraLocalAudioTrackRef.current?.stop?.(); communityAgoraLocalAudioTrackRef.current?.close?.() } catch {}
+  try { communityAgoraLocalVideoTrackRef.current?.stop?.(); communityAgoraLocalVideoTrackRef.current?.close?.() } catch {}
+  communityAgoraLocalAudioTrackRef.current = null
+  communityAgoraLocalVideoTrackRef.current = null
+  try { communityAgoraClientRef.current?.removeAllListeners?.() } catch {}
+  ;(async()=>{ try { await communityAgoraClientRef.current?.leave?.() } catch {} })()
+  communityAgoraClientRef.current = null
   communityRemoteStreamRef.current = null
   if (communityRemoteAudioRef.current) communityRemoteAudioRef.current.srcObject = null
   if (communityLocalVideoRef.current) communityLocalVideoRef.current.srcObject = null
@@ -3001,6 +3014,51 @@ function AppInner() {
   pc.addEventListener('icegatheringstatechange', onChange)
   setTimeout(() => { try { pc.removeEventListener('icegatheringstatechange', onChange) } catch {}; resolve() }, 1800)
  })
+ const ensureCommunityAgora = async ({ mode = 'audio', callId, peerUserId }) => {
+  if (communityAgoraClientRef.current) return communityAgoraClientRef.current
+  const tokenRes = await api.fetchAgoraToken(Number(peerUserId || 0))
+  const appId = tokenRes?.app_id || tokenRes?.appId
+  const channel = tokenRes?.channel_name || tokenRes?.channel || tokenRes?.channelName
+  const token = tokenRes?.token || null
+  const uid = Number(tokenRes?.uid || me?.id || 0)
+  if (!appId || !channel) throw new Error('Agora token config missing appId/channel')
+  const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' })
+  communityAgoraClientRef.current = client
+  const remoteStream = new MediaStream()
+  communityRemoteStreamRef.current = remoteStream
+  client.on('user-published', async (user, mediaType) => {
+   await client.subscribe(user, mediaType)
+   if (mediaType === 'audio' && user.audioTrack) {
+    try { user.audioTrack.play() } catch {}
+    try { remoteStream.addTrack(user.audioTrack.getMediaStreamTrack()) } catch {}
+   }
+   if (mediaType === 'video' && user.videoTrack) {
+    if (communityRemoteVideoRef.current) user.videoTrack.play(communityRemoteVideoRef.current)
+    try { remoteStream.addTrack(user.videoTrack.getMediaStreamTrack()) } catch {}
+   }
+   setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(callId || '') ? { ...prev, status: 'connected' } : prev))
+  })
+  client.on('user-unpublished', () => {
+    setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(callId || '') ? { ...prev, status: 'connected' } : prev))
+  })
+  client.on('user-left', () => {
+    closeCommunityPeer()
+    returnToCommunityPhone()
+  })
+  await client.join(appId, channel, token, uid)
+  const localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack()
+  communityAgoraLocalAudioTrackRef.current = localAudioTrack
+  let localVideoTrack = null
+  if (mode === 'video') {
+   localVideoTrack = await AgoraRTC.createCameraVideoTrack()
+   communityAgoraLocalVideoTrackRef.current = localVideoTrack
+   if (communityLocalVideoRef.current) localVideoTrack.play(communityLocalVideoRef.current)
+  }
+  const publishTracks = [localAudioTrack, localVideoTrack].filter(Boolean)
+  if (publishTracks.length) await client.publish(publishTracks)
+  setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(callId || '') ? { ...prev, status: 'connecting-media' } : prev))
+  return client
+ }
  const ensureCommunityPeer = async ({ mode = 'audio', callId, peerUserId }) => {
   if (communityPcRef.current) return communityPcRef.current
   const pc = new RTCPeerConnection({
@@ -3218,11 +3276,7 @@ function AppInner() {
      const mode = signal.mode === 'video' ? 'video' : 'audio'
      ;(async()=>{
       try {
-       const pc = await ensureCommunityPeer({ mode, callId: signal.callId, peerUserId })
-       const offer = await pc.createOffer()
-       await pc.setLocalDescription(offer)
-       await waitIceDone(pc)
-       await sendCallSignal(peerUserId, { v:1, type:'rtc_offer', mode, callId:signal.callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now(), sdp: pc.localDescription }, mode === 'video' ? '📹' : '📞')
+       await ensureCommunityAgora({ mode, callId: signal.callId, peerUserId })
        setCommunityActiveCall(prev => (prev && String(prev.callId || '') === String(signal.callId || '') ? { ...prev, status: 'connecting-media', peerUserId } : prev))
       } catch {}
      })()
@@ -8400,7 +8454,7 @@ function AppInner() {
  <h4 style={{margin:'6px 0 4px 0'}}>{communityIncomingCall.from} is calling you</h4>
  <div className='helper-text' style={{marginBottom:10}}>{communityIncomingCall.mode === 'video' ? 'Video call' : 'Audio call'} - answer now?</div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
- <button type='button' className='btn btn-dark' onClick={async()=>{ const mode = communityIncomingCall.mode; const callId = communityIncomingCall.callId; const peerUserId = communityIncomingCall.fromUserId; try { await sendCallSignal(peerUserId, { v:1, type:'answer', mode, callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now() }, mode === 'video' ? '📹' : '📞') } catch {} communityHandledCallIdsRef.current.add(String(callId || '')); setCommunityIncomingCall(null); setCommunityActiveCall({ callId, mode, status: 'connected', isCaller: false, peerUserId }) }}>Answer</button>
+ <button type='button' className='btn btn-dark' onClick={async()=>{ const mode = communityIncomingCall.mode; const callId = communityIncomingCall.callId; const peerUserId = communityIncomingCall.fromUserId; try { await sendCallSignal(peerUserId, { v:1, type:'answer', mode, callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now() }, mode === 'video' ? '📹' : '📞') } catch {} communityHandledCallIdsRef.current.add(String(callId || '')); setCommunityIncomingCall(null); setCommunityActiveCall({ callId, mode, status: 'connecting-media', isCaller: false, peerUserId }); try { await ensureCommunityAgora({ mode, callId, peerUserId }) } catch {} }}>Answer</button>
  <button type='button' className='btn' onClick={async()=>{ const peerUserId = communityIncomingCall.fromUserId; const callId = communityIncomingCall.callId; const mode = communityIncomingCall.mode || 'audio'; try { await sendCallSignal(peerUserId, { v:1, type:'decline', mode, callId, fromUserId:Number(me?.id || 0), toUserId:Number(peerUserId || 0), ts:Date.now() }, '📞') } catch {} communityHandledCallIdsRef.current.add(String(callId || '')); setCommunityIncomingCall(null) }}>Decline</button>
  </div>
  </div>
