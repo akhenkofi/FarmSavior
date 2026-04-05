@@ -38,7 +38,20 @@ class AppErrorBoundary extends React.Component {
  }
 }
 
-const errMsg = (e) => e?.response?.data?.detail || e?.message || 'Request failed'
+const errMsg = (e) => {
+ const detail = e?.response?.data?.detail
+ if (typeof detail === 'string' && detail.trim()) return detail
+ if (Array.isArray(detail)) return detail.map((item) => {
+  if (typeof item === 'string') return item
+  if (typeof item?.msg === 'string') return item.msg
+  return JSON.stringify(item)
+ }).join('; ')
+ if (detail && typeof detail === 'object') {
+  if (typeof detail.msg === 'string') return detail.msg
+  try { return JSON.stringify(detail) } catch {}
+ }
+ return e?.message || 'Request failed'
+}
 const verificationStatusLabel = (status) => ({ APPROVED: 'Verified', PENDING: 'Pending verification', DENIED: 'Verification denied', NOT_SUBMITTED: 'Not submitted' }[String(status || '').toUpperCase()] || String(status || 'Not submitted'))
 const verificationBadge = (me) => me?.identity_blue_check ? ' 🔵' : ''
 const normalizePhone = (v='') => {
@@ -2514,14 +2527,21 @@ const normalizeProductType = (value) => {
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
+const coerceImageValue = (item) => {
+ if (!item) return ''
+ if (typeof item === 'string') return item
+ if (typeof item === 'object') return item.url || item.image_url || item.data_url || item.src || item.path || ''
+ return ''
+}
+
 const parseImageList = (value) => {
- if (Array.isArray(value)) return value.filter(Boolean)
+ if (Array.isArray(value)) return value.map(coerceImageValue).filter(Boolean)
  if (!value) return []
  try {
- const parsed = JSON.parse(value)
- return Array.isArray(parsed) ? parsed.filter(Boolean) : []
+  const parsed = JSON.parse(value)
+  return Array.isArray(parsed) ? parsed.map(coerceImageValue).filter(Boolean) : []
  } catch {
- return []
+  return []
  }
 }
 
