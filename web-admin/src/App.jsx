@@ -4680,6 +4680,20 @@ function AppInner() {
   handleProtectedAction('my-listings', 'My Listings')
  }
 
+ const openMyListingDetail = (listing) => {
+  if (!listing?.row) return
+  const row = listing.row
+  const rawImages = parseImageList(row.image_urls || row.images || [])
+  const detail = {
+   ...row,
+   section: listing.type === 'product' ? 'products' : listing.type === 'livestock' ? 'livestock' : 'services',
+   title: row.title || row.crop_name || row.livestock_type || row.equipment_type || row.storage_type || 'Listing',
+   subtitle: row.location || row.pickup_location || '',
+   images: rawImages.length ? rawImages : [row.cover_image_url].filter(Boolean),
+  }
+  setPublicDetail(detail)
+ }
+
  const handleEditListing = (listing) => {
   if (!listing?.row) return
   const row = listing.row
@@ -6359,13 +6373,13 @@ function AppInner() {
   <div className='helper-text' style={{color:'#dc2626'}}>{myListingsError}</div>
  ) : flatMyListings.length ? (
   <div className='list'>
-   {flatMyListings.map((listing, index) => (<div key={`screen-my-listing-${listing.type}-${listing.row?.id || index}`} className='list-row' style={{justifyContent:'space-between',flexWrap:'wrap',gap:10}}>
+   {flatMyListings.map((listing, index) => (<div key={`screen-my-listing-${listing.type}-${listing.row?.id || index}`} className='list-row' style={{justifyContent:'space-between',flexWrap:'wrap',gap:10,cursor:'pointer'}} onClick={() => openMyListingDetail(listing)}>
     <div>
      <strong>{listing.title}</strong><br />
      <span className='helper-text'>{listing.type} • {listing.status}</span><br />
      <span className='helper-text'>Price: {listing.price === '' || listing.price === null || listing.price === undefined ? 'N/A' : listing.price}</span>
     </div>
-    <button type='button' className='btn btn-dark' onClick={() => handleEditListing(listing)}>Edit</button>
+    <button type='button' className='btn btn-dark' onClick={(e) => { e.stopPropagation(); handleEditListing(listing) }}>Edit</button>
    </div>))}
   </div>
  ) : (
