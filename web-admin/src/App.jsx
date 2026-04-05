@@ -5934,6 +5934,7 @@ function AppInner() {
  <button className={`app-quick-btn ${active === 'products' ? 'active' : ''}`} aria-pressed={active === 'products'} onClick={() => setActive('products')}>{t('Products','Produits')}</button>
  <button className={`app-quick-btn ${active === 'livestock' ? 'active' : ''}`} aria-pressed={active === 'livestock'} onClick={() => setActive('livestock')}>{t('Livestock','Élevage')}</button>
  <button className={`app-quick-btn ${active === 'services' ? 'active' : ''}`} aria-pressed={active === 'services'} onClick={() => setActive('services')}>{t('Services','Services')}</button>
+ <button className={`app-quick-btn ${active === 'my-listings' ? 'active' : ''}`} aria-pressed={active === 'my-listings'} onClick={openHomepageMyListings}>{t('My Listings','Mes annonces','我的列表')}</button>
  <button className={`app-quick-btn ${active === 'payments' ? 'active' : ''}`} aria-pressed={active === 'payments'} onClick={() => setActive('payments')}>{t('Marketplace','Marketplace','市场')}</button>
  </div>
  </div>
