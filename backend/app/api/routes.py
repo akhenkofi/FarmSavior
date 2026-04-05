@@ -4667,16 +4667,56 @@ def list_listings(db: Session = Depends(get_db)):
 @router.get('/listings/mine')
 def list_my_listings(limit: int = Query(200, gt=0, le=1000), authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
     user = _current_user_from_auth(authorization, db)
+
     def fetch_rows(model, fk_name):
         fk = getattr(model, fk_name)
         return db.query(model).filter(fk == user.id).order_by(model.created_at.desc()).limit(limit).all()
+
+    products = []
+    for row in fetch_rows(CropListing, 'farmer_id'):
+        raw = _row_to_dict(row)
+        raw['title'] = row.crop_name or 'Product listing'
+        raw['price'] = row.unit_price
+        raw['listing_type'] = 'product'
+        products.append(raw)
+
+    livestock = []
+    for row in fetch_rows(LivestockListing, 'farmer_id'):
+        raw = _row_to_dict(row)
+        raw['title'] = row.livestock_type or 'Livestock listing'
+        raw['price'] = row.unit_price
+        raw['listing_type'] = 'livestock'
+        livestock.append(raw)
+
+    services = []
+    for row in fetch_rows(LogisticsRequest, 'requester_id'):
+        raw = _row_to_dict(row)
+        raw['title'] = f"{row.pickup_location or 'Pickup'} → {row.dropoff_location or 'Dropoff'}"
+        raw['price'] = row.weight_kg
+        raw['service_type'] = 'logistics'
+        raw['listing_type'] = 'service'
+        services.append(raw)
+    for row in fetch_rows(EquipmentRental, 'requester_id'):
+        raw = _row_to_dict(row)
+        raw['title'] = row.equipment_type or 'Equipment listing'
+        raw['price'] = row.budget
+        raw['service_type'] = 'equipment'
+        raw['listing_type'] = 'service'
+        services.append(raw)
+    for row in fetch_rows(StorageReservation, 'requester_id'):
+        raw = _row_to_dict(row)
+        raw['title'] = row.storage_type or 'Storage listing'
+        raw['price'] = row.quantity_kg
+        raw['service_type'] = 'storage'
+        raw['listing_type'] = 'service'
+        services.append(raw)
+    services = sorted(services, key=lambda row: row.get('created_at') or datetime.utcnow(), reverse=True)[:limit]
+
     return {
         'user_id': user.id,
-        'products': [_row_to_dict(row) for row in fetch_rows(CropListing, 'farmer_id')],
-        'livestock': [_row_to_dict(row) for row in fetch_rows(LivestockListing, 'farmer_id')],
-        'logistics': [_row_to_dict(row) for row in fetch_rows(LogisticsRequest, 'requester_id')],
-        'equipment': [_row_to_dict(row) for row in fetch_rows(EquipmentRental, 'requester_id')],
-        'storage': [_row_to_dict(row) for row in fetch_rows(StorageReservation, 'requester_id')],
+        'products': products,
+        'services': services,
+        'livestock': livestock,
     }
 
 @router.put('/marketplace/listings/{listing_id}')

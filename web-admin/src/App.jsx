@@ -2703,7 +2703,7 @@ function AppInner() {
  const [recentViewed, setRecentViewed] = useState([])
  const [myListingsOpen, setMyListingsOpen] = useState(false)
  const [myListingsLoading, setMyListingsLoading] = useState(false)
- const [myListings, setMyListings] = useState({ products: [], livestock: [], logistics: [], equipment: [], storage: [] })
+ const [myListings, setMyListings] = useState({ products: [], services: [], livestock: [] })
  const [myListingsError, setMyListingsError] = useState('')
  const [worldChat, setWorldChat] = useState([])
  const [worldChatText, setWorldChatText] = useState('')
@@ -4597,10 +4597,8 @@ function AppInner() {
    const data = await api.fetchMyListings()
    setMyListings({
     products: data.products || [],
+    services: data.services || [],
     livestock: data.livestock || [],
-    logistics: data.logistics || [],
-    equipment: data.equipment || [],
-    storage: data.storage || [],
    })
   } catch (error) {
    setMyListingsError(errMsg(error))
@@ -4627,23 +4625,51 @@ function AppInner() {
   loadMyListings()
  }
 
+ const handleEditListing = (listing) => {
+  if (!listing?.row) return
+  const row = listing.row
+  setMyListingsOpen(false)
+  if (listing.type === 'product') {
+   setActive('products')
+   setCropEdit({ id: row.id, farmer_id: row.farmer_id || me?.id || 1, crop_name: row.crop_name || '', quantity_kg: row.quantity_kg || '', unit_price: row.unit_price || '', location: row.location || '', country: row.country || 'GH', status: row.status || 'OPEN' })
+   setProductsView('edit')
+   return
+  }
+  if (listing.type === 'livestock') {
+   setActive('livestock')
+   setLivestockEdit({ id: row.id, farmer_id: row.farmer_id || me?.id || 1, livestock_type: row.livestock_type || '', quantity: row.quantity || '', unit_price: row.unit_price || '', location: row.location || '', country: row.country || 'GH', status: row.status || 'OPEN' })
+   setLivestockView('edit')
+   return
+  }
+  setActive('services')
+  setServicesView('edit')
+  if (row.service_type === 'equipment') {
+   setEquipmentEdit({ id: row.id, requester_id: row.requester_id || me?.id || 1, equipment_type: row.equipment_type || '', duration_days: row.duration_days || '', location: row.location || '', budget: row.budget || '', status: row.status || 'PENDING' })
+   return
+  }
+  if (row.service_type === 'storage') {
+   setStorageEdit({ id: row.id, requester_id: row.requester_id || me?.id || 1, storage_type: row.storage_type || '', quantity_kg: row.quantity_kg || '', location: row.location || '', duration_days: row.duration_days || '', status: row.status || 'PENDING' })
+   return
+  }
+  setLogisticsEdit({ id: row.id, requester_id: row.requester_id || me?.id || 1, pickup_location: row.pickup_location || '', dropoff_location: row.dropoff_location || '', cargo_type: row.cargo_type || '', weight_kg: row.weight_kg || '', status: row.status || 'PENDING' })
+ }
+
  const flatMyListings = useMemo(() => {
   const rows = []
-  const addRows = (type, entries, titleFn) => {
+  const addRows = (type, entries) => {
    ;(entries || []).forEach((row) => rows.push({
     type,
-    title: titleFn(row),
+    title: row.title || row.crop_name || row.livestock_type || row.equipment_type || row.storage_type || 'Listing',
     status: row.status || row.state || 'N/A',
+    price: row.price ?? row.unit_price ?? row.budget ?? row.weight_kg ?? row.quantity_kg ?? '',
     row,
    }))
   }
-  addRows('product', myListings.products, (row) => row.crop_name || 'Product listing')
-  addRows('livestock', myListings.livestock, (row) => row.livestock_type || 'Livestock listing')
-  addRows('logistics', myListings.logistics, (row) => `${row.pickup_location || 'Pickup'} → ${row.dropoff_location || 'Dropoff'}`)
-  addRows('equipment', myListings.equipment, (row) => row.equipment_type || 'Equipment listing')
-  addRows('storage', myListings.storage, (row) => row.storage_type || 'Storage listing')
+  addRows('product', myListings.products)
+  addRows('service', myListings.services)
+  addRows('livestock', myListings.livestock)
   return rows
- }, [myListings])
+ }, [myListings, me?.id])
 
  const addBoundaryPoint = (lat, lng) => {
  const point = { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) }
@@ -9287,8 +9313,10 @@ function AppInner() {
      {flatMyListings.map((listing, index) => (<div key={`my-listing-${listing.type}-${listing.row?.id || index}`} className='list-row' style={{justifyContent:'space-between',flexWrap:'wrap',gap:10}}>
       <div>
        <strong>{listing.title}</strong><br />
-       <span className='helper-text'>{listing.type} • {listing.status}</span>
+       <span className='helper-text'>{listing.type} • {listing.status}</span><br />
+       <span className='helper-text'>Price: {listing.price === '' || listing.price === null || listing.price === undefined ? 'N/A' : listing.price}</span>
       </div>
+      <button type='button' className='btn btn-dark' onClick={() => handleEditListing(listing)}>Edit</button>
      </div>))}
     </div>
   ) : (
