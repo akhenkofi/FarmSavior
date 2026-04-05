@@ -3852,7 +3852,7 @@ const handleCommunityPostComment = () => {
   }
   run()
   const timer = setInterval(run, 4000)
-  return (<>) => { stopped = true; clearInterval(timer) }
+  return () => { stopped = true; clearInterval(timer) }
  }, [active, token])
 
  useEffect(() => {
