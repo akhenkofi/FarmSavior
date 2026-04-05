@@ -2682,8 +2682,13 @@ function AppInner() {
  const [showAuthModal, setShowAuthModal] = useState(false)
  useEffect(() => {
   try {
-   if (localStorage.getItem('farmsavior_open_my_listings_login') !== '1') return
-   localStorage.removeItem('farmsavior_open_my_listings_login')
+   const wantsMyListings = searchParams.get('myListings') === '1'
+   if (!wantsMyListings) return
+   if (token) {
+    setMyListingsOpen(true)
+    loadMyListings()
+    return
+   }
    setPendingFeatureLabel('My Listings')
    setPendingFeatureSection('onboarding')
    setAuthMode('login')
@@ -2697,7 +2702,7 @@ function AppInner() {
     setTimeout(() => { try { target.style.outline = ''; target.style.outlineOffset = '' } catch {} }, 1800)
    }
   } catch {}
- }, [])
+ }, [token])
  const [pendingFeatureLabel, setPendingFeatureLabel] = useState('')
  const [pendingFeatureSection, setPendingFeatureSection] = useState('')
  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -4627,14 +4632,14 @@ function AppInner() {
 
  const openMyListingsOverlay = () => {
   if (!token) {
-   try { localStorage.setItem('farmsavior_open_my_listings_login', '1') } catch {}
    try {
     const url = new URL(window.location.href)
     url.searchParams.set('public', '1')
+    url.searchParams.set('myListings', '1')
     url.hash = 'access-portal'
     window.location.assign(url.toString())
    } catch {
-    window.location.href = '/?public=1#access-portal'
+    window.location.href = '/?public=1&myListings=1#access-portal'
    }
    return
   }
@@ -5208,7 +5213,7 @@ function AppInner() {
  <div className='list-row'><span>AADU · Sheep University (Ghana Sheep Breed Program)</span><button type='button' className='btn' onClick={()=>handleProtectedAction('sheep-university', 'Sheep University')}>{t('Open','Ouvrir')}</button></div>
  <div className='list-row'><span>AADU · Goat University (Ghana Goat Breed Program)</span><button type='button' className='btn' onClick={()=>handleProtectedAction('goat-university', 'Goat University')}>{t('Open','Ouvrir')}</button></div>
  <div className='list-row'><span>AADU · Cattle University (Ghana Cattle Breed Program)</span><button type='button' className='btn' onClick={()=>handleProtectedAction('cattle-university', 'Cattle University')}>{t('Open','Ouvrir')}</button></div>
- <div className='list-row'><span>{t('My Listings','Mes annonces','我的列表')}</span><button type='button' className='btn btn-dark' onClick={openMyListingsOverlay}>{t('View','查看')}</button></div>
+ <div className='list-row'><span>{t('My Listings','Mes annonces','我的列表')}</span>{token ? <button type='button' className='btn btn-dark' onClick={openMyListingsOverlay}>{t('View','查看')}</button> : <a className='btn btn-dark' href='/?public=1&myListings=1#access-portal'>{t('View','查看')}</a>}</div>
  <div className='list-row'><span>{t('List Product','Publier un produit','发布产品')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('products', 'List Product')}>{t('Start','Démarrer')}</button></div>
  <div className='list-row'><span>{t('List Services','Publier des services','发布服务')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'List Services')}>{t('Start','Démarrer')}</button></div>
  <div className='list-row'><span>{t('List Machinery for Rent','Publier des machines à louer','发布机械租赁')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'List Machinery for Rent')}>{t('Start','Démarrer')}</button></div>
