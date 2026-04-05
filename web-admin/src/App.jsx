@@ -6384,15 +6384,18 @@ const handlePublishLivestock = async (e) => {
  </>}
  {selectedOrder.tracking_number && <div className='helper-text' style={{marginTop:10}}><strong>Tracking #:</strong> {selectedOrder.tracking_number}</div>}
  {selectedOrder.tracking_proof_url && <div style={{marginTop:10}}>{renderProofMedia(selectedOrder.tracking_proof_url)}</div>}
- {me?.id === selectedOrder.buyer_id && canConfirmDelivery &&
- {me?.id === selectedOrder.buyer_id && String(selectedOrder.payment_status || '').toUpperCase() !== 'PAID' && (
-  <div className='panel' style={{marginTop:12, padding:12, borderColor:'#153f6a', background:'#0f172a08'}}>
-   <div style={{fontWeight:700, marginBottom:6}}>Order payment</div>
-   <div className='helper-text'>Gross: {selectedOrder.gross_amount} {selectedOrder.currency || 'GHS'}</div>
-   <div className='row2' style={{gap:10, flexWrap:'wrap'}}><button type='button' className='btn btn-dark' disabled={orderPaymentProcessing} onClick={startOrderPayment}>{orderPaymentProcessing ? 'Redirecting to Paystack…' : 'Pay now with Paystack'}</button></div>
-  </div>
- )}
- <div className='panel' style={{marginTop:12, padding:12, borderColor:'#0f766e', background:'#0f766e10'}}><div style={{fontWeight:700, marginBottom:6}}>Buyer actions</div><div className='row2' style={{gap:10}}><button type='button' className='btn btn-dark' disabled={!canConfirmDelivery || confirmingDelivery} onClick={confirmSelectedOrderDelivery}>{confirmingDelivery ? 'Confirming…' : 'Confirm Delivery'}</button></div></div>}
+ {me?.id === selectedOrder.buyer_id && canConfirmDelivery && (
+  <>
+    {String(selectedOrder.payment_status || '').toUpperCase() !== 'PAID' && (
+     <div className='panel' style={{marginTop:12, padding:12, borderColor:'#153f6a', background:'#0f172a08'}}>
+      <div style={{fontWeight:700, marginBottom:6}}>Order payment</div>
+      <div className='helper-text'>Gross: {selectedOrder.gross_amount} {selectedOrder.currency || 'GHS'}</div>
+      <div className='row2' style={{gap:10, flexWrap:'wrap'}}><button type='button' className='btn btn-dark' disabled={orderPaymentProcessing} onClick={startOrderPayment}>{orderPaymentProcessing ? 'Redirecting to Paystack…' : 'Pay now with Paystack'}</button></div>
+     </div>
+    )}
+    <div className='panel' style={{marginTop:12, padding:12, borderColor:'#0f766e', background:'#0f766e10'}}><div style={{fontWeight:700, marginBottom:6}}>Buyer actions</div><div className='row2' style={{gap:10}}><button type='button' className='btn btn-dark' disabled={!canConfirmDelivery || confirmingDelivery} onClick={confirmSelectedOrderDelivery}>{confirmingDelivery ? 'Confirming…' : 'Confirm Delivery'}</button></div></div>
+  </>
+)}
  </div>
  </div>
  </div>}
@@ -10051,16 +10054,24 @@ const handlePublishLivestock = async (e) => {
    <strong>{t('My Listings','Mes annonces','我的列表')}</strong>
    <button type='button' className='btn btn-light' onClick={() => setMyListingsOpen(false)}>{t('Close','Fermer','关闭')}</button>
   </div>
-  {myListingsLoading ? <div>Loading listings…</div> : (myListingsError ? <div className='helper-text' style={{color:'#dc2626'}}>{myListingsError}</div> : (flatMyListings.length ? <div className='list' style={{maxHeight:'60vh',overflowY:'auto',gap:10}}>
-   {flatMyListings.map((listing, index) => (<div key={`my-listing-${listing.listing_type}-${listing.row?.id || index}`} className='list-row' style={{justifyContent:'space-between',flexWrap:'wrap',gap:10}}>
-    <div>
-     <strong>{listing.title}</strong><br />
-     <span className='helper-text'>{listing.listing_type} • {listing.status}</span><br />
-     <span className='helper-text'>Price: {listing.priceDisplay}</span>
+  {myListingsLoading ? (
+    <div>Loading listings…</div>
+  ) : myListingsError ? (
+    <div className='helper-text' style={{color:'#dc2626'}}>{myListingsError}</div>
+  ) : flatMyListings.length ? (
+    <div className='list' style={{maxHeight:'60vh',overflowY:'auto',gap:10}}>
+     {flatMyListings.map((listing, index) => (<div key={`my-listing-${listing.listing_type}-${listing.row?.id || index}`} className='list-row' style={{justifyContent:'space-between',flexWrap:'wrap',gap:10}}>
+      <div>
+       <strong>{listing.title}</strong><br />
+       <span className='helper-text'>{listing.listing_type} • {listing.status}</span><br />
+       <span className='helper-text'>Price: {listing.priceDisplay}</span>
+      </div>
+      <button type='button' className='btn btn-dark' onClick={() => handleEditListing(listing)}>Edit</button>
+     </div>))}
     </div>
-    <button type='button' className='btn btn-dark' onClick={() => handleEditListing(listing)}>Edit</button>
-   </div>))}
-  </div> : <div className='helper-text'>{t('No listings yet.','Aucune annonce pour le moment.','当前没有列表。')}</div>)))}
+  ) : (
+    <div className='helper-text'>{t('No listings yet.','Aucune annonce pour le moment.','当前没有列表。')}</div>
+  )}
  </div>
 </div>}
  <AdminPanelButton />
