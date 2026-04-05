@@ -4635,7 +4635,11 @@ function AppInner() {
 
  const openMyListingsOverlay = () => {
   if (!token) {
-   window.location.href = '/?public=1&myListings=1#access-portal'
+   setPendingFeatureLabel('My Listings')
+   setPendingFeatureSection('onboarding')
+   setAuthMode('login')
+   setAuthMsg('Sign in to view your listings.')
+   setShowAuthModal(true)
    return
   }
   setMyListingsOpen(true)
@@ -5208,7 +5212,7 @@ function AppInner() {
  <div className='list-row'><span>AADU · Sheep University (Ghana Sheep Breed Program)</span><button type='button' className='btn' onClick={()=>handleProtectedAction('sheep-university', 'Sheep University')}>{t('Open','Ouvrir')}</button></div>
  <div className='list-row'><span>AADU · Goat University (Ghana Goat Breed Program)</span><button type='button' className='btn' onClick={()=>handleProtectedAction('goat-university', 'Goat University')}>{t('Open','Ouvrir')}</button></div>
  <div className='list-row'><span>AADU · Cattle University (Ghana Cattle Breed Program)</span><button type='button' className='btn' onClick={()=>handleProtectedAction('cattle-university', 'Cattle University')}>{t('Open','Ouvrir')}</button></div>
- <div className='list-row'><span>{t('My Listings','Mes annonces','我的列表')}</span><button type='button' className='btn btn-dark' onClick={openMyListingsOverlay}>{t('View','查看')}</button></div>
+ <div className='list-row'><span>{t('My Listings','Mes annonces','我的列表')}</span><button type='button' className='btn btn-dark' style={{touchAction:'manipulation'}} onPointerUp={openMyListingsOverlay} onClick={openMyListingsOverlay}>{t('View','查看')}</button></div>
  <div className='list-row'><span>{t('List Product','Publier un produit','发布产品')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('products', 'List Product')}>{t('Start','Démarrer')}</button></div>
  <div className='list-row'><span>{t('List Services','Publier des services','发布服务')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'List Services')}>{t('Start','Démarrer')}</button></div>
  <div className='list-row'><span>{t('List Machinery for Rent','Publier des machines à louer','发布机械租赁')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'List Machinery for Rent')}>{t('Start','Démarrer')}</button></div>
