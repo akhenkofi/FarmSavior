@@ -43,7 +43,10 @@ const errMsg = (e) => {
  if (typeof detail === 'string' && detail.trim()) return detail
  if (Array.isArray(detail)) return detail.map((item) => {
   if (typeof item === 'string') return item
-  if (typeof item?.msg === 'string') return item.msg
+  if (item && typeof item === 'object') {
+   const loc = Array.isArray(item.loc) ? item.loc.join('.') + ': ' : ''
+   if (typeof item.msg === 'string') return loc + item.msg
+  }
   return JSON.stringify(item)
  }).join('; ')
  if (detail && typeof detail === 'object') {
@@ -8057,8 +8060,15 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
     <option value='in_person'>In person</option>
     <option value='virtual'>Virtual / video call</option>
    </select>
-   <input className='input' placeholder='Session length (days)' value={equipmentForm.duration_days} onChange={e => setEquipmentForm({ ...equipmentForm, duration_days: e.target.value })} />
-   <input className='input' placeholder={equipmentForm.service_delivery_mode === 'virtual' ? 'Country / timezone / remote availability' : 'Location'} value={equipmentForm.location} onChange={e => setEquipmentForm({ ...equipmentForm, location: e.target.value })} />
+   <div className='two-col'>
+    <input className='input' placeholder='Session length' value={equipmentForm.duration_days} onChange={e => setEquipmentForm({ ...equipmentForm, duration_days: e.target.value })} />
+    <select className='input' value={equipmentForm.duration_unit} onChange={e => setEquipmentForm({ ...equipmentForm, duration_unit: e.target.value })}>
+     <option value='minutes'>Minutes</option>
+     <option value='hours'>Hours</option>
+     <option value='days'>Days</option>
+    </select>
+   </div>
+   <input className='input' placeholder={equipmentForm.service_delivery_mode === 'virtual' ? 'Video call availability / platform' : 'Location'} value={equipmentForm.location} onChange={e => setEquipmentForm({ ...equipmentForm, location: e.target.value })} />
    {equipmentForm.service_delivery_mode === 'virtual' && <input className='input' placeholder='Video call link (optional)' value={equipmentForm.meeting_link} onChange={e => setEquipmentForm({ ...equipmentForm, meeting_link: e.target.value })} />}
    <input className='input' placeholder='Consultation fee' value={equipmentForm.budget} onChange={e => setEquipmentForm({ ...equipmentForm, budget: e.target.value })} />
    <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceImages} setImages={setServiceImages} />
