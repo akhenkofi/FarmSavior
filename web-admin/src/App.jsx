@@ -4613,6 +4613,7 @@ function AppInner() {
    setPendingFeatureSection('onboarding')
    setAuthMode('login')
    setAuthMsg('Sign in below to view your listings.')
+   try { alert('Sign in below to view your listings.') } catch {}
    setShowAuthModal(false)
    try {
     window.location.hash = 'access-portal'
