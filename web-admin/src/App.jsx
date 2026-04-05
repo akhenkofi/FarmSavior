@@ -2680,6 +2680,24 @@ function AppInner() {
  const [authLoading, setAuthLoading] = useState(false)
  const [communitySubmitting, setCommunitySubmitting] = useState(false)
  const [showAuthModal, setShowAuthModal] = useState(false)
+ useEffect(() => {
+  try {
+   if (localStorage.getItem('farmsavior_open_my_listings_login') !== '1') return
+   localStorage.removeItem('farmsavior_open_my_listings_login')
+   setPendingFeatureLabel('My Listings')
+   setPendingFeatureSection('onboarding')
+   setAuthMode('login')
+   setAuthMsg('Sign in below to view your listings.')
+   setShowAuthModal(false)
+   const target = document.getElementById('access-portal')
+   if (target) {
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    target.style.outline = '3px solid #0f766e'
+    target.style.outlineOffset = '6px'
+    setTimeout(() => { try { target.style.outline = ''; target.style.outlineOffset = '' } catch {} }, 1800)
+   }
+  } catch {}
+ }, [])
  const [pendingFeatureLabel, setPendingFeatureLabel] = useState('')
  const [pendingFeatureSection, setPendingFeatureSection] = useState('')
  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -4609,22 +4627,15 @@ function AppInner() {
 
  const openMyListingsOverlay = () => {
   if (!token) {
-   setPendingFeatureLabel('My Listings')
-   setPendingFeatureSection('onboarding')
-   setAuthMode('login')
-   setAuthMsg('Sign in below to view your listings.')
-   try { alert('Sign in below to view your listings.') } catch {}
-   setShowAuthModal(false)
+   try { localStorage.setItem('farmsavior_open_my_listings_login', '1') } catch {}
    try {
-    window.location.hash = 'access-portal'
-    const target = document.getElementById('access-portal')
-    if (target) {
-     target.scrollIntoView({ behavior: 'smooth', block: 'start' })
-     target.style.outline = '3px solid #0f766e'
-     target.style.outlineOffset = '6px'
-     setTimeout(() => { try { target.style.outline = ''; target.style.outlineOffset = '' } catch {} }, 1800)
-    }
-   } catch {}
+    const url = new URL(window.location.href)
+    url.searchParams.set('public', '1')
+    url.hash = 'access-portal'
+    window.location.assign(url.toString())
+   } catch {
+    window.location.href = '/?public=1#access-portal'
+   }
    return
   }
   setMyListingsOpen(true)
