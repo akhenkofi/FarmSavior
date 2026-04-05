@@ -3893,8 +3893,8 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  })
  const [logisticsForm, setLogisticsForm] = useState({ requester_id: 1, pickup_location: '', dropoff_location: '', cargo_type: '', weight_kg: '', status: 'PENDING' })
  const [logisticsEdit, setLogisticsEdit] = useState({ id: '', requester_id: 1, pickup_location: '', dropoff_location: '', cargo_type: '', weight_kg: '', status: 'PENDING' })
- const [equipmentForm, setEquipmentForm] = useState({ requester_id: 1, equipment_type: '', duration_days: '', location: '', budget: '', status: 'PENDING' })
- const [equipmentEdit, setEquipmentEdit] = useState({ id: '', requester_id: 1, equipment_type: '', duration_days: '', location: '', budget: '', status: 'PENDING' })
+ const [equipmentForm, setEquipmentForm] = useState({ requester_id: 1, equipment_type: '', duration_days: '', location: '', budget: '', status: 'PENDING', service_delivery_mode: 'in_person', meeting_link: '' })
+ const [equipmentEdit, setEquipmentEdit] = useState({ id: '', requester_id: 1, equipment_type: '', duration_days: '', location: '', budget: '', status: 'PENDING', service_delivery_mode: 'in_person', meeting_link: '' })
  const [storageForm, setStorageForm] = useState({ requester_id: 1, storage_type: '', quantity_kg: '', location: '', duration_days: '', status: 'PENDING' })
  const [storageEdit, setStorageEdit] = useState({ id: '', requester_id: 1, storage_type: '', quantity_kg: '', location: '', duration_days: '', status: 'PENDING' })
  const [serviceImages, setServiceImages] = useState([])
@@ -8046,15 +8046,20 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
    <button className='btn btn-dark'>Create Storage</button>
   </form>}
 
-  {serviceCreateType === 'consultation' && <form className='list' onSubmit={async e => { e.preventDefault(); await api.createEquipment({ ...equipmentForm, ...normalizeListingImages(serviceImages), requester_id: Number(equipmentForm.requester_id), duration_days: Number(equipmentForm.duration_days || 1), budget: Number(equipmentForm.budget) }); setServiceImages([]); await load(); setServicesView('list') }}>
+  {serviceCreateType === 'consultation' && <form className='list' onSubmit={async e => { e.preventDefault(); await api.createEquipment({ ...equipmentForm, ...normalizeListingImages(serviceImages), requester_id: Number(equipmentForm.requester_id), duration_days: Number(equipmentForm.duration_days || 1), budget: Number(equipmentForm.budget), location: equipmentForm.service_delivery_mode === 'virtual' ? (equipmentForm.location || 'Virtual / Video Call') : equipmentForm.location, meeting_link: equipmentForm.meeting_link || undefined }); setServiceImages([]); await load(); setServicesView('list') }}>
    <select className='input' value={equipmentForm.equipment_type} onChange={e => setEquipmentForm({ ...equipmentForm, equipment_type: e.target.value })} required>
     <option value=''>Select consultation type</option>
     <option value='Veterinary consultation'>Veterinary consultation</option>
     <option value='Veterinary / vaccination service'>Veterinary / vaccination service</option>
     <option value='Farm consultation'>Farm consultation</option>
    </select>
+   <select className='input' value={equipmentForm.service_delivery_mode} onChange={e => setEquipmentForm({ ...equipmentForm, service_delivery_mode: e.target.value })}>
+    <option value='in_person'>In person</option>
+    <option value='virtual'>Virtual / video call</option>
+   </select>
    <input className='input' placeholder='Session length (days)' value={equipmentForm.duration_days} onChange={e => setEquipmentForm({ ...equipmentForm, duration_days: e.target.value })} />
-   <input className='input' placeholder='Location / remote availability' value={equipmentForm.location} onChange={e => setEquipmentForm({ ...equipmentForm, location: e.target.value })} />
+   <input className='input' placeholder={equipmentForm.service_delivery_mode === 'virtual' ? 'Country / timezone / remote availability' : 'Location'} value={equipmentForm.location} onChange={e => setEquipmentForm({ ...equipmentForm, location: e.target.value })} />
+   {equipmentForm.service_delivery_mode === 'virtual' && <input className='input' placeholder='Video call link (optional)' value={equipmentForm.meeting_link} onChange={e => setEquipmentForm({ ...equipmentForm, meeting_link: e.target.value })} />}
    <input className='input' placeholder='Consultation fee' value={equipmentForm.budget} onChange={e => setEquipmentForm({ ...equipmentForm, budget: e.target.value })} />
    <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceImages} setImages={setServiceImages} />
    <button className='btn btn-dark'>Create Consultation Service</button>
