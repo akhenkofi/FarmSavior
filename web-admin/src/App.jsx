@@ -4612,12 +4612,17 @@ function AppInner() {
    setPendingFeatureLabel('My Listings')
    setPendingFeatureSection('onboarding')
    setAuthMode('login')
-   setAuthMsg('Please sign in to view your listings.')
-   setShowAuthModal(true)
+   setAuthMsg('Sign in below to view your listings.')
+   setShowAuthModal(false)
    try {
     window.location.hash = 'access-portal'
     const target = document.getElementById('access-portal')
-    target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    if (target) {
+     target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+     target.style.outline = '3px solid #0f766e'
+     target.style.outlineOffset = '6px'
+     setTimeout(() => { try { target.style.outline = ''; target.style.outlineOffset = '' } catch {} }, 1800)
+    }
    } catch {}
    return
   }
