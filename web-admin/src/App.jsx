@@ -4611,7 +4611,11 @@ function AppInner() {
 
  const openMyListingsOverlay = () => {
   if (!token) {
-   handleProtectedAction('onboarding', 'My Listings')
+   setPendingFeatureLabel('My Listings')
+   setPendingFeatureSection('onboarding')
+   setAuthMode('login')
+   setShowAuthModal(true)
+   try { document.getElementById('access-portal')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) } catch {}
    return
   }
   setMyListingsOpen(true)
