@@ -4811,12 +4811,13 @@ function AppInner() {
  persistRecents(recentSearches, next)
  }
 
- const baseMenu = ['home', 'dashboard', 'ai-disease', 'poultry-university', 'sheep-university', 'goat-university', 'cattle-university', 'livestock-records', 'onboarding', 'products', 'livestock', 'services', 'payments', 'alerts', 'maps', 'world-chat', 'community', 'government', 'contracts']
+ const baseMenu = ['home', 'dashboard', 'ai-disease', 'poultry-university', 'sheep-university', 'goat-university', 'cattle-university', 'livestock-records', 'onboarding', 'my-listings', 'products', 'livestock', 'services', 'payments', 'alerts', 'maps', 'world-chat', 'community', 'government', 'contracts']
  const menu = ((me?.role || '').toLowerCase() === 'admin') ? [...baseMenu, 'admin'] : baseMenu
  const menuLabel = (m) => ({
  'home':t('home','home','首页'),
  'dashboard':t('dashboard','dashboard','仪表盘'),
  'onboarding':t('My Account Settings','Paramètres du compte','账户设置'),
+ 'my-listings':t('My Listings','Mes annonces','我的列表'),
  'products':t('products','products','产品'),
  'livestock':t('livestock','livestock','牲畜'),
  'services':t('services','services','服务'),
