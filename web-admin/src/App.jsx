@@ -8006,6 +8006,7 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
    <button className={`tab ${serviceCreateType === 'logistics' ? 'active' : ''}`} onClick={() => setServiceCreateType('logistics')}>Logistics</button>
    <button className={`tab ${serviceCreateType === 'equipment' ? 'active' : ''}`} onClick={() => setServiceCreateType('equipment')}>Equipment</button>
    <button className={`tab ${serviceCreateType === 'storage' ? 'active' : ''}`} onClick={() => setServiceCreateType('storage')}>Storage</button>
+   <button className={`tab ${serviceCreateType === 'consultation' ? 'active' : ''}`} onClick={() => setServiceCreateType('consultation')}>Veterinary / Consultation</button>
   </div>
   <div className='helper-text' style={{marginBottom:12}}>Choose one service type and complete only the fields for that service.</div>
 
@@ -8043,6 +8044,20 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
    <input className='input' placeholder='Duration (days)' value={storageForm.duration_days} onChange={e => setStorageForm({ ...storageForm, duration_days: e.target.value })} />
    <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceImages} setImages={setServiceImages} />
    <button className='btn btn-dark'>Create Storage</button>
+  </form>}
+
+  {serviceCreateType === 'consultation' && <form className='list' onSubmit={async e => { e.preventDefault(); await api.createEquipment({ ...equipmentForm, ...normalizeListingImages(serviceImages), requester_id: Number(equipmentForm.requester_id), duration_days: Number(equipmentForm.duration_days || 1), budget: Number(equipmentForm.budget) }); setServiceImages([]); await load(); setServicesView('list') }}>
+   <select className='input' value={equipmentForm.equipment_type} onChange={e => setEquipmentForm({ ...equipmentForm, equipment_type: e.target.value })} required>
+    <option value=''>Select consultation type</option>
+    <option value='Veterinary consultation'>Veterinary consultation</option>
+    <option value='Veterinary / vaccination service'>Veterinary / vaccination service</option>
+    <option value='Farm consultation'>Farm consultation</option>
+   </select>
+   <input className='input' placeholder='Session length (days)' value={equipmentForm.duration_days} onChange={e => setEquipmentForm({ ...equipmentForm, duration_days: e.target.value })} />
+   <input className='input' placeholder='Location / remote availability' value={equipmentForm.location} onChange={e => setEquipmentForm({ ...equipmentForm, location: e.target.value })} />
+   <input className='input' placeholder='Consultation fee' value={equipmentForm.budget} onChange={e => setEquipmentForm({ ...equipmentForm, budget: e.target.value })} />
+   <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceImages} setImages={setServiceImages} />
+   <button className='btn btn-dark'>Create Consultation Service</button>
   </form>}
  </article>
 </section>}
