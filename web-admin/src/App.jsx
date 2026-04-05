@@ -4465,25 +4465,7 @@ const startOrderPayment = async () => {
  const [spotTradingOpen, setSpotTradingOpen] = useState(() => readPublicSectionPref('spotTradingOpen', true))
  const [governmentProgramsOpen, setGovernmentProgramsOpen] = useState(() => readPublicSectionPref('governmentProgramsOpen', true))
  const [tradeStatsOpen, setTradeStatsOpen] = useState(() => readPublicSectionPref('tradeStatsOpen', true))
- const popularActionItems = useMemo(() => ([
-  { label: t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析'), buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('ai-disease', 'AI Disease Analyzer'), variant: 'btn-dark' },
-  { label: t('Livestock Records Management','Gestion des registres du bétail','牲畜档案管理'), buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('livestock-records', 'Livestock Records Management'), variant: 'btn-dark' },
-  { label: t('FarmSavior Community','Communauté FarmSavior','FarmSavior 社区'), buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('community', 'FarmSavior Community'), variant: 'btn-dark' },
-  { label: 'AADU · Poultry University (Layers • Broilers • Guinea Fowl)', buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('poultry-university', 'Poultry University') },
-  { label: 'AADU · Sheep University (Ghana Sheep Breed Program)', buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('sheep-university', 'Sheep University') },
-  { label: 'AADU · Goat University (Ghana Goat Breed Program)', buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('goat-university', 'Goat University') },
-  { label: 'AADU · Cattle University (Ghana Cattle Breed Program)', buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('cattle-university', 'Cattle University') },
-  { label: t('My Listings','Mes annonces','我的列表'), buttonLabel: t('View','查看'), onClick: openMyListingsOverlay, variant: 'btn-dark' },
-  { label: t('List Product','Publier un produit','发布产品'), buttonLabel: t('Start','Démarrer'), onClick: () => handleProtectedAction('products', 'List Product') },
-  { label: t('List Livestock','Publier du bétail','发布牲畜'), buttonLabel: t('Start','Démarrer'), onClick: () => handleProtectedAction('livestock', 'List Livestock'), variant: 'btn-dark' },
-  { label: t('List Services','Publier des services','发布服务'), buttonLabel: t('Start','Démarrer'), onClick: () => handleProtectedAction('services', 'List Services') },
-  { label: t('List Machinery for Rent','Publier des machines à louer','发布机械租赁'), buttonLabel: t('Start','Démarrer'), onClick: () => handleProtectedAction('services', 'List Machinery for Rent') },
-  { label: t('Rent Machinery','Louer des machines','租用机械'), buttonLabel: t('Start','Démarrer'), onClick: () => handleProtectedAction('services', 'Rent Machinery') },
-  { label: t('Request Logistics / Transport','Demander logistique / transport','请求物流/运输'), buttonLabel: t('Start','Démarrer'), onClick: () => handleProtectedAction('services', 'Request Logistics / Transport') },
-  { label: t('Find Storage / Cold Room','Trouver stockage / chambre froide','寻找仓储/冷库'), buttonLabel: t('Start','Démarrer'), onClick: () => handleProtectedAction('services', 'Find Storage / Cold Room') },
-  { label: t('Farm GPS Mapping','Cartographie GPS des fermes','农场GPS标注'), buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('maps', 'Farm GPS Mapping') },
-  { label: t('Global World Chat','Chat mondial','全球聊天'), buttonLabel: t('Open','Ouvrir','打开'), onClick: () => handleProtectedAction('world-chat', 'Global World Chat') },
- ]), [handleProtectedAction, openMyListingsOverlay, t])
+
  const [livestockSubscription, setLivestockSubscription] = useState({ tier: 'free', status: 'FREE', record_limit: 25, can_create_records: true, subscription: null, plans: [] })
  const [billingOverview, setBillingOverview] = useState({ subscriptions: [], active_subscriptions: [], payments: [] })
  useEffect(() => {
@@ -5230,6 +5212,26 @@ const handlePublishLivestock = async (e) => {
  setAuthMode('login')
  setShowAuthModal(true)
  }
+
+ const popularActionItems = useMemo(() => ([
+  { label: t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析'), buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('ai-disease', 'AI Disease Analyzer'), variant: 'btn-dark' },
+  { label: t('Livestock Records Management','Gestion des registres du bétail','牲畜档案管理'), buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('livestock-records', 'Livestock Records Management'), variant: 'btn-dark' },
+  { label: t('FarmSavior Community','Communauté FarmSavior','FarmSavior 社区'), buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('community', 'FarmSavior Community'), variant: 'btn-dark' },
+  { label: 'AADU · Poultry University (Layers • Broilers • Guinea Fowl)', buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('poultry-university', 'Poultry University') },
+  { label: 'AADU · Sheep University (Ghana Sheep Breed Program)', buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('sheep-university', 'Sheep University') },
+  { label: 'AADU · Goat University (Ghana Goat Breed Program)', buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('goat-university', 'Goat University') },
+  { label: 'AADU · Cattle University (Ghana Cattle Breed Program)', buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('cattle-university', 'Cattle University') },
+  { label: t('My Listings','Mes annonces','我的列表'), buttonLabel: t('View','查看'), onClick: openMyListingsOverlay, variant: 'btn-dark' },
+  { label: t('List Product','Publier un produit','发布产品'), buttonLabel: t('Start','Démarrer'), onClick: () => handleProtectedAction('products', 'List Product') },
+  { label: t('List Livestock','Publier du bétail','发布牲畜'), buttonLabel: t('Start','Démarrer'), onClick: () => handleProtectedAction('livestock', 'List Livestock'), variant: 'btn-dark' },
+  { label: t('List Services','Publier des services','发布服务'), buttonLabel: t('Start','Démarrer'), onClick: () => handleProtectedAction('services', 'List Services') },
+  { label: t('List Machinery for Rent','Publier des machines à louer','发布机械租赁'), buttonLabel: t('Start','Démarrer'), onClick: () => handleProtectedAction('services', 'List Machinery for Rent') },
+  { label: t('Rent Machinery','Louer des machines','租用机械'), buttonLabel: t('Start','Démarrer'), onClick: () => handleProtectedAction('services', 'Rent Machinery') },
+  { label: t('Request Logistics / Transport','Demander logistique / transport','请求物流/运输'), buttonLabel: t('Start','Démarrer'), onClick: () => handleProtectedAction('services', 'Request Logistics / Transport') },
+  { label: t('Find Storage / Cold Room','Trouver stockage / chambre froide','寻找仓储/冷库'), buttonLabel: t('Start','Démarrer'), onClick: () => handleProtectedAction('services', 'Find Storage / Cold Room') },
+  { label: t('Farm GPS Mapping','Cartographie GPS des fermes','农场GPS标注'), buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('maps', 'Farm GPS Mapping') },
+  { label: t('Global World Chat','Chat mondial','全球聊天'), buttonLabel: t('Open','Ouvrir','打开'), onClick: () => handleProtectedAction('world-chat', 'Global World Chat') },
+ ]), [handleProtectedAction, openMyListingsOverlay, t])
 
  const addBoundaryPoint = (lat, lng) => {
  const point = { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) }
