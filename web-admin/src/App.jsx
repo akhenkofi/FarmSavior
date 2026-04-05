@@ -5243,7 +5243,7 @@ function AppInner() {
  {token && <div className='panel' style={{padding:10, marginBottom:10, background:'#ecfeff', border:'1px solid #99f6e4'}}>
  <div style={{fontWeight:700, marginBottom:6}}>{t('You are signed in.','Vous êtes connecté.')}</div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
- <button className='btn btn-dark' onClick={() => { window.location.href='/?public=0' }}>{t('Go to My Account Settings','Aller aux paramètres du compte')}</button>
+ <button className='btn btn-dark' onClick={() => { window.location.href='/?public=0' }}>{t('Go to My Account','Aller à mon compte','前往我的账户')}</button>
  <button className='btn' onClick={() => { localStorage.removeItem('farmsavior_token'); setToken(''); setAuthMode('login') }}>{t('Log out','Se déconnecter')}</button>
  </div>
  </div>}
