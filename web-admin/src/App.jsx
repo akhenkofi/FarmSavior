@@ -6512,9 +6512,16 @@ function AppInner() {
  {livestockView === 'edit' && <article className='panel'>
  {!livestockEdit.id ? <EmptyListingsState title='Choose a livestock listing to edit' body='Open Livestock List and tap Edit on a listing.' /> : <form className='list' onSubmit={async e => {
  e.preventDefault();
- await api.updateLivestock(Number(livestockEdit.id), { ...livestockEdit, ...normalizeListingImages(livestockEditImages), farmer_id: Number(livestockEdit.farmer_id || 1), quantity: Number(livestockEdit.quantity), unit_price: Number(livestockEdit.unit_price) });
- await load();
- setLivestockView('list')
+ try {
+  const res = await api.updateLivestock(Number(livestockEdit.id), { ...livestockEdit, ...normalizeListingImages(livestockEditImages), farmer_id: Number(livestockEdit.farmer_id || me?.id || 1), quantity: Number(livestockEdit.quantity), unit_price: Number(livestockEdit.unit_price) });
+  const updated = res?.record || res
+  setState(prev => ({ ...prev, livestock: (prev.livestock || []).map(row => Number(row.id) === Number(updated.id) ? { ...row, ...updated } : row) }))
+  setLivestockEdit(prev => ({ ...prev, ...updated }))
+  setLivestockView('list')
+  setActive('livestock')
+ } catch (err) {
+  alert(errMsg(err))
+ }
  }}>
  <div className='row2' style={{gap:10}}>
  <input className='input' placeholder='Listing ID' value={livestockEdit.id} onChange={e => setLivestockEdit({ ...livestockEdit, id: e.target.value })} required />
