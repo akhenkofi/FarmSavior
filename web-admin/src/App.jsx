@@ -2736,6 +2736,7 @@ function AppInner() {
  const [productsView, setProductsView] = useState('list')
  const [livestockView, setLivestockView] = useState('list')
  const [servicesView, setServicesView] = useState('list')
+const [serviceCreateType, setServiceCreateType] = useState('logistics')
  const [lightbox, setLightbox] = useState({ open: false, images: [], index: 0, title: '' })
  const [savedListings, setSavedListings] = useState(() => { try { return JSON.parse(localStorage.getItem('farmsavior_saved_listings') || '[]') } catch { return [] } })
  useEffect(() => {
@@ -7998,41 +7999,53 @@ function AppInner() {
  <button className={`tab ${servicesView === 'edit' ? 'active' : ''}`} onClick={() => setServicesView('edit')}>Edit Service</button>
  </div>
 
- {servicesView === 'create' && <div className='three-col'>
- <article className='panel'><h4>Logistics Request</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.createLogistics({ ...logisticsForm, ...normalizeListingImages(serviceImages), requester_id: Number(logisticsForm.requester_id), weight_kg: Number(logisticsForm.weight_kg) }); setServiceImages([]); await load(); setServicesView('list') }}>
- <input className='input' placeholder='Pickup' value={logisticsForm.pickup_location} onChange={e => setLogisticsForm({ ...logisticsForm, pickup_location: e.target.value })} />
- <input className='input' placeholder='Dropoff' value={logisticsForm.dropoff_location} onChange={e => setLogisticsForm({ ...logisticsForm, dropoff_location: e.target.value })} />
- <select className='input' value={logisticsForm.cargo_type} onChange={e => setLogisticsForm({ ...logisticsForm, cargo_type: e.target.value })} required>
-  <option value=''>Select service type</option>
-  {HIGH_DEMAND_SERVICE_TYPES.map(x => <option key={`service-type-log-${x}`} value={x}>{x}</option>)}
- </select>
- <input className='input' placeholder='Weight kg' value={logisticsForm.weight_kg} onChange={e => setLogisticsForm({ ...logisticsForm, weight_kg: e.target.value })} />
- <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceImages} setImages={setServiceImages} />
- <button className='btn btn-dark'>Create Logistics</button>
- </form></article>
- <article className='panel'><h4>Equipment Rental</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.createEquipment({ ...equipmentForm, ...normalizeListingImages(serviceImages), requester_id: Number(equipmentForm.requester_id), duration_days: Number(equipmentForm.duration_days), budget: Number(equipmentForm.budget) }); setServiceImages([]); await load(); setServicesView('list') }}>
- <select className='input' value={equipmentForm.equipment_type} onChange={e => setEquipmentForm({ ...equipmentForm, equipment_type: e.target.value })} required>
-  <option value=''>Select service type</option>
-  {HIGH_DEMAND_SERVICE_TYPES.map(x => <option key={`service-type-eq-${x}`} value={x}>{x}</option>)}
- </select>
- <input className='input' placeholder='Duration days' value={equipmentForm.duration_days} onChange={e => setEquipmentForm({ ...equipmentForm, duration_days: e.target.value })} />
- <input className='input' placeholder='Location' value={equipmentForm.location} onChange={e => setEquipmentForm({ ...equipmentForm, location: e.target.value })} />
- <input className='input' placeholder='Budget' value={equipmentForm.budget} onChange={e => setEquipmentForm({ ...equipmentForm, budget: e.target.value })} />
- <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceImages} setImages={setServiceImages} />
- <button className='btn btn-dark'>Create Rental</button>
- </form></article>
- <article className='panel'><h4>Storage Reservation</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.createStorage({ ...storageForm, ...normalizeListingImages(serviceImages), requester_id: Number(storageForm.requester_id), duration_days: Number(storageForm.duration_days), quantity_kg: Number(storageForm.quantity_kg) }); setServiceImages([]); await load(); setServicesView('list') }}>
- <select className='input' value={storageForm.storage_type} onChange={e => setStorageForm({ ...storageForm, storage_type: e.target.value })} required>
-  <option value=''>Select service type</option>
-  {HIGH_DEMAND_SERVICE_TYPES.map(x => <option key={`service-type-st-${x}`} value={x}>{x}</option>)}
- </select>
- <input className='input' placeholder='Quantity kg' value={storageForm.quantity_kg} onChange={e => setStorageForm({ ...storageForm, quantity_kg: e.target.value })} />
- <input className='input' placeholder='Location' value={storageForm.location} onChange={e => setStorageForm({ ...storageForm, location: e.target.value })} />
- <input className='input' placeholder='Duration days' value={storageForm.duration_days} onChange={e => setStorageForm({ ...storageForm, duration_days: e.target.value })} />
- <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceImages} setImages={setServiceImages} />
- <button className='btn btn-dark'>Create Storage</button>
- </form></article>
- </div>}
+ {servicesView === 'create' && <section>
+ <article className='panel'>
+  <h4>Create Service</h4>
+  <div className='tabs compact-tabs' style={{marginBottom:12}}>
+   <button className={`tab ${serviceCreateType === 'logistics' ? 'active' : ''}`} onClick={() => setServiceCreateType('logistics')}>Logistics</button>
+   <button className={`tab ${serviceCreateType === 'equipment' ? 'active' : ''}`} onClick={() => setServiceCreateType('equipment')}>Equipment</button>
+   <button className={`tab ${serviceCreateType === 'storage' ? 'active' : ''}`} onClick={() => setServiceCreateType('storage')}>Storage</button>
+  </div>
+  <div className='helper-text' style={{marginBottom:12}}>Choose one service type and complete only the fields for that service.</div>
+
+  {serviceCreateType === 'logistics' && <form className='list' onSubmit={async e => { e.preventDefault(); await api.createLogistics({ ...logisticsForm, ...normalizeListingImages(serviceImages), requester_id: Number(logisticsForm.requester_id), weight_kg: Number(logisticsForm.weight_kg) }); setServiceImages([]); await load(); setServicesView('list') }}>
+   <input className='input' placeholder='Pickup location' value={logisticsForm.pickup_location} onChange={e => setLogisticsForm({ ...logisticsForm, pickup_location: e.target.value })} />
+   <input className='input' placeholder='Dropoff location' value={logisticsForm.dropoff_location} onChange={e => setLogisticsForm({ ...logisticsForm, dropoff_location: e.target.value })} />
+   <select className='input' value={logisticsForm.cargo_type} onChange={e => setLogisticsForm({ ...logisticsForm, cargo_type: e.target.value })} required>
+    <option value=''>Select logistics type</option>
+    {HIGH_DEMAND_SERVICE_TYPES.map(x => <option key={`service-type-log-${x}`} value={x}>{x}</option>)}
+   </select>
+   <input className='input' placeholder='Weight (kg)' value={logisticsForm.weight_kg} onChange={e => setLogisticsForm({ ...logisticsForm, weight_kg: e.target.value })} />
+   <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceImages} setImages={setServiceImages} />
+   <button className='btn btn-dark'>Create Logistics</button>
+  </form>}
+
+  {serviceCreateType === 'equipment' && <form className='list' onSubmit={async e => { e.preventDefault(); await api.createEquipment({ ...equipmentForm, ...normalizeListingImages(serviceImages), requester_id: Number(equipmentForm.requester_id), duration_days: Number(equipmentForm.duration_days), budget: Number(equipmentForm.budget) }); setServiceImages([]); await load(); setServicesView('list') }}>
+   <select className='input' value={equipmentForm.equipment_type} onChange={e => setEquipmentForm({ ...equipmentForm, equipment_type: e.target.value })} required>
+    <option value=''>Select equipment type</option>
+    {HIGH_DEMAND_SERVICE_TYPES.map(x => <option key={`service-type-eq-${x}`} value={x}>{x}</option>)}
+   </select>
+   <input className='input' placeholder='Duration (days)' value={equipmentForm.duration_days} onChange={e => setEquipmentForm({ ...equipmentForm, duration_days: e.target.value })} />
+   <input className='input' placeholder='Location' value={equipmentForm.location} onChange={e => setEquipmentForm({ ...equipmentForm, location: e.target.value })} />
+   <input className='input' placeholder='Budget' value={equipmentForm.budget} onChange={e => setEquipmentForm({ ...equipmentForm, budget: e.target.value })} />
+   <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceImages} setImages={setServiceImages} />
+   <button className='btn btn-dark'>Create Rental</button>
+  </form>}
+
+  {serviceCreateType === 'storage' && <form className='list' onSubmit={async e => { e.preventDefault(); await api.createStorage({ ...storageForm, ...normalizeListingImages(serviceImages), requester_id: Number(storageForm.requester_id), duration_days: Number(storageForm.duration_days), quantity_kg: Number(storageForm.quantity_kg) }); setServiceImages([]); await load(); setServicesView('list') }}>
+   <select className='input' value={storageForm.storage_type} onChange={e => setStorageForm({ ...storageForm, storage_type: e.target.value })} required>
+    <option value=''>Select storage type</option>
+    {HIGH_DEMAND_SERVICE_TYPES.map(x => <option key={`service-type-st-${x}`} value={x}>{x}</option>)}
+   </select>
+   <input className='input' placeholder='Quantity (kg)' value={storageForm.quantity_kg} onChange={e => setStorageForm({ ...storageForm, quantity_kg: e.target.value })} />
+   <input className='input' placeholder='Location' value={storageForm.location} onChange={e => setStorageForm({ ...storageForm, location: e.target.value })} />
+   <input className='input' placeholder='Duration (days)' value={storageForm.duration_days} onChange={e => setStorageForm({ ...storageForm, duration_days: e.target.value })} />
+   <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceImages} setImages={setServiceImages} />
+   <button className='btn btn-dark'>Create Storage</button>
+  </form>}
+ </article>
+</section>}
 
  {servicesView === 'edit' && <div className='three-col'>
  <article className='panel'><h4>Edit Logistics</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.updateLogistics(Number(logisticsEdit.id), { ...logisticsEdit, ...normalizeListingImages(serviceEditImages), requester_id: Number(logisticsEdit.requester_id), weight_kg: Number(logisticsEdit.weight_kg) }); await load(); setServicesView('list') }}>
@@ -9460,7 +9473,7 @@ function AppInner() {
   )}
  </div>
 </div>}
- {token && <><EarningsButton /><DisputeButton role='buyer' />{isAdminUser && <AdminPanelButton />}</>}
+ {token && !(active === 'services' && servicesView === 'create') && <><EarningsButton /><DisputeButton role='buyer' />{isAdminUser && <AdminPanelButton />}</>}
  </>
 }
 
