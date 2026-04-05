@@ -4614,8 +4614,13 @@ function AppInner() {
    setPendingFeatureLabel('My Listings')
    setPendingFeatureSection('onboarding')
    setAuthMode('login')
+   setAuthMsg('Please sign in to view your listings.')
    setShowAuthModal(true)
-   try { document.getElementById('access-portal')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) } catch {}
+   try {
+    window.location.hash = 'access-portal'
+    const target = document.getElementById('access-portal')
+    target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+   } catch {}
    return
   }
   setMyListingsOpen(true)
