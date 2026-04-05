@@ -2646,8 +2646,8 @@ const isSavedListing = (saved, kind, id) => saved.includes(listingKey(kind, id))
 const openOrderFromListing = ({ me, setActive, setOrderForm, listingType, listingId, listingTitle, sellerId, unitPrice, quantity = 1 }) => {
  setOrderForm(prev => ({
  ...prev,
- buyer_id: Number(me?.id || prev.buyer_id || 1),
- seller_id: Number(sellerId || prev.seller_id || 2),
+ buyer_id: Number(me?.id || prev.buyer_id || 0) || '',
+ seller_id: Number(sellerId || prev.seller_id || 0) || '',
  listing_type: listingType,
  listing_id: Number(listingId || 1),
  listing_title: listingTitle || '',
@@ -3903,7 +3903,7 @@ function AppInner() {
  const [payoutForm, setPayoutForm] = useState({ user_id: 2, country: 'GH', payout_method: 'MOBILE_MONEY', account_name: '', bank_name: '', account_number: '', mobile_money_provider: 'MTN', mobile_money_number: '', currency: 'GHS', default_payout_method: true })
  const [payoutSettingsOpen, setPayoutSettingsOpen] = useState(false)
  const [payoutSaving, setPayoutSaving] = useState(false)
- const [buyerOrderUserId, setBuyerOrderUserId] = useState(String(me?.id || 1))
+ const [buyerOrderUserId, setBuyerOrderUserId] = useState(String(me?.id || ''))
  const [sellerOrderUserId, setSellerOrderUserId] = useState(String(me?.id || ''))
  const [selectedOrder, setSelectedOrder] = useState(null)
  const [selectedReceipt, setSelectedReceipt] = useState(null)
