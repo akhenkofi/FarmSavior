@@ -4832,7 +4832,7 @@ function AppInner() {
  }
 
  const baseMenu = ['home', 'dashboard', 'ai-disease', 'poultry-university', 'sheep-university', 'goat-university', 'cattle-university', 'livestock-records', 'onboarding', 'my-listings', 'products', 'livestock', 'services', 'payments', 'alerts', 'maps', 'world-chat', 'community', 'government', 'contracts']
- const menu = ((me?.role || '').toLowerCase() === 'admin') ? [...baseMenu, 'admin'] : baseMenu
+ const menu = isAdminUser ? [...baseMenu, 'admin'] : baseMenu
  const menuLabel = (m) => ({
  'home':t('home','home','首页'),
  'dashboard':t('dashboard','dashboard','仪表盘'),
@@ -6071,7 +6071,7 @@ function AppInner() {
  </section>}
 
  {active === 'dashboard' && <section>
- <h2>{t('Admin Dashboard + Analytics','Tableau de bord admin + analyses','管理员仪表盘 + 分析')}</h2>
+ <h2>{isAdminUser ? t('Admin Dashboard + Analytics','Tableau de bord admin + analyses','管理员仪表盘 + 分析') : t('My Dashboard + Analytics','Mon tableau de bord + analyses','我的仪表盘 + 分析')}</h2>
  <div className='kpi-grid'>{kpis.map(([k, v]) => <article className='kpi-card' key={k}><p>{k}</p><strong>{v}</strong></article>)}</div>
 
  <div className='two-col'>
@@ -9345,7 +9345,7 @@ function AppInner() {
  </form>
  <DataTable columns={['id', 'origin_country', 'destination_country', 'commodity', 'quantity', 'price', 'status']} rows={state.contracts} filterKey='commodity' /></section>}
 
- {active === 'admin' && ((me?.role || '').toLowerCase() === 'admin') && <section>
+ {active === 'admin' && isAdminUser && <section>
  <h2>{t('Admin Dashboard (Admin Only)','Tableau de bord admin (admin uniquement)','管理员仪表盘（仅管理员）')}</h2>
  <div className='kpi-grid'>
  <article className='kpi-card'><p>User management</p><strong>{(state.users || []).length}</strong></article>
