@@ -2754,6 +2754,7 @@ function AppInner() {
  const [myListingsLoading, setMyListingsLoading] = useState(false)
  const [myListings, setMyListings] = useState({ products: [], services: [], livestock: [] })
  const [myListingsError, setMyListingsError] = useState('')
+ const [selectedMyListing, setSelectedMyListing] = useState(null)
  const [worldChat, setWorldChat] = useState([])
  const [worldChatText, setWorldChatText] = useState('')
  const [worldChatMsg, setWorldChatMsg] = useState('')
@@ -4684,14 +4685,13 @@ function AppInner() {
   if (!listing?.row) return
   const row = listing.row
   const rawImages = parseImageList(row.image_urls || row.images || [])
-  const detail = {
-   ...row,
-   section: listing.type === 'product' ? 'products' : listing.type === 'livestock' ? 'livestock' : 'services',
+  setSelectedMyListing({
+   ...listing,
+   row,
    title: row.title || row.crop_name || row.livestock_type || row.equipment_type || row.storage_type || 'Listing',
-   subtitle: row.location || row.pickup_location || '',
+   subtitle: row.location || row.pickup_location || row.dropoff_location || '',
    images: rawImages.length ? rawImages : [row.cover_image_url].filter(Boolean),
-  }
-  setPublicDetail(detail)
+  })
  }
 
  const handleEditListing = (listing) => {
@@ -6390,6 +6390,27 @@ function AppInner() {
  )}
  </article>
  </section>}
+
+ {selectedMyListing && <div className='lightbox' onClick={() => setSelectedMyListing(null)}>
+ <div className='lightbox-inner public-detail' onClick={(e) => e.stopPropagation()}>
+  <div className='list-row' style={{marginBottom:8}}>
+   <strong>{selectedMyListing.title}</strong>
+   <button type='button' className='btn btn-dark' onClick={() => setSelectedMyListing(null)}>Close</button>
+  </div>
+  <ListingGallery images={selectedMyListing.images || []} title={selectedMyListing.title} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} />
+  <div className='detail-meta' style={{marginTop:10}}>
+   <div className='helper-text'>{selectedMyListing.subtitle}</div>
+   <div className='listing-card-metrics'>
+    <span>{selectedMyListing.type}</span>
+    <span>{selectedMyListing.status}</span>
+    <span>{selectedMyListing.price === '' || selectedMyListing.price === null || selectedMyListing.price === undefined ? 'Price: N/A' : `Price: ${selectedMyListing.price}`}</span>
+   </div>
+   <div className='card-actions'>
+    <button type='button' className='btn btn-dark' onClick={() => handleEditListing(selectedMyListing)}>Edit</button>
+   </div>
+  </div>
+ </div>
+</div>}
 
  {active === 'products' && <section>
  <div className='section-header'>
