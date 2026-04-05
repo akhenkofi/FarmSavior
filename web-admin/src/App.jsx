@@ -3772,8 +3772,8 @@ function AppInner() {
   return () => clearInterval(timer)
  }, [authMode])
  const [passportForm, setPassportForm] = useState({ user_id: 1, gps_lat: '', gps_lng: '', farm_size_hectares: '', crop_types: '[]', livestock_numbers: '{}', farm_photo_urls: '[]', harvest_records_notes: '' })
- const [cropForm, setCropForm] = useState({ farmer_id: 1, crop_name: '', quantity_kg: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
- const [cropEdit, setCropEdit] = useState({ id: '', farmer_id: 1, crop_name: '', quantity_kg: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
+ const [cropForm, setCropForm] = useState({ farmer_id: 1, crop_name: '', quantity_kg: '', unit_price: '', location: '', country: 'GH', status: 'OPEN', ships_from_country: 'GH', ships_from_city: '', ships_to_scope: 'country', shipping_cost_type: 'buyer_pays_actual', shipping_cost_amount: '', estimated_ship_days: '1-3 business days', shipping_notes: '' })
+ const [cropEdit, setCropEdit] = useState({ id: '', farmer_id: 1, crop_name: '', quantity_kg: '', unit_price: '', location: '', country: 'GH', status: 'OPEN', ships_from_country: 'GH', ships_from_city: '', ships_to_scope: 'country', shipping_cost_type: 'buyer_pays_actual', shipping_cost_amount: '', estimated_ship_days: '1-3 business days', shipping_notes: '' })
  const [cropQuickEdit, setCropQuickEdit] = useState({ id: '', quantity_kg: '', unit_price: '' })
  const [productImages, setProductImages] = useState([])
  const [productEditImages, setProductEditImages] = useState([])
@@ -6429,10 +6429,17 @@ function AppInner() {
  {productsView === 'create' && <article className='panel'>
  <form className='list' onSubmit={async e => {
  e.preventDefault();
- await api.createListing({ ...cropForm, crop_name: normalizeProductType(cropForm.crop_name), ...normalizeListingImages(productImages), farmer_id: Number(cropForm.farmer_id), quantity_kg: Number(cropForm.quantity_kg), unit_price: Number(cropForm.unit_price) });
- setProductImages([])
- await load();
- setProductsView('list')
+ try {
+  const res = await api.createListing({ ...cropForm, crop_name: normalizeProductType(cropForm.crop_name), ...normalizeListingImages(productImages), farmer_id: Number(cropForm.farmer_id || me?.id || 1), quantity_kg: Number(cropForm.quantity_kg), unit_price: Number(cropForm.unit_price), ships_from_country: cropForm.ships_from_country || cropForm.country || 'GH', ships_from_city: cropForm.ships_from_city || cropForm.location || 'Accra', ships_to_scope: cropForm.ships_to_scope || 'country', shipping_cost_type: cropForm.shipping_cost_type || 'buyer_pays_actual', shipping_cost_amount: cropForm.shipping_cost_amount === '' ? null : Number(cropForm.shipping_cost_amount), estimated_ship_days: cropForm.estimated_ship_days || '1-3 business days', shipping_notes: cropForm.shipping_notes || '' });
+  const created = res?.record || res
+  setState(prev => ({ ...prev, listings: [created, ...(prev.listings || [])] }))
+  setProductImages([])
+  setCropForm({ farmer_id: me?.id || 1, crop_name: '', quantity_kg: '', unit_price: '', location: '', country: 'GH', status: 'OPEN', ships_from_country: 'GH', ships_from_city: '', ships_to_scope: 'country', shipping_cost_type: 'buyer_pays_actual', shipping_cost_amount: '', estimated_ship_days: '1-3 business days', shipping_notes: '' })
+  setProductsView('list')
+  setActive('products')
+ } catch (err) {
+  alert(errMsg(err))
+ }
  }}>
  <div className='row2' style={{gap:10}}>
  <select className='input' value={cropForm.crop_name} onChange={e => setCropForm({ ...cropForm, crop_name: e.target.value })} required>
@@ -6453,9 +6460,16 @@ function AppInner() {
  {productsView === 'edit' && <article className='panel'>
  {!cropEdit.id ? <EmptyListingsState title='Choose a product to edit' body='Open Product List and tap Edit on a product card or row.' /> : <form className='list' onSubmit={async e => {
  e.preventDefault();
- await api.updateListing(Number(cropEdit.id), { ...cropEdit, crop_name: normalizeProductType(cropEdit.crop_name), ...normalizeListingImages(productEditImages, productEditImages[0]), farmer_id: Number(cropEdit.farmer_id), quantity_kg: Number(cropEdit.quantity_kg), unit_price: Number(cropEdit.unit_price) });
- await load();
- setProductsView('list')
+ try {
+  const res = await api.updateListing(Number(cropEdit.id), { ...cropEdit, crop_name: normalizeProductType(cropEdit.crop_name), ...normalizeListingImages(productEditImages, productEditImages[0]), farmer_id: Number(cropEdit.farmer_id || me?.id || 1), quantity_kg: Number(cropEdit.quantity_kg), unit_price: Number(cropEdit.unit_price), ships_from_country: cropEdit.ships_from_country || cropEdit.country || 'GH', ships_from_city: cropEdit.ships_from_city || cropEdit.location || 'Accra', ships_to_scope: cropEdit.ships_to_scope || 'country', shipping_cost_type: cropEdit.shipping_cost_type || 'buyer_pays_actual', shipping_cost_amount: cropEdit.shipping_cost_amount === '' ? null : Number(cropEdit.shipping_cost_amount), estimated_ship_days: cropEdit.estimated_ship_days || '1-3 business days', shipping_notes: cropEdit.shipping_notes || '' });
+  const updated = res?.record || res
+  setState(prev => ({ ...prev, listings: (prev.listings || []).map(row => Number(row.id) === Number(updated.id) ? { ...row, ...updated } : row) }))
+  setCropEdit(prev => ({ ...prev, ...updated }))
+  setProductsView('list')
+  setActive('products')
+ } catch (err) {
+  alert(errMsg(err))
+ }
  }}>
  <div className='row2' style={{gap:10}}>
  <input className='input' placeholder='Listing ID' value={cropEdit.id} onChange={e => setCropEdit({ ...cropEdit, id: e.target.value })} required />
@@ -6482,7 +6496,7 @@ function AppInner() {
  const images = parseImageList(r.image_urls)
  return <ListingDetailCard key={`product-card-${r.id}`} title={r.crop_name} subtitle={`${r.location || 'Location not set'} • ${r.country} • ${r.status}`} stats={[`${r.quantity_kg} kg`, `${r.unit_price}`, `${images.length} photos`]} contact={'Verified seller • FarmSavior protected'}><div className='listing-card-media'><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={r.crop_name} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /></div><div className='listing-card-body'><div className='listing-card-metrics'>{images.length ? <span className='cover-badge'>Cover ready</span> : null}</div><div className='card-actions'>
  <button className='btn btn-dark' type='button' onClick={() => {
- setCropEdit({ id: r.id, farmer_id: r.farmer_id || 1, crop_name: r.crop_name || '', quantity_kg: r.quantity_kg || '', unit_price: r.unit_price || '', location: r.location || '', country: r.country || 'GH', status: r.status || 'OPEN' })
+ setCropEdit({ id: r.id, farmer_id: r.farmer_id || 1, crop_name: r.crop_name || '', quantity_kg: r.quantity_kg || '', unit_price: r.unit_price || '', location: r.location || '', country: r.country || 'GH', status: r.status || 'OPEN', ships_from_country: r.ships_from_country || r.country || 'GH', ships_from_city: r.ships_from_city || r.location || '', ships_to_scope: r.ships_to_scope || 'country', shipping_cost_type: r.shipping_cost_type || 'buyer_pays_actual', shipping_cost_amount: r.shipping_cost_amount ?? '', estimated_ship_days: r.estimated_ship_days || '1-3 business days', shipping_notes: r.shipping_notes || '' })
  setCropQuickEdit({ id: r.id, quantity_kg: r.quantity_kg || '', unit_price: r.unit_price || '' })
  setProductEditImages(images)
  setProductsView('edit')
@@ -6494,7 +6508,7 @@ function AppInner() {
  })}
  </div>
  <DataTable columns={['id', 'crop_name', 'quantity_kg', 'unit_price', 'country', 'status']} rows={state.listings} filterKey='crop_name' onEdit={(r) => {
- setCropEdit({ id: r.id, farmer_id: r.farmer_id || 1, crop_name: r.crop_name || '', quantity_kg: r.quantity_kg || '', unit_price: r.unit_price || '', location: r.location || '', country: r.country || 'GH', status: r.status || 'OPEN' })
+ setCropEdit({ id: r.id, farmer_id: r.farmer_id || 1, crop_name: r.crop_name || '', quantity_kg: r.quantity_kg || '', unit_price: r.unit_price || '', location: r.location || '', country: r.country || 'GH', status: r.status || 'OPEN', ships_from_country: r.ships_from_country || r.country || 'GH', ships_from_city: r.ships_from_city || r.location || '', ships_to_scope: r.ships_to_scope || 'country', shipping_cost_type: r.shipping_cost_type || 'buyer_pays_actual', shipping_cost_amount: r.shipping_cost_amount ?? '', estimated_ship_days: r.estimated_ship_days || '1-3 business days', shipping_notes: r.shipping_notes || '' })
  setCropQuickEdit({ id: r.id, quantity_kg: r.quantity_kg || '', unit_price: r.unit_price || '' })
  setProductEditImages(parseImageList(r.image_urls))
  setProductsView('edit')
