@@ -4633,7 +4633,7 @@ function AppInner() {
   }
  }
 
- const openMyListingsOverlay = () => {
+ const openMyListingsOverlay = async () => {
   if (!token) {
    setPendingFeatureLabel('My Listings')
    setPendingFeatureSection('onboarding')
@@ -4642,8 +4642,8 @@ function AppInner() {
    setShowAuthModal(true)
    return
   }
-  setMyListingsOpen(true)
-  loadMyListings()
+  setActive('my-listings')
+  await loadMyListings()
  }
 
  const handleEditListing = (listing) => {
@@ -5899,6 +5899,7 @@ function AppInner() {
  <button className={`app-quick-btn ${active === 'products' ? 'active' : ''}`} aria-pressed={active === 'products'} onClick={() => setActive('products')}>{t('Products','Produits')}</button>
  <button className={`app-quick-btn ${active === 'livestock' ? 'active' : ''}`} aria-pressed={active === 'livestock'} onClick={() => setActive('livestock')}>{t('Livestock','Élevage')}</button>
  <button className={`app-quick-btn ${active === 'services' ? 'active' : ''}`} aria-pressed={active === 'services'} onClick={() => setActive('services')}>{t('Services','Services')}</button>
+ <button className={`app-quick-btn ${active === 'my-listings' ? 'active' : ''}`} aria-pressed={active === 'my-listings'} onClick={openMyListingsOverlay}>{t('My Listings','Mes annonces','我的列表')}</button>
  </div>
  </div>
  <div className='app-toolbar-side'>
@@ -6311,6 +6312,30 @@ function AppInner() {
  <h3>{t('Verified Accounts (Approved)','Comptes vérifiés (approuvés)','已认证账户（已批准）')}</h3>
  <DataTable columns={['user_id','full_name','phone','country','role','verified_status','ai_score']} rows={state.approvedAccounts} filterKey='full_name' />
  </article>}
+ </section>}
+
+ {active === 'my-listings' && <section>
+ <div className='list-row'><h2 style={{margin:0}}>{t('My Listings','Mes annonces','我的列表')}</h2><button className='btn' type='button' onClick={openMyListingsOverlay}>{t('Refresh','Actualiser','刷新')}</button></div>
+ <article className='panel'>
+ {myListingsLoading ? (
+  <div>Loading listings…</div>
+ ) : myListingsError ? (
+  <div className='helper-text' style={{color:'#dc2626'}}>{myListingsError}</div>
+ ) : flatMyListings.length ? (
+  <div className='list'>
+   {flatMyListings.map((listing, index) => (<div key={`screen-my-listing-${listing.type}-${listing.row?.id || index}`} className='list-row' style={{justifyContent:'space-between',flexWrap:'wrap',gap:10}}>
+    <div>
+     <strong>{listing.title}</strong><br />
+     <span className='helper-text'>{listing.type} • {listing.status}</span><br />
+     <span className='helper-text'>Price: {listing.price === '' || listing.price === null || listing.price === undefined ? 'N/A' : listing.price}</span>
+    </div>
+    <button type='button' className='btn btn-dark' onClick={() => handleEditListing(listing)}>Edit</button>
+   </div>))}
+  </div>
+ ) : (
+  <div className='helper-text'>{t('No listings yet.','Aucune annonce pour le moment.','当前没有列表。')}</div>
+ )}
+ </article>
  </section>}
 
  {active === 'products' && <section>
