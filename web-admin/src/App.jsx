@@ -2,6 +2,9 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import AgoraRTC from 'agora-rtc-sdk-ng'
 // homepage-priority-refresh
 import * as api from './services/api'
+import EarningsButton from './components/EarningsButton'
+import DisputeButton from './components/DisputeButton'
+import AdminPanelButton from './components/AdminPanelButton'
 
 class AppErrorBoundary extends React.Component {
  constructor(props) {
@@ -5899,6 +5902,7 @@ function AppInner() {
  <button className={`app-quick-btn ${active === 'livestock' ? 'active' : ''}`} aria-pressed={active === 'livestock'} onClick={() => setActive('livestock')}>{t('Livestock','Élevage')}</button>
  <button className={`app-quick-btn ${active === 'services' ? 'active' : ''}`} aria-pressed={active === 'services'} onClick={() => setActive('services')}>{t('Services','Services')}</button>
  <button className={`app-quick-btn ${active === 'my-listings' ? 'active' : ''}`} aria-pressed={active === 'my-listings'} onClick={openMyListingsOverlay}>{t('My Listings','Mes annonces','我的列表')}</button>
+ <button className={`app-quick-btn ${active === 'payments' ? 'active' : ''}`} aria-pressed={active === 'payments'} onClick={() => setActive('payments')}>{t('Marketplace','Marketplace','市场')}</button>
  </div>
  </div>
  <div className='app-toolbar-side'>
@@ -9369,6 +9373,7 @@ function AppInner() {
   )}
  </div>
 </div>}
+ {token && <><EarningsButton /><DisputeButton role='buyer' /><AdminPanelButton /></>}
  </>
 }
 
