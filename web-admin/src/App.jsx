@@ -81,71 +81,6 @@ const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
   reader.readAsDataURL(file)
 })
 
-const handleOrderProofInputChange = async (event) => {
-  if (!event?.target?.files) return
-  await handleOrderProofFiles(event.target.files)
-  try {
-    event.target.value = ''
-  } catch {}
-}
-
-const handleOrderProofFiles = async (files) => {
-  const selected = Array.from(files || []).filter(Boolean)
-  if (!selected.length) return
-  try {
-    const mapped = await Promise.all(selected.map(async (file) => ({
-      name: file.name,
-      type: file.type || 'application/octet-stream',
-      data_url: await readFileAsDataUrl(file),
-    })))
-    setOrderProofFiles(prev => [...prev, ...mapped])
-  } catch (err) {
-    alert('Unable to read proof files. Try smaller files or a different format.')
-  }
-}
-
-const removeOrderProofFile = (index) => {
-  setOrderProofFiles(prev => prev.filter((_, idx) => idx !== index))
-}
-
-useEffect(() => {
-  if (!selectedOrder) {
-    setOrderTrackingNumber('')
-    setOrderProofFiles([])
-    return
-  }
-  setOrderTrackingNumber(selectedOrder.tracking_number || '')
-  if (selectedOrder.tracking_proof_url) {
-    setOrderProofFiles([{ name: 'Shipping proof', type: 'image/jpeg', data_url: selectedOrder.tracking_proof_url }])
-  } else {
-    setOrderProofFiles([])
-  }
-}, [selectedOrder])
-
-const canMarkOrderShipped = Boolean(orderTrackingNumber.trim()) || orderProofFiles.length > 0
-
-const markSelectedOrderShipped = async () => {
-  if (!selectedOrder || orderMarkingShipping || !canMarkOrderShipped) return
-  setOrderMarkingShipping(true)
-  try {
-    const payload = {}
-    if (orderTrackingNumber.trim()) payload.tracking_number = orderTrackingNumber.trim()
-    if (orderProofFiles.length) {
-      payload.proof_files = orderProofFiles.map(f => ({ name: f.name, mime_type: f.type, data_url: f.data_url }))
-    }
-    const updated = await api.markOrderShipped(selectedOrder.id, payload)
-    setSelectedOrder(updated.order || updated)
-    await load()
-    setOrderTrackingNumber('')
-    setOrderProofFiles([])
-    alert('Marked as shipped and buyer notified.')
-  } catch (err) {
-    alert(errMsg(err))
-  } finally {
-    setOrderMarkingShipping(false)
-  }
-}
-
 const compressImageFileToDataUrl = (file, { maxDim = 1600, quality = 0.82, maxChars = 900000 } = {}) => new Promise((resolve, reject) => {
  const reader = new FileReader()
  reader.onerror = () => reject(new Error('Could not read image file'))
@@ -4378,7 +4313,73 @@ const [logisticsEdit, setLogisticsEdit] = useState({ id: '', requester_id: 1, pi
  const [orderTrackingNumber, setOrderTrackingNumber] = useState('')
 const [orderProofFiles, setOrderProofFiles] = useState([])
 const [orderMarkingShipping, setOrderMarkingShipping] = useState(false)
+const handleOrderProofFiles = async (files) => {
+  const selected = Array.from(files || []).filter(Boolean)
+  if (!selected.length) return
+  try {
+    const mapped = await Promise.all(selected.map(async (file) => ({
+      name: file.name,
+      type: file.type || 'application/octet-stream',
+      data_url: await readFileAsDataUrl(file),
+    })))
+    setOrderProofFiles(prev => [...prev, ...mapped])
+  } catch (err) {
+    alert('Unable to read proof files. Try smaller files or a different format.')
+  }
+}
+
+const handleOrderProofInputChange = async (event) => {
+  if (!event?.target?.files) return
+  await handleOrderProofFiles(event.target.files)
+  try {
+    event.target.value = ''
+  } catch {}
+}
+
+const removeOrderProofFile = (index) => {
+  setOrderProofFiles(prev => prev.filter((_, idx) => idx !== index))
+}
+
+const canMarkOrderShipped = Boolean(orderTrackingNumber.trim()) || orderProofFiles.length > 0
+
+const markSelectedOrderShipped = async () => {
+  if (!selectedOrder || orderMarkingShipping || !canMarkOrderShipped) return
+  setOrderMarkingShipping(true)
+  try {
+    const payload = {}
+    if (orderTrackingNumber.trim()) payload.tracking_number = orderTrackingNumber.trim()
+    if (orderProofFiles.length) {
+      payload.proof_files = orderProofFiles.map(f => ({ name: f.name, mime_type: f.type, data_url: f.data_url }))
+    }
+    const updated = await api.markOrderShipped(selectedOrder.id, payload)
+    setSelectedOrder(updated.order || updated)
+    await load()
+    setOrderTrackingNumber('')
+    setOrderProofFiles([])
+    alert('Marked as shipped and buyer notified.')
+  } catch (err) {
+    alert(errMsg(err))
+  } finally {
+    setOrderMarkingShipping(false)
+  }
+}
+
 const [confirmingDelivery, setConfirmingDelivery] = useState(false)
+const [selectedOrder, setSelectedOrder] = useState(null)
+useEffect(() => {
+  if (!selectedOrder) {
+    setOrderTrackingNumber('')
+    setOrderProofFiles([])
+    return
+  }
+  setOrderTrackingNumber(selectedOrder.tracking_number || '')
+  if (selectedOrder.tracking_proof_url) {
+    setOrderProofFiles([{ name: 'Shipping proof', type: 'image/jpeg', data_url: selectedOrder.tracking_proof_url }])
+  } else {
+    setOrderProofFiles([])
+  }
+}, [selectedOrder])
+
 const canConfirmDelivery = selectedOrder && !['DELIVERED','COMPLETED'].includes(String(selectedOrder.fulfillment_status || '').toUpperCase())
 const confirmSelectedOrderDelivery = async () => {
   if (!selectedOrder || confirmingDelivery) return
@@ -4425,7 +4426,6 @@ const startOrderPayment = async () => {
     setOrderPaymentProcessing(false)
   }
 }
-const [selectedOrder, setSelectedOrder] = useState(null)
  const [selectedReceipt, setSelectedReceipt] = useState(null)
  const [paymentForm, setPaymentForm] = useState({ payer_id: 2, payee_id: 1, amount: '', country: 'GH', method: 'MobileMoney', provider: 'MTN MoMo', escrow_enabled: true })
  const [paymentEdit, setPaymentEdit] = useState({ id: '', payer_id: 2, payee_id: 1, amount: '', country: 'GH', method: 'MobileMoney', provider: 'MTN MoMo', escrow_enabled: true })
