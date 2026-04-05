@@ -30,7 +30,7 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".MyFirebaseMessagingService"
+            android:name="com.fs.farmsaviorapp.MyFirebaseMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
@@ -38,7 +38,7 @@
         </service>
 
         <receiver
-            android:name=".IncomingCallActionReceiver"
+            android:name="com.fs.farmsaviorapp.IncomingCallActionReceiver"
             android:exported="false" />
 
         <activity

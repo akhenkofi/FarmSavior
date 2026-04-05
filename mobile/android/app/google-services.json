@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1006866535448",
+    "project_id": "farmsavior-10f98",
+    "storage_bucket": "farmsavior-10f98.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1006866535448:android:039d10d0bb05dcf8c51f6d",
+        "android_client_info": {
+          "package_name": "com.fs.farmsaviorapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEiW01oMWxRsG33bSane_op3DPw6K7ixI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

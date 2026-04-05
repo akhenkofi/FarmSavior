@@ -1,4 +1,4 @@
-package com.example.farmsavior_mobile
+package com.fs.farmsaviorapp
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -52,13 +52,13 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     )
 
     val acceptIntent = Intent(this, IncomingCallActionReceiver::class.java).apply {
-      action = "com.example.farmsavior_mobile.CALL_ACCEPT"
+      action = "com.fs.farmsaviorapp.CALL_ACCEPT"
       putExtra("callId", callId)
       putExtra("mode", mode)
       putExtra("url", url)
     }
     val declineIntent = Intent(this, IncomingCallActionReceiver::class.java).apply {
-      action = "com.example.farmsavior_mobile.CALL_DECLINE"
+      action = "com.fs.farmsaviorapp.CALL_DECLINE"
       putExtra("callId", callId)
     }
 

@@ -124,6 +124,7 @@ export const fetchUsers = async () => (await api.get('/users')).data
 
 export const fetchListings = async () => (await api.get('/marketplace/listings')).data
 export const createListing = async (payload) => (await api.post('/marketplace/listings', payload)).data
+export const fetchMyListings = async (params) => (await api.get('/listings/mine', { params })).data
 export const updateListing = async (id, payload) => (await api.put(`/marketplace/listings/${id}`, payload)).data
 export const deleteListing = async (id) => (await api.delete(`/marketplace/listings/${id}`)).data
 export const patchListingPriceQty = async (id, payload) => (await api.patch(`/marketplace/listings/${id}/price-qty`, payload)).data
@@ -168,7 +169,10 @@ export const fetchOrderReceipt = async (id) => (await api.get(`/orders/${id}/rec
 export const payOrder = async (id, payload) => (await api.post(`/orders/${id}/pay`, payload)).data
 export const verifyOrderPayment = async (id) => (await api.post(`/orders/${id}/verify-payment`)).data
 export const updateOrderStatus = async (id, payload) => (await api.put(`/orders/${id}/status`, payload)).data
+export const initializeMarketplaceOrderPayment = async (payload) => (await api.post('/payments/initialize', payload)).data
+export const verifyMarketplacePayment = async (payload) => (await api.post('/payments/verify', payload)).data
 export const confirmOrder = async (id) => (await api.post(`/orders/${id}/confirm`)).data
+export const markOrderShipped = async (id, payload) => (await api.post(`/orders/${id}/ship`, payload)).data
 export const releaseOrder = async (id) => (await api.post(`/orders/${id}/release`)).data
 export const disputeOrder = async (id, payload) => (await api.post(`/orders/${id}/dispute`, payload)).data
 
@@ -280,3 +284,12 @@ export const withAuthToken = (url) => {
   if (!token) return url
   return `${url}${url.includes('?') ? '&' : '?'}token=${encodeURIComponent(token)}`
 }
+
+export const fetchMarketplaceProfile = async (userId) => (await api.get(`/marketplace/users/${userId}/profile`)).data
+
+export const fetchSellerOrders = async () => (await api.get('/orders/seller')).data
+export const submitDispute = async (payload) => (await api.post('/disputes', payload)).data
+export const respondDispute = async (disputeId, payload) => (await api.post(`/disputes/${disputeId}/respond`, payload)).data
+export const resolveDispute = async (disputeId, result) => (await api.post(`/disputes/${disputeId}/resolve`, { result })).data
+export const fetchDisputeByOrder = async (orderId) => (await api.get(`/disputes/order/${orderId}`)).data
+export const fetchOpenDisputes = async () => (await api.get('/disputes')).data

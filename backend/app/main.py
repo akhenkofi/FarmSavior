@@ -73,6 +73,18 @@ def ensure_runtime_columns():
                         conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN image_urls TEXT DEFAULT '[]'"))
                     if 'cover_image_url' not in cols:
                         conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN cover_image_url TEXT"))
+                    shipping_cols = {
+                        'ships_from_country': "VARCHAR(8) DEFAULT 'GH'",
+                        'ships_from_city': "VARCHAR(120) DEFAULT 'Unknown'",
+                        'ships_to_scope': "VARCHAR(20) DEFAULT 'country'",
+                        'shipping_cost_type': "VARCHAR(20) DEFAULT 'free'",
+                        'shipping_cost_amount': 'FLOAT',
+                        'estimated_ship_days': "VARCHAR(120) DEFAULT 'Varies'",
+                        'shipping_notes': 'TEXT'
+                    }
+                    for col, ddl in shipping_cols.items():
+                        if col not in cols:
+                            conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {col} {ddl}"))
 
 
 
@@ -87,7 +99,9 @@ def ensure_runtime_columns():
                 extra = {
                     'auto_release_at': _ts_type(),
                     'released_at': _ts_type(),
-                    'refunded_at': _ts_type()
+                    'refunded_at': _ts_type(),
+                    'platform_fee_amount': 'FLOAT DEFAULT 0',
+                    'seller_payout_amount': 'FLOAT DEFAULT 0'
                 }
                 for col, ddl in extra.items():
                     if col not in ocols:
@@ -133,8 +147,10 @@ def ensure_runtime_columns():
                     'buyer_id': 'INTEGER', 'seller_id': 'INTEGER', 'listing_type': 'VARCHAR(30)', 'listing_id': 'INTEGER',
                     'listing_title': 'VARCHAR(180)', 'quantity': 'FLOAT DEFAULT 1', 'unit_price': 'FLOAT DEFAULT 0',
                     'gross_amount': 'FLOAT DEFAULT 0', 'platform_fee': 'FLOAT DEFAULT 0', 'processing_fee': 'FLOAT DEFAULT 0',
-                    'seller_net': 'FLOAT DEFAULT 0', 'currency': "VARCHAR(10) DEFAULT 'GHS'", 'escrow_status': "VARCHAR(40) DEFAULT 'AWAITING_PAYMENT'",
-                    'fulfillment_status': "VARCHAR(40) DEFAULT 'PENDING'", 'payment_status': "VARCHAR(40) DEFAULT 'UNPAID'", 'payout_status': "VARCHAR(40) DEFAULT 'HELD'",
+                    'seller_net': 'FLOAT DEFAULT 0', 'currency': "VARCHAR(10) DEFAULT 'GHS'", 'status': "VARCHAR(20) DEFAULT 'pending'",
+                    'tracking_number': 'VARCHAR(120)', 'tracking_proof_url': 'VARCHAR(500)', 'shipped_at': _ts_type(), 'delivered_at': _ts_type(),
+                    'funds_release_at': _ts_type(), 'seller_ship_deadline': _ts_type(),
+                    'escrow_status': "VARCHAR(40) DEFAULT 'AWAITING_PAYMENT'", 'fulfillment_status': "VARCHAR(40) DEFAULT 'PENDING'", 'payment_status': "VARCHAR(40) DEFAULT 'UNPAID'", 'payout_status': "VARCHAR(40) DEFAULT 'HELD'",
                     'delivery_method': "VARCHAR(60) DEFAULT 'STANDARD'", 'delivery_note': 'TEXT', 'buyer_note': 'TEXT', 'seller_note': 'TEXT',
                     'payment_reference': 'VARCHAR(120)', 'updated_at': _ts_type()
                 }
@@ -192,6 +208,45 @@ def ensure_runtime_columns():
                     recipient_user_id INTEGER NOT NULL,
                     text TEXT NOT NULL,
                     created_at {_ts_type()}
+                )
+            """))
+            conn.execute(text(f"""
+                CREATE TABLE IF NOT EXISTS marketplace_disputes (
+                    id INTEGER PRIMARY KEY,
+                    order_id INTEGER NOT NULL,
+                    buyer_id INTEGER NOT NULL,
+                    seller_id INTEGER NOT NULL,
+                    buyer_description TEXT NOT NULL,
+                    buyer_evidence_url TEXT,
+                    seller_description TEXT,
+                    seller_evidence_url TEXT,
+                    status VARCHAR(32) DEFAULT 'open',
+                    created_at {_ts_type()}
+                )
+            """))
+
+            conn.execute(text(f"""
+                CREATE TABLE IF NOT EXISTS marketplace_profiles (
+                    id INTEGER PRIMARY KEY,
+                    user_id INTEGER NOT NULL UNIQUE,
+                    display_name VARCHAR(120) NOT NULL,
+                    username VARCHAR(80) NOT NULL UNIQUE,
+                    bio TEXT DEFAULT '',
+                    avatar_url TEXT,
+                    created_at {_ts_type()},
+                    updated_at {_ts_type()}
+                )
+            """))
+
+            conn.execute(text(f"""
+                CREATE TABLE IF NOT EXISTS marketplace_posts (
+                    id INTEGER PRIMARY KEY,
+                    user_id INTEGER NOT NULL,
+                    title VARCHAR(160),
+                    body TEXT NOT NULL,
+                    media_urls TEXT DEFAULT '[]',
+                    created_at {_ts_type()},
+                    updated_at {_ts_type()}
                 )
             """))
     except Exception as exc:

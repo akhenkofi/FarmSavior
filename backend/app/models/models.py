@@ -20,6 +20,19 @@ class CountryCode(str, enum.Enum):
     bf = 'BF'
 
 
+class ShippingScope(str, enum.Enum):
+    local = 'local'
+    country = 'country'
+    continent = 'continent'
+    worldwide = 'worldwide'
+
+
+class ShippingCostType(str, enum.Enum):
+    free = 'free'
+    flat_fee = 'flat_fee'
+    buyer_pays_actual = 'buyer_pays_actual'
+
+
 class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, index=True)
@@ -123,6 +136,13 @@ class CropListing(Base):
     status = Column(Enum(ListingStatus), default=ListingStatus.open)
     image_urls = Column(Text, default='[]')
     cover_image_url = Column(Text, nullable=True)
+    ships_from_country = Column(String(8), nullable=False, default='GH')
+    ships_from_city = Column(String(120), nullable=False, default='Unknown')
+    ships_to_scope = Column(Enum(ShippingScope), nullable=False, default=ShippingScope.country)
+    shipping_cost_type = Column(Enum(ShippingCostType), nullable=False, default=ShippingCostType.free)
+    shipping_cost_amount = Column(Float, nullable=True)
+    estimated_ship_days = Column(String(120), nullable=False, default='Varies')
+    shipping_notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -138,6 +158,13 @@ class LivestockListing(Base):
     status = Column(String(30), default='OPEN')
     image_urls = Column(Text, default='[]')
     cover_image_url = Column(Text, nullable=True)
+    ships_from_country = Column(String(8), nullable=False, default='GH')
+    ships_from_city = Column(String(120), nullable=False, default='Unknown')
+    ships_to_scope = Column(Enum(ShippingScope), nullable=False, default=ShippingScope.country)
+    shipping_cost_type = Column(Enum(ShippingCostType), nullable=False, default=ShippingCostType.free)
+    shipping_cost_amount = Column(Float, nullable=True)
+    estimated_ship_days = Column(String(120), nullable=False, default='Varies')
+    shipping_notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -172,6 +199,13 @@ class LogisticsRequest(Base):
     tracking_note = Column(String(255), default='Awaiting transporter')
     image_urls = Column(Text, default='[]')
     cover_image_url = Column(Text, nullable=True)
+    ships_from_country = Column(String(8), nullable=False, default='GH')
+    ships_from_city = Column(String(120), nullable=False, default='Unknown')
+    ships_to_scope = Column(Enum(ShippingScope), nullable=False, default=ShippingScope.country)
+    shipping_cost_type = Column(Enum(ShippingCostType), nullable=False, default=ShippingCostType.free)
+    shipping_cost_amount = Column(Float, nullable=True)
+    estimated_ship_days = Column(String(120), nullable=False, default='Varies')
+    shipping_notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -186,6 +220,13 @@ class EquipmentRental(Base):
     status = Column(String(30), default='PENDING')
     image_urls = Column(Text, default='[]')
     cover_image_url = Column(Text, nullable=True)
+    ships_from_country = Column(String(8), nullable=False, default='GH')
+    ships_from_city = Column(String(120), nullable=False, default='Unknown')
+    ships_to_scope = Column(Enum(ShippingScope), nullable=False, default=ShippingScope.country)
+    shipping_cost_type = Column(Enum(ShippingCostType), nullable=False, default=ShippingCostType.free)
+    shipping_cost_amount = Column(Float, nullable=True)
+    estimated_ship_days = Column(String(120), nullable=False, default='Varies')
+    shipping_notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -200,6 +241,13 @@ class StorageReservation(Base):
     status = Column(String(30), default='PENDING')
     image_urls = Column(Text, default='[]')
     cover_image_url = Column(Text, nullable=True)
+    ships_from_country = Column(String(8), nullable=False, default='GH')
+    ships_from_city = Column(String(120), nullable=False, default='Unknown')
+    ships_to_scope = Column(Enum(ShippingScope), nullable=False, default=ShippingScope.country)
+    shipping_cost_type = Column(Enum(ShippingCostType), nullable=False, default=ShippingCostType.free)
+    shipping_cost_amount = Column(Float, nullable=True)
+    estimated_ship_days = Column(String(120), nullable=False, default='Varies')
+    shipping_notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -212,10 +260,24 @@ class StorageReservation(Base):
 class MarketplaceNotification(Base):
     __tablename__ = 'marketplace_notifications'
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     title = Column(String(180), nullable=False)
     message = Column(Text, nullable=False)
-    is_read = Column(Boolean, default=False)
+    data = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class MarketplaceDispute(Base):
+    __tablename__ = 'marketplace_disputes'
+    id = Column(Integer, primary_key=True)
+    order_id = Column(Integer, ForeignKey('marketplace_orders.id'), nullable=False, index=True)
+    buyer_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    seller_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    buyer_description = Column(Text, nullable=False)
+    buyer_evidence_url = Column(Text, nullable=True)
+    seller_description = Column(Text, nullable=True)
+    seller_evidence_url = Column(Text, nullable=True)
+    status = Column(String(32), default='open')
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -267,7 +329,16 @@ class MarketplaceOrder(Base):
     platform_fee = Column(Float, default=0)
     processing_fee = Column(Float, default=0)
     seller_net = Column(Float, default=0)
+    platform_fee_amount = Column(Float, default=0)
+    seller_payout_amount = Column(Float, default=0)
     currency = Column(String(10), default='GHS')
+    status = Column(String(20), default='pending')
+    tracking_number = Column(String(120), nullable=True)
+    tracking_proof_url = Column(String(500), nullable=True)
+    shipped_at = Column(DateTime, nullable=True)
+    delivered_at = Column(DateTime, nullable=True)
+    funds_release_at = Column(DateTime, nullable=True)
+    seller_ship_deadline = Column(DateTime, nullable=True)
     escrow_status = Column(String(40), default='AWAITING_PAYMENT')
     fulfillment_status = Column(String(40), default='PENDING')
     payment_status = Column(String(40), default='UNPAID')
@@ -528,6 +599,29 @@ class CommunityPostComment(Base):
     author_name = Column(String(120), nullable=True)
     text = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class MarketplaceProfile(Base):
+    __tablename__ = 'marketplace_profiles'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, unique=True, index=True)
+    display_name = Column(String(120), nullable=False)
+    username = Column(String(80), nullable=False, index=True)
+    bio = Column(Text, default='')
+    avatar_url = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class MarketplacePost(Base):
+    __tablename__ = 'marketplace_posts'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    title = Column(String(160), nullable=True)
+    body = Column(Text, nullable=False)
+    media_urls = Column(Text, default='[]')
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class CommunityDirectMessage(Base):

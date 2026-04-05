@@ -1,4 +1,4 @@
-package com.example.farmsavior_mobile
+package com.fs.farmsaviorapp
 
 import android.os.Bundle
 import io.flutter.embedding.android.FlutterActivity

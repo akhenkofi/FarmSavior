@@ -1,4 +1,4 @@
-package com.example.farmsavior_mobile
+package com.fs.farmsaviorapp
 
 import android.app.Activity
 import android.content.Intent

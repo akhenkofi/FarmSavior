@@ -1,10 +1,13 @@
 from datetime import datetime
-from typing import Optional, Literal
-from pydantic import BaseModel
+from typing import Optional, Literal, List
+from pydantic import BaseModel, EmailStr
 
 
 Country = Literal['GH', 'NG', 'BF']
 UserType = Literal['Farmer', 'Buyer', 'Transporter', 'EquipmentProvider', 'StorageProvider']
+
+ShippingScope = Literal['local', 'country', 'continent', 'worldwide']
+ShippingCostType = Literal['free', 'flat_fee', 'buyer_pays_actual']
 
 
 class UserCreate(BaseModel):
@@ -102,6 +105,13 @@ class CropListingIn(BaseModel):
     status: str = 'OPEN'
     image_urls: str = '[]'
     cover_image_url: Optional[str] = None
+    ships_from_country: str
+    ships_from_city: str
+    ships_to_scope: ShippingScope
+    shipping_cost_type: ShippingCostType
+    shipping_cost_amount: Optional[float] = None
+    estimated_ship_days: str
+    shipping_notes: Optional[str] = None
 
 
 class LivestockListingIn(BaseModel):
@@ -114,6 +124,13 @@ class LivestockListingIn(BaseModel):
     status: str = 'OPEN'
     image_urls: str = '[]'
     cover_image_url: Optional[str] = None
+    ships_from_country: str
+    ships_from_city: str
+    ships_to_scope: ShippingScope
+    shipping_cost_type: ShippingCostType
+    shipping_cost_amount: Optional[float] = None
+    estimated_ship_days: str
+    shipping_notes: Optional[str] = None
 
 
 class LogisticsIn(BaseModel):
@@ -127,6 +144,13 @@ class LogisticsIn(BaseModel):
     status: str = 'PENDING'
     image_urls: str = '[]'
     cover_image_url: Optional[str] = None
+    ships_from_country: str
+    ships_from_city: str
+    ships_to_scope: ShippingScope
+    shipping_cost_type: ShippingCostType
+    shipping_cost_amount: Optional[float] = None
+    estimated_ship_days: str
+    shipping_notes: Optional[str] = None
 
 
 class EquipmentRentalIn(BaseModel):
@@ -138,6 +162,13 @@ class EquipmentRentalIn(BaseModel):
     status: str = 'PENDING'
     image_urls: str = '[]'
     cover_image_url: Optional[str] = None
+    ships_from_country: str
+    ships_from_city: str
+    ships_to_scope: ShippingScope
+    shipping_cost_type: ShippingCostType
+    shipping_cost_amount: Optional[float] = None
+    estimated_ship_days: str
+    shipping_notes: Optional[str] = None
 
 
 class StorageReservationIn(BaseModel):
@@ -149,6 +180,13 @@ class StorageReservationIn(BaseModel):
     status: str = 'PENDING'
     image_urls: str = '[]'
     cover_image_url: Optional[str] = None
+    ships_from_country: str
+    ships_from_city: str
+    ships_to_scope: ShippingScope
+    shipping_cost_type: ShippingCostType
+    shipping_cost_amount: Optional[float] = None
+    estimated_ship_days: str
+    shipping_notes: Optional[str] = None
 
 
 class OfferIn(BaseModel):
@@ -207,6 +245,43 @@ class MarketplaceOrderIn(BaseModel):
     buyer_note: Optional[str] = None
 
 
+class MarketplaceOrderShipProof(BaseModel):
+    name: str
+    mime_type: str
+    data_url: str
+
+class MarketplaceOrderShipIn(BaseModel):
+    tracking_number: Optional[str] = None
+    proof_files: List[MarketplaceOrderShipProof] = []
+
+class MarketplaceListingSummary(BaseModel):
+    listing_id: int
+    listing_type: str
+    title: str
+    summary: Optional[str] = None
+    price: Optional[float] = None
+    currency: Optional[str] = 'GHS'
+    status: Optional[str] = None
+    cover_image_url: Optional[str] = None
+    shipping_summary: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+class MarketplacePostSummary(BaseModel):
+    id: int
+    title: Optional[str] = None
+    body: str
+    media_urls: List[str] = []
+    created_at: Optional[datetime] = None
+
+class MarketplaceProfileResponse(BaseModel):
+    user_id: int
+    display_name: str
+    username: str
+    bio: str
+    avatar_url: Optional[str] = None
+    listings: List[MarketplaceListingSummary] = []
+    posts: List[MarketplacePostSummary] = []
+
 class MarketplaceOrderStatusIn(BaseModel):
     escrow_status: Optional[str] = None
     fulfillment_status: Optional[str] = None
@@ -226,6 +301,17 @@ class PaymentIn(BaseModel):
     escrow_enabled: bool = True
     currency: Optional[str] = None
 
+
+
+
+class PaystackInitializeIn(BaseModel):
+    order_id: int
+    buyer_email: EmailStr
+    amount: float
+    currency: Optional[str] = None
+
+class PaystackVerifyIn(BaseModel):
+    reference: str
 
 class WeatherAlertIn(BaseModel):
     country: Country

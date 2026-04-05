@@ -14,7 +14,7 @@ import xml.etree.ElementTree as ET
 import re
 import ssl
 from pathlib import Path
-from fastapi import APIRouter, Depends, HTTPException, Body, Header, Request
+from fastapi import APIRouter, Depends, HTTPException, Body, Header, Request, Query
 from pydantic import BaseModel
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
@@ -30,19 +30,21 @@ from app.models.models import (
     DeviceToken, DiseaseScan, SheepGoatRecord, LivestockPurchaseSource, SheepGoatBreedingGroup, SheepGoatSubscription,
     WorldChatMessage, WorldChatUserModeration,
     CommunityProfile, CommunityFollow, CommunityMute, CommunityPost, CommunityPostLike, CommunityPostComment, CommunityDirectMessage,
-    MarketplaceOrder, SellerPayoutProfile, PayoutHistory, MarketplaceNotification
+    MarketplaceOrder, SellerPayoutProfile, PayoutHistory, MarketplaceNotification, ShippingScope, ShippingCostType,
+    MarketplaceProfile, MarketplacePost, MarketplaceDispute
 )
 from app.schemas.schemas import (
     UserCreate, UserLogin, OTPVerify, TokenResponse, FarmerProfileIn,
     CropListingIn, OfferIn, LogisticsIn, LogisticsAcceptIn,
-    PaymentIn, WeatherAlertIn, IDVerificationIn, IDVerificationSelfIn, FarmPassportIn,
+    PaymentIn, PaystackInitializeIn, PaystackVerifyIn, WeatherAlertIn, IDVerificationIn, IDVerificationSelfIn, FarmPassportIn,
     LivestockListingIn, EquipmentRentalIn, StorageReservationIn, ContractIn,
     VerificationDecisionIn, DeviceTokenIn, DiseaseAnalyzeIn,
     SheepGoatRecordIn, LivestockPurchaseSourceIn, SheepGoatBreedingGroupIn, SheepGoatSubscriptionIn, PoultryUniversitySubscriptionIn,
     WorldChatMessageIn, WorldChatModerationActionIn, WorldChatUserSanctionIn,
     CommunityProfileIn, CommunityDirectMessageIn, CommunityPostIn, CommunityCommentIn,
     PlantIdentifyIn, PestIdentifyIn, AccountUpdateIn, PasswordChangeIn, DeleteAccountIn,
-    MarketplaceOrderIn, MarketplaceOrderStatusIn, SellerPayoutProfileIn, SellerPayoutVerificationIn, RefundRequestIn, AutoReleaseIn
+    MarketplaceOrderIn, MarketplaceOrderStatusIn, MarketplaceOrderShipIn, MarketplaceOrderShipProof, SellerPayoutProfileIn, SellerPayoutVerificationIn, RefundRequestIn, AutoReleaseIn,
+    MarketplaceProfileResponse, MarketplaceListingSummary, MarketplacePostSummary
 )
 from app.core.config import settings
 from app.core.security import create_access_token, hash_password, verify_password, decode_access_token
@@ -52,9 +54,85 @@ from app.core.data_lake import write_jsonl, write_snapshot
 router = APIRouter(prefix='/api/v1')
 
 
+def _calculate_payouts(order):
+    gross = float(order.gross_amount or 0)
+    platform_fee_amount = round(gross * 0.08, 2)
+    seller_payout_amount = round(max(0.0, gross - platform_fee_amount), 2)
+    return platform_fee_amount, seller_payout_amount
+
+
 ID_UPLOAD_ROOT = Path(__file__).resolve().parents[3] / 'data' / 'private' / 'id-verifications'
 CALL_SIGNAL_EVENTS: dict[str, list[dict]] = {}
 CALL_SIGNAL_INBOX_EVENTS: list[dict] = []
+
+
+def _listing_shipping_summary(row):
+    city = str(getattr(row, 'ships_from_city', '') or '').strip()
+    country = str(getattr(row, 'ships_from_country', '') or '').strip()
+    scope = str(getattr(row, 'ships_to_scope', '') or '').strip()
+    parts = []
+    if city or country:
+        parts.append(', '.join(filter(None, [city, country])))
+    if scope:
+        parts.append(scope.capitalize())
+    return ' → '.join(parts) if parts else None
+
+
+def _listing_summary(row, listing_type, title, price=None, currency='GHS', status=None, cover_image=None):
+    return {
+        'listing_id': int(row.id),
+        'listing_type': listing_type,
+        'title': title,
+        'summary': getattr(row, 'summary', None) or None,
+        'price': float(price) if price not in (None, '', False) else None,
+        'currency': currency,
+        'status': status,
+        'cover_image_url': cover_image,
+        'shipping_summary': _listing_shipping_summary(row),
+        'created_at': getattr(row, 'created_at', None)
+    }
+
+
+
+
+def _row_to_dict(row):
+    return {col.name: getattr(row, col.name) for col in row.__table__.columns}
+
+
+def _aggregate_listings(db: Session, user_id: int, limit: int):
+    listings = []
+    crop_rows = db.query(CropListing).filter(CropListing.farmer_id == user_id).order_by(CropListing.created_at.desc()).limit(limit).all()
+    for row in crop_rows:
+        listings.append(_listing_summary(row, 'product', row.crop_name, row.unit_price, row.currency.value if getattr(row, 'currency', None) else 'GHS', row.status.value if hasattr(row.status, 'value') else row.status, row.cover_image_url))
+    livestock_rows = db.query(LivestockListing).filter(LivestockListing.farmer_id == user_id).order_by(LivestockListing.created_at.desc()).limit(limit).all()
+    for row in livestock_rows:
+        listings.append(_listing_summary(row, 'livestock', row.livestock_type, row.unit_price, row.currency.value if getattr(row, 'currency', None) else 'GHS', row.status, row.cover_image_url))
+    logistics_rows = db.query(LogisticsRequest).filter(LogisticsRequest.requester_id == user_id).order_by(LogisticsRequest.created_at.desc()).limit(limit).all()
+    for row in logistics_rows:
+        listings.append(_listing_summary(row, 'logistics', row.cargo_type, None, 'GHS', row.status, row.cover_image_url))
+    equipment_rows = db.query(EquipmentRental).filter(EquipmentRental.requester_id == user_id).order_by(EquipmentRental.created_at.desc()).limit(limit).all()
+    for row in equipment_rows:
+        listings.append(_listing_summary(row, 'equipment', row.equipment_type, row.budget, 'GHS', row.status, row.cover_image_url))
+    storage_rows = db.query(StorageReservation).filter(StorageReservation.requester_id == user_id).order_by(StorageReservation.created_at.desc()).limit(limit).all()
+    for row in storage_rows:
+        listings.append(_listing_summary(row, 'storage', row.storage_type, None, 'GHS', row.status, row.cover_image_url))
+    return sorted(listings, key=lambda x: x.get('created_at') or datetime.utcnow(), reverse=True)[:limit]
+
+
+def _serialize_marketplace_post(post):
+    try:
+        media = json.loads(post.media_urls or '[]')
+        if not isinstance(media, list):
+            media = [media]
+    except Exception:
+        media = []
+    return {
+        'id': post.id,
+        'title': post.title,
+        'body': post.body,
+        'media_urls': [str(m) for m in media if m],
+        'created_at': post.created_at
+    }
 
 
 def _get_call_channel_name(user_id_1: int, user_id_2: int) -> str:
@@ -863,6 +941,122 @@ def _paystack_transaction_verify(reference: str) -> dict:
     with urlopen(req, timeout=20) as resp:
         return json.loads(resp.read().decode('utf-8', errors='ignore'))
 
+
+def _marketplace_order_metadata(order):
+    return {
+        'kind': 'marketplace_order',
+        'order_id': order.id,
+        'listing_title': order.listing_title,
+        'buyer_id': order.buyer_id,
+        'seller_id': order.seller_id,
+    }
+
+def _initialize_marketplace_order_paystack_payment(order, db, buyer_email, amount_major=None, currency=None):
+    amount_value = float(amount_major or order.gross_amount or 0)
+    if amount_value <= 0:
+        raise HTTPException(status_code=400, detail='Amount must be greater than zero')
+    currency_value = str((currency or order.currency or 'GHS')).upper()
+    reference = order.payment_reference or f"ESC-{order.id}-{int(datetime.utcnow().timestamp())}-{random.randint(100,999)}"
+    metadata = _marketplace_order_metadata(order)
+    metadata['currency'] = currency_value
+    try:
+        ps_resp = _paystack_transaction_initialize(
+            email=buyer_email,
+            amount_major=amount_value,
+            reference=reference,
+            metadata=metadata,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f'Paystack initialize failed: {exc}')
+    data = (ps_resp or {}).get('data') or {}
+    order.payment_reference = reference
+    order.currency = currency_value
+    order.payment_status = 'PENDING'
+    order.platform_fee = 0.08
+    order.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(order)
+    return {
+        'order': order,
+        'payment': {
+            'authorization_url': data.get('authorization_url'),
+            'access_code': data.get('access_code'),
+            'reference': reference,
+        },
+        'reference': reference,
+        'authorization_url': data.get('authorization_url'),
+        'amount': amount_value,
+        'currency': currency_value,
+    }
+
+def _verify_marketplace_order_payment(reference, db):
+    try:
+        ps_resp = _paystack_transaction_verify(reference)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f'Paystack verify failed: {exc}')
+    data = (ps_resp or {}).get('data') or {}
+    if str(data.get('status') or '').lower() != 'success':
+        raise HTTPException(status_code=400, detail='Payment not successful yet')
+    metadata = data.get('metadata') or {}
+    order = None
+    order_id = metadata.get('order_id')
+    if order_id:
+        try:
+            order_id = int(order_id)
+        except Exception:
+            order_id = None
+    if order_id:
+        order = db.query(MarketplaceOrder).filter(MarketplaceOrder.id == order_id).first()
+    if not order:
+        order = db.query(MarketplaceOrder).filter(MarketplaceOrder.payment_reference == reference).first()
+    if not order:
+        raise HTTPException(status_code=404, detail='Order not found')
+    amount_paid = round((float(data.get('amount') or 0) / 100), 2)
+    currency_value = str((data.get('currency') or order.currency or 'GHS')).upper()
+    platform_fee_amount, seller_payout_amount = _calculate_payouts(order)
+    order.payment_reference = reference
+    order.payment_status = 'PAID'
+    order.escrow_status = 'PAID_IN_ESCROW'
+    order.fulfillment_status = 'READY_FOR_SELLER'
+    order.status = 'paid'
+    order.platform_fee = 0.08
+    order.platform_fee_amount = platform_fee_amount
+    order.seller_payout_amount = seller_payout_amount
+    order.seller_net = seller_payout_amount
+    deadline = datetime.utcnow() + timedelta(days=5)
+    order.seller_ship_deadline = deadline
+    order.currency = currency_value
+    order.updated_at = datetime.utcnow()
+    existing = db.query(Payment).filter(Payment.reference == reference).first()
+    if not existing:
+        buyer = db.query(User).filter(User.id == order.buyer_id).first()
+        payment = Payment(
+            payer_id=order.buyer_id,
+            payee_id=order.seller_id,
+            amount=order.gross_amount,
+            currency=order.currency or 'GHS',
+            country=getattr(buyer, 'country', CountryCode.gh),
+            method='Paystack',
+            provider='Paystack',
+            escrow_enabled=True,
+            reference=reference,
+            status='SUCCESS'
+        )
+        db.add(payment)
+    db.commit()
+    db.refresh(order)
+    deadline_str = deadline.strftime('%Y-%m-%d %H:%M:%S')
+    _notify_user(db, order.buyer_id, 'Payment secured', f'Your payment for order #{order.id} is now held in FarmSavior escrow.')
+    _notify_user(db, order.seller_id, 'New paid order', f'Order #{order.id} is paid. Ship it by {deadline_str} GMT or the buyer will get an automatic refund.')
+    return {
+        'order': order,
+        'order_id': order.id,
+        'reference': reference,
+        'amount_paid': amount_paid,
+        'currency': currency_value,
+        'listing_title': order.listing_title,
+        'seller_ship_deadline': order.seller_ship_deadline,
+    }
 
 def _paystack_signature_valid(raw_body: bytes, signature: str) -> bool:
     secret = _paystack_secret_clean().encode('utf-8')
@@ -1673,6 +1867,9 @@ def submit_my_id_verification(payload: IDVerificationSelfIn, authorization: Opti
         reviewed_at=datetime.utcnow()
     )
     db.add(review)
+    if str(ai_status or '').upper() == 'APPROVED':
+        u.is_verified = True
+        _account_store_upsert_user(u)
     db.commit()
 
     return {'message': 'Verification submitted and auto-reviewed', 'id_verification_id': rec.id, 'status': ai_status, 'ai_score': ai_score, 'ai_reason': ai_reason}
@@ -2850,6 +3047,38 @@ def _assert_no_contact_info(*values: Optional[str]):
             raise HTTPException(status_code=400, detail='Direct contact info is not allowed here. Use FarmSavior in-app contact flow.')
 
 
+SHIPPING_SCOPE_VALUES = {scope.value for scope in ShippingScope}
+SHIPPING_COST_VALUES = {cost.value for cost in ShippingCostType}
+
+
+def _validate_shipping_terms(data: dict):
+    missing = []
+    for field in ['ships_from_country', 'ships_from_city', 'ships_to_scope', 'shipping_cost_type', 'estimated_ship_days']:
+        if not str(data.get(field) or '').strip():
+            missing.append(field)
+    if missing:
+        raise HTTPException(status_code=400, detail=f"Missing shipping terms: {', '.join(missing)}")
+    scope = str(data.get('ships_to_scope') or '').strip()
+    if scope not in SHIPPING_SCOPE_VALUES:
+        raise HTTPException(status_code=400, detail='ships_to_scope must be one of local, country, continent, worldwide')
+    cost_type = str(data.get('shipping_cost_type') or '').strip()
+    if cost_type not in SHIPPING_COST_VALUES:
+        raise HTTPException(status_code=400, detail='shipping_cost_type must be free, flat_fee, or buyer_pays_actual')
+    amount = data.get('shipping_cost_amount')
+    if cost_type == ShippingCostType.flat_fee.value:
+        if amount is None:
+            raise HTTPException(status_code=400, detail='shipping_cost_amount is required when shipping_cost_type is flat_fee')
+        try:
+            val = float(amount)
+        except Exception:
+            raise HTTPException(status_code=400, detail='shipping_cost_amount must be a number')
+        if val < 0:
+            raise HTTPException(status_code=400, detail='shipping_cost_amount cannot be negative')
+    elif amount not in (None, ''):
+        try:
+            float(amount)
+        except Exception:
+            raise HTTPException(status_code=400, detail='shipping_cost_amount must be a number if provided')
 def _mask_contact_info(value: Optional[str]) -> str:
     raw = value or ''
     if not raw:
@@ -4420,8 +4649,10 @@ def list_farmer_profiles(db: Session = Depends(get_db)):
 @router.post('/marketplace/listings')
 def create_listing(payload: CropListingIn, db: Session = Depends(get_db)):
     _require_transact_verified_user(db, int(payload.farmer_id), 'Seller')
-    _assert_no_contact_info(payload.crop_name, payload.location)
-    listing = CropListing(**payload.model_dump())
+    data = payload.model_dump()
+    _assert_no_contact_info(data.get('crop_name'), data.get('location'))
+    _validate_shipping_terms(data)
+    listing = CropListing(**data)
     db.add(listing)
     db.commit()
     db.refresh(listing)
@@ -4432,6 +4663,21 @@ def create_listing(payload: CropListingIn, db: Session = Depends(get_db)):
 def list_listings(db: Session = Depends(get_db)):
     return db.query(CropListing).order_by(CropListing.id.desc()).all()
 
+
+@router.get('/listings/mine')
+def list_my_listings(limit: int = Query(200, gt=0, le=1000), authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    user = _current_user_from_auth(authorization, db)
+    def fetch_rows(model, fk_name):
+        fk = getattr(model, fk_name)
+        return db.query(model).filter(fk == user.id).order_by(model.created_at.desc()).limit(limit).all()
+    return {
+        'user_id': user.id,
+        'products': [_row_to_dict(row) for row in fetch_rows(CropListing, 'farmer_id')],
+        'livestock': [_row_to_dict(row) for row in fetch_rows(LivestockListing, 'farmer_id')],
+        'logistics': [_row_to_dict(row) for row in fetch_rows(LogisticsRequest, 'requester_id')],
+        'equipment': [_row_to_dict(row) for row in fetch_rows(EquipmentRental, 'requester_id')],
+        'storage': [_row_to_dict(row) for row in fetch_rows(StorageReservation, 'requester_id')],
+    }
 
 @router.put('/marketplace/listings/{listing_id}')
 def update_listing(listing_id: int, payload: CropListingIn, db: Session = Depends(get_db)):
@@ -4486,8 +4732,10 @@ def delete_listing(listing_id: int, db: Session = Depends(get_db)):
 @router.post('/marketplace/livestock')
 def create_livestock_listing(payload: LivestockListingIn, db: Session = Depends(get_db)):
     _require_transact_verified_user(db, int(payload.farmer_id), 'Seller')
-    _assert_no_contact_info(payload.livestock_type, payload.location)
-    listing = LivestockListing(**payload.model_dump())
+    data = payload.model_dump()
+    _assert_no_contact_info(data.get('livestock_type'), data.get('location'))
+    _validate_shipping_terms(data)
+    listing = LivestockListing(**data)
     db.add(listing)
     db.commit()
     db.refresh(listing)
@@ -4507,6 +4755,7 @@ def update_livestock_listing(listing_id: int, payload: LivestockListingIn, db: S
 
     data = payload.model_dump()
     _assert_no_contact_info(data.get('livestock_type'), data.get('location'))
+    _validate_shipping_terms(data)
     decision, score, reason = _ai_review_change('livestock', data)
     _save_update_review(db, 'livestock', listing_id, 'update', data, decision, score, reason)
     if decision == 'DENIED':
@@ -4992,6 +5241,7 @@ def delete_livestock_listing(listing_id: int, db: Session = Depends(get_db)):
 def create_logistics(payload: LogisticsIn, db: Session = Depends(get_db)):
     data = payload.model_dump()
     _assert_no_contact_info(data.get('pickup_location'), data.get('dropoff_location'), data.get('cargo_type'), data.get('cargo_details'))
+    _validate_shipping_terms(data)
     auto_status, auto_reason = _service_auto_moderate(data)
     req = LogisticsRequest(
         requester_id=data.get('requester_id') or data.get('created_by'),
@@ -5002,7 +5252,14 @@ def create_logistics(payload: LogisticsIn, db: Session = Depends(get_db)):
         status=auto_status,
         tracking_note=auto_reason[:255],
         image_urls=data.get('image_urls') or '[]',
-        cover_image_url=data.get('cover_image_url')
+        cover_image_url=data.get('cover_image_url'),
+        ships_from_country=data.get('ships_from_country'),
+        ships_from_city=data.get('ships_from_city'),
+        ships_to_scope=data.get('ships_to_scope'),
+        shipping_cost_type=data.get('shipping_cost_type'),
+        shipping_cost_amount=data.get('shipping_cost_amount'),
+        estimated_ship_days=data.get('estimated_ship_days'),
+        shipping_notes=data.get('shipping_notes')
     )
     db.add(req)
     db.commit()
@@ -5040,12 +5297,16 @@ def update_logistics(request_id: int, payload: LogisticsIn, db: Session = Depend
         raise HTTPException(status_code=404, detail='Logistics request not found')
     data = payload.model_dump()
     _assert_no_contact_info(data.get('pickup_location'), data.get('dropoff_location'), data.get('cargo_type'), data.get('cargo_details'))
+    _validate_shipping_terms(data)
     req.requester_id = data.get('requester_id') or data.get('created_by') or req.requester_id
     req.pickup_location = data.get('pickup_location', req.pickup_location)
     req.dropoff_location = data.get('dropoff_location', req.dropoff_location)
     req.cargo_type = data.get('cargo_type') or data.get('cargo_details') or req.cargo_type
     req.weight_kg = data.get('weight_kg') or req.weight_kg
     req.status = data.get('status') or req.status
+    for key in ['ships_from_country','ships_from_city','ships_to_scope','shipping_cost_type','shipping_cost_amount','estimated_ship_days','shipping_notes']:
+        if key in data and data.get(key) is not None:
+            setattr(req, key, data[key])
     db.commit()
     db.refresh(req)
     return req
@@ -5078,6 +5339,7 @@ def accept_logistics(request_id: int, payload: LogisticsAcceptIn, db: Session = 
 def create_equipment_rental(payload: EquipmentRentalIn, db: Session = Depends(get_db)):
     _assert_no_contact_info(payload.equipment_type, payload.location)
     data = payload.model_dump()
+    _validate_shipping_terms(data)
     auto_status, auto_reason = _service_auto_moderate(data)
     rec = EquipmentRental(**{**data, 'status': auto_status if auto_status == 'APPROVED' else f'DENIED: {auto_reason[:90]}'} )
     db.add(rec)
@@ -5121,7 +5383,9 @@ def update_equipment_rental(rental_id: int, payload: EquipmentRentalIn, db: Sess
     if not rec:
         raise HTTPException(status_code=404, detail='Equipment rental not found')
     _assert_no_contact_info(payload.equipment_type, payload.location)
-    for k, v in payload.model_dump().items():
+    data=payload.model_dump()
+    _validate_shipping_terms(data)
+    for k, v in data.items():
         setattr(rec, k, v)
     db.commit()
     db.refresh(rec)
@@ -5141,6 +5405,7 @@ def delete_equipment_rental(rental_id: int, db: Session = Depends(get_db)):
 def create_storage_reservation(payload: StorageReservationIn, db: Session = Depends(get_db)):
     _assert_no_contact_info(payload.storage_type, payload.location)
     data = payload.model_dump()
+    _validate_shipping_terms(data)
     auto_status, auto_reason = _service_auto_moderate(data)
     rec = StorageReservation(**{**data, 'status': auto_status if auto_status == 'APPROVED' else f'DENIED: {auto_reason[:90]}'} )
     db.add(rec)
@@ -5176,7 +5441,9 @@ def update_storage_reservation(reservation_id: int, payload: StorageReservationI
     if not rec:
         raise HTTPException(status_code=404, detail='Storage reservation not found')
     _assert_no_contact_info(payload.storage_type, payload.location)
-    for k, v in payload.model_dump().items():
+    data=payload.model_dump()
+    _validate_shipping_terms(data)
+    for k, v in data.items():
         setattr(rec, k, v)
     db.commit()
     db.refresh(rec)
@@ -5196,10 +5463,48 @@ def delete_storage_reservation(reservation_id: int, db: Session = Depends(get_db
 
 
 
-def _notify_user(db: Session, user_id: Optional[int], title: str, message: str):
+def _send_smtp_email(to_email: str, subject: str, body: str):
+    host = str(getattr(settings, 'SMTP_HOST', '') or '').strip()
+    if not host:
+        return
+    port = int(getattr(settings, 'SMTP_PORT', 587) or 587)
+    user = str(getattr(settings, 'SMTP_USER', '') or '').strip()
+    pwd = str(getattr(settings, 'SMTP_PASS', '') or '').strip()
+    sender = str(getattr(settings, 'SMTP_FROM', '') or 'no-reply@farmsavior.com').strip()
+    msg = EmailMessage()
+    msg['Subject'] = subject[:120]
+    msg['From'] = sender
+    msg['To'] = to_email
+    msg.set_content(body)
+    try:
+        with smtplib.SMTP(host, port, timeout=10) as server:
+            if user and pwd:
+                server.starttls()
+                server.login(user, pwd)
+            server.send_message(msg)
+    except Exception:
+        pass
+
+
+def _notify_admin(db: Session, title: str, message: str):
+    admin = db.query(User).filter(User.role == 'admin').first()
+    if admin:
+        _notify_user(db, admin.id, title, message)
+
+
+def _notify_user(db: Session, user_id: Optional[int], title: str, message: str, data: Optional[dict] = None):
     if not user_id:
         return
-    db.add(MarketplaceNotification(user_id=user_id, title=title[:180], message=message[:2000]))
+    notification = MarketplaceNotification(user_id=user_id, title=title[:180], message=message[:2000])
+    db.add(notification)
+    user = db.query(User).filter(User.id == int(user_id)).first()
+    if user:
+        tokens = [str(r.token or '').strip() for r in db.query(DeviceToken).filter(DeviceToken.user_id == user.id).all() if str(r.token or '').strip()]
+        if tokens:
+            _send_fcm_push(tokens, title=title, body=message, data=data)
+        email = (getattr(user, 'email', '') or '').strip()
+        if email:
+            _send_smtp_email(email, title, message)
 
 
 def _send_fcm_push(tokens: list[str], title: str, body: str, data: Optional[dict] = None):
@@ -5474,32 +5779,53 @@ def marketplace_order_receipt(order_id: int, db: Session = Depends(get_db)):
         'refunded_at': getattr(order, 'refunded_at', None),
     }
 
+@router.post('/orders/{order_id}/ship')
+def ship_marketplace_order(order_id: int, payload: MarketplaceOrderShipIn, db: Session = Depends(get_db)):
+    order = db.query(MarketplaceOrder).filter(MarketplaceOrder.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail='Order not found')
+    if not payload.tracking_number and not payload.proof_files:
+        raise HTTPException(status_code=400, detail='Provide a tracking number or upload shipping proof before marking shipped')
+    proof_data = None
+    if payload.proof_files:
+        proof_data = payload.proof_files[0].data_url
+        order.tracking_proof_url = proof_data
+    if payload.tracking_number:
+        order.tracking_number = payload.tracking_number.strip()
+    order.fulfillment_status = 'SHIPPED'
+    order.status = 'shipped'
+    order.shipped_at = datetime.utcnow()
+    order.updated_at = datetime.utcnow()
+    if order.payment_status == 'PAID':
+        order.escrow_status = 'IN_FULFILLMENT'
+    message = f'Order #{order.id} has been marked shipped.'
+    if order.tracking_number:
+        message += f' Tracking #: {order.tracking_number}.'
+    _notify_user(db, order.buyer_id, 'Order shipped', message)
+    db.commit()
+    db.refresh(order)
+    return order
+
 @router.post('/orders/{order_id}/pay')
 def pay_marketplace_order(order_id: int, payload: PaymentIn, db: Session = Depends(get_db)):
     order = db.query(MarketplaceOrder).filter(MarketplaceOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail='Order not found')
     buyer = db.query(User).filter(User.id == order.buyer_id).first()
-    if order.payment_status == 'PAID':
-        return {'order': order, 'message': 'Order already paid'}
-    email = (getattr(buyer, 'email', '') or '').strip() or f'user{order.buyer_id}@farmsavior.local'
-    reference = order.payment_reference or f"ESC-{order.id}-{int(datetime.utcnow().timestamp())}-{random.randint(100,999)}"
-    try:
-        ps_resp = _paystack_transaction_initialize(
-            email=email,
-            amount_major=order.gross_amount,
-            reference=reference,
-            metadata={'kind': 'marketplace_order', 'order_id': order.id, 'buyer_id': order.buyer_id, 'seller_id': order.seller_id}
-        )
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f'Paystack initialize failed: {e}')
-    data = (ps_resp or {}).get('data') or {}
-    order.payment_reference = reference
-    order.updated_at = datetime.utcnow()
-    db.commit()
-    db.refresh(order)
-    return {'order': order, 'payment': {'authorization_url': data.get('authorization_url'), 'access_code': data.get('access_code'), 'reference': reference}}
-
+    buyer_email = (getattr(buyer, 'email', '') or '').strip() or f'user{order.buyer_id}@farmsavior.local'
+    result = _initialize_marketplace_order_paystack_payment(
+        order,
+        db,
+        buyer_email,
+        amount_major=order.gross_amount,
+        currency=payload.currency or order.currency,
+    )
+    payment_info = {
+        'authorization_url': result['payment']['authorization_url'],
+        'access_code': result['payment'].get('access_code'),
+        'reference': result['reference'],
+    }
+    return {'order': result['order'], 'payment': payment_info}
 
 @router.post('/orders/{order_id}/verify-payment')
 def verify_marketplace_order_payment(order_id: int, db: Session = Depends(get_db)):
@@ -5508,39 +5834,7 @@ def verify_marketplace_order_payment(order_id: int, db: Session = Depends(get_db
         raise HTTPException(status_code=404, detail='Order not found')
     if not order.payment_reference:
         raise HTTPException(status_code=400, detail='Order has no Paystack payment reference')
-    try:
-        ps_resp = _paystack_transaction_verify(order.payment_reference)
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f'Paystack verify failed: {e}')
-    data = (ps_resp or {}).get('data') or {}
-    if str(data.get('status') or '').lower() != 'success':
-        raise HTTPException(status_code=400, detail='Payment not successful yet')
-    existing = db.query(Payment).filter(Payment.reference == order.payment_reference).first()
-    if not existing:
-        buyer = db.query(User).filter(User.id == order.buyer_id).first()
-        payment = Payment(
-            payer_id=order.buyer_id,
-            payee_id=order.seller_id,
-            amount=order.gross_amount,
-            currency=order.currency or 'GHS',
-            country=getattr(buyer, 'country', CountryCode.gh),
-            method='Paystack',
-            provider='Paystack',
-            escrow_enabled=True,
-            reference=order.payment_reference,
-            status='SUCCESS'
-        )
-        db.add(payment)
-    order.payment_status = 'PAID'
-    order.escrow_status = 'PAID_IN_ESCROW'
-    order.fulfillment_status = 'READY_FOR_SELLER'
-    setattr(order, 'auto_release_at', datetime.utcnow() + timedelta(days=3))
-    _notify_user(db, order.buyer_id, 'Payment secured', f'Your payment for order #{order.id} is now held in FarmSavior escrow.')
-    _notify_user(db, order.seller_id, 'Escrow funded', f'Buyer payment for order #{order.id} is secured. You can now fulfill the order.')
-    db.commit()
-    db.refresh(order)
-    return {'order': order, 'verification': data}
-
+    return _verify_marketplace_order_payment(order.payment_reference, db)
 
 @router.post('/paystack/webhook')
 async def paystack_webhook(request: Request, db: Session = Depends(get_db)):
@@ -5601,16 +5895,47 @@ def update_marketplace_order_status(order_id: int, payload: MarketplaceOrderStat
     return order
 
 
+
+@router.get('/marketplace/users/{target_user_id}/profile', response_model=MarketplaceProfileResponse)
+def marketplace_user_public_profile(target_user_id: int, listings_limit: int = Query(30, ge=1, le=100), posts_limit: int = Query(12, ge=1, le=50), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == target_user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail='Marketplace user not found')
+    profile = db.query(MarketplaceProfile).filter(MarketplaceProfile.user_id == target_user_id).first()
+    if not profile:
+        username = f"market{target_user_id}"
+        profile = MarketplaceProfile(user_id=target_user_id, display_name=username, username=username)
+        db.add(profile)
+        db.commit()
+        db.refresh(profile)
+    listings = _aggregate_listings(db, target_user_id, listings_limit)
+    posts = db.query(MarketplacePost).filter(MarketplacePost.user_id == target_user_id).order_by(MarketplacePost.created_at.desc()).limit(posts_limit).all()
+    serialized_posts = [_serialize_marketplace_post(post) for post in posts]
+    return MarketplaceProfileResponse(
+        user_id=profile.user_id,
+        display_name=profile.display_name,
+        username=profile.username,
+        bio=profile.bio or '',
+        avatar_url=profile.avatar_url,
+        listings=listings,
+        posts=serialized_posts
+    )
+
 @router.post('/orders/{order_id}/confirm')
 def confirm_marketplace_order(order_id: int, db: Session = Depends(get_db)):
     order = db.query(MarketplaceOrder).filter(MarketplaceOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail='Order not found')
-    order.fulfillment_status = 'COMPLETED'
+    now = datetime.utcnow()
+    order.fulfillment_status = 'DELIVERED'
+    order.status = 'delivered'
+    order.delivered_at = now
+    order.funds_release_at = now + timedelta(hours=24)
     order.escrow_status = 'BUYER_CONFIRMED'
     order.payout_status = 'READY_FOR_RELEASE'
-    order.updated_at = datetime.utcnow()
-    _notify_user(db, order.seller_id, 'Buyer confirmed order', f'Buyer confirmed order #{order.id}. Funds are ready for release review.')
+    order.updated_at = now
+    release_str = order.funds_release_at.strftime("%Y-%m-%d %H:%M:%S")
+    _notify_user(db, order.seller_id, 'Buyer confirmed delivery', f'Buyer confirmed delivery for order #{order.id}. Funds will release {release_str} GMT.')
     db.commit()
     db.refresh(order)
     return order
@@ -5642,12 +5967,15 @@ def release_marketplace_order(order_id: int, db: Session = Depends(get_db)):
         except Exception as e:
             payout_status = 'PAYOUT_FAILED'
             receipt_note = f'Paystack transfer failed: {e}'
+    platform_fee_amount, seller_payout_amount = _calculate_payouts(order)
+    order.platform_fee_amount = platform_fee_amount
+    order.seller_payout_amount = seller_payout_amount
     order.escrow_status = 'RELEASED'
     order.payout_status = payout_status
     order.updated_at = datetime.utcnow()
     setattr(order, 'released_at', datetime.utcnow())
-    db.add(PayoutHistory(order_id=order.id, seller_id=order.seller_id, payout_profile_id=payout.id if payout else None, amount=order.seller_net, currency=order.currency or 'GHS', status=payout_status, reference=payout_ref, transfer_code=transfer_code, receipt_note=receipt_note))
-    _notify_user(db, order.seller_id, 'Payout released', f'FarmSavior released {order.seller_net} {order.currency} for order #{order.id}. Status: {payout_status}.')
+    db.add(PayoutHistory(order_id=order.id, seller_id=order.seller_id, payout_profile_id=payout.id if payout else None, amount=seller_payout_amount, currency=order.currency or 'GHS', status=payout_status, reference=payout_ref, transfer_code=transfer_code, receipt_note=receipt_note))
+    _notify_user(db, order.seller_id, 'Payout released', f'FarmSavior released {seller_payout_amount} {order.currency} for order #{order.id} after an 8% platform fee ({platform_fee_amount}). Status: {payout_status}.')
     _notify_user(db, order.buyer_id, 'Order completed', f'Order #{order.id} escrow has been released to the seller.')
     db.commit()
     db.refresh(order)
@@ -5754,6 +6082,23 @@ def create_payment(payload: PaymentIn, db: Session = Depends(get_db)):
     db.refresh(payment)
     return payment
 
+
+@router.post('/payments/initialize')
+def initialize_marketplace_payment(payload: PaystackInitializeIn, db: Session = Depends(get_db)):
+    order = db.query(MarketplaceOrder).filter(MarketplaceOrder.id == payload.order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail='Order not found')
+    return _initialize_marketplace_order_paystack_payment(
+        order,
+        db,
+        payload.buyer_email,
+        amount_major=payload.amount,
+        currency=payload.currency or order.currency,
+    )
+
+@router.post('/payments/verify')
+def verify_marketplace_payment(payload: PaystackVerifyIn, db: Session = Depends(get_db)):
+    return _verify_marketplace_order_payment(payload.reference, db)
 
 @router.get('/payments')
 def list_payments(db: Session = Depends(get_db)):

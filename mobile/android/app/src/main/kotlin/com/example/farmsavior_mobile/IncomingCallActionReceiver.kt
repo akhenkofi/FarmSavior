@@ -1,4 +1,4 @@
-package com.example.farmsavior_mobile
+package com.fs.farmsaviorapp
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -12,7 +12,7 @@ class IncomingCallActionReceiver : BroadcastReceiver() {
     NotificationManagerCompat.from(context).cancel(callId.hashCode())
 
     when (intent.action) {
-      "com.example.farmsavior_mobile.CALL_ACCEPT" -> {
+      "com.fs.farmsaviorapp.CALL_ACCEPT" -> {
         val launch = context.packageManager.getLaunchIntentForPackage(context.packageName)
         launch?.apply {
           putExtra("incoming_call_action", "accept")
@@ -22,7 +22,7 @@ class IncomingCallActionReceiver : BroadcastReceiver() {
           addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }?.let { context.startActivity(it) }
       }
-      "com.example.farmsavior_mobile.CALL_DECLINE" -> {
+      "com.fs.farmsaviorapp.CALL_DECLINE" -> {
         // Explicit no-op (dismiss only)
       }
     }
