@@ -4465,6 +4465,25 @@ const startOrderPayment = async () => {
  const [spotTradingOpen, setSpotTradingOpen] = useState(() => readPublicSectionPref('spotTradingOpen', true))
  const [governmentProgramsOpen, setGovernmentProgramsOpen] = useState(() => readPublicSectionPref('governmentProgramsOpen', true))
  const [tradeStatsOpen, setTradeStatsOpen] = useState(() => readPublicSectionPref('tradeStatsOpen', true))
+ const popularActionItems = useMemo(() => ([
+  { label: t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析'), buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('ai-disease', 'AI Disease Analyzer'), variant: 'btn-dark' },
+  { label: t('Livestock Records Management','Gestion des registres du bétail','牲畜档案管理'), buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('livestock-records', 'Livestock Records Management'), variant: 'btn-dark' },
+  { label: t('FarmSavior Community','Communauté FarmSavior','FarmSavior 社区'), buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('community', 'FarmSavior Community'), variant: 'btn-dark' },
+  { label: 'AADU · Poultry University (Layers • Broilers • Guinea Fowl)', buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('poultry-university', 'Poultry University') },
+  { label: 'AADU · Sheep University (Ghana Sheep Breed Program)', buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('sheep-university', 'Sheep University') },
+  { label: 'AADU · Goat University (Ghana Goat Breed Program)', buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('goat-university', 'Goat University') },
+  { label: 'AADU · Cattle University (Ghana Cattle Breed Program)', buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('cattle-university', 'Cattle University') },
+  { label: t('My Listings','Mes annonces','我的列表'), buttonLabel: t('View','查看'), onClick: openMyListingsOverlay, variant: 'btn-dark' },
+  { label: t('List Product','Publier un produit','发布产品'), buttonLabel: t('Start','Démarrer'), onClick: () => handleProtectedAction('products', 'List Product') },
+  { label: t('List Livestock','Publier du bétail','发布牲畜'), buttonLabel: t('Start','Démarrer'), onClick: () => handleProtectedAction('livestock', 'List Livestock'), variant: 'btn-dark' },
+  { label: t('List Services','Publier des services','发布服务'), buttonLabel: t('Start','Démarrer'), onClick: () => handleProtectedAction('services', 'List Services') },
+  { label: t('List Machinery for Rent','Publier des machines à louer','发布机械租赁'), buttonLabel: t('Start','Démarrer'), onClick: () => handleProtectedAction('services', 'List Machinery for Rent') },
+  { label: t('Rent Machinery','Louer des machines','租用机械'), buttonLabel: t('Start','Démarrer'), onClick: () => handleProtectedAction('services', 'Rent Machinery') },
+  { label: t('Request Logistics / Transport','Demander logistique / transport','请求物流/运输'), buttonLabel: t('Start','Démarrer'), onClick: () => handleProtectedAction('services', 'Request Logistics / Transport') },
+  { label: t('Find Storage / Cold Room','Trouver stockage / chambre froide','寻找仓储/冷库'), buttonLabel: t('Start','Démarrer'), onClick: () => handleProtectedAction('services', 'Find Storage / Cold Room') },
+  { label: t('Farm GPS Mapping','Cartographie GPS des fermes','农场GPS标注'), buttonLabel: t('Open','Ouvrir'), onClick: () => handleProtectedAction('maps', 'Farm GPS Mapping') },
+  { label: t('Global World Chat','Chat mondial','全球聊天'), buttonLabel: t('Open','Ouvrir','打开'), onClick: () => handleProtectedAction('world-chat', 'Global World Chat') },
+ ]), [handleProtectedAction, openMyListingsOverlay, t])
  const [livestockSubscription, setLivestockSubscription] = useState({ tier: 'free', status: 'FREE', record_limit: 25, can_create_records: true, subscription: null, plans: [] })
  const [billingOverview, setBillingOverview] = useState({ subscriptions: [], active_subscriptions: [], payments: [] })
  useEffect(() => {
@@ -5741,23 +5760,9 @@ const handlePublishLivestock = async (e) => {
  <button type='button' className='btn' style={{marginLeft:'auto'}} onClick={() => setPopularActionsOpen(v => !v)}>{popularActionsOpen ? t('Hide','Masquer','隐藏') : t('Show','Afficher','显示')}</button>
  </div>
  {popularActionsOpen && <div className='list'>
- <div className='list-row'><span>{t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('ai-disease', 'AI Disease Analyzer')}>{t('Open','Ouvrir')}</button></div>
- <div className='list-row'><span>{t('Livestock Records Management','Gestion des registres du bétail','牲畜档案管理')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('livestock-records', 'Livestock Records Management')}>{t('Open','Ouvrir')}</button></div>
- <div className='list-row'><span>{t('FarmSavior Community','Communauté FarmSavior','FarmSavior 社区')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('community', 'FarmSavior Community')}>{t('Open','Ouvrir')}</button></div>
- <div className='list-row'><span>AADU · Poultry University (Layers • Broilers • Guinea Fowl)</span><button type='button' className='btn' onClick={()=>handleProtectedAction('poultry-university', 'Poultry University')}>{t('Open','Ouvrir')}</button></div>
- <div className='list-row'><span>AADU · Sheep University (Ghana Sheep Breed Program)</span><button type='button' className='btn' onClick={()=>handleProtectedAction('sheep-university', 'Sheep University')}>{t('Open','Ouvrir')}</button></div>
- <div className='list-row'><span>AADU · Goat University (Ghana Goat Breed Program)</span><button type='button' className='btn' onClick={()=>handleProtectedAction('goat-university', 'Goat University')}>{t('Open','Ouvrir')}</button></div>
- <div className='list-row'><span>AADU · Cattle University (Ghana Cattle Breed Program)</span><button type='button' className='btn' onClick={()=>handleProtectedAction('cattle-university', 'Cattle University')}>{t('Open','Ouvrir')}</button></div>
- <div className='list-row'><span>{t('My Listings','Mes annonces','我的列表')}</span><button type='button' className='btn btn-dark' onClick={openMyListingsOverlay}>{t('View','查看')}</button></div>
- <div className='list-row'><span>{t('List Product','Publier un produit','发布产品')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('products', 'List Product')}>{t('Start','Démarrer')}</button></div>
- <div className='list-row'><span>{t('List Livestock','Publier du bétail','发布牲畜')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('livestock', 'List Livestock')}>{t('Start','Démarrer')}</button></div>
- <div className='list-row'><span>{t('List Services','Publier des services','发布服务')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'List Services')}>{t('Start','Démarrer')}</button></div>
- <div className='list-row'><span>{t('List Machinery for Rent','Publier des machines à louer','发布机械租赁')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'List Machinery for Rent')}>{t('Start','Démarrer')}</button></div>
- <div className='list-row'><span>{t('Rent Machinery','Louer des machines','租用机械')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'Rent Machinery')}>{t('Start','Démarrer')}</button></div>
- <div className='list-row'><span>{t('Request Logistics / Transport','Demander logistique / transport','请求物流/运输')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'Request Logistics / Transport')}>{t('Start','Démarrer')}</button></div>
- <div className='list-row'><span>{t('Find Storage / Cold Room','Trouver stockage / chambre froide','寻找仓储/冷库')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'Find Storage / Cold Room')}>{t('Start','Démarrer')}</button></div>
- <div className='list-row'><span>{t('Farm GPS Mapping','Cartographie GPS des fermes','农场GPS标注')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('maps', 'Farm GPS Mapping')}>{t('Open','Ouvrir')}</button></div>
- <div className='list-row'><span>{t('Global World Chat','Chat mondial','全球聊天')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('world-chat', 'Global World Chat')}>{t('Open','Ouvrir','打开')}</button></div>
+ {popularActionItems.map((item, index) => (
+  <div className='list-row' key={`popular-${index}-${item.label}`}><span>{item.label}</span><button type='button' className={`btn${item.variant ? ` ${item.variant}` : ''}`} onClick={item.onClick}>{item.buttonLabel}</button></div>
+ ))}
  </div>}
  <p style={{fontSize:'.82rem', color:'#64748b'}}>{t('You can browse publicly; posting, renting, contacting providers, and transactions require sign-in.','Vous pouvez parcourir publiquement ; publier, louer, contacter des prestataires et effectuer des transactions nécessite une connexion.','你可以公开浏览；发布、租赁、联系服务商和交易需要登录。')}</p>
  </article>
