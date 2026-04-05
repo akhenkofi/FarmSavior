@@ -6373,13 +6373,16 @@ function AppInner() {
   <div className='helper-text' style={{color:'#dc2626'}}>{myListingsError}</div>
  ) : flatMyListings.length ? (
   <div className='list'>
-   {flatMyListings.map((listing, index) => (<div key={`screen-my-listing-${listing.type}-${listing.row?.id || index}`} className='list-row' style={{justifyContent:'space-between',flexWrap:'wrap',gap:10,cursor:'pointer'}} onClick={() => openMyListingDetail(listing)}>
+   {flatMyListings.map((listing, index) => (<div key={`screen-my-listing-${listing.type}-${listing.row?.id || index}`} className='list-row' style={{justifyContent:'space-between',flexWrap:'wrap',gap:10}}>
     <div>
      <strong>{listing.title}</strong><br />
      <span className='helper-text'>{listing.type} • {listing.status}</span><br />
      <span className='helper-text'>Price: {listing.price === '' || listing.price === null || listing.price === undefined ? 'N/A' : listing.price}</span>
     </div>
-    <button type='button' className='btn btn-dark' onClick={(e) => { e.stopPropagation(); handleEditListing(listing) }}>Edit</button>
+    <div className='card-actions' style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+     <button type='button' className='btn' onClick={() => openMyListingDetail(listing)}>View Details</button>
+     <button type='button' className='btn btn-dark' onClick={() => handleEditListing(listing)}>Edit</button>
+    </div>
    </div>))}
   </div>
  ) : (
