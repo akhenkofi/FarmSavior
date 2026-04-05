@@ -4647,9 +4647,11 @@ def list_farmer_profiles(db: Session = Depends(get_db)):
 
 
 @router.post('/marketplace/listings')
-def create_listing(payload: CropListingIn, db: Session = Depends(get_db)):
-    _require_transact_verified_user(db, int(payload.farmer_id), 'Seller')
+def create_listing(payload: CropListingIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    user = _current_user_from_auth(authorization, db)
+    _require_transact_verified_user(db, int(user.id), 'Seller')
     data = payload.model_dump()
+    data['farmer_id'] = int(user.id)
     _assert_no_contact_info(data.get('crop_name'), data.get('location'))
     _validate_shipping_terms(data)
     listing = CropListing(**data)
@@ -4770,9 +4772,11 @@ def delete_listing(listing_id: int, db: Session = Depends(get_db)):
     return {'ok': True}
 
 @router.post('/marketplace/livestock')
-def create_livestock_listing(payload: LivestockListingIn, db: Session = Depends(get_db)):
-    _require_transact_verified_user(db, int(payload.farmer_id), 'Seller')
+def create_livestock_listing(payload: LivestockListingIn, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    user = _current_user_from_auth(authorization, db)
+    _require_transact_verified_user(db, int(user.id), 'Seller')
     data = payload.model_dump()
+    data['farmer_id'] = int(user.id)
     _assert_no_contact_info(data.get('livestock_type'), data.get('location'))
     _validate_shipping_terms(data)
     listing = LivestockListing(**data)
