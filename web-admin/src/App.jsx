@@ -3774,8 +3774,8 @@ function AppInner() {
  const [cropQuickEdit, setCropQuickEdit] = useState({ id: '', quantity_kg: '', unit_price: '' })
  const [productImages, setProductImages] = useState([])
  const [productEditImages, setProductEditImages] = useState([])
- const [livestockForm, setLivestockForm] = useState({ farmer_id: 1, livestock_type: '', quantity: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
- const [livestockEdit, setLivestockEdit] = useState({ id: '', farmer_id: 1, livestock_type: '', quantity: '', unit_price: '', location: '', country: 'GH', status: 'OPEN' })
+ const [livestockForm, setLivestockForm] = useState({ farmer_id: 1, livestock_type: '', quantity: '', unit_price: '', location: '', country: 'GH', status: 'OPEN', ships_from_country: 'GH', ships_from_city: '', ships_to_scope: 'NATIONWIDE', shipping_cost_type: 'BUYER_ARRANGED', shipping_cost_amount: '', estimated_ship_days: '1-3 days', shipping_notes: '' })
+ const [livestockEdit, setLivestockEdit] = useState({ id: '', farmer_id: 1, livestock_type: '', quantity: '', unit_price: '', location: '', country: 'GH', status: 'OPEN', ships_from_country: 'GH', ships_from_city: '', ships_to_scope: 'NATIONWIDE', shipping_cost_type: 'BUYER_ARRANGED', shipping_cost_amount: '', estimated_ship_days: '1-3 days', shipping_notes: '' })
  const [livestockQuickEdit, setLivestockQuickEdit] = useState({ id: '', quantity: '', unit_price: '' })
  const [accountSettingsTab, setAccountSettingsTab] = useState('profile')
  const [notificationPrefs, setNotificationPrefs] = useState(() => {
@@ -6488,7 +6488,7 @@ function AppInner() {
  if (!livestockImages.length) missing.push('at least 1 livestock image')
  if (missing.length) { alert(`Please add: ${missing.join(', ')}.`); return }
  try {
-  await api.createLivestock({ ...livestockForm, ...normalizeListingImages(livestockImages), farmer_id: Number(livestockForm.farmer_id), quantity: Number(livestockForm.quantity), unit_price: Number(livestockForm.unit_price) })
+  await api.createLivestock({ ...livestockForm, ...normalizeListingImages(livestockImages), farmer_id: Number(livestockForm.farmer_id), quantity: Number(livestockForm.quantity), unit_price: Number(livestockForm.unit_price), ships_from_country: livestockForm.ships_from_country || livestockForm.country || 'GH', ships_from_city: livestockForm.ships_from_city || livestockForm.location || '', shipping_cost_amount: livestockForm.shipping_cost_amount === '' ? null : Number(livestockForm.shipping_cost_amount) })
   setLivestockImages([])
   await load()
   setLivestockView('list')
@@ -6533,7 +6533,7 @@ function AppInner() {
  {!livestockEdit.id ? <EmptyListingsState title='Choose a livestock listing to edit' body='Open Livestock List and tap Edit on a listing.' /> : <form className='list' onSubmit={async e => {
  e.preventDefault();
  try {
-  const res = await api.updateLivestock(Number(livestockEdit.id), { ...livestockEdit, ...normalizeListingImages(livestockEditImages), farmer_id: Number(livestockEdit.farmer_id || me?.id || 1), quantity: Number(livestockEdit.quantity), unit_price: Number(livestockEdit.unit_price) });
+  const res = await api.updateLivestock(Number(livestockEdit.id), { ...livestockEdit, ...normalizeListingImages(livestockEditImages), farmer_id: Number(livestockEdit.farmer_id || me?.id || 1), quantity: Number(livestockEdit.quantity), unit_price: Number(livestockEdit.unit_price), ships_from_country: livestockEdit.ships_from_country || livestockEdit.country || 'GH', ships_from_city: livestockEdit.ships_from_city || livestockEdit.location || '', shipping_cost_amount: livestockEdit.shipping_cost_amount === '' ? null : Number(livestockEdit.shipping_cost_amount) });
   const updated = res?.record || res
   setState(prev => ({ ...prev, livestock: (prev.livestock || []).map(row => Number(row.id) === Number(updated.id) ? { ...row, ...updated } : row) }))
   setLivestockEdit(prev => ({ ...prev, ...updated }))
@@ -6564,7 +6564,7 @@ function AppInner() {
  const images = parseImageList(r.image_urls)
  return <ListingDetailCard key={`livestock-card-${r.id}`} title={r.livestock_type} subtitle={`${r.location || 'Location not set'} • ${r.country} • ${r.status}`} stats={[`${r.quantity} animals`, `${r.unit_price}`, `${images.length} photos`]} contact={'Verified seller • FarmSavior protected'}><div className='listing-card-media'><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={r.livestock_type} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /></div><div className='listing-card-body'><div className='listing-card-metrics'>{images.length ? <span className='cover-badge'>Cover ready</span> : null}</div><div className='card-actions'>
  <button className='btn btn-dark' type='button' onClick={() => {
- setLivestockEdit({ id: r.id, farmer_id: r.farmer_id || 1, livestock_type: r.livestock_type || '', quantity: r.quantity || '', unit_price: r.unit_price || '', location: r.location || '', country: r.country || 'GH', status: r.status || 'OPEN' })
+ setLivestockEdit({ id: r.id, farmer_id: r.farmer_id || 1, livestock_type: r.livestock_type || '', quantity: r.quantity || '', unit_price: r.unit_price || '', location: r.location || '', country: r.country || 'GH', status: r.status || 'OPEN', ships_from_country: r.ships_from_country || r.country || 'GH', ships_from_city: r.ships_from_city || r.location || '', ships_to_scope: r.ships_to_scope || 'NATIONWIDE', shipping_cost_type: r.shipping_cost_type || 'BUYER_ARRANGED', shipping_cost_amount: r.shipping_cost_amount ?? '', estimated_ship_days: r.estimated_ship_days || '1-3 days', shipping_notes: r.shipping_notes || '' })
  setLivestockQuickEdit({ id: r.id, quantity: r.quantity || '', unit_price: r.unit_price || '' })
  setLivestockEditImages(images)
  setLivestockView('edit')
@@ -6576,7 +6576,7 @@ function AppInner() {
  })}
  </div>
  <DataTable columns={['id', 'livestock_type', 'quantity', 'unit_price', 'country', 'status']} rows={state.livestock} filterKey='livestock_type' onEdit={(r) => {
- setLivestockEdit({ id: r.id, farmer_id: r.farmer_id || 1, livestock_type: r.livestock_type || '', quantity: r.quantity || '', unit_price: r.unit_price || '', location: r.location || '', country: r.country || 'GH', status: r.status || 'OPEN' })
+ setLivestockEdit({ id: r.id, farmer_id: r.farmer_id || 1, livestock_type: r.livestock_type || '', quantity: r.quantity || '', unit_price: r.unit_price || '', location: r.location || '', country: r.country || 'GH', status: r.status || 'OPEN', ships_from_country: r.ships_from_country || r.country || 'GH', ships_from_city: r.ships_from_city || r.location || '', ships_to_scope: r.ships_to_scope || 'NATIONWIDE', shipping_cost_type: r.shipping_cost_type || 'BUYER_ARRANGED', shipping_cost_amount: r.shipping_cost_amount ?? '', estimated_ship_days: r.estimated_ship_days || '1-3 days', shipping_notes: r.shipping_notes || '' })
  setLivestockQuickEdit({ id: r.id, quantity: r.quantity || '', unit_price: r.unit_price || '' })
  setLivestockEditImages(parseImageList(r.image_urls))
  setLivestockView('edit')
