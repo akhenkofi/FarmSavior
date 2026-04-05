@@ -6316,15 +6316,16 @@ const handlePublishLivestock = async (e) => {
  <div style={{marginTop:6}}>{t('Information in marketplace, AI tools, weather, plant/pest insights, and community content is provided as guidance only and does not replace professional agronomy, veterinary, legal, or financial advice. Always verify locally before acting.','Les informations du marché, des outils IA, de la météo, des analyses plantes/ravageurs et du contenu communautaire sont fournies à titre indicatif et ne remplacent pas les conseils professionnels en agronomie, vétérinaire, juridique ou financier. Vérifiez toujours localement avant d’agir.','市场、AI工具、天气、植物/害虫洞察和社区内容仅供参考，不可替代农业、兽医、法律或金融专业意见。请在本地核实后再行动。')}</div>
  </article>
 
- <PublicDetailLightbox
+{publicDetail && <PublicDetailLightbox
   detail={publicDetail}
-  gallery={<ListingGallery images={publicDetail.images} title={publicDetail.title} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} />}
+  gallery={<ListingGallery images={publicDetail.images || []} title={publicDetail.title} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} />}
   onClose={() => setPublicDetail(null)}
   shippingAcknowledged={publicDetailShippingAcknowledged}
   onAcknowledge={() => setPublicDetailShippingAcknowledged(true)}
   onContact={() => handleProtectedAction(publicDetail.section, `Contact ${publicDetail.title}`)}
   onSave={() => handleProtectedAction(publicDetail.section, `Save ${publicDetail.title}`)}
 />
+}
 <MarketplaceProfileLightbox profile={marketplaceProfile} onClose={closeMarketplaceProfileView} onMessage={() => handleProtectedAction('messages', `Message ${marketplaceProfile.display_name || marketplaceProfile.username}`)} />
 
 
