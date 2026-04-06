@@ -2550,7 +2550,7 @@ const parseImageList = (value) => {
 
 const normalizeListingImages = (images = [], coverImageUrl = '') => {
  const list = parseImageList(images)
- const cover = coverImageUrl || list[0] || ''
+ const cover = coverImageUrl || list[0] || null
  return { image_urls: JSON.stringify(list), cover_image_url: cover }
 }
 
@@ -2586,6 +2586,7 @@ function ListingImagePicker({ label, limit, images, setImages }) {
  <strong>{label}</strong>
  <span>{images.length}/{limit} images</span>
  </div>
+ {!!images.length && <div className='card-actions' style={{marginBottom:8}}><button type='button' className='btn btn-mini' onClick={() => setImages([])}>Remove all images</button></div>}
  <input className='input' type='file' accept='image/jpeg,image/png,image/webp' multiple onChange={onFiles} />
  {!!images.length && <div className='image-grid'>
  {images.map((src, idx) => <div className='image-thumb-wrap' key={`${label}-${idx}`}>
@@ -2646,17 +2647,21 @@ function ListingDetailCard({ title, subtitle, stats = [], contact = '', children
 const listingKey = (kind, id) => `${kind}:${id}`
 const isSavedListing = (saved, kind, id) => saved.includes(listingKey(kind, id))
 
-const openOrderFromListing = ({ me, setActive, setOrderForm, listingType, listingId, listingTitle, sellerId, unitPrice, quantity = 1 }) => {
- setOrderForm(prev => ({
- ...prev,
- buyer_id: Number(me?.id || prev.buyer_id || 0) || '',
- seller_id: Number(sellerId || prev.seller_id || 0) || '',
- listing_type: listingType,
- listing_id: Number(listingId || 1),
- listing_title: listingTitle || '',
- quantity: Number(quantity || 1),
- unit_price: Number(unitPrice || 0),
- }))
+const openOrderFromListing = async ({ me, setActive, setOrderForm, onPrepared, listingType, listingId, listingTitle, sellerId, unitPrice, quantity = 1 }) => {
+ const prepared = {
+  buyer_id: Number(me?.id || 0) || '',
+  seller_id: Number(sellerId || 0) || '',
+  listing_type: listingType,
+  listing_id: Number(listingId || 1),
+  listing_title: listingTitle || '',
+  quantity: Number(quantity || 1),
+  unit_price: Number(unitPrice || 0),
+ }
+ setOrderForm(prev => ({ ...prev, ...prepared }))
+ if (typeof onPrepared === 'function') {
+  await onPrepared(prepared)
+  return
+ }
  setActive('payments')
 }
 
@@ -2740,6 +2745,7 @@ function AppInner() {
  const [livestockView, setLivestockView] = useState('list')
  const [servicesView, setServicesView] = useState('list')
 const [serviceCreateType, setServiceCreateType] = useState('logistics')
+const [serviceEditType, setServiceEditType] = useState('logistics')
  const [lightbox, setLightbox] = useState({ open: false, images: [], index: 0, title: '' })
  const [savedListings, setSavedListings] = useState(() => { try { return JSON.parse(localStorage.getItem('farmsavior_saved_listings') || '[]') } catch { return [] } })
  useEffect(() => {
@@ -3740,7 +3746,7 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  const [me, setMe] = useState(null)
  const adminPhoneNormalized = normalizePhone(me?.phone || '')
  const adminPhoneDigits = adminPhoneNormalized.replace(/\D/g, '')
- const isAdminUser = adminPhoneNormalized === '+233536761831' || adminPhoneDigits === '233536761831' || adminPhoneDigits === '0536761831' || adminPhoneDigits.endsWith('536761831') || String(me?.role || '').toLowerCase() === 'admin'
+ const isAdminUser = adminPhoneNormalized === '+233536761831' || adminPhoneDigits === '233536761831'
  const lastTrackRef = useRef('')
 
  useEffect(() => {
@@ -3894,11 +3900,11 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
   sale_date: payload.sale_date || null,
   died_date: payload.died_date || null,
  })
- const [logisticsForm, setLogisticsForm] = useState({ requester_id: 1, pickup_location: '', dropoff_location: '', cargo_type: '', weight_kg: '', status: 'PENDING', ships_from_country: 'GH', ships_from_city: '', ships_to_scope: 'country', shipping_cost_type: 'buyer_pays_actual', shipping_cost_amount: '', estimated_ship_days: '1-3 business days', shipping_notes: '' })
+ const [logisticsForm, setLogisticsForm] = useState({ requester_id: '', pickup_location: '', dropoff_location: '', cargo_type: '', weight_kg: '', status: 'PENDING', ships_from_country: 'GH', ships_from_city: '', ships_to_scope: 'country', shipping_cost_type: 'buyer_pays_actual', shipping_cost_amount: '', estimated_ship_days: '1-3 business days', shipping_notes: '' })
  const [logisticsEdit, setLogisticsEdit] = useState({ id: '', requester_id: 1, pickup_location: '', dropoff_location: '', cargo_type: '', weight_kg: '', status: 'PENDING', ships_from_country: 'GH', ships_from_city: '', ships_to_scope: 'country', shipping_cost_type: 'buyer_pays_actual', shipping_cost_amount: '', estimated_ship_days: '1-3 business days', shipping_notes: '' })
- const [equipmentForm, setEquipmentForm] = useState({ requester_id: 1, equipment_type: '', duration_days: '', location: '', budget: '', status: 'PENDING', service_delivery_mode: 'in_person', meeting_link: '', ships_from_country: 'GH', ships_from_city: '', ships_to_scope: 'country', shipping_cost_type: 'buyer_pays_actual', shipping_cost_amount: '', estimated_ship_days: '1-3 business days', shipping_notes: '' })
+ const [equipmentForm, setEquipmentForm] = useState({ requester_id: '', equipment_type: '', duration_days: '', location: '', budget: '', status: 'PENDING', service_delivery_mode: 'in_person', meeting_link: '', ships_from_country: 'GH', ships_from_city: '', ships_to_scope: 'country', shipping_cost_type: 'buyer_pays_actual', shipping_cost_amount: '', estimated_ship_days: '1-3 business days', shipping_notes: '' })
  const [equipmentEdit, setEquipmentEdit] = useState({ id: '', requester_id: 1, equipment_type: '', duration_days: '', location: '', budget: '', status: 'PENDING', service_delivery_mode: 'in_person', meeting_link: '', ships_from_country: 'GH', ships_from_city: '', ships_to_scope: 'country', shipping_cost_type: 'buyer_pays_actual', shipping_cost_amount: '', estimated_ship_days: '1-3 business days', shipping_notes: '' })
- const [storageForm, setStorageForm] = useState({ requester_id: 1, storage_type: '', quantity_kg: '', location: '', duration_days: '', status: 'PENDING', ships_from_country: 'GH', ships_from_city: '', ships_to_scope: 'country', shipping_cost_type: 'buyer_pays_actual', shipping_cost_amount: '', estimated_ship_days: '1-3 business days', shipping_notes: '' })
+ const [storageForm, setStorageForm] = useState({ requester_id: '', storage_type: '', quantity_kg: '', location: '', duration_days: '', status: 'PENDING', ships_from_country: 'GH', ships_from_city: '', ships_to_scope: 'country', shipping_cost_type: 'buyer_pays_actual', shipping_cost_amount: '', estimated_ship_days: '1-3 business days', shipping_notes: '' })
  const [storageEdit, setStorageEdit] = useState({ id: '', requester_id: 1, storage_type: '', quantity_kg: '', location: '', duration_days: '', status: 'PENDING', ships_from_country: 'GH', ships_from_city: '', ships_to_scope: 'country', shipping_cost_type: 'buyer_pays_actual', shipping_cost_amount: '', estimated_ship_days: '1-3 business days', shipping_notes: '' })
  const [serviceImages, setServiceImages] = useState([])
  const [serviceEditImages, setServiceEditImages] = useState([])
@@ -3911,6 +3917,9 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  const [sellerOrderUserId, setSellerOrderUserId] = useState(String(me?.id || ''))
  const [selectedOrder, setSelectedOrder] = useState(null)
  const [selectedReceipt, setSelectedReceipt] = useState(null)
+ const [savingServiceEdit, setSavingServiceEdit] = useState('')
+ const [marketplaceShowcaseView, setMarketplaceShowcaseView] = useState('carousel')
+ const [marketplaceShowcaseFilter, setMarketplaceShowcaseFilter] = useState('all')
  const [paymentForm, setPaymentForm] = useState({ payer_id: 2, payee_id: 1, amount: '', country: 'GH', method: 'MobileMoney', provider: 'MTN MoMo', escrow_enabled: true })
  const [paymentEdit, setPaymentEdit] = useState({ id: '', payer_id: 2, payee_id: 1, amount: '', country: 'GH', method: 'MobileMoney', provider: 'MTN MoMo', escrow_enabled: true })
  const [alertForm, setAlertForm] = useState({ country: 'GH', region: '', severity: 'MEDIUM', alert_type: '', message: '', valid_until: '' })
@@ -4176,6 +4185,35 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  setUniversityProductMessage(product, v.message || 'Verification checked.')
  }
 
+ const startMarketplaceOrderCheckout = async (prepared) => {
+  try {
+   if (!token || !me?.id) { handleProtectedAction('onboarding', 'Buy Now'); return }
+   const orderPayload = {
+    buyer_id: Number(me.id),
+    seller_id: Number(prepared?.seller_id || 0),
+    listing_type: String(prepared?.listing_type || 'PRODUCT').toUpperCase(),
+    listing_id: Number(prepared?.listing_id || 1),
+    listing_title: String(prepared?.listing_title || '').trim() || 'Marketplace listing',
+    quantity: Number(prepared?.quantity || 1),
+    unit_price: Number(prepared?.unit_price || 0),
+    currency: 'GHS',
+    delivery_method: 'STANDARD',
+    buyer_note: '',
+   }
+   const created = await api.createOrder(orderPayload)
+   const pay = await api.payOrder(created.id, { ...orderPayment, payer_id: created.buyer_id, payee_id: created.seller_id, amount: created.gross_amount, currency: created.currency || 'GHS' })
+   const reference = pay?.payment?.reference || created.payment_reference
+   cachePendingCheckout({ type: 'marketplace_order', order_id: created.id, listing_title: created.listing_title, reference })
+   const paymentUrl = pay?.payment?.authorization_url
+   if (paymentUrl) { window.location.href = paymentUrl; return }
+   setActive('payments')
+   await load()
+  } catch (e) {
+   alert(errMsg(e))
+   setActive('payments')
+  }
+ }
+
  useEffect(() => {
 
  const loadLivestockSubscription = async () => {
@@ -4235,6 +4273,7 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  const [showUnitConverter, setShowUnitConverter] = useState(false)
  const [showSplash, setShowSplash] = useState(true)
  const [isOffline, setIsOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false)
+ const [networkBusy, setNetworkBusy] = useState(false)
 
  const urlLang = (() => {
  try { return new URLSearchParams(window.location.search).get('lang') || '' } catch { return '' }
@@ -4327,12 +4366,25 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  }, [])
 
  useEffect(() => {
+  const onNetwork = (event) => {
+   const busy = !!event?.detail?.busy || Number(event?.detail?.inFlight || 0) > 0
+   setNetworkBusy(busy)
+  }
+  window.addEventListener('farmsavior:network-activity', onNetwork)
+  return () => window.removeEventListener('farmsavior:network-activity', onNetwork)
+ }, [])
+
+ useEffect(() => {
  localStorage.setItem('farmsavior_ui_country', uiCountry)
  }, [uiCountry])
 
  useEffect(() => {
  setMobileMenuOpen(false)
  }, [active])
+
+ useEffect(() => {
+ if (!isAdminUser && active === 'dashboard') setActive('home')
+ }, [isAdminUser, active])
 
  useEffect(() => {
  try { localStorage.setItem('farmsavior_saved_listings', JSON.stringify(savedListings)) } catch {}
@@ -4388,8 +4440,11 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  const [govSubsidyForm, setGovSubsidyForm] = useState({ country: 'GH', agency: 'MOFA', farmer_user_id: 1, amount: '' })
  const [govMsgForm, setGovMsgForm] = useState({ country: 'GH', target: 'farmers', text: '' })
  const [showGovAdminTools, setShowGovAdminTools] = useState(false)
+ const [servicesLoading, setServicesLoading] = useState(false)
 
  const load = async () => {
+ setServicesLoading(true)
+ try {
  const meRes = await api.fetchMe().catch(() => null)
  setMe(meRes)
  if (meRes) {
@@ -4441,6 +4496,9 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  currency: myPayoutProfile.currency || prev.currency,
  default_payout_method: typeof myPayoutProfile.default_payout_method === 'boolean' ? myPayoutProfile.default_payout_method : prev.default_payout_method
  }))
+ }
+ } finally {
+ setServicesLoading(false)
  }
  }
 
@@ -4685,6 +4743,11 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
   handleProtectedAction('my-listings', 'My Listings')
  }
 
+ useEffect(() => {
+  if (active !== 'my-listings' || !token) return
+  loadMyListings()
+ }, [active, token, me?.id])
+
  const openMyListingDetail = (listing) => {
   if (!listing?.row) return
   const row = listing.row
@@ -4716,27 +4779,35 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
   }
   setActive('services')
   setServicesView('edit')
-  if (row.service_type === 'equipment') {
+  const rowImages = parseImageList(row.image_urls || row.images || [])
+  setServiceEditImages(rowImages)
+  if (row.service_type === 'equipment' || row.service_type === 'consultation') {
+   setServiceEditType('equipment')
    setEquipmentEdit({ id: row.id, requester_id: row.requester_id || me?.id || 1, equipment_type: row.equipment_type || '', duration_days: row.duration_days || '', location: row.location || '', budget: row.budget || '', status: row.status || 'PENDING' })
    return
   }
   if (row.service_type === 'storage') {
+   setServiceEditType('storage')
    setStorageEdit({ id: row.id, requester_id: row.requester_id || me?.id || 1, storage_type: row.storage_type || '', quantity_kg: row.quantity_kg || '', location: row.location || '', duration_days: row.duration_days || '', status: row.status || 'PENDING' })
    return
   }
+  setServiceEditType('logistics')
   setLogisticsEdit({ id: row.id, requester_id: row.requester_id || me?.id || 1, pickup_location: row.pickup_location || '', dropoff_location: row.dropoff_location || '', cargo_type: row.cargo_type || '', weight_kg: row.weight_kg || '', status: row.status || 'PENDING' })
  }
 
  const flatMyListings = useMemo(() => {
   const rows = []
   const addRows = (type, entries) => {
-   ;(entries || []).forEach((row) => rows.push({
+   ;(entries || []).forEach((row) => {
+    const images = parseImageList(row.image_urls || row.images || [])
+    rows.push({
     type,
     title: row.title || row.crop_name || row.livestock_type || row.equipment_type || row.storage_type || 'Listing',
     status: row.status || row.state || 'N/A',
     price: row.price ?? row.unit_price ?? row.budget ?? row.weight_kg ?? row.quantity_kg ?? '',
+    previewImage: (String(row.service_type || '').toLowerCase() === 'logistics') ? (images[0] || '') : (images[0] || row.cover_image_url || ''),
     row,
-   }))
+   })})
   }
   addRows('product', myListings.products)
   addRows('service', myListings.services)
@@ -4851,12 +4922,13 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  persistRecents(recentSearches, next)
  }
 
- const baseMenu = ['home', 'dashboard', 'ai-disease', 'poultry-university', 'sheep-university', 'goat-university', 'cattle-university', 'livestock-records', 'onboarding', 'my-listings', 'products', 'livestock', 'services', 'payments', 'alerts', 'maps', 'world-chat', 'community', 'government', 'contracts']
- const menu = isAdminUser ? [...baseMenu, 'admin'] : baseMenu
+ const baseMenu = ['home', 'ai-disease', 'poultry-university', 'sheep-university', 'goat-university', 'cattle-university', 'livestock-records', 'onboarding', 'marketplace', 'my-listings', 'products', 'livestock', 'services', 'payments', 'alerts', 'maps', 'world-chat', 'community', 'government', 'contracts']
+ const menu = isAdminUser ? ['home', 'dashboard', ...baseMenu.slice(1), 'admin'] : baseMenu
  const menuLabel = (m) => ({
  'home':t('home','home','首页'),
  'dashboard':t('dashboard','dashboard','仪表盘'),
  'onboarding':t('My Account Settings','Paramètres du compte','账户设置'),
+ 'marketplace':t('Marketplace','Marketplace','市场'),
  'my-listings':t('My Listings','Mes annonces','我的列表'),
  'products':t('products','products','产品'),
  'livestock':t('livestock','livestock','牲畜'),
@@ -5021,6 +5093,48 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  return out
  }, [state.logistics, state.equipment, state.storage])
 
+ const marketplaceShowcaseListings = useMemo(() => {
+  const mkRow = (category, row) => {
+   const images = parseImageList(row.image_urls || [])
+   const image = category === 'logistics' ? (images[0] || '') : (images[0] || row.cover_image_url || '')
+   const title = category === 'product'
+    ? (row.crop_name || 'Product listing')
+    : category === 'livestock'
+     ? (row.livestock_type || 'Livestock listing')
+     : category === 'logistics'
+      ? `${row.pickup_location || 'Pickup'} → ${row.dropoff_location || 'Dropoff'}`
+      : category === 'storage'
+       ? (row.storage_type || 'Storage service')
+       : (row.equipment_type || 'Service listing')
+   const preview = category === 'product'
+    ? `${row.quantity_kg || 0} kg • ${row.location || 'Location not set'}`
+    : category === 'livestock'
+     ? `${row.quantity || 0} animals • ${row.location || 'Location not set'}`
+     : category === 'logistics'
+      ? `${row.cargo_type || 'General cargo'} • ${row.weight_kg || 0} kg`
+      : category === 'storage'
+       ? `${row.quantity_kg || 0} kg • ${row.location || 'Location not set'}`
+       : `${row.location || 'Location not set'} • ${row.duration_days || 1} days`
+   const created = row.created_at ? new Date(row.created_at).getTime() : 0
+   const subtype = category === 'equipment' && /consult|veterinary|vet/i.test(String(row.equipment_type || '')) ? 'consultation' : category
+   return { id: `${category}-${row.id}`, rowId: row.id, category, subtype, title, preview, image, created, status: row.status || 'OPEN' }
+  }
+
+  const merged = [
+   ...(state.listings || []).map((row) => mkRow('product', row)),
+   ...(state.livestock || []).map((row) => mkRow('livestock', row)),
+   ...(state.logistics || []).map((row) => mkRow('logistics', row)),
+   ...(state.equipment || []).map((row) => mkRow('equipment', row)),
+   ...(state.storage || []).map((row) => mkRow('storage', row)),
+  ]
+
+  const filtered = marketplaceShowcaseFilter === 'all'
+   ? merged
+   : merged.filter((x) => x.category === marketplaceShowcaseFilter || x.subtype === marketplaceShowcaseFilter)
+
+  return filtered.sort((a, b) => (b.created || 0) - (a.created || 0))
+ }, [state.listings, state.livestock, state.logistics, state.equipment, state.storage, marketplaceShowcaseFilter])
+
  const publicGovRows = state.govPrograms.length ? state.govPrograms : featuredGovSeed
  const safeGovHeadline = (row) => {
  const raw = String(row?.headline || '')
@@ -5148,6 +5262,20 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  verified_at: new Date().toISOString(),
  section: paymentSectionRoute(pending.product),
  })
+ } else if (pending.type === 'marketplace_order' && pending.order_id) {
+ const verified = await api.verifyOrderPayment(Number(pending.order_id))
+ const order = await api.fetchOrder(Number(pending.order_id)).catch(() => null)
+ await load()
+ setActive('onboarding')
+ setPaymentReturnNotice({
+ kind: 'marketplace_order',
+ order_id: Number(pending.order_id),
+ title: 'Thank you - your order payment is confirmed.',
+ message: verified?.message || `Order #${pending.order_id} for ${order?.listing_title || pending.listing_title || 'your item'} is now paid and secured in escrow.`,
+ reference,
+ verified_at: new Date().toISOString(),
+ section: 'payments',
+ })
  }
  clearPendingCheckout()
  try {
@@ -5266,6 +5394,7 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  <div className='list-row'><span>AADU · Goat University (Ghana Goat Breed Program)</span><button type='button' className='btn' onClick={()=>handleProtectedAction('goat-university', 'Goat University')}>{t('Open','Ouvrir')}</button></div>
  <div className='list-row'><span>AADU · Cattle University (Ghana Cattle Breed Program)</span><button type='button' className='btn' onClick={()=>handleProtectedAction('cattle-university', 'Cattle University')}>{t('Open','Ouvrir')}</button></div>
  <div className='list-row'><span>{t('My Listings','Mes annonces','我的列表')}</span><button type='button' className='btn btn-dark' style={{touchAction:'manipulation'}} onPointerUp={openHomepageMyListings} onClick={openHomepageMyListings}>{t('View','查看')}</button></div>
+ <div className='list-row'><span>{t('Marketplace','Marketplace','市场')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('payments', 'Marketplace')}>{t('Open','Ouvrir','打开')}</button></div>
  <div className='list-row'><span>{t('List Product','Publier un produit','发布产品')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('products', 'List Product')}>{t('Start','Démarrer')}</button></div>
  <div className='list-row'><span>{t('List Services','Publier des services','发布服务')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'List Services')}>{t('Start','Démarrer')}</button></div>
  <div className='list-row'><span>{t('List Machinery for Rent','Publier des machines à louer','发布机械租赁')}</span><button type='button' className='btn' onClick={()=>handleProtectedAction('services', 'List Machinery for Rent')}>{t('Start','Démarrer')}</button></div>
@@ -5324,6 +5453,8 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  region: regionValue,
  user_type: signup.user_type,
  password: passwordValue,
+ accept_terms: !!signup.accept_terms,
+ accept_privacy: !!signup.accept_privacy,
  }
  const registerRes = await api.register(payload)
  await api.trackAnalyticsEvent({
@@ -5428,7 +5559,7 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
      consent_personalization: !!signup.consent_personalization,
      consent_marketing: !!signup.consent_marketing,
      consent_aggregated_insights: !!signup.consent_aggregated_insights,
-    })
+        })
     setOtpResendReadyAt(Date.now() + 60_000)
     setAuthMsg('OTP resent successfully.')
    } catch (e) {
@@ -5873,6 +6004,7 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  <p>Check your network and try again.</p>
  </div>
  </div>}
+ {networkBusy && !showSplash && !isOffline && <div style={{position:'fixed',top:10,left:'50%',transform:'translateX(-50%)',zIndex:170,padding:'6px 12px',borderRadius:999,background:'rgba(15,23,42,.9)',color:'#fff',fontSize:'.78rem',fontWeight:700,boxShadow:'0 10px 24px rgba(15,23,42,.25)'}}>Syncing updates…</div>}
  {lightbox.open && <div className='lightbox' onClick={() => setLightbox({ open: false, images: [], index: 0, title: '' })}>
  <div className='lightbox-inner' onClick={(e) => e.stopPropagation()}>
  <div className='list-row' style={{marginBottom:8}}>
@@ -5885,6 +6017,23 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  <span className='gallery-count'>{lightbox.index + 1}/{lightbox.images.length}</span>
  <button type='button' className='btn btn-mini' onClick={() => setLightbox(prev => ({ ...prev, index: (prev.index + 1) % prev.images.length }))}>Next</button>
  </div>}
+ </div>
+ </div>}
+ {paymentReturnNotice?.kind === 'marketplace_order' && <div className='lightbox' onClick={() => { setPaymentReturnNotice(null); setActive('home') }}>
+ <div className='lightbox-inner public-detail' onClick={(e) => e.stopPropagation()}>
+ <div className='list-row' style={{marginBottom:8}}><strong>✅ Order Payment Confirmed</strong><button type='button' className='btn btn-dark' onClick={() => { setPaymentReturnNotice(null); setActive('home') }}>Close</button></div>
+ <div className='detail-meta'>
+ <div className='listing-card-metrics'>
+ <span>Order #{paymentReturnNotice.order_id || '-'}</span><span>Reference {paymentReturnNotice.reference || '-'}</span>
+ </div>
+ <h4>{paymentReturnNotice.title}</h4>
+ <div className='helper-text'>{paymentReturnNotice.message}</div>
+ <div className='panel' style={{marginTop:10}}>Verified {formatDateTime(paymentReturnNotice.verified_at)}</div>
+ <div className='card-actions' style={{marginTop:10}}>
+ <button type='button' className='btn btn-dark' onClick={() => { setActive('payments'); setPaymentReturnNotice(null) }}>View order confirmation</button>
+ <button type='button' className='btn' onClick={() => { setActive('home'); setPaymentReturnNotice(null) }}>Done</button>
+ </div>
+ </div>
  </div>
  </div>}
  {selectedOrder && <div className='lightbox' onClick={() => setSelectedOrder(null)}>
@@ -5920,7 +6069,7 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  <h3 style={{margin:0}}>FarmSavior</h3>
  </div>
  <div className='sidebar-section-label'>Current section</div>
- {menu.map(m => <button key={m} className={`sideBtn ${active === m ? 'on' : ''}`} aria-current={active === m ? 'page' : undefined} onClick={() => { setActive(m); setMobileMenuOpen(false) }}><span>{menuLabel(m)}</span>{active === m && <span className='sideBtnMarker'>Current</span>}</button>)}
+ {menu.map(m => { const isCurrent = active === m || (m === 'marketplace' && active === 'payments'); const target = m === 'marketplace' ? 'payments' : m; return <button key={m} className={`sideBtn ${isCurrent ? 'on' : ''}`} aria-current={isCurrent ? 'page' : undefined} onClick={() => { setActive(target); setMobileMenuOpen(false) }}><span>{menuLabel(m)}</span>{isCurrent && <span className='sideBtnMarker'>Current</span>}</button> })}
  <button className='sideBtn' onClick={() => { localStorage.removeItem('farmsavior_token'); setToken('') }}>{t('logout','se déconnecter')}</button>
  </aside>
  <main className='main'>
@@ -6091,7 +6240,7 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  </article>
  </section>}
 
- {active === 'dashboard' && <section>
+ {active === 'dashboard' && isAdminUser && <section>
  <h2>{isAdminUser ? t('Admin Dashboard + Analytics','Tableau de bord admin + analyses','管理员仪表盘 + 分析') : t('My Dashboard + Analytics','Mon tableau de bord + analyses','我的仪表盘 + 分析')}</h2>
  <div className='kpi-grid'>{kpis.map(([k, v]) => <article className='kpi-card' key={k}><p>{k}</p><strong>{v}</strong></article>)}</div>
 
@@ -6129,7 +6278,7 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  </section>}
 
  {active === 'onboarding' && <section className='onboarding-shell'>
- {!!paymentReturnNotice && <article className='panel' style={{marginBottom:12, background:'linear-gradient(135deg,#ecfdf5 0%,#eff6ff 100%)', border:'1px solid #86efac'}}>
+ {!!paymentReturnNotice && paymentReturnNotice.kind !== 'marketplace_order' && <article className='panel' style={{marginBottom:12, background:'linear-gradient(135deg,#ecfdf5 0%,#eff6ff 100%)', border:'1px solid #86efac'}}>
  <div style={{display:'flex',justifyContent:'space-between',gap:12,flexWrap:'wrap',alignItems:'center'}}>
  <div>
  <div style={{fontSize:'.78rem',fontWeight:800,color:'#15803d',textTransform:'uppercase',letterSpacing:'.08em'}}>Payment confirmed</div>
@@ -6378,10 +6527,13 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  ) : flatMyListings.length ? (
   <div className='list'>
    {flatMyListings.map((listing, index) => (<div key={`screen-my-listing-${listing.type}-${listing.row?.id || index}`} className='list-row' style={{justifyContent:'space-between',flexWrap:'wrap',gap:10}}>
-    <div>
-     <strong>{listing.title}</strong><br />
-     <span className='helper-text'>{listing.type} • {listing.status}</span><br />
-     <span className='helper-text'>Price: {listing.price === '' || listing.price === null || listing.price === undefined ? 'N/A' : listing.price}</span>
+    <div style={{display:'flex',gap:10,alignItems:'flex-start'}}>
+     <div style={{width:56,height:56,borderRadius:8,overflow:'hidden',background:'#f1f5f9',flex:'0 0 auto'}}>{listing.previewImage ? <img src={listing.previewImage} alt={listing.title} style={{width:'100%',height:'100%',objectFit:'cover'}} /> : <div style={{width:'100%',height:'100%',display:'grid',placeItems:'center',fontSize:'.72rem',color:'#64748b'}}>No image</div>}</div>
+     <div>
+      <strong>{listing.title}</strong><br />
+      <span className='helper-text'>{listing.type}{listing.row?.service_type ? ` (${listing.row.service_type})` : ''} • {listing.status}</span><br />
+      <span className='helper-text'>Price: {listing.price === '' || listing.price === null || listing.price === undefined ? 'N/A' : listing.price}</span>
+     </div>
     </div>
     <div className='card-actions' style={{display:'flex',gap:8,flexWrap:'wrap'}}>
      <button type='button' className='btn' onClick={() => openMyListingDetail(listing)}>View Details</button>
@@ -6505,7 +6657,7 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  setProductEditImages(images)
  setProductsView('edit')
  }}>Edit</button>
- <button className='btn' type='button' onClick={() => setSavedListings(prev => isSavedListing(prev, 'product', r.id) ? prev.filter(x => x !== listingKey('product', r.id)) : [...prev, listingKey('product', r.id)])}>{isSavedListing(savedListings, 'product', r.id) ? 'Saved ✓' : 'Save'}</button><button className='btn' type='button' onClick={async () => { try { await navigator.share?.({ title: r.crop_name, text: `${r.location || ''} • ${r.quantity_kg} kg`, url: window.location.href }) } catch {} }}>Share</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'PRODUCT', listingId: r.id, listingTitle: r.crop_name, sellerId: r.farmer_id, unitPrice: r.unit_price, quantity: 1 })}>Contact via FarmSavior</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'PRODUCT', listingId: r.id, listingTitle: r.crop_name, sellerId: r.farmer_id, unitPrice: r.unit_price, quantity: 1 })}>Make Offer</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'PRODUCT', listingId: r.id, listingTitle: r.crop_name, sellerId: r.farmer_id, unitPrice: r.unit_price, quantity: 1 })}>Request Purchase</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete product #${r.id}?`)) return; await api.deleteListing(r.id); await load() }}>Delete</button>
+ <button className='btn' type='button' onClick={() => setSavedListings(prev => isSavedListing(prev, 'livestock', r.id) ? prev.filter(x => x !== listingKey('livestock', r.id)) : [...prev, listingKey('livestock', r.id)])}>{isSavedListing(savedListings, 'livestock', r.id) ? 'Saved ✓' : 'Save'}</button><button className='btn' type='button' onClick={async () => { try { await navigator.share?.({ title: r.livestock_type, text: `${r.location || ''} • ${r.quantity || ''} animals`, url: window.location.href }) } catch {} }}>Share</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, onPrepared: startMarketplaceOrderCheckout, listingType: 'LIVESTOCK', listingId: r.id, listingTitle: r.livestock_type, sellerId: r.farmer_id, unitPrice: r.unit_price, quantity: 1 })}>Contact via FarmSavior</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, onPrepared: startMarketplaceOrderCheckout, listingType: 'LIVESTOCK', listingId: r.id, listingTitle: r.livestock_type, sellerId: r.farmer_id, unitPrice: r.unit_price, quantity: 1 })}>Make Offer</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, onPrepared: startMarketplaceOrderCheckout, listingType: 'LIVESTOCK', listingId: r.id, listingTitle: r.livestock_type, sellerId: r.farmer_id, unitPrice: r.unit_price, quantity: 1 })}>Buy Now</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete livestock #${r.id}?`)) return; await api.deleteLivestock(r.id); await load() }}>Delete</button>
  </div>
  </div>
  </ListingDetailCard>
@@ -6626,7 +6778,7 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  setLivestockEditImages(images)
  setLivestockView('edit')
  }}>Edit</button>
- <button className='btn' type='button' onClick={() => setSavedListings(prev => isSavedListing(prev, 'product', r.id) ? prev.filter(x => x !== listingKey('product', r.id)) : [...prev, listingKey('product', r.id)])}>{isSavedListing(savedListings, 'product', r.id) ? 'Saved ✓' : 'Save'}</button><button className='btn' type='button' onClick={async () => { try { await navigator.share?.({ title: r.crop_name, text: `${r.location || ''} • ${r.quantity_kg} kg`, url: window.location.href }) } catch {} }}>Share</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'PRODUCT', listingId: r.id, listingTitle: r.crop_name, sellerId: r.farmer_id, unitPrice: r.unit_price, quantity: 1 })}>Contact via FarmSavior</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'PRODUCT', listingId: r.id, listingTitle: r.crop_name, sellerId: r.farmer_id, unitPrice: r.unit_price, quantity: 1 })}>Make Offer</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'PRODUCT', listingId: r.id, listingTitle: r.crop_name, sellerId: r.farmer_id, unitPrice: r.unit_price, quantity: 1 })}>Request Purchase</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete product #${r.id}?`)) return; await api.deleteListing(r.id); await load() }}>Delete</button>
+ <button className='btn' type='button' onClick={() => setSavedListings(prev => isSavedListing(prev, 'product', r.id) ? prev.filter(x => x !== listingKey('product', r.id)) : [...prev, listingKey('product', r.id)])}>{isSavedListing(savedListings, 'product', r.id) ? 'Saved ✓' : 'Save'}</button><button className='btn' type='button' onClick={async () => { try { await navigator.share?.({ title: r.crop_name, text: `${r.location || ''} • ${r.quantity_kg} kg`, url: window.location.href }) } catch {} }}>Share</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, onPrepared: startMarketplaceOrderCheckout, listingType: 'PRODUCT', listingId: r.id, listingTitle: r.crop_name, sellerId: r.farmer_id, unitPrice: r.unit_price, quantity: 1 })}>Contact via FarmSavior</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, onPrepared: startMarketplaceOrderCheckout, listingType: 'PRODUCT', listingId: r.id, listingTitle: r.crop_name, sellerId: r.farmer_id, unitPrice: r.unit_price, quantity: 1 })}>Make Offer</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, onPrepared: startMarketplaceOrderCheckout, listingType: 'PRODUCT', listingId: r.id, listingTitle: r.crop_name, sellerId: r.farmer_id, unitPrice: r.unit_price, quantity: 1 })}>Buy Now</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete product #${r.id}?`)) return; await api.deleteListing(r.id); await load() }}>Delete</button>
  </div>
  </div>
  </ListingDetailCard>
@@ -6644,6 +6796,7 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
 
  {active === 'poultry-university' && <section>
  <h3>🐔 Poultry University</h3>
+ <div className='panel' style={{marginBottom:10,padding:10,background:'#fff7ed',border:'1px solid #fdba74',color:'#9a3412'}}><strong>Important:</strong> University upgrades are non-refundable once payment is processed because premium learning information is delivered immediately.</div>
  <div className='panel' style={{marginBottom:10, background:((poultryTier==='pro') || String(poultrySubscription?.subscription?.plan_code || '').toLowerCase()==='pro') ? 'linear-gradient(135deg,#0f172a 0%,#1d4ed8 45%,#0ea5e9 100%)' : 'linear-gradient(135deg,#eff6ff 0%,#f8fafc 100%)', border:((poultryTier==='pro') || String(poultrySubscription?.subscription?.plan_code || '').toLowerCase()==='pro') ? '1px solid rgba(255,255,255,.16)' : '1px solid #bfdbfe', color:((poultryTier==='pro') || String(poultrySubscription?.subscription?.plan_code || '').toLowerCase()==='pro') ? '#fff' : '#0f172a'}}>
  <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',color:((poultryTier==='pro') || String(poultrySubscription?.subscription?.plan_code || '').toLowerCase()==='pro') ? 'rgba(255,255,255,.9)' : '#1d4ed8'}}>AADU school</div>
  <strong style={{display:'block',marginTop:4}}>{((poultryTier==='pro') || String(poultrySubscription?.subscription?.plan_code || '').toLowerCase()==='pro') ? 'Poultry University · PRO ✓' : 'Poultry University'}</strong>
@@ -6868,6 +7021,7 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
 
  {active === 'sheep-university' && <section>
  <h3>🐑 Sheep University</h3>
+ <div className='panel' style={{marginBottom:10,padding:10,background:'#fff7ed',border:'1px solid #fdba74',color:'#9a3412'}}><strong>Important:</strong> University upgrades are non-refundable once payment is processed because premium learning information is delivered immediately.</div>
  <div className='panel' style={{marginBottom:10, background:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? 'linear-gradient(135deg,#0f172a 0%,#14532d 45%,#0f766e 100%)' : 'linear-gradient(135deg,#eff6ff 0%,#faf5ff 100%)', color:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? '#fff' : '#0f172a', border:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? '1px solid rgba(255,255,255,.12)' : '1px solid #bfdbfe', boxShadow:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? '0 18px 40px rgba(15,23,42,.24)' : 'none'}}><div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'center',flexWrap:'wrap'}}><div><div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',opacity:.9}}>AADU school</div><strong style={{display:'block',fontSize:'1.05rem',marginTop:4}}>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? `Sheep University · ${String(universitySubscriptions.sheep?.subscription?.plan_code || sheepTier || '').toUpperCase()} ✓` : 'Sheep University'}</strong><div style={{marginTop:6,color:(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? 'rgba(255,255,255,.88)' : '#1e3a8a'}}>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? `${sheepTier === 'pro' ? 'Professional' : 'Paid'} access is active. Full Sheep University modules are unlocked${sheepTier === 'pro' ? ' with premium execution tools.' : '.'}` : 'Sheep University frames breed development, flock discipline, lamb survival, and commercial performance as one operating system inside AADU.'}</div></div>{(sheepTier !== 'free' || universitySubscriptions.sheep?.subscription?.status === 'ACTIVE') ? <span className='cover-badge' style={{background:'rgba(255,255,255,.14)', color:'#fff', border:'1px solid rgba(255,255,255,.24)'}}>{String(universitySubscriptions.sheep?.subscription?.status || 'ACTIVE').replaceAll('_',' ')}</span> : null}</div></div>
  <article className='panel' style={{marginBottom:10,border:'1px solid #ddd6fe',background:'#faf5ff'}}>
  <h4 style={{marginTop:0,color:'#6d28d9'}}>Ghana Sheep Breed Development Framework</h4>
@@ -6988,6 +7142,7 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
 
  {active === 'goat-university' && <section>
  <h3>🐐 Goat University</h3>
+ <div className='panel' style={{marginBottom:10,padding:10,background:'#fff7ed',border:'1px solid #fdba74',color:'#9a3412'}}><strong>Important:</strong> University upgrades are non-refundable once payment is processed because premium learning information is delivered immediately.</div>
  <div className='panel' style={{marginBottom:10, background:(goatTier==='pro' || String(universitySubscriptions.goat?.subscription?.plan_code || '').toLowerCase()==='pro') ? 'linear-gradient(135deg,#0f172a 0%,#0f766e 45%,#14b8a6 100%)' : 'linear-gradient(135deg,#eff6ff 0%,#f0fdfa 100%)', border:(goatTier==='pro' || String(universitySubscriptions.goat?.subscription?.plan_code || '').toLowerCase()==='pro') ? '1px solid rgba(255,255,255,.16)' : '1px solid #bfdbfe', color:(goatTier==='pro' || String(universitySubscriptions.goat?.subscription?.plan_code || '').toLowerCase()==='pro') ? '#fff' : '#0f172a'}}>
  <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',color:(goatTier==='pro' || String(universitySubscriptions.goat?.subscription?.plan_code || '').toLowerCase()==='pro') ? 'rgba(255,255,255,.9)' : '#0f766e'}}>AADU school</div>
  <strong style={{display:'block',marginTop:4}}>{(goatTier==='pro' || String(universitySubscriptions.goat?.subscription?.plan_code || '').toLowerCase()==='pro') ? `Goat University · PRO ✓` : 'Goat University'}</strong>
@@ -7113,6 +7268,7 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
 
  {active === 'cattle-university' && <section>
  <h3>🐄 Cattle University</h3>
+ <div className='panel' style={{marginBottom:10,padding:10,background:'#fff7ed',border:'1px solid #fdba74',color:'#9a3412'}}><strong>Important:</strong> University upgrades are non-refundable once payment is processed because premium learning information is delivered immediately.</div>
  <div className='panel' style={{marginBottom:10, background:(cattleTier==='pro' || String(universitySubscriptions.cattle?.subscription?.plan_code || '').toLowerCase()==='pro') ? 'linear-gradient(135deg,#0f172a 0%,#92400e 45%,#d97706 100%)' : 'linear-gradient(135deg,#eff6ff 0%,#fffbeb 100%)', border:(cattleTier==='pro' || String(universitySubscriptions.cattle?.subscription?.plan_code || '').toLowerCase()==='pro') ? '1px solid rgba(255,255,255,.16)' : '1px solid #bfdbfe', color:(cattleTier==='pro' || String(universitySubscriptions.cattle?.subscription?.plan_code || '').toLowerCase()==='pro') ? '#fff' : '#0f172a'}}>
  <div style={{fontSize:'.76rem',fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',color:(cattleTier==='pro' || String(universitySubscriptions.cattle?.subscription?.plan_code || '').toLowerCase()==='pro') ? 'rgba(255,255,255,.9)' : '#92400e'}}>AADU school</div>
  <strong style={{display:'block',marginTop:4}}>{(cattleTier==='pro' || String(universitySubscriptions.cattle?.subscription?.plan_code || '').toLowerCase()==='pro') ? `Cattle University · PRO ✓` : 'Cattle University'}</strong>
@@ -7996,6 +8152,7 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  </div>
  <button className='btn btn-dark' type='button' onClick={() => setServicesView('create')}>Add New Service</button>
  </div>
+ {servicesLoading && <div className='panel' style={{marginBottom:10, border:'1px solid #bfdbfe', background:'linear-gradient(180deg,#eff6ff 0%,#f8fafc 100%)'}}><strong>Refreshing service listings…</strong><div className='helper-text' style={{marginTop:4}}>Please wait while FarmSavior fetches your latest logistics, consultation, equipment, and storage listings.</div></div>}
  <div className='tabs compact-tabs'>
  <button className={`tab ${servicesView === 'list' ? 'active' : ''}`} onClick={() => setServicesView('list')}>Service Lists</button>
  <button className={`tab ${servicesView === 'create' ? 'active' : ''}`} onClick={() => setServicesView('create')}>Create Service</button>
@@ -8013,7 +8170,7 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
   </div>
   <div className='helper-text' style={{marginBottom:12}}>Choose one service type and complete only the fields for that service.</div>
 
-  {serviceCreateType === 'logistics' && <form className='list' onSubmit={async e => { e.preventDefault(); try { const res = await api.createLogistics({ ...logisticsForm, ...normalizeListingImages(serviceImages), requester_id: Number(logisticsForm.requester_id || me?.id || 1), weight_kg: Number(logisticsForm.weight_kg || 1), ships_from_country: logisticsForm.ships_from_country || 'GH', ships_from_city: logisticsForm.ships_from_city || logisticsForm.pickup_location || 'Accra', ships_to_scope: logisticsForm.ships_to_scope || 'country', shipping_cost_type: logisticsForm.shipping_cost_type || 'buyer_pays_actual', shipping_cost_amount: Number(logisticsForm.shipping_cost_amount || 0), estimated_ship_days: logisticsForm.estimated_ship_days || '1-3 business days', shipping_notes: logisticsForm.shipping_notes || '' }); const created = res?.record || res; setState(prev => ({ ...prev, logistics: [created, ...(prev.logistics || [])] })); setServiceImages([]); setServicesView('list'); setActive('services'); } catch (err) { alert(errMsg(err)) } }}>
+  {serviceCreateType === 'logistics' && <form className='list' onSubmit={async e => { e.preventDefault(); try { const res = await api.createLogistics({ ...logisticsForm, ...normalizeListingImages(serviceImages), requester_id: Number(me?.id || logisticsForm.requester_id || 1), weight_kg: Number(logisticsForm.weight_kg || 1), ships_from_country: logisticsForm.ships_from_country || 'GH', ships_from_city: logisticsForm.ships_from_city || logisticsForm.pickup_location || 'Accra', ships_to_scope: logisticsForm.ships_to_scope || 'country', shipping_cost_type: logisticsForm.shipping_cost_type || 'buyer_pays_actual', shipping_cost_amount: Number(logisticsForm.shipping_cost_amount || 0), estimated_ship_days: logisticsForm.estimated_ship_days || '1-3 business days', shipping_notes: logisticsForm.shipping_notes || '' }); const created = res?.record || res; setState(prev => ({ ...prev, logistics: [created, ...(prev.logistics || [])] })); setServiceImages([]); setServicesView('list'); setActive('services'); } catch (err) { alert(errMsg(err)) } }}>
    <input className='input' placeholder='Pickup location' value={logisticsForm.pickup_location} onChange={e => setLogisticsForm({ ...logisticsForm, pickup_location: e.target.value })} />
    <input className='input' placeholder='Dropoff location' value={logisticsForm.dropoff_location} onChange={e => setLogisticsForm({ ...logisticsForm, dropoff_location: e.target.value })} />
    <select className='input' value={logisticsForm.cargo_type} onChange={e => setLogisticsForm({ ...logisticsForm, cargo_type: e.target.value })} required>
@@ -8037,7 +8194,7 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
    <button className='btn btn-dark'>Create Rental</button>
   </form>}
 
-  {serviceCreateType === 'storage' && <form className='list' onSubmit={async e => { e.preventDefault(); try { const res = await api.createStorage({ ...storageForm, ...normalizeListingImages(serviceImages), requester_id: Number(storageForm.requester_id || me?.id || 1), duration_days: Number(storageForm.duration_days || 1), quantity_kg: Number(storageForm.quantity_kg || 1), ships_from_country: storageForm.ships_from_country || 'GH', ships_from_city: storageForm.ships_from_city || storageForm.location || 'Accra', ships_to_scope: storageForm.ships_to_scope || 'country', shipping_cost_type: storageForm.shipping_cost_type || 'buyer_pays_actual', shipping_cost_amount: Number(storageForm.shipping_cost_amount || 0), estimated_ship_days: storageForm.estimated_ship_days || '1-3 business days', shipping_notes: storageForm.shipping_notes || '' }); const created = res?.record || res; setState(prev => ({ ...prev, storage: [created, ...(prev.storage || [])] })); setServiceImages([]); setServicesView('list'); setActive('services'); } catch (err) { alert(errMsg(err)) } }}>
+  {serviceCreateType === 'storage' && <form className='list' onSubmit={async e => { e.preventDefault(); try { const res = await api.createStorage({ ...storageForm, ...normalizeListingImages(serviceImages), requester_id: Number(me?.id || storageForm.requester_id || 1), duration_days: Number(storageForm.duration_days || 1), quantity_kg: Number(storageForm.quantity_kg || 1), ships_from_country: storageForm.ships_from_country || 'GH', ships_from_city: storageForm.ships_from_city || storageForm.location || 'Accra', ships_to_scope: storageForm.ships_to_scope || 'country', shipping_cost_type: storageForm.shipping_cost_type || 'buyer_pays_actual', shipping_cost_amount: Number(storageForm.shipping_cost_amount || 0), estimated_ship_days: storageForm.estimated_ship_days || '1-3 business days', shipping_notes: storageForm.shipping_notes || '' }); const created = res?.record || res; setState(prev => ({ ...prev, storage: [created, ...(prev.storage || [])] })); setServiceImages([]); setServicesView('list'); setActive('services'); } catch (err) { alert(errMsg(err)) } }}>
    <select className='input' value={storageForm.storage_type} onChange={e => setStorageForm({ ...storageForm, storage_type: e.target.value })} required>
     <option value=''>Select storage type</option>
     {HIGH_DEMAND_SERVICE_TYPES.map(x => <option key={`service-type-st-${x}`} value={x}>{x}</option>)}
@@ -8049,7 +8206,7 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
    <button className='btn btn-dark'>Create Storage</button>
   </form>}
 
-  {serviceCreateType === 'consultation' && <form className='list' onSubmit={async e => { e.preventDefault(); try { const res = await api.createEquipment({ ...equipmentForm, ...normalizeListingImages(serviceImages), requester_id: Number(equipmentForm.requester_id || me?.id || 1), duration_days: Number(equipmentForm.duration_days || 1), budget: Number(equipmentForm.budget || 1), location: equipmentForm.service_delivery_mode === 'virtual' ? (equipmentForm.location || 'Virtual / Video Call') : equipmentForm.location, meeting_link: equipmentForm.meeting_link || undefined }); const created = res?.record || res; setState(prev => ({ ...prev, equipment: [created, ...(prev.equipment || [])] })); setServiceImages([]); setServicesView('list'); setActive('services'); } catch (err) { alert(errMsg(err)) } }}>
+  {serviceCreateType === 'consultation' && <form className='list' onSubmit={async e => { e.preventDefault(); try { const res = await api.createEquipment({ requester_id: Number(me?.id || equipmentForm.requester_id || 1), equipment_type: equipmentForm.equipment_type, duration_days: Number(equipmentForm.duration_days || 1), location: equipmentForm.service_delivery_mode === 'virtual' ? (equipmentForm.location || 'Virtual / Video Call') : equipmentForm.location, budget: Number(equipmentForm.budget || 1), status: equipmentForm.status || 'PENDING', ships_from_country: equipmentForm.ships_from_country || 'GH', ships_from_city: equipmentForm.ships_from_city || equipmentForm.location || 'Accra', ships_to_scope: equipmentForm.ships_to_scope || 'country', shipping_cost_type: equipmentForm.shipping_cost_type || 'buyer_pays_actual', shipping_cost_amount: equipmentForm.shipping_cost_amount === '' ? null : Number(equipmentForm.shipping_cost_amount), estimated_ship_days: equipmentForm.estimated_ship_days || '1-3 business days', shipping_notes: equipmentForm.shipping_notes || '', meeting_link: equipmentForm.meeting_link || undefined, ...normalizeListingImages(serviceImages) }); const created = res?.record || res; setState(prev => ({ ...prev, equipment: [created, ...(prev.equipment || [])] })); setServiceImages([]); setServicesView('list'); setActive('services'); } catch (err) { alert(errMsg(err)) } }}>
    <select className='input' value={equipmentForm.equipment_type} onChange={e => setEquipmentForm({ ...equipmentForm, equipment_type: e.target.value })} required>
     <option value=''>Select consultation type</option>
     <option value='Veterinary consultation'>Veterinary consultation</option>
@@ -8077,8 +8234,8 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  </article>
 </section>}
 
- {servicesView === 'edit' && <div className='three-col'>
- <article className='panel'><h4>Edit Logistics</h4><form className='list' onSubmit={async e => { e.preventDefault(); try { const res = await api.updateLogistics(Number(logisticsEdit.id), { ...logisticsEdit, ...normalizeListingImages(serviceEditImages), requester_id: Number(logisticsEdit.requester_id || me?.id || 1), weight_kg: Number(logisticsEdit.weight_kg || 1) }); const updated = res?.record || res; setState(prev => ({ ...prev, logistics: (prev.logistics || []).map(row => Number(row.id) === Number(updated.id) ? { ...row, ...updated } : row) })); setServicesView('list'); setActive('services'); } catch (err) { alert(errMsg(err)) } }}>
+ {servicesView === 'edit' && <><div className='tabs compact-tabs' style={{marginBottom:10}}><button className={`tab ${serviceEditType === 'logistics' ? 'active' : ''}`} onClick={() => setServiceEditType('logistics')}>Logistics</button><button className={`tab ${serviceEditType === 'equipment' ? 'active' : ''}`} onClick={() => setServiceEditType('equipment')}>Equipment / Consultation</button><button className={`tab ${serviceEditType === 'storage' ? 'active' : ''}`} onClick={() => setServiceEditType('storage')}>Storage</button></div><div className='three-col'>
+ {serviceEditType === 'logistics' && <article className='panel'><h4>Edit Logistics</h4><form className='list' onSubmit={async e => { e.preventDefault(); if (savingServiceEdit) return; setSavingServiceEdit('logistics'); try { const payload = { ...logisticsEdit, ...normalizeListingImages(serviceEditImages), requester_id: Number(me?.id || logisticsEdit.requester_id || 1), weight_kg: Number(logisticsEdit.weight_kg || 1), ships_from_country: logisticsEdit.ships_from_country || 'GH', ships_from_city: logisticsEdit.ships_from_city || logisticsEdit.pickup_location || 'Accra', ships_to_scope: logisticsEdit.ships_to_scope || 'country', shipping_cost_type: logisticsEdit.shipping_cost_type || 'buyer_pays_actual', shipping_cost_amount: logisticsEdit.shipping_cost_amount === '' ? null : Number(logisticsEdit.shipping_cost_amount || 0), estimated_ship_days: logisticsEdit.estimated_ship_days || '1-3 business days', shipping_notes: logisticsEdit.shipping_notes || '' }; const longHaul = /long haul|truck logistics/i.test(String(payload.cargo_type || '')); if (longHaul) { await api.deleteLogistics(Number(logisticsEdit.id)); await api.createLogistics(payload) } else { await api.updateLogistics(Number(logisticsEdit.id), payload) }; await load(); setServicesView('list'); setActive('services'); } catch (err) { alert(errMsg(err)) } finally { setSavingServiceEdit('') } }}>
  <input className='input' placeholder='ID to edit' value={logisticsEdit.id} onChange={e => setLogisticsEdit({ ...logisticsEdit, id: e.target.value })} required />
  <input className='input' placeholder='Pickup' value={logisticsEdit.pickup_location} onChange={e => setLogisticsEdit({ ...logisticsEdit, pickup_location: e.target.value })} />
  <input className='input' placeholder='Dropoff' value={logisticsEdit.dropoff_location} onChange={e => setLogisticsEdit({ ...logisticsEdit, dropoff_location: e.target.value })} />
@@ -8088,9 +8245,9 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
   {HIGH_DEMAND_SERVICE_TYPES.map(x => <option key={`service-type-log-edit-${x}`} value={x}>{x}</option>)}
  </select>
  <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceEditImages} setImages={setServiceEditImages} />
- <button className='btn btn-dark'>Save Logistics</button>
- </form></article>
- <article className='panel'><h4>Edit Equipment</h4><form className='list' onSubmit={async e => { e.preventDefault(); try { const res = await api.updateEquipment(Number(equipmentEdit.id), { ...equipmentEdit, ...normalizeListingImages(serviceEditImages), requester_id: Number(equipmentEdit.requester_id || me?.id || 1), duration_days: Number(equipmentEdit.duration_days || 1), budget: Number(equipmentEdit.budget || 1) }); const updated = res?.record || res; setState(prev => ({ ...prev, equipment: (prev.equipment || []).map(row => Number(row.id) === Number(updated.id) ? { ...row, ...updated } : row) })); setServicesView('list'); setActive('services'); } catch (err) { alert(errMsg(err)) } }}>
+ <button className='btn btn-dark' disabled={savingServiceEdit === 'logistics'}>{savingServiceEdit === 'logistics' ? 'Saving logistics…' : 'Save Logistics'}</button>
+ </form></article>}
+ {serviceEditType === 'equipment' && <article className='panel'><h4>Edit Consultation / Equipment</h4><form className='list' onSubmit={async e => { e.preventDefault(); if (savingServiceEdit) return; setSavingServiceEdit('equipment'); try { const res = await api.updateEquipment(Number(equipmentEdit.id), { ...equipmentEdit, ...normalizeListingImages(serviceEditImages), requester_id: Number(me?.id || equipmentEdit.requester_id || 1), duration_days: Number(equipmentEdit.duration_days || 1), budget: Number(equipmentEdit.budget || 1), ships_from_country: equipmentEdit.ships_from_country || 'GH', ships_from_city: equipmentEdit.ships_from_city || equipmentEdit.location || 'Accra', ships_to_scope: equipmentEdit.ships_to_scope || 'country', shipping_cost_type: equipmentEdit.shipping_cost_type || 'buyer_pays_actual', shipping_cost_amount: equipmentEdit.shipping_cost_amount === '' ? null : Number(equipmentEdit.shipping_cost_amount || 0), estimated_ship_days: equipmentEdit.estimated_ship_days || '1-3 business days', shipping_notes: equipmentEdit.shipping_notes || '' }); const updated = res?.record || res; await load(); setServicesView('list'); setActive('services'); } catch (err) { alert(errMsg(err)) } finally { setSavingServiceEdit('') } }}>
  <input className='input' placeholder='ID to edit' value={equipmentEdit.id} onChange={e => setEquipmentEdit({ ...equipmentEdit, id: e.target.value })} required />
  <select className='input' value={equipmentEdit.equipment_type || ''} onChange={e => setEquipmentEdit({ ...equipmentEdit, equipment_type: e.target.value })}>
   <option value=''>Select service type</option>
@@ -8099,9 +8256,9 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  </select>
  <input className='input' placeholder='Location' value={equipmentEdit.location} onChange={e => setEquipmentEdit({ ...equipmentEdit, location: e.target.value })} />
  <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceEditImages} setImages={setServiceEditImages} />
- <button className='btn btn-dark'>Save Equipment</button>
- </form></article>
- <article className='panel'><h4>Edit Storage</h4><form className='list' onSubmit={async e => { e.preventDefault(); try { const res = await api.updateStorage(Number(storageEdit.id), { ...storageEdit, ...normalizeListingImages(serviceEditImages), requester_id: Number(storageEdit.requester_id || me?.id || 1), duration_days: Number(storageEdit.duration_days || 1), quantity_kg: Number(storageEdit.quantity_kg || 1) }); const updated = res?.record || res; setState(prev => ({ ...prev, storage: (prev.storage || []).map(row => Number(row.id) === Number(updated.id) ? { ...row, ...updated } : row) })); setServicesView('list'); setActive('services'); } catch (err) { alert(errMsg(err)) } }}>
+ <button className='btn btn-dark' disabled={savingServiceEdit === 'equipment'}>{savingServiceEdit === 'equipment' ? 'Saving equipment…' : 'Save Equipment'}</button>
+ </form></article>}
+ {serviceEditType === 'storage' && <article className='panel'><h4>Edit Storage</h4><form className='list' onSubmit={async e => { e.preventDefault(); if (savingServiceEdit) return; setSavingServiceEdit('storage'); try { const res = await api.updateStorage(Number(storageEdit.id), { ...storageEdit, ...normalizeListingImages(serviceEditImages), requester_id: Number(me?.id || storageEdit.requester_id || 1), duration_days: Number(storageEdit.duration_days || 1), quantity_kg: Number(storageEdit.quantity_kg || 1), ships_from_country: storageEdit.ships_from_country || 'GH', ships_from_city: storageEdit.ships_from_city || storageEdit.location || 'Accra', ships_to_scope: storageEdit.ships_to_scope || 'country', shipping_cost_type: storageEdit.shipping_cost_type || 'buyer_pays_actual', shipping_cost_amount: storageEdit.shipping_cost_amount === '' ? null : Number(storageEdit.shipping_cost_amount || 0), estimated_ship_days: storageEdit.estimated_ship_days || '1-3 business days', shipping_notes: storageEdit.shipping_notes || '' }); const updated = res?.record || res; await load(); setServicesView('list'); setActive('services'); } catch (err) { alert(errMsg(err)) } finally { setSavingServiceEdit('') } }}>
  <input className='input' placeholder='ID to edit' value={storageEdit.id} onChange={e => setStorageEdit({ ...storageEdit, id: e.target.value })} required />
  <select className='input' value={storageEdit.storage_type || ''} onChange={e => setStorageEdit({ ...storageEdit, storage_type: e.target.value })}>
   <option value=''>Select service type</option>
@@ -8110,24 +8267,47 @@ const [serviceCreateType, setServiceCreateType] = useState('logistics')
  </select>
  <input className='input' placeholder='Location' value={storageEdit.location} onChange={e => setStorageEdit({ ...storageEdit, location: e.target.value })} />
  <ListingImagePicker label='Service photos' limit={MAX_IMAGE_COUNTS.services} images={serviceEditImages} setImages={setServiceEditImages} />
- <button className='btn btn-dark'>Save Storage</button>
- </form></article>
- </div>}
+ <button className='btn btn-dark' disabled={savingServiceEdit === 'storage'}>{savingServiceEdit === 'storage' ? 'Saving storage…' : 'Save Storage'}</button>
+ </form></article>}
+ </div></>}
 
  {servicesView === 'list' && <div className='three-col'>
  <article className='panel'><h4>Logistics Requests</h4>{!state.logistics.length ? <EmptyListingsState title='No logistics services yet' body='Create your first logistics request or transport service listing.' actionLabel='Add Logistics Service' onAction={() => setServicesView('create')} /> : <div className='list'>
- {state.logistics.map((r) => { const images = parseImageList(r.image_urls); return <ListingDetailCard key={`log-${r.id}`} title={`${r.pickup_location} → ${r.dropoff_location}`} subtitle={`${r.cargo_type || 'General cargo'} • ${r.status}`} stats={[`${r.weight_kg || 0} kg`, `${images.length} photos`]} contact={'Verified provider • FarmSavior protected'}><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={`Logistics ${r.id}`} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /><div className='card-actions'><button className='btn btn-dark' type='button' onClick={() => { setLogisticsEdit({ id: r.id, requester_id: r.requester_id || 1, pickup_location: r.pickup_location || '', dropoff_location: r.dropoff_location || '', cargo_type: r.cargo_type || '', weight_kg: r.weight_kg || '', status: r.status || 'PENDING' }); setServiceEditImages(images); setServicesView('edit') }}>Edit</button><button className='btn' type='button' onClick={() => setSavedListings(prev => isSavedListing(prev, 'logistics', r.id) ? prev.filter(x => x !== listingKey('logistics', r.id)) : [...prev, listingKey('logistics', r.id)])}>{isSavedListing(savedListings, 'logistics', r.id) ? 'Saved ✓' : 'Save'}</button><button className='btn' type='button' onClick={async () => { try { await navigator.share?.({ title: `${r.pickup_location} → ${r.dropoff_location}`, text: r.cargo_type || 'Logistics service', url: window.location.href }) } catch {} }}>Share</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.weight_kg || 0, quantity: 1 })}>Contact via FarmSavior</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.weight_kg || 0, quantity: 1 })}>Send Inquiry</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete logistics service #${r.id}?`)) return; await api.deleteLogistics(r.id); await load() }}>Delete</button></div></ListingDetailCard> })}
+ {state.logistics.map((r) => { const images = parseImageList(r.image_urls); return <ListingDetailCard key={`log-${r.id}`} title={`${r.pickup_location} → ${r.dropoff_location}`} subtitle={`${r.cargo_type || 'General cargo'} • ${r.status}`} stats={[`${r.weight_kg || 0} kg`, `${images.length} photos`]} contact={'Verified provider • FarmSavior protected'}><ListingGallery images={images} title={`Logistics ${r.id}`} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /><div className='card-actions'><button className='btn btn-dark' type='button' onClick={() => { setLogisticsEdit({ id: r.id, requester_id: r.requester_id || 1, pickup_location: r.pickup_location || '', dropoff_location: r.dropoff_location || '', cargo_type: r.cargo_type || '', weight_kg: r.weight_kg || '', status: r.status || 'PENDING' }); setServiceEditImages(images); setServiceEditType('logistics'); setServicesView('edit') }}>Edit</button><button className='btn' type='button' onClick={() => setSavedListings(prev => isSavedListing(prev, 'logistics', r.id) ? prev.filter(x => x !== listingKey('logistics', r.id)) : [...prev, listingKey('logistics', r.id)])}>{isSavedListing(savedListings, 'logistics', r.id) ? 'Saved ✓' : 'Save'}</button><button className='btn' type='button' onClick={async () => { try { await navigator.share?.({ title: `${r.pickup_location} → ${r.dropoff_location}`, text: r.cargo_type || 'Logistics service', url: window.location.href }) } catch {} }}>Share</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, onPrepared: startMarketplaceOrderCheckout, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.weight_kg || 0, quantity: 1 })}>Contact via FarmSavior</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, onPrepared: startMarketplaceOrderCheckout, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.weight_kg || 0, quantity: 1 })}>Send Inquiry</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete logistics service #${r.id}?`)) return; await api.deleteLogistics(r.id); await load() }}>Delete</button></div></ListingDetailCard> })}
  </div>}</article>
  <article className='panel'><h4>Equipment Rentals</h4>{!state.equipment.length ? <EmptyListingsState title='No equipment rentals yet' body='Create your first machinery or equipment rental service.' actionLabel='Add Equipment Service' onAction={() => setServicesView('create')} /> : <div className='list'>
- {state.equipment.map((r) => { const images = parseImageList(r.image_urls); return <ListingDetailCard key={`eq-${r.id}`} title={r.equipment_type} subtitle={`${r.location || 'Location not set'} • ${r.status}`} stats={[`${r.duration_days} days`, `${r.budget} budget`, `${images.length} photos`]} contact={'Verified provider • FarmSavior protected'}><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={`Equipment ${r.id}`} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /><div className='card-actions'><button className='btn btn-dark' type='button' onClick={() => { setEquipmentEdit({ id: r.id, requester_id: r.requester_id || 1, equipment_type: r.equipment_type || '', duration_days: r.duration_days || '', location: r.location || '', budget: r.budget || '', status: r.status || 'PENDING' }); setServiceEditImages(images); setServicesView('edit') }}>Edit</button><button className='btn' type='button' onClick={() => setSavedListings(prev => isSavedListing(prev, 'equipment', r.id) ? prev.filter(x => x !== listingKey('equipment', r.id)) : [...prev, listingKey('equipment', r.id)])}>{isSavedListing(savedListings, 'equipment', r.id) ? 'Saved ✓' : 'Save'}</button><button className='btn' type='button' onClick={async () => { try { await navigator.share?.({ title: r.equipment_type, text: r.location || 'Equipment service', url: window.location.href }) } catch {} }}>Share</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.budget || r.weight_kg || 0, quantity: 1 })}>Contact via FarmSavior</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.budget || r.weight_kg || 0, quantity: 1 })}>Send Inquiry</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete equipment service #${r.id}?`)) return; await api.deleteEquipment(r.id); await load() }}>Delete</button></div></ListingDetailCard> })}
+ {state.equipment.map((r) => { const images = parseImageList(r.image_urls); return <ListingDetailCard key={`eq-${r.id}`} title={r.equipment_type} subtitle={`${r.location || 'Location not set'} • ${r.status}`} stats={[`${r.duration_days} days`, `${r.budget} budget`, `${images.length} photos`]} contact={'Verified provider • FarmSavior protected'}><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={`Equipment ${r.id}`} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /><div className='card-actions'><button className='btn btn-dark' type='button' onClick={() => { setEquipmentEdit({ id: r.id, requester_id: r.requester_id || 1, equipment_type: r.equipment_type || '', duration_days: r.duration_days || '', location: r.location || '', budget: r.budget || '', status: r.status || 'PENDING' }); setServiceEditImages(images); setServiceEditType('equipment'); setServicesView('edit') }}>Edit</button><button className='btn' type='button' onClick={() => setSavedListings(prev => isSavedListing(prev, 'equipment', r.id) ? prev.filter(x => x !== listingKey('equipment', r.id)) : [...prev, listingKey('equipment', r.id)])}>{isSavedListing(savedListings, 'equipment', r.id) ? 'Saved ✓' : 'Save'}</button><button className='btn' type='button' onClick={async () => { try { await navigator.share?.({ title: r.equipment_type, text: r.location || 'Equipment service', url: window.location.href }) } catch {} }}>Share</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, onPrepared: startMarketplaceOrderCheckout, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.budget || r.weight_kg || 0, quantity: 1 })}>Contact via FarmSavior</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, onPrepared: startMarketplaceOrderCheckout, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.budget || r.weight_kg || 0, quantity: 1 })}>Send Inquiry</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete equipment service #${r.id}?`)) return; await api.deleteEquipment(r.id); await load() }}>Delete</button></div></ListingDetailCard> })}
  </div>}</article>
  <article className='panel'><h4>Storage Reservations</h4>{!state.storage.length ? <EmptyListingsState title='No storage services yet' body='Create your first storage or cold-room service listing.' actionLabel='Add Storage Service' onAction={() => setServicesView('create')} /> : <div className='list'>
- {state.storage.map((r) => { const images = parseImageList(r.image_urls); return <ListingDetailCard key={`st-${r.id}`} title={r.storage_type} subtitle={`${r.location || 'Location not set'} • ${r.status}`} stats={[`${r.quantity_kg} kg`, `${r.duration_days} days`, `${images.length} photos`]} contact={'Verified provider • FarmSavior protected'}><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={`Storage ${r.id}`} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /><div className='card-actions'><button className='btn btn-dark' type='button' onClick={() => { setStorageEdit({ id: r.id, requester_id: r.requester_id || 1, storage_type: r.storage_type || '', quantity_kg: r.quantity_kg || '', location: r.location || '', duration_days: r.duration_days || '', status: r.status || 'PENDING' }); setServiceEditImages(images); setServicesView('edit') }}>Edit</button><button className='btn' type='button' onClick={() => setSavedListings(prev => isSavedListing(prev, 'storage', r.id) ? prev.filter(x => x !== listingKey('storage', r.id)) : [...prev, listingKey('storage', r.id)])}>{isSavedListing(savedListings, 'storage', r.id) ? 'Saved ✓' : 'Save'}</button><button className='btn' type='button' onClick={async () => { try { await navigator.share?.({ title: r.storage_type, text: r.location || 'Storage service', url: window.location.href }) } catch {} }}>Share</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.budget || r.weight_kg || 0, quantity: 1 })}>Contact via FarmSavior</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.budget || r.weight_kg || 0, quantity: 1 })}>Send Inquiry</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete storage service #${r.id}?`)) return; await api.deleteStorage(r.id); await load() }}>Delete</button></div></ListingDetailCard> })}
+ {state.storage.map((r) => { const images = parseImageList(r.image_urls); return <ListingDetailCard key={`st-${r.id}`} title={r.storage_type} subtitle={`${r.location || 'Location not set'} • ${r.status}`} stats={[`${r.quantity_kg} kg`, `${r.duration_days} days`, `${images.length} photos`]} contact={'Verified provider • FarmSavior protected'}><ListingGallery images={images.length ? images : [r.cover_image_url].filter(Boolean)} title={`Storage ${r.id}`} onOpen={(imgs, index, title) => setLightbox({ open: true, images: imgs, index, title })} /><div className='card-actions'><button className='btn btn-dark' type='button' onClick={() => { setStorageEdit({ id: r.id, requester_id: r.requester_id || 1, storage_type: r.storage_type || '', quantity_kg: r.quantity_kg || '', location: r.location || '', duration_days: r.duration_days || '', status: r.status || 'PENDING' }); setServiceEditImages(images); setServiceEditType('storage'); setServicesView('edit') }}>Edit</button><button className='btn' type='button' onClick={() => setSavedListings(prev => isSavedListing(prev, 'storage', r.id) ? prev.filter(x => x !== listingKey('storage', r.id)) : [...prev, listingKey('storage', r.id)])}>{isSavedListing(savedListings, 'storage', r.id) ? 'Saved ✓' : 'Save'}</button><button className='btn' type='button' onClick={async () => { try { await navigator.share?.({ title: r.storage_type, text: r.location || 'Storage service', url: window.location.href }) } catch {} }}>Share</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, onPrepared: startMarketplaceOrderCheckout, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.budget || r.weight_kg || 0, quantity: 1 })}>Contact via FarmSavior</button><button className='btn' type='button' onClick={() => openOrderFromListing({ me, setActive, setOrderForm, onPrepared: startMarketplaceOrderCheckout, listingType: 'LOGISTICS', listingId: r.id, listingTitle: `${r.pickup_location} to ${r.dropoff_location}`, sellerId: r.requester_id, unitPrice: r.budget || r.weight_kg || 0, quantity: 1 })}>Send Inquiry</button><button className='btn' type='button' onClick={async () => { if (!window.confirm(`Delete storage service #${r.id}?`)) return; await api.deleteStorage(r.id); await load() }}>Delete</button></div></ListingDetailCard> })}
  </div>}</article>
  </div>}
  </section>}
 
- {active === 'payments' && <section><h3>{t('Payments & Escrow','Paiements et séquestre','支付和托管')}</h3><div className='panel' style={{marginBottom:12}}><strong>Order updates</strong><div className='list' style={{marginTop:8}}>{state.notifications.slice(0,6).map((n) => <div key={`note-${n.id}`} className='list-row'><span><strong>{n.title}</strong><br /><span className='helper-text'>{n.message}</span></span></div>)}{!state.notifications.length && <div className='helper-text' style={{marginTop:8}}>No notifications yet.</div>}</div></div>
+ {active === 'payments' && <section><h3>{t('Payments & Escrow','Paiements et séquestre','支付和托管')}</h3>
+ <article className='panel' style={{marginBottom:12}}>
+  <div className='section-header'>
+   <div>
+    <h4 style={{margin:'0 0 4px'}}>Marketplace Listings Feed</h4>
+    <div className='helper-text'>All live products, livestock, and services in one stream. Newest items appear first.</div>
+   </div>
+   <div className='card-actions'>
+    <select className='input' value={marketplaceShowcaseFilter} onChange={e => setMarketplaceShowcaseFilter(e.target.value)}>
+     <option value='all'>All categories</option>
+     <option value='product'>Products</option>
+     <option value='livestock'>Livestock</option>
+     <option value='logistics'>Logistics</option>
+     <option value='consultation'>Consultations</option>
+     <option value='equipment'>Equipment</option>
+     <option value='storage'>Storage</option>
+    </select>
+    <button className={`btn ${marketplaceShowcaseView === 'carousel' ? 'btn-dark' : ''}`} type='button' onClick={() => setMarketplaceShowcaseView('carousel')}>Carousel</button>
+    <button className={`btn ${marketplaceShowcaseView === 'list' ? 'btn-dark' : ''}`} type='button' onClick={() => setMarketplaceShowcaseView('list')}>List</button>
+   </div>
+  </div>
+  {!marketplaceShowcaseListings.length ? (networkBusy ? <div className='panel' style={{border:'1px solid #bfdbfe',background:'#eff6ff'}}><strong>Loading live listings…</strong><div className='helper-text' style={{marginTop:4}}>Fetching the latest products, livestock, and services.</div></div> : <div className='helper-text'>No listings available for this filter yet.</div>) : marketplaceShowcaseView === 'carousel' ? <div style={{display:'flex',gap:10,overflowX:'auto',paddingBottom:4,snapType:'x mandatory'}}>{marketplaceShowcaseListings.map((item) => <div key={`mk-show-${item.id}`} className='panel' style={{minWidth:260,maxWidth:280,padding:10,snapAlign:'start',border:'1px solid #e2e8f0'}}><div style={{height:120,borderRadius:10,overflow:'hidden',marginBottom:8,background:'#f1f5f9'}}>{item.image ? <img src={item.image} alt={item.title} style={{width:'100%',height:'100%',objectFit:'cover'}} /> : <div style={{width:'100%',height:'100%',display:'grid',placeItems:'center',color:'#64748b'}}>No image</div>}</div><strong>{item.title}</strong><div className='helper-text'>{item.subtype} • {item.status}</div><div className='helper-text' style={{marginTop:4}}>{item.preview}</div></div>)}</div> : <div className='list'>{marketplaceShowcaseListings.map((item) => <div key={`mk-row-${item.id}`} className='list-row' style={{alignItems:'flex-start',gap:10}}><div style={{width:56,height:56,borderRadius:8,overflow:'hidden',background:'#f1f5f9',flex:'0 0 auto'}}>{item.image ? <img src={item.image} alt={item.title} style={{width:'100%',height:'100%',objectFit:'cover'}} /> : <div style={{width:'100%',height:'100%',display:'grid',placeItems:'center',fontSize:'.72rem',color:'#64748b'}}>No image</div>}</div><span><strong>{item.title}</strong><br/><span className='helper-text'>{item.subtype} • {item.status}</span><br/><span className='helper-text'>{item.preview}</span></span></div>)}</div>}
+ </article>
+ <div className='panel' style={{marginBottom:12}}><strong>Order updates</strong><div className='list' style={{marginTop:8}}>{state.notifications.slice(0,6).map((n) => <div key={`note-${n.id}`} className='list-row'><span><strong>{n.title}</strong><br /><span className='helper-text'>{n.message}</span></span></div>)}{!state.notifications.length && <div className='helper-text' style={{marginTop:8}}>No notifications yet.</div>}</div></div>
  <div className='three-col'>
  {isAdminUser && <article className='panel'><h4>Seller Payout Settings</h4><form className='list' onSubmit={async e => { e.preventDefault(); await api.savePayoutProfile({ ...payoutForm, user_id: Number(payoutForm.user_id) }); await load() }}>
  <div className='row2' style={{gap:10}}><input className='input' value='Your payout profile' readOnly /><input className='input' placeholder='Country' value={payoutForm.country} onChange={e => setPayoutForm({ ...payoutForm, country: e.target.value })} /></div>

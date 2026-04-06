@@ -1408,6 +1408,10 @@ def register_user(payload: UserCreate, db: Session = Depends(get_db)):
 
     if not payload.phone:
         raise HTTPException(status_code=400, detail='Phone number is required for signup')
+    if not payload.accept_terms:
+        raise HTTPException(status_code=400, detail='You must accept the Terms of Service to sign up')
+    if not payload.accept_privacy:
+        raise HTTPException(status_code=400, detail='You must accept the Privacy Policy to sign up')
 
     existing_user = _find_existing_user_by_identity(db, phone=payload.phone, email=payload.email)
     if existing_user and existing_user.is_verified:
@@ -4700,9 +4704,11 @@ def list_my_listings(limit: int = Query(200, gt=0, le=1000), authorization: Opti
         services.append(raw)
     for row in fetch_rows(EquipmentRental, 'requester_id'):
         raw = _row_to_dict(row)
-        raw['title'] = row.equipment_type or 'Equipment listing'
+        equipment_name = str(row.equipment_type or '')
+        is_consultation = any(token in equipment_name.lower() for token in ['consult', 'veterinary', 'vet'])
+        raw['title'] = equipment_name or 'Equipment listing'
         raw['price'] = row.budget
-        raw['service_type'] = 'equipment'
+        raw['service_type'] = 'consultation' if is_consultation else 'equipment'
         raw['listing_type'] = 'service'
         services.append(raw)
     for row in fetch_rows(StorageReservation, 'requester_id'):
@@ -5316,6 +5322,22 @@ def list_logistics(db: Session = Depends(get_db)):
     rows = db.query(LogisticsRequest).order_by(LogisticsRequest.id.desc()).all()
     changed = False
     for r in rows:
+        cargo_lower = str(getattr(r, 'cargo_type', '') or '').lower()
+        if 'long haul' in cargo_lower or 'truck logistics' in cargo_lower:
+            if r.image_urls != '[]' or r.cover_image_url:
+                r.image_urls = '[]'
+                r.cover_image_url = None
+                changed = True
+
+        try:
+            parsed_images = json.loads(r.image_urls or '[]')
+            has_images = isinstance(parsed_images, list) and any(isinstance(x, str) and x.strip() for x in parsed_images)
+        except Exception:
+            has_images = False
+        if not has_images and r.cover_image_url:
+            r.cover_image_url = None
+            changed = True
+
         if str(getattr(r, 'status', '')).upper() != 'PENDING':
             continue
         status, reason = _service_auto_moderate({
@@ -5348,6 +5370,20 @@ def update_logistics(request_id: int, payload: LogisticsIn, db: Session = Depend
     req.cargo_type = data.get('cargo_type') or data.get('cargo_details') or req.cargo_type
     req.weight_kg = data.get('weight_kg') or req.weight_kg
     req.status = data.get('status') or req.status
+    if 'image_urls' in data:
+        incoming_urls = data.get('image_urls')
+        if isinstance(incoming_urls, list):
+            req.image_urls = json.dumps(incoming_urls)
+            parsed_urls = [u for u in incoming_urls if isinstance(u, str) and u.strip()]
+        else:
+            req.image_urls = incoming_urls if incoming_urls is not None else req.image_urls
+            try:
+                parsed = json.loads(req.image_urls or '[]')
+                parsed_urls = [u for u in parsed if isinstance(u, str) and u.strip()]
+            except Exception:
+                parsed_urls = []
+        incoming_cover = data.get('cover_image_url')
+        req.cover_image_url = incoming_cover if incoming_cover else (parsed_urls[0] if parsed_urls else None)
     for key in ['ships_from_country','ships_from_city','ships_to_scope','shipping_cost_type','shipping_cost_amount','estimated_ship_days','shipping_notes']:
         if key in data and data.get(key) is not None:
             setattr(req, key, data[key])

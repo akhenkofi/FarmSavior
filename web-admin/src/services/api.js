@@ -49,7 +49,17 @@ const forceLogoutToLogin = () => {
   }
 }
 
+let inFlightRequests = 0
+const emitNetworkActivity = () => {
+  if (typeof window === 'undefined') return
+  try {
+    window.dispatchEvent(new CustomEvent('farmsavior:network-activity', { detail: { inFlight: inFlightRequests, busy: inFlightRequests > 0 } }))
+  } catch {}
+}
+
 api.interceptors.request.use((config) => {
+  inFlightRequests += 1
+  emitNetworkActivity()
   const token = localStorage.getItem('farmsavior_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
@@ -57,10 +67,14 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (res) => {
+    inFlightRequests = Math.max(0, inFlightRequests - 1)
+    emitNetworkActivity()
     if (String(res?.config?.url || '').includes('/auth/me')) clearAuthFailures()
     return res
   },
   (error) => {
+    inFlightRequests = Math.max(0, inFlightRequests - 1)
+    emitNetworkActivity()
     const status = error?.response?.status
     const detailSource = error?.response?.data?.detail
     const detail = typeof detailSource === 'string'

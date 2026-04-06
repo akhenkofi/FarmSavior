@@ -19,6 +19,8 @@ class UserCreate(BaseModel):
     signup_method: Literal['phone', 'email'] = 'phone'
     phone: Optional[str] = None
     email: Optional[str] = None
+    accept_terms: bool = False
+    accept_privacy: bool = False
 
 
 class UserLogin(BaseModel):
