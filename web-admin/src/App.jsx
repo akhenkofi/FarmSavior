@@ -4213,6 +4213,40 @@ const [serviceEditType, setServiceEditType] = useState('logistics')
    setActive('payments')
   }
  }
+ const isCancelledMarketplaceOrder = (order) => ['CANCELLED', 'CANCELED'].includes(String(order?.fulfillment_status || '').toUpperCase()) || ['CANCELLED', 'CANCELED'].includes(String(order?.escrow_status || '').toUpperCase()) || ['CANCELLED', 'CANCELED'].includes(String(order?.payment_status || '').toUpperCase()) || ['CANCELLED', 'CANCELED'].includes(String(order?.payout_status || '').toUpperCase())
+ const buyerVisibleOrders = (state.orders || []).filter(o => String(o.buyer_id) === String(buyerOrderUserId) && !isCancelledMarketplaceOrder(o))
+ const sellerVisibleOrders = (state.orders || []).filter(o => String(o.seller_id) === String(sellerOrderUserId) && !isCancelledMarketplaceOrder(o))
+ const canCancelBuyerOrder = (order) => !isCancelledMarketplaceOrder(order) && String(order?.payment_status || '').toUpperCase() !== 'PAID' && String(order?.escrow_status || '').toUpperCase() === 'AWAITING_PAYMENT'
+ const handleBuyerOrderPayment = async (order) => {
+  try {
+   const res = await api.payOrder(order.id, { ...orderPayment, payer_id: order.buyer_id, payee_id: order.seller_id, amount: order.gross_amount, currency: order.currency || 'GHS' })
+   const reference = res?.payment?.reference || order?.payment_reference
+   cachePendingCheckout({ type: 'marketplace_order', order_id: order.id, listing_title: order.listing_title, reference })
+   const url = res?.payment?.authorization_url
+   if (url) { window.location.href = url; return }
+   await load()
+   alert('Paystack payment link was not returned for this order.')
+  } catch (err) {
+   alert(errMsg(err))
+  }
+ }
+ const handleBuyerOrderCancel = async (order) => {
+  if (!canCancelBuyerOrder(order)) return
+  const ok = window.confirm(`Cancel order #${order.id}?`)
+  if (!ok) return
+  try {
+   await api.updateOrderStatus(order.id, {
+    fulfillment_status: 'CANCELLED',
+    escrow_status: 'CANCELLED',
+    payment_status: 'CANCELLED',
+    payout_status: 'CANCELLED',
+    buyer_note: 'Buyer cancelled unpaid order before payment',
+   })
+   await load()
+  } catch (err) {
+   alert(errMsg(err))
+  }
+ }
 
  useEffect(() => {
 
