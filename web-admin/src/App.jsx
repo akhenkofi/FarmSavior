@@ -6892,10 +6892,16 @@ const [serviceEditType, setServiceEditType] = useState('logistics')
  </article>
  </div>
 
- {poultryTier !== 'free' && <article className='panel' style={{marginTop:10}}>
- <h4>Climate Priorities + Health Schedule</h4>
- <div className='list'>
+ {poultryTier !== 'free' && <div style={{marginTop:10, display:'grid', gap:10}}>
+ <details className='panel' open>
+ <summary style={{fontWeight:700, cursor:'pointer'}}>Climate Priorities</summary>
+ <div className='list' style={{marginTop:10}}>
  {(poultryZone === 'humid' ? poultryClimate.humid : poultryClimate.dry).map((p)=><div className='list-row' key={p}><span>{p}</span></div>)}
+ </div>
+ </details>
+ <details className='panel' open>
+ <summary style={{fontWeight:700, cursor:'pointer'}}>Vaccination/Health Schedule</summary>
+ <div className='list' style={{marginTop:10}}>
  {poultryVaxProgram.map((v)=><div className='list-row' key={v}><span>{v}</span></div>)}
  </div>
  <div className='panel' style={{marginTop:10,padding:10,background:'#fffaf0',border:'1px solid #fed7aa'}}>
@@ -6910,7 +6916,8 @@ const [serviceEditType, setServiceEditType] = useState('logistics')
  <p style={{fontSize:'.82rem',color:'#64748b',marginTop:8}}>{poultryHealthGuides[poultryTrack].caution}</p>
  <p style={{fontSize:'.82rem',color:'#64748b',marginTop:8}}>Final vaccine brands/timing must be validated with licensed local veterinary authorities before execution.</p>
  </div>
- </article>}
+ </details>
+ </div>}
 
  {poultryTier === 'pro' && <article className='panel poultry-pro-shell' style={{marginTop:10, border:'1.5px solid #f59e0b', background:'#fffbeb'}}>
  <h4 style={{marginTop:0}}>🏆 Executive Tools</h4>

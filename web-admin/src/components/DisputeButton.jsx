@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import DisputeCenter from './DisputeCenter'
+import MovableFloatingButton from './MovableFloatingButton'
 
 const DisputeButton = ({ role = 'buyer' }) => {
   const [open, setOpen] = useState(false)
@@ -16,24 +17,15 @@ const DisputeButton = ({ role = 'buyer' }) => {
           </div>
         </div>
       )}
-      <button
-        type='button'
-        className='btn'
-        style={{
-          position: 'fixed',
-          bottom: 72,
-          right: 18,
-          background: '#c53030',
-          color: '#fff',
-          borderRadius: 999,
-          padding: '12px 20px',
-          zIndex: 5400,
-          boxShadow: '0 6px 18px rgba(0,0,0,.3)'
-        }}
+      <MovableFloatingButton
+        storageKey='farmsavior-floating-disputes'
+        label='Disputes'
+        shortLabel='!'
+        color='#c53030'
+        zIndex={5400}
+        defaultPosition={{ bottom: 72, right: 18 }}
         onClick={() => setOpen(true)}
-      >
-        Disputes
-      </button>
+      />
     </>
   )
 }
