@@ -9724,7 +9724,8 @@ const [serviceEditType, setServiceEditType] = useState('logistics')
   )}
  </div>
 </div>}
- {token && !(active === 'services' && servicesView === 'create') && <><EarningsButton /><DisputeButton role='buyer' />{isAdminUser && <AdminPanelButton />}</>}
+ {token && !(active === 'services' && servicesView === 'create') && !['community', 'poultry-university', 'sheep-university', 'goat-university', 'cattle-university'].includes(active) && <><EarningsButton /><DisputeButton role='buyer' /></>}
+ {token && !(active === 'services' && servicesView === 'create') && isAdminUser && <AdminPanelButton />}
  </>
 }
 
