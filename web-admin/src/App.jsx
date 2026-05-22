@@ -7654,7 +7654,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  <div style={{marginTop:6, color:'rgba(226,232,240,.88)', lineHeight:1.55}}>Launch the exact live Whyvo experience from inside FarmSavior.</div>
  </div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
- <button type='button' className='btn btn-dark' style={{background:'#fff', color:'#0f172a', borderColor:'#fff'}} onClick={() => window.open('https://www.whyvo.app', '_blank', 'noopener,noreferrer')}>Open Arrival</button>
+ <a href='https://www.whyvo.app' target='_blank' rel='noopener noreferrer' className='btn btn-dark' style={{background:'#fff', color:'#0f172a', borderColor:'#fff', textDecoration:'none', display:'inline-flex', alignItems:'center', justifyContent:'center'}}>Open Arrival</a>
  <button type='button' className='btn' style={{borderColor:'rgba(191,219,254,.38)', color:'#e2e8f0', background:'rgba(15,23,42,.18)'}} onClick={() => setActive('arrival')}>Open here</button>
  </div>
  </div>
