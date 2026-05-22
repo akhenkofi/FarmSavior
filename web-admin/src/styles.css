@@ -154,7 +154,7 @@
 @media(max-width:980px){.aadu-home-hero{grid-template-columns:1fr}.aadu-home-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:640px){.aadu-home-section{gap:12px}.aadu-home-hero{padding:18px 16px;border-radius:0 0 28px 28px}.aadu-home-copy h3{font-size:1.5rem}.aadu-home-aside{padding:14px}.aadu-home-grid{grid-template-columns:1fr}.aadu-school-card{padding:16px;border-radius:20px}.aadu-school-actions .btn{flex:1}.poultry-guidance-card{padding:14px;border-radius:20px}.poultry-guidance-head{flex-direction:column}.poultry-guidance-tags{width:100%}}
 
-html,body,#root{width:100%;max-width:100%;overflow-x:hidden}
+html,body,#root{width:100%;max-width:100%;overflow-x:hidden;touch-action:manipulation}
 body{margin:0;min-height:100vh}
 .main,section,.panel,.records-shell,.disease-shell,.onboarding-shell{max-width:100%;min-width:0}
 section{width:100%;overflow-x:hidden}
@@ -195,3 +195,29 @@ img,video,canvas,svg{max-width:100%;height:auto}
 .community-message-composer .input{border-radius:12px;background:#f8fafc;border:1px solid #d6dee8}
 .community-messenger-main-head .btn{border-radius:12px}
 .community-messenger-main-head .btn.btn-dark{background:#0a84ff;border-color:#0a84ff}
+.community-chat-page{margin-top:14px}
+.community-chat-page-shell{display:grid;gap:14px;padding:14px;border-radius:28px;background:linear-gradient(180deg,#f8fbff 0%,#eef4ff 100%);border:1px solid #dbe7f3;box-shadow:0 18px 42px rgba(15,23,42,.08)}
+.community-chat-page-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.community-chat-page-body{display:grid;grid-template-columns:minmax(280px,340px) minmax(0,1fr);gap:14px;min-height:68vh}
+.community-chat-page-sidebar,.community-chat-page-main{background:#fff;border:1px solid #dbe7f3;border-radius:24px;padding:14px;min-height:0}
+.community-chat-page-main{display:grid;grid-template-rows:auto minmax(0,1fr);background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%)}
+.community-whyvo-home{background:#fff;border:none;box-shadow:none;padding:0;overflow:hidden}
+.community-whyvo-home-header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 6px 14px 6px}
+.community-whyvo-home-header h2{font-size:2.2rem;line-height:1;font-weight:800;color:#111827}
+.community-whyvo-home-actions{display:flex;align-items:center;gap:8px}
+.community-whyvo-icon-btn{width:34px;height:34px;border:none;border-radius:50%;background:#fff;color:#111827;font-size:1rem;display:grid;place-items:center;cursor:pointer}
+.community-whyvo-search-wrap{padding:0 6px 14px 6px}
+.community-whyvo-search{border:none!important;background:#f1f5f9!important;border-radius:16px!important;min-height:48px;padding:0 16px!important;box-shadow:none!important}
+.community-whyvo-thread-list{display:grid;gap:0;border-top:1px solid #f1f5f9}
+.community-whyvo-thread-row{display:grid;grid-template-columns:56px minmax(0,1fr);gap:14px;align-items:center;padding:14px 6px;border:none;background:#fff;text-align:left;width:100%;cursor:pointer}
+.community-whyvo-thread-row.featured{background:#f3fbf3}
+.community-whyvo-thread-avatar{width:56px;height:56px;border-radius:50%;overflow:hidden;background:#dbeafe;color:#1d4ed8;font-weight:800;display:grid;place-items:center;flex-shrink:0}
+.community-whyvo-thread-main{min-width:0}
+.community-whyvo-thread-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.community-whyvo-thread-top strong{font-size:1.05rem;color:#111827}
+.community-whyvo-thread-top span{font-size:.85rem;color:#6b7280;white-space:nowrap}
+.community-whyvo-thread-preview{font-size:1rem;color:#4b5563;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.community-whyvo-bottom-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;align-items:center;padding:14px 4px 4px 4px;border-top:1px solid #e5e7eb;margin-top:12px}
+.community-whyvo-tab-btn{border:none;background:transparent;padding:8px 4px;color:#6b7280;font-weight:700;cursor:pointer}
+.community-whyvo-tab-btn.active{color:#111827}
+@media(max-width:760px){.community-chat-page-shell{padding:10px;border-radius:0;border-left:none;border-right:none}.community-chat-page-body{grid-template-columns:1fr;min-height:calc(100vh - 240px)}.community-chat-page-sidebar.conversation-open{display:none}.community-chat-page-main{display:none}.community-chat-page-main.open{display:grid}.community-mobile-back-btn{display:inline-flex}.community-whyvo-home-header{padding-top:0}.community-whyvo-home-header h2{font-size:2rem}.community-whyvo-thread-row{padding-left:0;padding-right:0}}

@@ -3038,6 +3038,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  const [communityMessageThreads, setCommunityMessageThreads] = useState([])
  const [communityInboxOpen, setCommunityInboxOpen] = useState(false)
  const [communityInboxSection, setCommunityInboxSection] = useState('messages')
+ const [communityMessagesPageOpen, setCommunityMessagesPageOpen] = useState(false)
  const [communityInboxLoading, setCommunityInboxLoading] = useState(false)
  const [communityInboxError, setCommunityInboxError] = useState('')
  const [communityMessageView, setCommunityMessageView] = useState({ open: false, loading: false, error: '', user: null, messages: [] })
@@ -3155,8 +3156,9 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  setCommunityProfileView({ open: false, loading: false, data: null, error: '', userId: null })
  window.scrollTo({ top: 0, behavior: 'smooth' })
  }
- const openCommunityInbox = async () => {
+ const openCommunityInbox = async ({ page = false } = {}) => {
  setCommunityInboxSection('messages')
+ setCommunityMessagesPageOpen(!!page)
  setCommunityInboxOpen(true)
  setCommunityInboxLoading(true)
  setCommunityInboxError('')
@@ -3179,6 +3181,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  }
  }
  const openCommunityCalls = async () => {
+ setCommunityMessagesPageOpen(false)
  setCommunityInboxSection('calls')
  setCommunityInboxOpen(true)
  setCommunityInboxLoading(true)
@@ -3205,6 +3208,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  const targetUserId = user?.user_id || user?.id
  if (!targetUserId) return
  const normalizedUser = { ...(user || {}), user_id: targetUserId }
+ setCommunityMessagesPageOpen(true)
  setCommunityInboxOpen(true)
  setCommunityInboxSection('messages')
  setCommunityNewChatPickerOpen(false)
@@ -3223,6 +3227,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  }
  }
  const closeCommunityMessages = () => {
+ setCommunityMessagesPageOpen(false)
  setCommunityInboxOpen(false)
  setCommunityNewChatPickerOpen(false)
  setCommunityNewChatSelectedUserId(null)
@@ -6691,7 +6696,6 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  <div className='list-row'><span>{t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('ai-disease', 'AI Disease Analyzer')}>{t('Open','Ouvrir')}</button></div>
  <div className='list-row'><span>{t('Livestock Records','Registres du bétail','牲畜档案')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('livestock-records', 'Livestock Records')}>{t('Open','Ouvrir')}</button></div>
  <div className='list-row'><span>{t('Community','Communauté','社区')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('community', 'FarmSavior Community')}>{t('Open','Ouvrir')}</button></div>
- <div className='list-row'><span>Arrival</span><button type='button' className='btn btn-dark' onClick={() => setActive('arrival')}>{t('Open','Ouvrir','打开')}</button></div>
  <div className='list-row'><span>{AADU_FULL_NAME} (AADU)</span><button type='button' className='btn' onClick={openPublicAADUSection}>{t('Open','Ouvrir','打开')}</button></div>
  <div className='list-row'><span>{t('Games','Jeux','游戏')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('games', 'Games')}>{t('Open','Ouvrir','打开')}</button></div>
  </div>}
@@ -7587,7 +7591,6 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  <button className={`app-quick-btn ${active === 'livestock-records' ? 'active' : ''}`} aria-pressed={active === 'livestock-records'} onClick={() => setActive('livestock-records')}>{t('Records','Registres','档案')}</button>
  <button className={`app-quick-btn ${active === 'marketplace' ? 'active' : ''}`} aria-pressed={active === 'marketplace'} onClick={() => setActive('marketplace')}>{t('Marketplace','Marketplace','市场')}</button>
  <button className={`app-quick-btn ${active === 'community' ? 'active' : ''}`} aria-pressed={active === 'community'} onClick={() => setActive('community')}>{t('Community','Communauté','社区')}</button>
- <button className={`app-quick-btn ${active === 'arrival' ? 'active' : ''}`} aria-pressed={active === 'arrival'} onClick={() => setActive('arrival')}>Arrival</button>
  <button className={`app-quick-btn ${active === 'aadu' ? 'active' : ''}`} aria-pressed={active === 'aadu'} type='button' onClick={openAccountAADUSection}>AAD University</button>
 <button className={`app-quick-btn ${active === 'payments' ? 'active' : ''}`} aria-pressed={active === 'payments'} onClick={() => setActive('payments')}>{t('Payments','Paiements','支付')}</button>
 <button className={`app-quick-btn ${active === 'games' ? 'active' : ''}`} aria-pressed={active === 'games'} onClick={() => setActive('games')}>{t('Games','Jeux','游戏')}</button>
@@ -7646,20 +7649,6 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  </article>
  </div>
 
- <article className='panel' style={{marginTop:10, background:'linear-gradient(135deg,#0f172a 0%,#1e293b 45%,#312e81 100%)', color:'#fff', border:'1px solid rgba(129,140,248,.28)', boxShadow:'0 18px 40px rgba(15,23,42,.22)'}}>
- <div className='section-header' style={{alignItems:'center'}}>
- <div>
- <div style={{fontSize:'.78rem', fontWeight:800, letterSpacing:'.08em', textTransform:'uppercase', color:'rgba(191,219,254,.88)', marginBottom:6}}>Arrival</div>
- <h3 style={{margin:0, color:'#fff'}}>Open the full Whyvo app</h3>
- <div style={{marginTop:6, color:'rgba(226,232,240,.88)', lineHeight:1.55}}>Launch the exact live Whyvo experience from inside FarmSavior.</div>
- </div>
- <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
- <a href='https://www.whyvo.app' target='_blank' rel='noopener noreferrer' className='btn btn-dark' style={{background:'#fff', color:'#0f172a', borderColor:'#fff', textDecoration:'none', display:'inline-flex', alignItems:'center', justifyContent:'center'}}>Open Arrival</a>
- <button type='button' className='btn' style={{borderColor:'rgba(191,219,254,.38)', color:'#e2e8f0', background:'rgba(15,23,42,.18)'}} onClick={() => setActive('arrival')}>Open here</button>
- </div>
- </div>
- </article>
-
  <article className='panel' style={{marginTop:10, background:'linear-gradient(180deg,#ffffff 0%,#f8fafc 100%)', border:'1px solid #e2e8f0', boxShadow:'0 10px 24px rgba(15,23,42,.05)'}}>
  <div className='section-header'>
  <div>
@@ -7673,7 +7662,6 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  <div className='list-row'><span>{t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('ai-disease', 'AI Disease Analyzer')}>{t('Open','Ouvrir','打开')}</button></div>
  <div className='list-row'><span>{t('Livestock Records','Registres du bétail','牲畜档案')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('livestock-records', 'Livestock Records')}>{t('Open','Ouvrir','打开')}</button></div>
  <div className='list-row'><span>{t('Community','Communauté','社区')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('community', 'FarmSavior Community')}>{t('Open','Ouvrir','打开')}</button></div>
- <div className='list-row'><span>Arrival</span><button type='button' className='btn btn-dark' onClick={() => setActive('arrival')}>{t('Open','Ouvrir','打开')}</button></div>
  {isAdminUser ? <div className='list-row'><span>{t('Admin Analytics','Analyses admin','管理员分析')}</span><button type='button' className='btn btn-dark' onClick={async ()=>{ setActive('analytics'); setAdminAnalyticsLoading(true); try { await loadAdminDashboardData() } finally { setAdminAnalyticsLoading(false) } }}>{t('Open','Ouvrir','打开')}</button></div> : null}
  <div className='list-row'><span>{AADU_FULL_NAME} (AADU)</span><button type='button' className='btn' onClick={openPublicAADUSection}>{t('Open','Ouvrir','打开')}</button></div>
  <div className='list-row'><span>{t('Games','Jeux','游戏')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('games', 'Games')}>{t('Open','Ouvrir','打开')}</button></div>
@@ -10824,29 +10812,6 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  </article>}
  </section>}
 
- {active === 'arrival' && <section>
- <article className='panel' style={{padding:0, overflow:'hidden', border:'1px solid #e2e8f0', boxShadow:'0 12px 32px rgba(15,23,42,.08)'}}>
- <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, padding:'14px 16px', borderBottom:'1px solid #e2e8f0', background:'linear-gradient(180deg,#ffffff 0%,#f8fafc 100%)'}}>
- <div>
- <div style={{fontSize:'.78rem', fontWeight:800, letterSpacing:'.08em', textTransform:'uppercase', color:'#64748b'}}>Arrival</div>
- <div className='helper-text' style={{marginTop:4}}>Embedded live Whyvo experience inside FarmSavior.</div>
- </div>
- <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
- <button type='button' className='btn' onClick={() => window.open('https://www.whyvo.app', '_blank', 'noopener,noreferrer')}>Open in new tab</button>
- <button type='button' className='btn btn-dark' onClick={() => setActive('home')}>Back to FarmSavior</button>
- </div>
- </div>
- <iframe
- title='Arrival / Whyvo'
- src='https://www.whyvo.app'
- style={{width:'100%', height:'85vh', border:'0', background:'#fff'}}
- loading='eager'
- referrerPolicy='strict-origin-when-cross-origin'
- allow='camera; microphone; clipboard-read; clipboard-write; fullscreen; autoplay'
- />
- </article>
- </section>}
-
  {active === 'community' && <section>
  {communityCallDetailView.open ? <article id='community-call-detail-view' className='panel' style={{border:'1px solid #cbd5e1', boxShadow:'0 12px 30px rgba(15,23,42,.08)', overflow:'hidden'}}>
  <div style={{padding:'16px 16px 10px 16px', borderBottom:'1px solid #e2e8f0', background:'linear-gradient(120deg,#f8fafc,#eef2ff)'}}>
@@ -11108,166 +11073,90 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  <button className='btn btn-dark' disabled={payoutSaving}>{payoutSaving ? 'Saving payout settings…' : 'Save payout settings'}</button>
  </form>}
  </article>}
- <article className='panel'>
- <h4>{t('My Community Profile','Mon profil communautaire','我的社区资料')}</h4>
- <div style={{position:'relative', marginBottom:12}}>
- {isUserImage(communityProfile.cover_image_url)
- ? <img src={communityProfile.cover_image_url} alt='Cover' style={{width:'100%',height:170,objectFit:'cover',borderRadius:12,border:'1px solid #e2e8f0'}} />
- : <div style={{width:'100%',height:170,borderRadius:12,border:'1px solid #e2e8f0',background:'#f1f5f9',display:'grid',placeItems:'center',color:'#64748b'}}>Upload your cover image</div>}
- <div style={{position:'absolute',inset:0,borderRadius:12,background:'linear-gradient(180deg,rgba(15,23,42,0) 30%, rgba(15,23,42,.35) 100%)'}} />
- {isUserImage(communityProfile.avatar_url)
- ? <img src={communityProfile.avatar_url} alt='Avatar' style={{position:'absolute',left:14,bottom:-26,width:86,height:86,objectFit:'cover',borderRadius:'50%',border:'4px solid #fff',boxShadow:'0 8px 20px rgba(0,0,0,.22)'}} />
- : <div style={{position:'absolute',left:14,bottom:-26,width:86,height:86,borderRadius:'50%',border:'4px solid #fff',background:'#e2e8f0',display:'grid',placeItems:'center',color:'#64748b'}}>No DP</div>}
- </div>
- <div style={{paddingLeft:4, marginTop:28, marginBottom:8}}>
- <div style={{fontSize:'1rem',fontWeight:700,color:'#0f172a'}}>{(communityProfile.full_name || me?.full_name || 'Your profile') + verificationBadge(me)}</div>
- <div style={{fontSize:'.82rem',color:'#0284c7',fontWeight:600}}>@{communityProfile.username || 'set_username'}</div>
- <div style={{fontSize:'.85rem',color:'#475569'}}>{communityProfile.bio || 'Add a short bio to attract followers.'}</div>
- <div style={{display:'flex',gap:12,flexWrap:'wrap',marginTop:6,fontSize:'.78rem',color:'#475569'}}>
- <span><strong>{communityProfile.followers_count || communityFollowState.followers_count || 0}</strong> followers</span>
- <span><strong>{communityProfile.following_count || communityFollowState.following_count || 0}</strong> following</span>
- <span><strong>{communityPosts.filter(p => String(p.user_id) === String(me?.id)).length}</strong> posts</span>
- </div>
- <div style={{marginTop:10, display:'flex', gap:8, flexWrap:'wrap'}}>
- <button type='button' className='btn' disabled={communityProfileOpeningUserId === me?.id} onClick={()=>openCommunityProfileView(me?.id)}>{communityProfileOpeningUserId === me?.id ? 'Opening…' : 'View Public Profile'}</button>
+ <article className='panel community-whyvo-home'>
+ <div className='community-whyvo-home-header'>
+ <h2 style={{margin:0}}>Chats</h2>
+ <div className='community-whyvo-home-actions'>
+ <button type='button' className='community-whyvo-icon-btn' disabled={communityProfileOpeningUserId === me?.id} onClick={()=>openCommunityProfileView(me?.id)} aria-label='Open profile'>◌</button>
+ <button type='button' className='community-whyvo-icon-btn' onClick={()=>setCommunityProfileEditorOpen(open => !open)} aria-label='Edit profile'>✎</button>
+ <button type='button' className='community-whyvo-icon-btn' onClick={()=>openCommunityCalls()} aria-label='Open calls'>⋯</button>
  </div>
  </div>
- <div style={{marginTop:14, border:'1px solid #dbe6df', borderRadius:16, overflow:'hidden', background:'#f8fafc'}}>
- <button
- type='button'
- onClick={()=>setCommunityProfileEditorOpen(open => !open)}
- style={{width:'100%', border:'none', background:'transparent', padding:'14px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, textAlign:'left', cursor:'pointer'}}
- >
- <div>
- <div style={{fontWeight:700, color:'#0f172a'}}>{communityProfileEditorOpen ? 'Editing your profile' : 'Edit Profile'}</div>
- <div style={{fontSize:'.82rem', color:'#64748b'}}>{communityProfileDirty ? 'You have unsaved changes.' : 'Clean up photos, identity, story, and privacy settings.'}</div>
+ <div className='community-whyvo-search-wrap'>
+ <input className='input community-whyvo-search' placeholder='Search' value={communityUserSearch} onChange={(e)=>setCommunityUserSearch(e.target.value)} />
  </div>
- <div style={{display:'flex', alignItems:'center', gap:8, flexShrink:0}}>
- {communityProfileDirty && <span style={{fontSize:'.72rem', fontWeight:700, color:'#166534', background:'#dcfce7', padding:'4px 8px', borderRadius:999}}>Unsaved</span>}
- <span style={{fontSize:'1rem', color:'#475569'}}>{communityProfileEditorOpen ? '▴' : '▾'}</span>
+ <div className='community-whyvo-thread-list'>
+ {(communityMessageThreads || []).map((thread, idx)=>{
+  const previewText = (()=>{ const tx = String(thread?.last_message?.text || ''); const lx = tx.toLowerCase(); if (lx.includes('join my audio call:') || lx.includes('join my video call:') || lx.includes('meet.jit.si/') || lx.includes('call_signal:')) return 'Video call activity'; return tx || 'No messages yet.' })()
+  const initials = String(thread?.user?.full_name || 'U').trim().charAt(0).toUpperCase()
+  return <button key={`whyvo-home-thread-${thread?.user?.user_id || idx}`} type='button' className={`community-whyvo-thread-row ${idx === 0 ? 'featured' : ''}`} onClick={()=>openCommunityMessages(thread.user)}>
+   <div className='community-whyvo-thread-avatar'>{isUserImage(thread?.user?.avatar_url) ? <img src={thread.user.avatar_url} alt={thread?.user?.full_name || 'Avatar'} style={{width:'100%',height:'100%',objectFit:'cover'}} /> : initials}</div>
+   <div className='community-whyvo-thread-main'>
+    <div className='community-whyvo-thread-top'>
+     <strong>{thread?.user?.full_name || `User ${thread?.user?.user_id || ''}`}</strong>
+     <span>{String(thread?.last_message?.created_at || '').replace('T',' ').slice(11,16)}</span>
+    </div>
+    <div className='community-whyvo-thread-preview'>{previewText}</div>
+   </div>
+  </button>
+ })}
+ {!communityMessageThreads.length && <div className='community-thread-preview community-thread-preview-empty'>No chats yet.</div>}
  </div>
- </button>
- {communityProfileEditorOpen && <form className='list' style={{padding:'0 12px 12px 12px', gap:10}} onSubmit={async(e)=>{
- e.preventDefault()
- try {
- setCommunityProfileSaving(true)
- const nextProfile = {
- full_name: String(communityProfile.full_name || '').trim(),
- username: String(communityProfile.username || '').trim().toLowerCase().replace(/\s+/g,''),
- avatar_url: communityProfile.avatar_url || '',
- cover_image_url: communityProfile.cover_image_url || '',
- bio: String(communityProfile.bio || '').trim(),
- farm_life: String(communityProfile.farm_life || '').trim(),
- interests: String(communityProfile.interests || '').trim(),
- visibility: communityProfile.visibility || 'PUBLIC'
- }
- if (!nextProfile.full_name && me?.full_name) nextProfile.full_name = String(me.full_name || '').trim()
- if (!nextProfile.username && communityProfileBaseline?.username) nextProfile.username = communityProfileBaseline.username
- const saved = await api.saveCommunityProfileMe(nextProfile)
- const mergedProfile = { ...nextProfile, ...(saved || {}) }
- setCommunityProfile(mergedProfile)
- setCommunityProfileBaseline(mergedProfile)
- setCommunityPosts(prev => (prev || []).map(post => String(post.user_id) === String(me?.id)
- ? { ...post, author_full_name: mergedProfile.full_name || post.author_full_name, author_username: mergedProfile.username || post.author_username, author_avatar_url: mergedProfile.avatar_url || post.author_avatar_url, author_cover_image_url: mergedProfile.cover_image_url || post.author_cover_image_url }
- : post
- ))
- setCommunityProfileDirty(false)
- setCommunityProfileEditorOpen(false)
- const meRes = await api.fetchMe().catch(()=>null)
- if (meRes) {
- setMe(meRes)
- setAccountForm({ full_name: meRes.full_name || '', email: meRes.email || '', region: meRes.region || '' })
- }
- await loadCommunity()
- alert('Profile updated and synced across your community profile.')
- } catch (err) {
- alert(errMsg(err))
- } finally {
- setCommunityProfileSaving(false)
- }
- }}>
- <div style={{fontSize:'.78rem', color:'#64748b', padding:'0 4px'}}>Make quick updates without losing the profile preview above.</div>
-
- <details open={communityProfileSectionsOpen.photos} onToggle={(e)=>setCommunityProfileSectionsOpen(prev => ({ ...prev, photos: !!(e?.currentTarget?.open ?? e?.target?.open) }))} style={{border:'1px solid #e2e8f0', borderRadius:14, background:'#fff'}}>
- <summary style={{cursor:'pointer', listStyle:'none', padding:'12px 14px', fontWeight:700, color:'#0f172a'}}>Photos</summary>
- <div className='list' style={{padding:'0 12px 12px 12px', gap:8}}>
- <label style={{fontSize:'.82rem',color:'#475569'}}>Display picture</label>
- <input className='input' type='file' accept='image/*' onChange={async (e)=>{
- const f = e.target.files?.[0]
- if (!f) return
- try {
- const data = await compressImageFileToDataUrl(f, { maxDim: 960, quality: 0.72, maxChars: 450000 })
- setCommunityProfileDirty(true)
- setCommunityProfile(prev => ({ ...prev, avatar_url: data }))
- } catch (err) {
- alert(`Could not prepare display picture: ${err?.message || err}`)
- }
- }} />
- <label style={{fontSize:'.82rem',color:'#475569'}}>Cover image</label>
- <input className='input' type='file' accept='image/*' onChange={async (e)=>{
- const f = e.target.files?.[0]
- if (!f) return
- try {
- const data = await compressImageFileToDataUrl(f, { maxDim: 1400, quality: 0.76, maxChars: 700000 })
- setCommunityProfileDirty(true)
- setCommunityProfile(prev => ({ ...prev, cover_image_url: data }))
- } catch (err) {
- alert(`Could not prepare cover image: ${err?.message || err}`)
- }
- }} />
+ <div className='community-whyvo-bottom-tabs'>
+  <button type='button' className='community-whyvo-tab-btn'>Updates</button>
+  <button type='button' className='community-whyvo-tab-btn' onClick={()=>openCommunityCalls()}>Calls</button>
+  <button type='button' className='community-whyvo-tab-btn active' onClick={()=>openCommunityInbox({ page: true })}>Chats</button>
+  <button type='button' className='community-whyvo-tab-btn' onClick={()=>setCommunityProfileEditorOpen(open => !open)}>Settings</button>
  </div>
- </details>
-
- <details open={communityProfileSectionsOpen.identity} onToggle={(e)=>setCommunityProfileSectionsOpen(prev => ({ ...prev, identity: !!(e?.currentTarget?.open ?? e?.target?.open) }))} style={{border:'1px solid #e2e8f0', borderRadius:14, background:'#fff'}}>
- <summary style={{cursor:'pointer', listStyle:'none', padding:'12px 14px', fontWeight:700, color:'#0f172a'}}>Identity</summary>
- <div className='list' style={{padding:'0 12px 12px 12px', gap:8}}>
- <input className='input' placeholder='Main name / display name' value={communityProfile.full_name || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, full_name:e.target.value}) }} />
- <input className='input' placeholder='Username (e.g. akhen_farmer)' value={communityProfile.username || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, username:e.target.value.toLowerCase().replace(/\s+/g,'')}) }} />
- </div>
- </details>
-
- <details open={communityProfileSectionsOpen.story} onToggle={(e)=>setCommunityProfileSectionsOpen(prev => ({ ...prev, story: !!(e?.currentTarget?.open ?? e?.target?.open) }))} style={{border:'1px solid #e2e8f0', borderRadius:14, background:'#fff'}}>
- <summary style={{cursor:'pointer', listStyle:'none', padding:'12px 14px', fontWeight:700, color:'#0f172a'}}>Bio & farm details</summary>
- <div className='list' style={{padding:'0 12px 12px 12px', gap:8}}>
- <textarea className='input' rows={3} placeholder='Short bio' value={communityProfile.bio || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, bio:e.target.value}) }} />
- <textarea className='input' rows={3} placeholder='Farm life details' value={communityProfile.farm_life || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, farm_life:e.target.value}) }} />
- <input className='input' placeholder='Interests/tags (comma separated)' value={communityProfile.interests || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, interests:e.target.value}) }} />
- </div>
- </details>
-
- <details open={communityProfileSectionsOpen.privacy} onToggle={(e)=>setCommunityProfileSectionsOpen(prev => ({ ...prev, privacy: !!(e?.currentTarget?.open ?? e?.target?.open) }))} style={{border:'1px solid #e2e8f0', borderRadius:14, background:'#fff'}}>
- <summary style={{cursor:'pointer', listStyle:'none', padding:'12px 14px', fontWeight:700, color:'#0f172a'}}>Privacy</summary>
- <div className='list' style={{padding:'0 12px 12px 12px', gap:8}}>
- <select className='input' value={communityProfile.visibility || 'PUBLIC'} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, visibility:e.target.value}) }}>
- <option value='PUBLIC'>Public</option>
- <option value='FOLLOWERS'>Followers only</option>
- </select>
- <div style={{fontSize:'.78rem', color:'#64748b'}}>Choose who can view your community profile details in the public profile screen.</div>
- <select className='input' value={communityProfile.message_privacy || 'FOLLOWING'} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, message_privacy:e.target.value}) }}>
- <option value='EVERYONE'>Everyone can message me</option>
- <option value='FOLLOWING'>Only growers who follow me can message me</option>
- <option value='NOBODY'>Nobody can message me</option>
- </select>
- <div style={{fontSize:'.78rem', color:'#64748b'}}>Direct messages respect this setting immediately. Existing conversations stay visible, but new sends are blocked when someone no longer qualifies.</div>
- </div>
- </details>
-
- <div style={{display:'flex', flexDirection:'column', gap:8, padding:'8px 4px 0 4px'}}>
- <button className='btn btn-dark' disabled={communityProfileSaving}>{communityProfileSaving ? 'Saving Profile…' : 'Save Profile'}</button>
- <div style={{fontSize:'.78rem', color:'#64748b', textAlign:'center'}}>{communityProfileDirty ? 'Save to publish your latest profile edits everywhere in Community.' : 'No unsaved changes right now.'}</div>
- </div>
- </form>}
- </div>
- </article>
-
- <article className='panel' style={{border:'1px solid #dbeafe', background:'linear-gradient(180deg,#eff6ff 0%,#f8fafc 100%)'}}>
- <h4 style={{marginTop:0}}>Messages & Calls</h4>
- <div className='helper-text' style={{marginBottom:8}}>Quick access to your inbox, calls, and active conversations.</div>
- <div style={{display:'flex', gap:8, flexWrap:'nowrap', width:'100%', alignItems:'center'}}>
- <button type='button' className='btn btn-dark' style={{flex:'1 1 0', minWidth:120, height:44, minHeight:44, maxHeight:44}} onClick={()=>openCommunityInbox()}>{communityMessageThreads.length ? `Messages (${communityMessageThreads.length})` : 'Messages'}</button>
- <button type='button' className='btn' style={{flex:'1 1 0', minWidth:120, height:44, minHeight:44, maxHeight:44}} onClick={()=>openCommunityCalls()}>Phone</button>
- {communityMessageView?.user?.user_id && <button type='button' className='btn' onClick={()=>openCommunityMessages(communityMessageView.user)}>Resume last chat</button>}
- </div>
+ {communityProfileEditorOpen && <div className='panel' style={{marginTop:12}}>
+  <div style={{display:'flex', justifyContent:'space-between', gap:10, alignItems:'center', marginBottom:10}}>
+   <strong>Edit Profile</strong>
+   {communityProfileDirty && <span style={{fontSize:'.72rem', fontWeight:700, color:'#166534', background:'#dcfce7', padding:'4px 8px', borderRadius:999}}>Unsaved</span>}
+  </div>
+  <form className='list' style={{gap:10}} onSubmit={async(e)=>{
+   e.preventDefault()
+   try {
+    setCommunityProfileSaving(true)
+    const nextProfile = {
+     full_name: String(communityProfile.full_name || '').trim(),
+     username: String(communityProfile.username || '').trim().toLowerCase().replace(/\s+/g,''),
+     avatar_url: communityProfile.avatar_url || '',
+     cover_image_url: communityProfile.cover_image_url || '',
+     bio: String(communityProfile.bio || '').trim(),
+     farm_life: String(communityProfile.farm_life || '').trim(),
+     interests: String(communityProfile.interests || '').trim(),
+     visibility: communityProfile.visibility || 'PUBLIC'
+    }
+    if (!nextProfile.full_name && me?.full_name) nextProfile.full_name = String(me.full_name || '').trim()
+    if (!nextProfile.username && communityProfileBaseline?.username) nextProfile.username = communityProfileBaseline.username
+    const saved = await api.saveCommunityProfileMe(nextProfile)
+    const mergedProfile = { ...nextProfile, ...(saved || {}) }
+    setCommunityProfile(mergedProfile)
+    setCommunityProfileBaseline(mergedProfile)
+    setCommunityPosts(prev => (prev || []).map(post => String(post.user_id) === String(me?.id)
+    ? { ...post, author_full_name: mergedProfile.full_name || post.author_full_name, author_username: mergedProfile.username || post.author_username, author_avatar_url: mergedProfile.avatar_url || post.author_avatar_url, author_cover_image_url: mergedProfile.cover_image_url || post.author_cover_image_url }
+    : post
+    ))
+    setCommunityProfileDirty(false)
+    setCommunityProfileEditorOpen(false)
+    const meRes = await api.fetchMe().catch(()=>null)
+    if (meRes) {
+     setMe(meRes)
+     setAccountForm({ full_name: meRes.full_name || '', email: meRes.email || '', region: meRes.region || '' })
+    }
+    await loadCommunity()
+   } catch (err) {
+    alert(errMsg(err))
+   } finally {
+    setCommunityProfileSaving(false)
+   }
+  }}>
+   <input className='input' placeholder='Main name / display name' value={communityProfile.full_name || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, full_name:e.target.value}) }} />
+   <input className='input' placeholder='Username' value={communityProfile.username || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, username:e.target.value.toLowerCase().replace(/\s+/g,'')}) }} />
+   <textarea className='input' rows={3} placeholder='Short bio' value={communityProfile.bio || ''} onChange={(e)=>{ setCommunityProfileDirty(true); setCommunityProfile({...communityProfile, bio:e.target.value}) }} />
+   <button className='btn btn-dark' disabled={communityProfileSaving}>{communityProfileSaving ? 'Saving Profile…' : 'Save Profile'}</button>
+  </form>
+ </div>}
  </article>
 
  <article className='panel'>
@@ -11298,7 +11187,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  </div>
 
 
- {communityInboxOpen && <div className='community-messenger-overlay' onClick={(e)=>{ if (e.target === e.currentTarget) closeCommunityMessages() }}>
+ {communityInboxOpen && !communityMessagesPageOpen && <div className='community-messenger-overlay' onClick={(e)=>{ if (e.target === e.currentTarget) closeCommunityMessages() }}>
  <div className={`community-messenger-shell ${communityMessageView.open ? 'conversation-open' : ''} ${communityInboxSection === 'calls' ? 'phone-open' : ''}`} style={{height:'82vh', maxHeight:820}}>
  <div className='community-messenger-sidebar'>
  <div className='community-messenger-sidebar-head'>
@@ -11442,6 +11331,94 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  </div>}
  </div>
  </div>}
+
+ {communityInboxOpen && communityMessagesPageOpen && communityInboxSection === 'messages' && <section className='community-chat-page'>
+ <div className='community-chat-page-shell'>
+ <div className='community-chat-page-head'>
+ <button type='button' className='btn' onClick={closeCommunityMessages}>← Back</button>
+ <div>
+ <div className='community-inbox-kicker'>Whyvo Chat</div>
+ <h3 style={{margin:'4px 0 0 0'}}>Messages</h3>
+ <div className='helper-text'>{communityInboxLoading ? 'Loading chats…' : (communityMessageThreads.length ? `${communityMessageThreads.length} conversation${communityMessageThreads.length === 1 ? '' : 's'}` : 'No conversations yet')}</div>
+ </div>
+ <button type='button' className='btn btn-dark' onClick={()=>{ setCommunityMessageView({ open: false, loading: false, error: '', user: null, messages: [] }); setCommunityNewChatPickerOpen(v=>!v); setCommunityNewChatSelectedUserId(null) }}>＋ New Chat</button>
+ </div>
+ {!!communityInboxError && <div className='panel' style={{marginBottom:10, background:'#fff7ed', color:'#9a3412'}}>{communityInboxError}</div>}
+ {communityNewChatPickerOpen && <div className='panel' style={{marginBottom:12, background:'linear-gradient(180deg,#f8fafc 0%,#eef6ff 100%)', border:'1px solid #dbe6df', borderRadius:18}}>
+  <div style={{fontWeight:800, fontSize:'1rem', color:'#0f172a', marginBottom:8}}>Start new chat</div>
+  <div className='list' style={{maxHeight:220, overflow:'auto', gap:8}}>
+   {((communityFollowState?.following || []).filter(Boolean)).map((u)=><label key={`chat-page-following-${u?.user_id || u?.id}`} className='list-row' style={{alignItems:'center', gap:12, background:'#fff', border:'1px solid #e2e8f0', borderRadius:14, padding:'12px 14px'}}>
+    <input type='radio' name='community-chat-page-user' checked={String(communityNewChatSelectedUserId || '') === String(u?.user_id || u?.id || '')} onChange={()=>setCommunityNewChatSelectedUserId(u?.user_id || u?.id)} />
+    <div style={{minWidth:0, flex:1}}>
+     <div style={{fontWeight:800, color:'#0f172a'}}>{u?.full_name || `User ${u?.user_id || u?.id || ''}`}</div>
+     <div style={{fontSize:'.82rem', color:'#0284c7'}}>{u?.username ? `@${u.username}` : 'Community grower'}</div>
+    </div>
+   </label>)}
+   {!((communityFollowState?.following || []).filter(Boolean).length) && <div className='community-thread-preview community-thread-preview-empty'>No followed contacts available yet.</div>}
+  </div>
+  <div style={{display:'flex', justifyContent:'flex-end', gap:8, marginTop:12}}>
+   <button type='button' className='btn' onClick={()=>{ setCommunityNewChatPickerOpen(false); setCommunityNewChatSelectedUserId(null) }}>Cancel</button>
+   <button type='button' className='btn btn-dark' disabled={!communityNewChatSelectedUserId || communityMessageOpeningUserId === communityNewChatSelectedUserId} onClick={()=>{ const selected = (communityFollowState?.following || []).find(u => String(u?.user_id || u?.id || '') === String(communityNewChatSelectedUserId || '')); if (selected) openCommunityMessages(selected) }}>{communityMessageOpeningUserId === communityNewChatSelectedUserId ? 'Opening…' : 'Message'}</button>
+  </div>
+ </div>}
+ <div className='community-chat-page-body'>
+  <div className={`community-chat-page-sidebar ${communityMessageView.open ? 'conversation-open' : ''}`}>
+   <div className='community-thread-list'>
+    {(communityMessageThreads || []).map((thread)=><button key={`community-chat-page-thread-${thread?.user?.user_id}`} type='button' className={`community-thread-row ${String(communityMessageView?.user?.user_id || '') === String(thread?.user?.user_id || '') ? 'active' : ''}`} onClick={()=>openCommunityMessages(thread.user)}>
+     <div className='community-thread-row-top'>
+      <strong>{thread?.user?.full_name || `User ${thread?.user?.user_id || ''}`}</strong>
+      <span>{String(thread?.last_message?.created_at || '').replace('T',' ').slice(0,16)}</span>
+     </div>
+     <div style={{fontSize:'.8rem', color:'#0284c7'}}>{thread?.user?.username ? `@${thread.user.username}` : 'No username yet'}</div>
+     <div className='community-thread-snippet'>{(()=>{ const tx = String(thread?.last_message?.text || ''); const lx = tx.toLowerCase(); if (lx.includes('join my audio call:') || lx.includes('join my video call:') || lx.includes('meet.jit.si/') || lx.includes('call_signal:')) return 'Call activity'; return `${thread?.last_message?.is_mine ? 'You: ' : ''}${tx.slice(0, 120)}` })()}</div>
+    </button>)}
+    {!communityMessageThreads.length && !communityInboxLoading && <div className='community-thread-preview community-thread-preview-empty'>No active conversations yet.</div>}
+   </div>
+  </div>
+  <div className={`community-chat-page-main ${communityMessageView.open ? 'open' : ''}`}>
+   {!communityMessageView.open && <div className='community-messenger-empty'>
+    <div className='empty-emoji'>💬</div>
+    <strong>Pick a conversation from the chat list</strong>
+    <span>This page now opens directly into the Whyvo-style messages flow.</span>
+   </div>}
+   {communityMessageView.open && <>
+    <div className='community-messenger-main-head'>
+     <div>
+      <div className='community-inbox-kicker'>Chat</div>
+      <h4 style={{margin:'4px 0 0 0'}}>{communityMessageView?.user?.full_name || 'Conversation'}</h4>
+      <div className='helper-text'>{communityMessageView?.user?.username ? `@${communityMessageView.user.username}` : (communityMessageView.loading ? 'Opening chat…' : 'Direct messages')}</div>
+     </div>
+     <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+      <button type='button' className='btn community-mobile-back-btn' onClick={()=>setCommunityMessageView({ open: false, loading: false, error: '', user: null, messages: [] })}>Back to chats</button>
+     </div>
+    </div>
+    {communityMessageView.loading && <div className='community-messenger-empty'><div className='empty-emoji'>⏳</div><strong>Opening messages…</strong><span>Loading the latest conversation safely.</span></div>}
+    {!!communityMessageView.error && <div className='panel' style={{marginTop:8, background:'#fff7ed', color:'#9a3412'}}>{communityMessageView.error}</div>}
+    {!communityMessageView.loading && !communityMessageView.error && <>
+     <div ref={communityMessageListRef} className='community-message-scroll'>
+      {(communityMessageView.messages || [])
+      .filter((msg)=>{
+       const t = String(msg?.text || '').toLowerCase()
+       return !(t.includes('join my audio call:') || t.includes('join my video call:') || t.includes('meet.jit.si/') || t.includes('call_signal:'))
+      })
+      .map((msg)=><div key={`community-chat-page-dm-${msg.id}`} style={{display:'flex', justifyContent: msg.is_mine ? 'flex-end' : 'flex-start'}}>
+       <div className={`community-message-bubble ${msg.is_mine ? 'mine' : ''}`}>
+        <div style={{whiteSpace:'pre-wrap'}}>{msg.text}</div>
+        <div className='community-message-meta'>{String(msg.created_at || '').replace('T',' ').slice(0,16)}</div>
+       </div>
+      </div>)}
+      {!((communityMessageView.messages || []).filter(msg => { const t = String(msg?.text || '').toLowerCase(); return !(t.includes('join my audio call:') || t.includes('join my video call:') || t.includes('meet.jit.si/') || t.includes('call_signal:')) }).length) && <div className='community-messenger-empty compact'><strong>No messages yet.</strong><span>Send the first message to start the conversation.</span></div>}
+     </div>
+     <div className='community-message-composer'>
+      <input className='input' placeholder='Write a direct message…' value={communityMessageDraft} onChange={(e)=>setCommunityMessageDraft(e.target.value)} disabled={communityMessageSending} onKeyDown={(e)=>{ if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendActiveCommunityMessage() } }} />
+      <button type='button' className='btn btn-dark' disabled={communityMessageSending || !String(communityMessageDraft || '').trim()} onClick={sendActiveCommunityMessage}>{communityMessageSending ? 'Sending…' : 'Send'}</button>
+     </div>
+    </>}
+   </>}
+  </div>
+ </div>
+ </div>
+ </section>}
 
  {communityIncomingCall && <div className='community-messenger-overlay' style={{zIndex: 220, background:'rgba(2,6,23,.38)', backdropFilter:'blur(8px)'}}>
  <div className='panel' style={{maxWidth:420, width:'92vw', border:'1px solid rgba(255,255,255,.14)', borderRadius:28, padding:'22px 20px 20px', background:'linear-gradient(180deg, rgba(15,23,42,.96), rgba(15,23,42,.88))', boxShadow:'0 24px 70px rgba(2,6,23,.38)', position:'relative'}}>
