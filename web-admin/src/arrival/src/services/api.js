@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { ARRIVAL_EMBEDDED } from '../../embed'
 
 const ARRIVAL_DEFAULT_API_BASE_URL = 'https://whyvobackend-production.up.railway.app/api/v1'
 const rawBaseUrl = import.meta.env.VITE_ARRIVAL_API_BASE_URL || ARRIVAL_DEFAULT_API_BASE_URL
@@ -51,14 +52,14 @@ const recordAuthFailure = () => {
 
 const forceLogoutToLogin = () => {
   clearAuthFailures()
-  try { localStorage.removeItem('farmsavior_token') } catch {}
-  try { sessionStorage.setItem('farmsavior_auth_expired', '1') } catch {}
+  try { localStorage.removeItem('arrival_token') } catch {}
+  try { sessionStorage.setItem('arrival_auth_expired', '1') } catch {}
   if (typeof window !== 'undefined') {
     const url = new URL(window.location.href)
     url.searchParams.set('public', '1')
     url.searchParams.set('auth', 'login')
     url.searchParams.set('reason', 'session-expired')
-    window.location.href = url.toString()
+    if (!ARRIVAL_EMBEDDED) window.location.href = url.toString()
   }
 }
 
@@ -73,7 +74,7 @@ const emitNetworkActivity = () => {
 api.interceptors.request.use((config) => {
   inFlightRequests += 1
   emitNetworkActivity()
-  const token = localStorage.getItem('farmsavior_token')
+  const token = localStorage.getItem('arrival_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
@@ -323,7 +324,7 @@ export const addCommunityPostComment = async (postId, payload) => (await api.pos
 
 export const withAuthToken = (url) => {
   if (!url) return ''
-  const token = localStorage.getItem('farmsavior_token')
+  const token = localStorage.getItem('arrival_token')
   if (!token) return url
   return `${url}${url.includes('?') ? '&' : '?'}token=${encodeURIComponent(token)}`
 }

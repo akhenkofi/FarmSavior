@@ -9,6 +9,7 @@ const WebFarmStackGame = lazy(() => import('./components/WebFarmStackGame'))
 const WebFarmRunnerGame = lazy(() => import('./components/WebFarmRunnerGame'))
 const WebTradeTycoonGame = lazy(() => import('./components/WebTradeTycoonGame'))
 import farmStackLogo from './assets/farmstack-logo.jpg'
+import { ARRIVAL_EMBEDDED, arrivalEmbeddedNavigate } from '../embed'
 
 class AppErrorBoundary extends React.Component {
  constructor(props) {
@@ -33,7 +34,7 @@ class AppErrorBoundary extends React.Component {
  <div className='helper-text' style={{marginBottom:12}}>Error: {this.state.message}</div>
  <div className='card-actions'>
  <button className='btn btn-dark' type='button' onClick={() => window.location.reload()}>Reload app</button>
- <button className='btn' type='button' onClick={() => { try { localStorage.removeItem('farmsavior_token') } catch {} window.location.href='/?public=1' }}>Open public view</button>
+ <button className='btn' type='button' onClick={() => { try { localStorage.removeItem('arrival_token') } catch {} if (ARRIVAL_EMBEDDED) { setActive('home'); return } if (ARRIVAL_EMBEDDED) { setActive('home') } else { window.location.href='/?public=1' } }}>Open public view</button>
  </div>
  </div>
  </div>
@@ -2850,7 +2851,7 @@ function AlertCardList({ title, subtitle, rows, emptyText = 'No alerts yet', sho
 
 function AppInner() {
  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams('')
- const resumeSection = (typeof window !== 'undefined' ? (localStorage.getItem('farmsavior_resume_section') || '') : '')
+ const resumeSection = (typeof window !== 'undefined' ? (localStorage.getItem('arrival_resume_section') || '') : '')
  const forcePublicView = (searchParams.get('public') !== '0') && !resumeSection
  const authPrompt = searchParams.get('auth') || ''
  const initialCommunityProfileUserId = searchParams.get('communityProfile') || ''
@@ -2861,11 +2862,11 @@ function AppInner() {
  const mappedGo = (explicitGo === 'poultry-academy' ? 'poultry-university' : (explicitGo === 'sheep-academy' ? 'sheep-university' : (explicitGo === 'goat-academy' ? 'goat-university' : (explicitGo === 'cattle-academy' ? 'cattle-university' : explicitGo))))
  const stickySections = new Set(['payments','livestock-records','poultry-university','sheep-university','goat-university','cattle-university','community','world-chat','ai-disease'])
  const initialSection = (mappedGo && mappedGo !== 'onboarding' ? mappedGo : 'home')
- const [token, setToken] = useState(localStorage.getItem('farmsavior_token'))
+ const [token, setToken] = useState(localStorage.getItem('arrival_token'))
  const [authMode, setAuthMode] = useState('login')
  const [portalType, setPortalType] = useState('main')
- const [uiCountry, setUiCountry] = useState(() => localStorage.getItem('farmsavior_ui_country') || 'GH')
- const [uiLang, setUiLang] = useState(() => localStorage.getItem('farmsavior_ui_lang') || 'en')
+ const [uiCountry, setUiCountry] = useState(() => localStorage.getItem('arrival_ui_country') || 'GH')
+ const [uiLang, setUiLang] = useState(() => localStorage.getItem('arrival_ui_lang') || 'en')
  const [phoneForOtp, setPhoneForOtp] = useState('')
  const [authMsg, setAuthMsg] = useState('')
  const [authLoading, setAuthLoading] = useState(false)
@@ -2873,8 +2874,8 @@ function AppInner() {
  const [showAuthModal, setShowAuthModal] = useState(false)
  useEffect(() => {
   try {
-   if (sessionStorage.getItem('farmsavior_auth_expired') === '1') {
-    sessionStorage.removeItem('farmsavior_auth_expired')
+   if (sessionStorage.getItem('arrival_auth_expired') === '1') {
+    sessionStorage.removeItem('arrival_auth_expired')
     setAuthMode('login')
     setAuthMsg('Session expired. Please sign in again.')
     setShowAuthModal(true)
@@ -2980,7 +2981,7 @@ function AppInner() {
 const [serviceCreateType, setServiceCreateType] = useState('logistics')
 const [serviceEditType, setServiceEditType] = useState('logistics')
  const [lightbox, setLightbox] = useState({ open: false, images: [], index: 0, title: '' })
- const [savedListings, setSavedListings] = useState(() => { try { return JSON.parse(localStorage.getItem('farmsavior_saved_listings') || '[]') } catch { return [] } })
+ const [savedListings, setSavedListings] = useState(() => { try { return JSON.parse(localStorage.getItem('arrival_saved_listings') || '[]') } catch { return [] } })
  const [marketplaceSavedOpen, setMarketplaceSavedOpen] = useState(false)
  const [marketplaceOfferLightbox, setMarketplaceOfferLightbox] = useState({ open: false, sending: false, error: '', success: '', listing: null, sellerUserId: null, offerPrice: '', quantityKg: '' })
  const [pendingScrollTarget, setPendingScrollTarget] = useState(initialScrollTarget === 'aadu' ? 'account-aadu-hero' : '')
@@ -2988,8 +2989,8 @@ const [accountAaduIntent, setAccountAaduIntent] = useState(initialScrollTarget =
  useEffect(() => {
   try {
    const stickySections = new Set(['payments','livestock-records','poultry-university','sheep-university','goat-university','cattle-university','community','world-chat','ai-disease'])
-   if (stickySections.has(active)) localStorage.setItem('farmsavior_resume_section', active)
-   else if (active === 'home' || active === 'onboarding') localStorage.removeItem('farmsavior_resume_section')
+   if (stickySections.has(active)) localStorage.setItem('arrival_resume_section', active)
+   else if (active === 'home' || active === 'onboarding') localStorage.removeItem('arrival_resume_section')
   } catch {}
  }, [active])
  const [publicDetail, setPublicDetail] = useState(null)
@@ -3059,7 +3060,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  const [communityCallControlsVisible, setCommunityCallControlsVisible] = useState(true)
  const [communityMainVideo, setCommunityMainVideo] = useState('remote')
  const [communityCallMiniCollapsed, setCommunityCallMiniCollapsed] = useState(false)
- const [communityCallSoundsEnabled, setCommunityCallSoundsEnabled] = useState(() => { try { return localStorage.getItem('farmsavior_call_sounds') !== '0' } catch { return true } })
+ const [communityCallSoundsEnabled, setCommunityCallSoundsEnabled] = useState(() => { try { return localStorage.getItem('arrival_call_sounds') !== '0' } catch { return true } })
  const [communityCallSoundProfile, setCommunityCallSoundProfile] = useState(() => { try { return localStorage.getItem('farmsavior_call_sound_profile') || 'soft' } catch { return 'soft' } })
  const communityMessageListRef = useRef(null)
  const communityLastCallAlertRef = useRef(null)
@@ -3678,7 +3679,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
    try { micState = await navigator.permissions?.query?.({ name: 'microphone' }).then(r => r?.state || '').catch(()=>'') } catch {}
    const blocked = camState === 'denied' || micState === 'denied'
    if (blocked) return
-   const savedGranted = (()=>{ try { return typeof window !== 'undefined' && localStorage.getItem('farmsavior_call_permissions_granted') === '1' } catch { return false } })()
+   const savedGranted = (()=>{ try { return typeof window !== 'undefined' && localStorage.getItem('arrival_call_permissions_granted') === '1' } catch { return false } })()
    const shouldPrompt = forcePrompt || !savedGranted
    if (!shouldPrompt && camState === 'prompt' && micState === 'prompt') return
    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
@@ -3689,7 +3690,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
     communityAgoraLocalAudioTrackRef.current?.setEnabled?.(false)
     communityAgoraLocalVideoTrackRef.current?.setEnabled?.(false)
    } catch {}
-   try { if (typeof window !== 'undefined' && 'localStorage' in window) localStorage.setItem('farmsavior_call_permissions_granted', '1') } catch {}
+   try { if (typeof window !== 'undefined' && 'localStorage' in window) localStorage.setItem('arrival_call_permissions_granted', '1') } catch {}
   } catch (err) {
    if (!silent) alert(errMsg(err))
   } finally {
@@ -3931,7 +3932,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  }, [communityActiveCall])
 
  useEffect(() => {
-  try { localStorage.setItem('farmsavior_call_sounds', communityCallSoundsEnabled ? '1' : '0') } catch {}
+  try { localStorage.setItem('arrival_call_sounds', communityCallSoundsEnabled ? '1' : '0') } catch {}
  }, [communityCallSoundsEnabled])
 
  useEffect(() => {
@@ -4200,16 +4201,16 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  const [notificationsOpen, setNotificationsOpen] = useState(false)
  const [notificationPrefs, setNotificationPrefs] = useState(() => {
   try {
-   const raw = localStorage.getItem('farmsavior_notification_prefs')
+   const raw = localStorage.getItem('arrival_notification_prefs')
    if (raw) return { ...{ calls: true, orders: true, verification: true, push: true, sms: false, email: true }, ...JSON.parse(raw) }
   } catch {}
   return { calls: true, orders: true, verification: true, push: true, sms: false, email: true }
  })
  const [localNotificationReads, setLocalNotificationReads] = useState(() => {
-  try { return JSON.parse(localStorage.getItem('farmsavior_notification_reads') || '{}') || {} } catch { return {} }
+  try { return JSON.parse(localStorage.getItem('arrival_notification_reads') || '{}') || {} } catch { return {} }
  })
  const [localNotificationClears, setLocalNotificationClears] = useState(() => {
-  try { return JSON.parse(localStorage.getItem('farmsavior_notification_clears') || '[]') || [] } catch { return [] }
+  try { return JSON.parse(localStorage.getItem('arrival_notification_clears') || '[]') || [] } catch { return [] }
  })
  const [livestockImages, setLivestockImages] = useState([])
  const [livestockEditImages, setLivestockEditImages] = useState([])
@@ -4514,13 +4515,13 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  }, [showHighDemandProducts, showHighDemandServices, showHighDemandLivestock, popularActionsOpen, publicRecordsOpen, publicUniversityOpen, weatherOpen, newsOpen, spotTradingOpen, governmentProgramsOpen, tradeStatsOpen])
 
  useEffect(() => {
-  try { localStorage.setItem('farmsavior_notification_prefs', JSON.stringify(notificationPrefs || {})) } catch {}
+  try { localStorage.setItem('arrival_notification_prefs', JSON.stringify(notificationPrefs || {})) } catch {}
  }, [notificationPrefs])
  useEffect(() => {
-  try { localStorage.setItem('farmsavior_notification_reads', JSON.stringify(localNotificationReads || {})) } catch {}
+  try { localStorage.setItem('arrival_notification_reads', JSON.stringify(localNotificationReads || {})) } catch {}
  }, [localNotificationReads])
  useEffect(() => {
-  try { localStorage.setItem('farmsavior_notification_clears', JSON.stringify(localNotificationClears || [])) } catch {}
+  try { localStorage.setItem('arrival_notification_clears', JSON.stringify(localNotificationClears || [])) } catch {}
  }, [localNotificationClears])
  const effectiveLivestockSubscription = livestockSubscription
  const [paymentReturnNotice, setPaymentReturnNotice] = useState(null)
@@ -4812,7 +4813,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
   } catch (e) {
    const status = Number(e?.response?.status || 0)
    if (status === 401 || status === 403) {
-    try { localStorage.removeItem('farmsavior_token') } catch {}
+    try { localStorage.removeItem('arrival_token') } catch {}
     setToken('')
     setMe(null)
     handleProtectedAction(authSection, label, { mode: 'login', message: 'Session expired. Please sign in again to continue to livestock billing.' })
@@ -5062,7 +5063,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  }
 
  useEffect(() => {
- localStorage.setItem('farmsavior_ui_lang', uiLang)
+ localStorage.setItem('arrival_ui_lang', uiLang)
  }, [uiLang])
 
  useEffect(() => {
@@ -5088,7 +5089,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  }, [])
 
  useEffect(() => {
- localStorage.setItem('farmsavior_ui_country', uiCountry)
+ localStorage.setItem('arrival_ui_country', uiCountry)
  }, [uiCountry])
 
  useEffect(() => {
@@ -5100,7 +5101,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  }, [isAdminUser, active])
 
  useEffect(() => {
- try { localStorage.setItem('farmsavior_saved_listings', JSON.stringify(savedListings)) } catch {}
+ try { localStorage.setItem('arrival_saved_listings', JSON.stringify(savedListings)) } catch {}
  }, [savedListings])
 
  useEffect(() => {
@@ -5312,7 +5313,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  }
  setMe(meRes)
  if (token && !meRes && (meFetchStatus === 401 || meFetchStatus === 403)) {
-  try { localStorage.removeItem('farmsavior_token') } catch {}
+  try { localStorage.removeItem('arrival_token') } catch {}
   setToken('')
   setAuthMode('login')
   setAuthMsg('Session expired. Please sign in again.')
@@ -5674,7 +5675,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  }, [token])
 
  const saveToken = (jwt) => {
- localStorage.setItem('farmsavior_token', jwt)
+ localStorage.setItem('arrival_token', jwt)
  setToken(jwt)
  setAuthMsg('Authenticated successfully')
 
@@ -5683,7 +5684,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
   setPendingFeatureSection('')
   setPendingFeatureLabel('')
   clearLivestockCheckoutIntent()
-  try { localStorage.removeItem('farmsavior_resume_section') } catch {}
+  try { localStorage.removeItem('arrival_resume_section') } catch {}
   window.location.href = `/?public=0&checkout=livestock-upgrade&plan=${encodeURIComponent(String(checkoutIntent.plan_code || 'premium'))}`
   return
  }
@@ -5695,12 +5696,12 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  }
 
  const goToPublicHomepage = () => {
- try { localStorage.removeItem('farmsavior_resume_section') } catch {}
- window.location.href = '/?public=1'
+ try { localStorage.removeItem('arrival_resume_section') } catch {}
+ if (ARRIVAL_EMBEDDED) { setActive('home') } else { window.location.href = '/?public=1' }
  }
 
  const goToAccountSettings = () => {
-  try { localStorage.setItem('farmsavior_resume_section', 'onboarding') } catch {}
+  try { localStorage.setItem('arrival_resume_section', 'onboarding') } catch {}
   try {
    const url = new URL(window.location.href)
    url.searchParams.set('public', '0')
@@ -5716,7 +5717,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  }
 
  const goToAppSection = (section = 'home') => {
- window.location.href = `/?public=0&go=${encodeURIComponent(section)}`
+ if (ARRIVAL_EMBEDDED) { setActive(section); return } window.location.href = `/?public=0&go=${encodeURIComponent(section)}`
  }
 
  const openPublicAADUSection = () => {
@@ -5778,7 +5779,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
   } catch (error) {
    const status = Number(error?.response?.status || 0)
    if (status === 401 || status === 403) {
-    try { localStorage.removeItem('farmsavior_token') } catch {}
+    try { localStorage.removeItem('arrival_token') } catch {}
     setToken('')
     setMe(null)
     setMyListings({ products: [], services: [], livestock: [] })
@@ -6029,7 +6030,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  const q = String(term || '').trim()
  if (!q) return
  addRecentSearch(q)
- window.location.href = `/?public=0&go=marketplace&q=${encodeURIComponent(q)}`
+ if (ARRIVAL_EMBEDDED) { setMarketplaceSearchQuery(q); setSelectedMarketplaceListing(null); setPublicSearchCommitted(''); setPublicSearching(false); setActive('marketplace'); return } window.location.href = `/?public=0&go=marketplace&q=${encodeURIComponent(q)}`
  }
 
  const addRecentViewed = (label) => {
@@ -6703,7 +6704,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  <div style={{fontWeight:700, marginBottom:6}}>{t('You are signed in.','Vous êtes connecté.')}</div>
  <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
  <button className='btn btn-dark' onClick={() => { window.location.href='/?public=0' }}>{t('Go to My Account','Aller à mon compte','前往我的账户')}</button>
- <button className='btn' onClick={() => { localStorage.removeItem('farmsavior_token'); setToken(''); setAuthMode('login') }}>{t('Log out','Se déconnecter')}</button>
+ <button className='btn' onClick={() => { localStorage.removeItem('arrival_token'); setToken(''); setAuthMode('login') }}>{t('Log out','Se déconnecter')}</button>
  </div>
  </div>}
  {!token && <>
@@ -6763,7 +6764,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  }
  }).catch(() => {})
  try {
- localStorage.setItem('farmsavior_consent', JSON.stringify({
+ localStorage.setItem('arrival_consent', JSON.stringify({
  accept_terms: !!signup.accept_terms,
  accept_privacy: !!signup.accept_privacy,
  consent_analytics: !!signup.consent_analytics,
@@ -6892,7 +6893,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
   e.preventDefault()
   e.stopPropagation()
   setLivestockCheckoutIntent({ type: 'livestock_upgrade', plan_code: 'premium' })
-  try { localStorage.removeItem('farmsavior_resume_section') } catch {}
+  try { localStorage.removeItem('arrival_resume_section') } catch {}
   window.location.href = '/?public=0&checkout=livestock-upgrade&plan=premium'
  }}>Upgrade</button>
  <button className='btn' onClick={() => handleProtectedAction('payments', 'My billing', { mode: 'login', message: 'Sign in to view your billing.' })}>My billing</button>
@@ -7544,7 +7545,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  </div>
  <div className='sidebar-section-label'>Current section</div>
  {menu.map(m => { const target = m; const isCurrent = active === m; return <button key={m} className={`sideBtn ${isCurrent ? 'on' : ''}`} aria-current={isCurrent ? 'page' : undefined} onClick={() => { if (m === 'aadu') { setAccountAaduIntent(false); setAccountUniversityOpen(true); setPendingScrollTarget(''); setActive('aadu'); setMobileMenuOpen(false); return } setAccountAaduIntent(false); setAccountUniversityOpen(false); setPendingScrollTarget(''); setActive(target); setMobileMenuOpen(false) }}><span>{menuLabel(m)}</span>{isCurrent && <span className='sideBtnMarker'>Current</span>}</button> })}
- <button className='sideBtn' onClick={() => { localStorage.removeItem('farmsavior_token'); setToken('') }}>{t('logout','se déconnecter')}</button>
+ <button className='sideBtn' onClick={() => { localStorage.removeItem('arrival_token'); setToken('') }}>{t('logout','se déconnecter')}</button>
  </aside>
  <main className='main'>
  {!(active === 'games' && (gamesScreen === 'farmstack' || gamesScreen === 'runner')) && <div className='mobileTopBar'>
@@ -8048,11 +8049,11 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  if (!ok) return
  try {
  await api.deleteAccount(deleteAccountForm)
- localStorage.removeItem('farmsavior_token')
+ localStorage.removeItem('arrival_token')
  setToken('')
  setDeleteAccountForm({ current_password: '' })
  alert('Your account has been deleted.')
- window.location.href='/?public=1'
+ if (ARRIVAL_EMBEDDED) { setActive('home') } else { window.location.href='/?public=1' }
  } catch (e) { alert(errMsg(e)) }
  }}>
  <input className='input' type='password' placeholder='Confirm current password to delete account' value={deleteAccountForm.current_password} onChange={e => setDeleteAccountForm({ current_password: e.target.value })} />
@@ -11448,7 +11449,7 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
   <button type='button' className='btn' aria-label={communityCallMuted ? 'Unmute' : 'Mute'} title={communityCallMuted ? 'Unmute' : 'Mute'} onClick={(e)=>{ e.stopPropagation(); toggleCommunityMute(); bumpCommunityCallControls() }} style={{width:56, height:56, minWidth:56, padding:0, borderRadius:'50%', display:'grid', placeItems:'center', background:communityCallMuted ? 'rgba(239,68,68,.22)' : 'rgba(15,23,42,.78)', color:'#fff', border:'1px solid rgba(255,255,255,.22)', boxShadow:'0 10px 24px rgba(0,0,0,.18)', fontSize:'1.2rem'}}>{communityCallMuted ? '🔇' : '🎙️'}</button>
   {communityActiveCall?.mode === 'video' && <button type='button' className='btn' aria-label={communityCallCameraOff ? 'Camera On' : 'Camera Off'} title={communityCallCameraOff ? 'Camera On' : 'Camera Off'} onClick={(e)=>{ e.stopPropagation(); toggleCommunityCamera(); bumpCommunityCallControls() }} style={{width:56, height:56, minWidth:56, padding:0, borderRadius:'50%', display:'grid', placeItems:'center', background:communityCallCameraOff ? 'rgba(239,68,68,.22)' : 'rgba(15,23,42,.78)', color:'#fff', border:'1px solid rgba(255,255,255,.22)', boxShadow:'0 10px 24px rgba(0,0,0,.18)', fontSize:'1.2rem'}}>{communityCallCameraOff ? '📷' : '📹'}</button>}
   {communityActiveCall?.mode === 'video' && <button type='button' className='btn' aria-label='Flip camera' title='Flip camera' onClick={async(e)=>{ e.stopPropagation(); await flipCommunityCamera(); bumpCommunityCallControls() }} style={{width:56, height:56, minWidth:56, padding:0, borderRadius:'50%', display:'grid', placeItems:'center', background:'rgba(15,23,42,.78)', color:'#fff', border:'1px solid rgba(255,255,255,.22)', boxShadow:'0 10px 24px rgba(0,0,0,.18)', fontSize:'1.2rem'}}>🔄</button>}
-  <button type='button' className='btn' aria-label={communityCallSoundsEnabled ? 'Disable call sounds' : 'Enable call sounds'} title={communityCallSoundsEnabled ? 'Disable call sounds' : 'Enable call sounds'} onClick={(e)=>{ e.stopPropagation(); const next = !communityCallSoundsEnabled; setCommunityCallSoundsEnabled(next); try { localStorage.setItem('farmsavior_call_sounds', next ? '1' : '0') } catch {} bumpCommunityCallControls() }} style={{width:56, height:56, minWidth:56, padding:0, borderRadius:'50%', display:'grid', placeItems:'center', background:communityCallSoundsEnabled ? 'rgba(15,23,42,.78)' : 'rgba(239,68,68,.18)', color:'#fff', border:'1px solid rgba(255,255,255,.22)', boxShadow:'0 10px 24px rgba(0,0,0,.18)', fontSize:'1.15rem'}}>{communityCallSoundsEnabled ? '🔔' : '🔕'}</button>
+  <button type='button' className='btn' aria-label={communityCallSoundsEnabled ? 'Disable call sounds' : 'Enable call sounds'} title={communityCallSoundsEnabled ? 'Disable call sounds' : 'Enable call sounds'} onClick={(e)=>{ e.stopPropagation(); const next = !communityCallSoundsEnabled; setCommunityCallSoundsEnabled(next); try { localStorage.setItem('arrival_call_sounds', next ? '1' : '0') } catch {} bumpCommunityCallControls() }} style={{width:56, height:56, minWidth:56, padding:0, borderRadius:'50%', display:'grid', placeItems:'center', background:communityCallSoundsEnabled ? 'rgba(15,23,42,.78)' : 'rgba(239,68,68,.18)', color:'#fff', border:'1px solid rgba(255,255,255,.22)', boxShadow:'0 10px 24px rgba(0,0,0,.18)', fontSize:'1.15rem'}}>{communityCallSoundsEnabled ? '🔔' : '🔕'}</button>
   <button type='button' className='btn btn-dark' aria-label='End Call' title='End Call' onClick={(e)=>{ e.stopPropagation(); endCommunityActiveCall() }} style={{width:56, height:56, minWidth:56, padding:0, borderRadius:'50%', display:'grid', placeItems:'center', background:'#dc2626', border:'1px solid rgba(255,255,255,.1)', boxShadow:'0 12px 24px rgba(220,38,38,.24)', fontSize:'1.2rem'}}>📞</button>
  </div>
  </div>
@@ -11601,11 +11602,11 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  setDiseaseResult(r)
  api.fetchDiseaseScans().then(rows => setState(prev => ({ ...prev, diseaseScans: rows }))).catch(() => {})
  let scanCount = 0
- try { scanCount = Number(localStorage.getItem('farmsavior_disease_scan_count') || 0) || 0 } catch {}
+ try { scanCount = Number(localStorage.getItem('arrival_disease_scan_count') || 0) || 0 } catch {}
  const minDelayMs = scanCount < 10 ? 5000 : 2200
  const remaining = minDelayMs - (Date.now() - startedAt)
  if (remaining > 0) await new Promise(resolve => setTimeout(resolve, remaining))
- try { localStorage.setItem('farmsavior_disease_scan_count', String(scanCount + 1)) } catch {}
+ try { localStorage.setItem('arrival_disease_scan_count', String(scanCount + 1)) } catch {}
  } catch (err) {
  alert(`Analyze failed: ${errMsg(err)}`)
  } finally {

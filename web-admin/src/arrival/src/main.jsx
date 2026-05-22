@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import './styles.css'
+import { ARRIVAL_EMBEDDED } from '../embed'
 
 const BUILD_ID = '2026-04-20-marketplace-pwa-sync-v101'
 
@@ -25,7 +26,7 @@ async function forceFreshClient() {
       await clearClientCaches()
       const url = new URL(window.location.href)
       url.searchParams.set('v', BUILD_ID)
-      window.location.replace(url.toString())
+      if (!ARRIVAL_EMBEDDED) window.location.replace(url.toString())
       return false
     }
   } catch (err) {
@@ -41,7 +42,7 @@ if ('serviceWorker' in navigator) {
       await clearClientCaches()
       const url = new URL(window.location.href)
       url.searchParams.set('v', BUILD_ID)
-      window.location.replace(url.toString())
+      if (!ARRIVAL_EMBEDDED) window.location.replace(url.toString())
     } catch (err) {
       console.error('Service worker update sync failed:', err)
     }
@@ -64,7 +65,7 @@ window.addEventListener('error', async (event) => {
   }
 })
 
-forceFreshClient().then((okToRender) => {
+(ARRIVAL_EMBEDDED ? Promise.resolve(true) : forceFreshClient()).then((okToRender) => {
   if (!okToRender) return
   ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
