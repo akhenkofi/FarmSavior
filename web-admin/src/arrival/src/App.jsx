@@ -8,7 +8,6 @@ const DisputeCenter = lazy(() => import('./components/DisputeCenter'))
 const WebFarmStackGame = lazy(() => import('./components/WebFarmStackGame'))
 const WebFarmRunnerGame = lazy(() => import('./components/WebFarmRunnerGame'))
 const WebTradeTycoonGame = lazy(() => import('./components/WebTradeTycoonGame'))
-import ArrivalApp from './arrival/ArrivalApp'
 import farmStackLogo from './assets/farmstack-logo.jpg'
 
 class AppErrorBoundary extends React.Component {
@@ -6692,7 +6691,6 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  <div className='list-row'><span>{t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('ai-disease', 'AI Disease Analyzer')}>{t('Open','Ouvrir')}</button></div>
  <div className='list-row'><span>{t('Livestock Records','Registres du bétail','牲畜档案')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('livestock-records', 'Livestock Records')}>{t('Open','Ouvrir')}</button></div>
  <div className='list-row'><span>{t('Community','Communauté','社区')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('community', 'FarmSavior Community')}>{t('Open','Ouvrir')}</button></div>
- <div className='list-row'><span>Arrival</span><button type='button' className='btn btn-dark' onClick={() => alert('Arrival full-state import is being wired into FarmSavior next. This button will open the embedded Arrival experience once the integration step is complete.')}>{t('Open','Ouvrir','打开')}</button></div>
  <div className='list-row'><span>{AADU_FULL_NAME} (AADU)</span><button type='button' className='btn' onClick={openPublicAADUSection}>{t('Open','Ouvrir','打开')}</button></div>
  <div className='list-row'><span>{t('Games','Jeux','游戏')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('games', 'Games')}>{t('Open','Ouvrir','打开')}</button></div>
  </div>}
@@ -7588,7 +7586,6 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  <button className={`app-quick-btn ${active === 'livestock-records' ? 'active' : ''}`} aria-pressed={active === 'livestock-records'} onClick={() => setActive('livestock-records')}>{t('Records','Registres','档案')}</button>
  <button className={`app-quick-btn ${active === 'marketplace' ? 'active' : ''}`} aria-pressed={active === 'marketplace'} onClick={() => setActive('marketplace')}>{t('Marketplace','Marketplace','市场')}</button>
  <button className={`app-quick-btn ${active === 'community' ? 'active' : ''}`} aria-pressed={active === 'community'} onClick={() => setActive('community')}>{t('Community','Communauté','社区')}</button>
- <button className={`app-quick-btn ${active === 'arrival' ? 'active' : ''}`} aria-pressed={active === 'arrival'} onClick={() => setActive('arrival')}>Arrival</button>
  <button className={`app-quick-btn ${active === 'aadu' ? 'active' : ''}`} aria-pressed={active === 'aadu'} type='button' onClick={openAccountAADUSection}>AAD University</button>
 <button className={`app-quick-btn ${active === 'payments' ? 'active' : ''}`} aria-pressed={active === 'payments'} onClick={() => setActive('payments')}>{t('Payments','Paiements','支付')}</button>
 <button className={`app-quick-btn ${active === 'games' ? 'active' : ''}`} aria-pressed={active === 'games'} onClick={() => setActive('games')}>{t('Games','Jeux','游戏')}</button>
@@ -7660,7 +7657,6 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  <div className='list-row'><span>{t('AI Disease Analyzer','Analyseur IA des maladies','AI 病害分析')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('ai-disease', 'AI Disease Analyzer')}>{t('Open','Ouvrir','打开')}</button></div>
  <div className='list-row'><span>{t('Livestock Records','Registres du bétail','牲畜档案')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('livestock-records', 'Livestock Records')}>{t('Open','Ouvrir','打开')}</button></div>
  <div className='list-row'><span>{t('Community','Communauté','社区')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('community', 'FarmSavior Community')}>{t('Open','Ouvrir','打开')}</button></div>
- <div className='list-row'><span>Arrival</span><button type='button' className='btn btn-dark' onClick={() => alert('Arrival full-state import is being wired into FarmSavior next. This button will open the embedded Arrival experience once the integration step is complete.')}>{t('Open','Ouvrir','打开')}</button></div>
  {isAdminUser ? <div className='list-row'><span>{t('Admin Analytics','Analyses admin','管理员分析')}</span><button type='button' className='btn btn-dark' onClick={async ()=>{ setActive('analytics'); setAdminAnalyticsLoading(true); try { await loadAdminDashboardData() } finally { setAdminAnalyticsLoading(false) } }}>{t('Open','Ouvrir','打开')}</button></div> : null}
  <div className='list-row'><span>{AADU_FULL_NAME} (AADU)</span><button type='button' className='btn' onClick={openPublicAADUSection}>{t('Open','Ouvrir','打开')}</button></div>
  <div className='list-row'><span>{t('Games','Jeux','游戏')}</span><button type='button' className='btn btn-dark' onClick={()=>handleProtectedAction('games', 'Games')}>{t('Open','Ouvrir','打开')}</button></div>
@@ -10809,12 +10805,6 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  {!worldChatQueue.length && <div className='list-row'><span>No flagged messages.</span></div>}
  </div>
  </article>}
- </section>}
-
- {active === 'arrival' && <section>
- <article className='panel' style={{padding:0, overflow:'hidden', border:'1px solid #e2e8f0', boxShadow:'0 12px 32px rgba(15,23,42,.08)'}}>
- <ArrivalApp />
- </article>
  </section>}
 
  {active === 'community' && <section>
