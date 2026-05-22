@@ -8,7 +8,6 @@ const DisputeCenter = lazy(() => import('./components/DisputeCenter'))
 const WebFarmStackGame = lazy(() => import('./components/WebFarmStackGame'))
 const WebFarmRunnerGame = lazy(() => import('./components/WebFarmRunnerGame'))
 const WebTradeTycoonGame = lazy(() => import('./components/WebTradeTycoonGame'))
-import ArrivalApp from './arrival/ArrivalApp'
 import farmStackLogo from './assets/farmstack-logo.jpg'
 
 class AppErrorBoundary extends React.Component {
@@ -10813,7 +10812,24 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
 
  {active === 'arrival' && <section>
  <article className='panel' style={{padding:0, overflow:'hidden', border:'1px solid #e2e8f0', boxShadow:'0 12px 32px rgba(15,23,42,.08)'}}>
- <ArrivalApp />
+ <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, padding:'14px 16px', borderBottom:'1px solid #e2e8f0', background:'linear-gradient(180deg,#ffffff 0%,#f8fafc 100%)'}}>
+ <div>
+ <div style={{fontSize:'.78rem', fontWeight:800, letterSpacing:'.08em', textTransform:'uppercase', color:'#64748b'}}>Arrival</div>
+ <div className='helper-text' style={{marginTop:4}}>Embedded live Whyvo experience inside FarmSavior.</div>
+ </div>
+ <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+ <button type='button' className='btn' onClick={() => window.open('https://www.whyvo.app', '_blank', 'noopener,noreferrer')}>Open in new tab</button>
+ <button type='button' className='btn btn-dark' onClick={() => setActive('home')}>Back to FarmSavior</button>
+ </div>
+ </div>
+ <iframe
+ title='Arrival / Whyvo'
+ src='https://www.whyvo.app'
+ style={{width:'100%', height:'85vh', border:'0', background:'#fff'}}
+ loading='eager'
+ referrerPolicy='strict-origin-when-cross-origin'
+ allow='camera; microphone; clipboard-read; clipboard-write; fullscreen; autoplay'
+ />
  </article>
  </section>}
 
