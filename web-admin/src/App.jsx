@@ -7646,6 +7646,20 @@ const [accountPopularActionsOpen, setAccountPopularActionsOpen] = useState(true)
  </article>
  </div>
 
+ <article className='panel' style={{marginTop:10, background:'linear-gradient(135deg,#0f172a 0%,#1e293b 45%,#312e81 100%)', color:'#fff', border:'1px solid rgba(129,140,248,.28)', boxShadow:'0 18px 40px rgba(15,23,42,.22)'}}>
+ <div className='section-header' style={{alignItems:'center'}}>
+ <div>
+ <div style={{fontSize:'.78rem', fontWeight:800, letterSpacing:'.08em', textTransform:'uppercase', color:'rgba(191,219,254,.88)', marginBottom:6}}>Arrival</div>
+ <h3 style={{margin:0, color:'#fff'}}>Open the full Whyvo app</h3>
+ <div style={{marginTop:6, color:'rgba(226,232,240,.88)', lineHeight:1.55}}>Launch the exact live Whyvo experience from inside FarmSavior.</div>
+ </div>
+ <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+ <button type='button' className='btn btn-dark' style={{background:'#fff', color:'#0f172a', borderColor:'#fff'}} onClick={() => window.open('https://www.whyvo.app', '_blank', 'noopener,noreferrer')}>Open Arrival</button>
+ <button type='button' className='btn' style={{borderColor:'rgba(191,219,254,.38)', color:'#e2e8f0', background:'rgba(15,23,42,.18)'}} onClick={() => setActive('arrival')}>Open here</button>
+ </div>
+ </div>
+ </article>
+
  <article className='panel' style={{marginTop:10, background:'linear-gradient(180deg,#ffffff 0%,#f8fafc 100%)', border:'1px solid #e2e8f0', boxShadow:'0 10px 24px rgba(15,23,42,.05)'}}>
  <div className='section-header'>
  <div>
