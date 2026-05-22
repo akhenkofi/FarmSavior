@@ -154,7 +154,7 @@
 @media(max-width:980px){.aadu-home-hero{grid-template-columns:1fr}.aadu-home-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:640px){.aadu-home-section{gap:12px}.aadu-home-hero{padding:18px 16px;border-radius:0 0 28px 28px}.aadu-home-copy h3{font-size:1.5rem}.aadu-home-aside{padding:14px}.aadu-home-grid{grid-template-columns:1fr}.aadu-school-card{padding:16px;border-radius:20px}.aadu-school-actions .btn{flex:1}.poultry-guidance-card{padding:14px;border-radius:20px}.poultry-guidance-head{flex-direction:column}.poultry-guidance-tags{width:100%}}
 
-html,body,#root{width:100%;max-width:100%;overflow-x:hidden;touch-action:manipulation}
+html,body,#root{width:100%;max-width:100%;overflow-x:hidden}
 body{margin:0;min-height:100vh}
 .main,section,.panel,.records-shell,.disease-shell,.onboarding-shell{max-width:100%;min-width:0}
 section{width:100%;overflow-x:hidden}
